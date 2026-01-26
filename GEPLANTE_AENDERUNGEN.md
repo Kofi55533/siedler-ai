@@ -13,9 +13,10 @@ Dieses Dokument sammelt alle besprochenen Änderungen bevor sie implementiert we
 | # | Änderung | Priorität | Status |
 |---|----------|-----------|--------|
 | 1 | Multi-Step Action System | Hoch | Besprochen |
-| 2 | Lager-System für Refiner | Mittel | Offen (später prüfen) |
-| 3 | Dynamische Bauplätze | Hoch | Besprochen |
-| 4 | Alle Arbeiter-Laufwege simulieren | Hoch | Besprochen |
+| 2 | Dynamische Positionen (nur verfügbare) | Hoch | Besprochen |
+| 3 | Lager-System für Refiner | Mittel | Offen (später prüfen) |
+| 4 | Dynamische Bauplätze | Hoch | Besprochen |
+| 5 | Alle Arbeiter-Laufwege simulieren | Hoch | Besprochen |
 
 ---
 
@@ -33,27 +34,28 @@ Statt einem flachen Action Space mit 332 vordefinierten Kombinationen:
 
 ---
 
-### ALLE ACTION-TYPEN MIT MULTI-STEP FLOWS
+### ALLE ACTION-TYPEN MIT MULTI-STEP FLOWS (12 Actions)
 
 #### Übersicht aller Flows
 
-| Action-Typ | Step 1 | Step 2 | Step 3 | Step 4 |
-|------------|--------|--------|--------|--------|
-| Wait | "Wait" | - | - | - |
-| Bauen | "Bauen" | Gebäude? | Position? | - |
-| Upgrade | "Upgrade" | Gebäude? | Position?* | - |
-| Forschen | "Forschen" | Technologie? | - | - |
-| Rekrutieren | "Rekrutieren" | Soldaten-Typ? | Anzahl? | - |
-| Leibeigene kaufen | "Serf kaufen" | Anzahl? | - | - |
-| Leibeigene entlassen | "Serf entlassen" | Von wo?* | Anzahl? | - |
-| Leibeigene zuweisen | "Zuweisen" | Von wo? | Anzahl? | Wohin? |
-| Leibeigene abziehen | "Abziehen" | Von wo? | Anzahl? | - |
-| Abreißen | "Abreißen" | Gebäude? | Position?* | - |
-| Segnen | "Segnen" | Kategorie? | - | - |
-| Steuern | "Steuern" | Stufe? | - | - |
-| Alarm | "Alarm" | AN/AUS? | - | - |
+| # | Action-Typ | Step 1 | Step 2 | Step 3 | Step 4 |
+|---|------------|--------|--------|--------|--------|
+| 1 | Wait | "Wait" | - | - | - |
+| 2 | Bauen | "Bauen" | Gebäude? | Position? | - |
+| 3 | Upgrade | "Upgrade" | Gebäude? | Position?* | - |
+| 4 | Forschen | "Forschen" | Technologie? | - | - |
+| 5 | Rekrutieren | "Rekrutieren" | Soldaten-Typ? | Anzahl? | - |
+| 6 | Leibeigene kaufen | "Serf kaufen" | Anzahl? | - | - |
+| 7 | Leibeigene entlassen | "Serf entlassen" | Von wo? | Anzahl? | - |
+| 8 | Leibeigene zuweisen | "Zuweisen" | Von wo? | Anzahl? | Wohin? |
+| 9 | Abreißen | "Abreißen" | Gebäude? | Position?* | - |
+| 10 | Segnen | "Segnen" | Kategorie? | - | - |
+| 11 | Steuern | "Steuern" | Stufe? | - | - |
+| 12 | Alarm | "Alarm" | AN/AUS? | - | - |
 
 *Position nur wenn mehrere Gebäude des gleichen Typs existieren
+
+**HINWEIS:** "Abziehen" wurde ENTFERNT - ist jetzt Teil von "Zuweisen" mit Ziel="Frei"
 
 ---
 
@@ -73,19 +75,20 @@ Step 1: "Wait" → [ausführen, Zeit vorrücken]
 Step 1: "Bauen"
     ↓
 Step 2: Welches Gebäude?
-        Optionen: [Wohnhaus_1, Bauernhof_1, Hochschule_1, ...]
+        Optionen: Alle baubaren Gebäude-Typen
         Maske: Nur Gebäude die man sich leisten kann UND für die Position existiert
     ↓
 Step 3: Wo bauen?
-        Optionen: Top 30 Positionen, sortiert nach Nutzen für dieses Gebäude
-        Maske: Nur verfügbare Positionen
+        Optionen: NUR AKTUELL VERFÜGBARE Positionen (dynamisch!)
+        Maske: Nur Positionen die für dieses Gebäude gültig sind
     ↓
 [ausführen, Zeit vorrücken]
 ```
 
 **Spezialfälle:**
-- **Minen**: Step 3 zeigt nur freie Schacht-Positionen
-- **Dorfzentrum**: Step 3 zeigt nur Dorfzentrum-Slots
+- **Minen**: Step 3 zeigt nur freie Schacht-Positionen (max 3 pro Typ)
+- **Dorfzentrum**: Step 3 zeigt nur Dorfzentrum-Slots (max 3)
+- **Normale Gebäude**: Alle verfügbaren Bauplätze
 
 ---
 
@@ -104,10 +107,6 @@ Step 3: Welche Position? (NUR wenn mehrere vom gleichen Typ!)
 [ausführen, Zeit vorrücken]
 ```
 
-**Beispiel:**
-- Nur 1 Wohnhaus_1 gebaut → Step 3 wird übersprungen
-- 3 Wohnhaus_1 gebaut → Agent wählt welches upgraded wird
-
 ---
 
 #### 4. FORSCHEN (2 Steps)
@@ -115,7 +114,7 @@ Step 3: Welche Position? (NUR wenn mehrere vom gleichen Typ!)
 Step 1: "Forschen"
     ↓
 Step 2: Welche Technologie?
-        Optionen: [Mathematik, Fernglas, Luntenschloss, ...]
+        Optionen: Alle Technologien
         Maske: Nur Techs mit erfüllten Voraussetzungen + Ressourcen
     ↓
 [ausführen, Zeit vorrücken]
@@ -128,11 +127,11 @@ Step 2: Welche Technologie?
 Step 1: "Rekrutieren"
     ↓
 Step 2: Welchen Soldaten-Typ?
-        Optionen: [Schwertkämpfer, Bogenschütze, Scharfschütze_1, Scharfschütze_2, ...]
+        Optionen: Alle Soldaten-Typen
         Maske: Nur Typen die rekrutierbar (Gebäude + Tech + Ressourcen)
     ↓
 Step 3: Wie viele?
-        Optionen: [1, 2, 3, 4, 5, 10, ...] oder dynamisch basierend auf Ressourcen
+        Optionen: [1, 2, 3, 5, 10, alle_leistbar]
         Maske: Nur Anzahlen die man sich leisten kann
     ↓
 [ausführen, Zeit vorrücken]
@@ -153,16 +152,16 @@ Step 2: Wie viele?
 
 ---
 
-#### 7. LEIBEIGENE ENTLASSEN (2-3 Steps)
+#### 7. LEIBEIGENE ENTLASSEN (3 Steps)
 ```
 Step 1: "Leibeigene entlassen"
     ↓
-Step 2: Von wo entlassen? (optional - für volle Kontrolle)
-        Optionen: [Frei/Idle, Holz-Zone-1, Eisenmine, Baustelle-3, ...]
-        Maske: Nur Positionen wo Leibeigene sind
+Step 2: Von wo entlassen?
+        Optionen: Alle Bereiche wo Leibeigene sind (siehe BEREICHE unten)
+        Maske: Nur Bereiche wo mindestens 1 Leibeigener ist
     ↓
 Step 3: Wie viele?
-        Optionen: [1, 2, 3, 5, alle]
+        Optionen: [1, 2, 3, 5, 10, alle]
         Maske: Nur Anzahlen die an dieser Position verfügbar sind
     ↓
 [ausführen, Zeit vorrücken]
@@ -171,67 +170,35 @@ Step 3: Wie viele?
 ---
 
 #### 8. LEIBEIGENE ZUWEISEN (4 Steps) - VOLLE KONTROLLE
+
+**WICHTIG:** Diese Action ersetzt auch "Abziehen"! Ziel="Frei" = Abziehen
+
 ```
 Step 1: "Leibeigene zuweisen"
     ↓
 Step 2: Von wo nehmen?
-        Optionen: [Frei/Idle, Holz-Zone-1, Holz-Zone-2, Eisenmine, Baustelle-3, ...]
-        Maske: Nur Positionen wo Leibeigene sind (inkl. "Frei")
+        Optionen: Alle QUELL-BEREICHE (siehe unten)
+        Maske: Nur Bereiche wo mindestens 1 Leibeigener ist
     ↓
 Step 3: Wie viele?
         Optionen: [1, 2, 3, 5, 10, alle]
         Maske: Nur Anzahlen die an Quell-Position verfügbar sind
     ↓
 Step 4: Wohin schicken?
-        Optionen: Alle Ziel-Positionen
-          - Holz-Zonen: [HQ-Bereich, Schwefelmine-Zone, Lehmmine-Zone, ...]
-          - Stollen: [Eisen-Stollen-1, Stein-Stollen-1, ...]
-          - Vorkommen: [Eisen-Vorkommen-1, ...] (nur wenn keine Mine dort!)
-          - Baustellen: [Baustelle-1, Baustelle-2, ...]
-          - "Frei" (zurückrufen zu Idle)
-        Maske: Nur gültige Ziele (nicht voll, nicht blockiert)
+        Optionen: Alle ZIEL-BEREICHE (siehe unten)
+        Maske: Nur gültige Ziele (nicht erschöpft, nicht blockiert)
     ↓
 [ausführen, Zeit vorrücken]
 ```
 
-**Quell-Positionen (Step 2):**
-- "Frei" = Idle Leibeigene beim HQ
-- Holz-Zonen (6 Stück)
-- Stollen (Eisen, Stein, Lehm, Schwefel × je 3)
-- Vorkommen (kleine Deposits)
-- Baustellen (aktive Bauprojekte)
-
-**Ziel-Positionen (Step 4):**
-- Gleiche Kategorien wie Quell-Positionen
-- Plus spezielle Option "Frei" um Leibeigene zurückzurufen
-
 ---
 
-#### 9. LEIBEIGENE ABZIEHEN (3 Steps)
-```
-Step 1: "Leibeigene abziehen"
-    ↓
-Step 2: Von wo abziehen?
-        Optionen: [Holz-Zone-1, Eisenmine, Baustelle-3, ...]
-        Maske: Nur Positionen wo Leibeigene arbeiten
-    ↓
-Step 3: Wie viele?
-        Optionen: [1, 2, 3, 5, alle]
-        Maske: Nur Anzahlen die dort arbeiten
-    ↓
-[ausführen, Leibeigene werden "Frei", Zeit vorrücken]
-```
-
-*Hinweis: "Abziehen" ist wie "Zuweisen" mit Ziel="Frei", könnte zusammengeführt werden*
-
----
-
-#### 10. ABREISSEN (2-3 Steps)
+#### 9. ABREISSEN (2-3 Steps)
 ```
 Step 1: "Abreißen"
     ↓
 Step 2: Welches Gebäude?
-        Optionen: [Wohnhaus_1, Bauernhof_1, ...]
+        Optionen: Alle gebauten Gebäude-Typen
         Maske: Nur Gebäude die existieren
     ↓
 Step 3: Welche Position? (NUR wenn mehrere vom gleichen Typ!)
@@ -243,7 +210,7 @@ Step 3: Welche Position? (NUR wenn mehrere vom gleichen Typ!)
 
 ---
 
-#### 11. SEGNEN (2 Steps)
+#### 10. SEGNEN (2 Steps)
 ```
 Step 1: "Segnen"
     ↓
@@ -254,18 +221,9 @@ Step 2: Welche Kategorie?
 [ausführen, Zeit vorrücken]
 ```
 
-**Kategorien (aus extra2):**
-| ID | Name | Betroffene Worker |
-|----|------|-------------------|
-| 1 | Konstruktion | Miner, Farmer, BrickMaker, Sawmillworker, Stonecutter |
-| 2 | Forschung | Scholar, Priest, Engineer, MasterBuilder |
-| 3 | Waffen | Smith, Alchemist, Smelter, Gunsmith |
-| 4 | Finanzen | Trader, Treasurer |
-| 5 | Kanonisierung | ALLE Worker |
-
 ---
 
-#### 12. STEUERN (2 Steps)
+#### 11. STEUERN (2 Steps)
 ```
 Step 1: "Steuern"
     ↓
@@ -276,18 +234,9 @@ Step 2: Welche Stufe?
 [ausführen, Zeit vorrücken]
 ```
 
-**Steuerstufen:**
-| Stufe | Steuer | Motivation |
-|-------|--------|------------|
-| 0 | 0 | +0.20 |
-| 1 | 5 | +0.08 |
-| 2 | 10 | 0 (Start) |
-| 3 | 15 | -0.08 |
-| 4 | 20 | -0.12 |
-
 ---
 
-#### 13. ALARM (2 Steps)
+#### 12. ALARM (2 Steps)
 ```
 Step 1: "Alarm"
     ↓
@@ -302,18 +251,203 @@ Step 2: AN oder AUS?
 
 ---
 
-### ZUSAMMENFASSUNG ACTION SPACES
+## 2. BEREICHE FÜR LEIBEIGENE (Von wo / Wohin)
+
+### VOLLSTÄNDIGE LISTE ALLER BEREICHE
+
+#### QUELL-BEREICHE (Von wo nehmen?) - 26 feste + dynamische Baustellen
+
+| # | Kategorie | Bereich-Name | Beschreibung |
+|---|-----------|--------------|--------------|
+| 0 | Idle | **Frei** | Leibeigene die nichts tun (beim HQ) |
+| | | | |
+| | **HOLZ-ZONEN (6)** | | |
+| 1 | Holz | HQ_Bereich | 69 Bäume, für Wohnhäuser/Bauernhöfe |
+| 2 | Holz | Schwefelmine_Zone | 14 Bäume, für Alchimistenhütte |
+| 3 | Holz | Lehmmine_Zone | 66 Bäume, für Lehmhütte |
+| 4 | Holz | Steinmine_Zone | 32 Bäume, für Steinmetzhütte |
+| 5 | Holz | Dorfzentrum_Zone | 25 Bäume, für Expansion |
+| 6 | Holz | Eisenmine_Zone | 72 Bäume, für Schmiede |
+| | | | |
+| | **EISEN-STOLLEN (3)** | | |
+| 7 | Stollen | Eisen_Stollen_1 | Position (36276, 8927), 400 Ressourcen |
+| 8 | Stollen | Eisen_Stollen_2 | Position (37495, 7801), 400 Ressourcen |
+| 9 | Stollen | Eisen_Stollen_3 | Position (37784, 7266), 400 Ressourcen |
+| | | | |
+| | **STEIN-STOLLEN (3)** | | |
+| 10 | Stollen | Stein_Stollen_1 | Position (40056, 14891), 400 Ressourcen |
+| 11 | Stollen | Stein_Stollen_2 | Position (39321, 14716), 400 Ressourcen |
+| 12 | Stollen | Stein_Stollen_3 | Position (38633, 14720), 400 Ressourcen |
+| | | | |
+| | **LEHM-STOLLEN (3)** | | |
+| 13 | Stollen | Lehm_Stollen_1 | Position (35181, 19553), 400 Ressourcen |
+| 14 | Stollen | Lehm_Stollen_2 | Position (35106, 18872), 400 Ressourcen |
+| 15 | Stollen | Lehm_Stollen_3 | Position (34991, 17997), 400 Ressourcen |
+| | | | |
+| | **SCHWEFEL-STOLLEN (3)** | | |
+| 16 | Stollen | Schwefel_Stollen_1 | Position (44304, 21484), 400 Ressourcen |
+| 17 | Stollen | Schwefel_Stollen_2 | Position (44006, 20978), 400 Ressourcen |
+| 18 | Stollen | Schwefel_Stollen_3 | Position (44576, 22120), 400 Ressourcen |
+| | | | |
+| | **VORKOMMEN (6)** | | Nur wenn KEINE Mine dort! |
+| 19 | Vorkommen | Eisen_Vorkommen_1 | Position (34325, 7950), 4000 Ressourcen |
+| 20 | Vorkommen | Eisen_Vorkommen_2 | Position (36325, 6750), 4000 Ressourcen |
+| 21 | Vorkommen | Stein_Vorkommen_1 | Position (42800, 15100), 4000 Ressourcen |
+| 22 | Vorkommen | Lehm_Vorkommen_1 | Position (31125, 18750), 4000 Ressourcen |
+| 23 | Vorkommen | Schwefel_Vorkommen_1 | Position (48125, 20950), 4000 Ressourcen |
+| 24 | Vorkommen | Schwefel_Vorkommen_2 | Position (47725, 18550), 4000 Ressourcen |
+| | | | |
+| | **BAUSTELLEN (dynamisch)** | | |
+| 25+ | Baustelle | Baustelle_1, _2, ... | Aktive Bauprojekte (variiert) |
+
+**Gesamt feste Bereiche:** 25 (1 Frei + 6 Holz + 12 Stollen + 6 Vorkommen)
+**Plus dynamische Baustellen:** 0-10+ (je nach aktiven Bauprojekten)
+
+---
+
+#### ZIEL-BEREICHE (Wohin schicken?) - Gleiche Liste + Bedingungen
+
+| # | Bereich-Name | Bedingung für Ziel |
+|---|--------------|-------------------|
+| 0 | **Frei** | Immer möglich (= ABZIEHEN!) |
+| | | |
+| 1-6 | Holz-Zonen | Wenn noch Bäume in Zone vorhanden |
+| | | |
+| 7-18 | Stollen | Immer möglich (Stollen erschöpfen nicht für Spieler) |
+| | | |
+| 19-24 | Vorkommen | NUR wenn: |
+| | | - KEINE Mine dort gebaut wurde |
+| | | - Noch Ressourcen vorhanden (>0) |
+| | | |
+| 25+ | Baustellen | Wenn Bauprojekt aktiv |
+
+---
+
+### MASKEN-LOGIK FÜR BEREICHE
+
+```python
+def _mask_source_areas(self):
+    """Maske für Step 2: Von wo nehmen?"""
+    mask = np.zeros(MAX_AREAS, dtype=bool)
+
+    # Frei: Wenn idle Leibeigene existieren
+    if self.free_leibeigene > 0:
+        mask[0] = True
+
+    # Holz-Zonen: Wenn Leibeigene dort arbeiten
+    for i, zone in enumerate(self.wood_zones):
+        if zone.assigned_serfs > 0:
+            mask[1 + i] = True
+
+    # Stollen: Wenn Leibeigene dort arbeiten
+    for i, shaft in enumerate(self.shafts):
+        if shaft.assigned_serfs > 0:
+            mask[7 + i] = True
+
+    # Vorkommen: Wenn Leibeigene dort arbeiten
+    for i, deposit in enumerate(self.deposits):
+        if deposit.assigned_serfs > 0:
+            mask[19 + i] = True
+
+    # Baustellen: Wenn Leibeigene dort arbeiten
+    for i, site in enumerate(self.construction_sites):
+        if site.assigned_serfs > 0:
+            mask[25 + i] = True
+
+    return mask
+
+def _mask_target_areas(self):
+    """Maske für Step 4: Wohin schicken?"""
+    mask = np.zeros(MAX_AREAS, dtype=bool)
+
+    # Frei: Immer möglich (= Abziehen)
+    mask[0] = True
+
+    # Holz-Zonen: Wenn noch Bäume vorhanden
+    for i, zone in enumerate(self.wood_zones):
+        if zone.remaining_trees > 0:
+            mask[1 + i] = True
+
+    # Stollen: Immer möglich
+    for i in range(12):
+        mask[7 + i] = True
+
+    # Vorkommen: Nur wenn keine Mine dort UND Ressourcen > 0
+    for i, deposit in enumerate(self.deposits):
+        if not deposit.has_mine_built and deposit.remaining > 0:
+            mask[19 + i] = True
+
+    # Baustellen: Wenn Bauprojekt aktiv
+    for i, site in enumerate(self.construction_sites):
+        if site.is_active:
+            mask[25 + i] = True
+
+    return mask
+```
+
+---
+
+## 3. DYNAMISCHE POSITIONEN FÜR BAUEN
+
+### Prinzip: Nur aktuell verfügbare Positionen (Option C)
+
+Der Agent sieht **NUR Positionen die gerade verfügbar sind** - keine feste Liste!
+
+```python
+class ActionPhase:
+    POSITION = "position"
+
+# Action Space für Positionen ist DYNAMISCH
+def _get_position_action_space(self):
+    available = self._get_available_positions_for(self.pending_building)
+    return Discrete(len(available))  # Variiert!
+
+def _mask_position(self):
+    """Alle angezeigten Positionen sind gültig - Maske ist alles True."""
+    available = self._get_available_positions_for(self.pending_building)
+    return np.ones(len(available), dtype=bool)
+```
+
+### Problem: Variabler Action Space
+
+Gymnasium erwartet **festen** Action Space. Lösung:
+
+```python
+# Feste maximale Größe, aber nur verfügbare sind in Maske True
+MAX_POSITIONS = 200  # Genug für alle möglichen Positionen
+
+def _mask_position(self):
+    mask = np.zeros(MAX_POSITIONS, dtype=bool)
+    available = self._get_available_positions_for(self.pending_building)
+
+    for i in range(min(len(available), MAX_POSITIONS)):
+        mask[i] = True
+
+    return mask
+```
+
+### Positions-Typen je nach Gebäude
+
+| Gebäude-Typ | Verfügbare Positionen |
+|-------------|----------------------|
+| Normale Gebäude | Alle freien Bauplätze (~1962 max) |
+| Minen | Nur freie Schacht-Positionen (max 3) |
+| Dorfzentrum | Nur Dorfzentrum-Slots (max 3) |
+
+---
+
+## 4. ZUSAMMENFASSUNG ACTION SPACES
 
 | Phase | Discrete Space Größe | Beschreibung |
 |-------|---------------------|--------------|
-| MAIN | ~15 | Haupt-Action-Kategorien |
+| MAIN | 12 | Haupt-Action-Kategorien |
 | BUILDING | ~28 | Gebäude-Typen |
-| POSITION | ~30-50 | Top Positionen |
+| POSITION | max 200 | Dynamisch - nur verfügbare! |
 | TECH | ~50 | Technologien |
 | SOLDIER | ~22 | Soldaten-Typen |
-| QUANTITY | ~10 | Anzahl (1,2,3,5,10,alle) |
-| SOURCE | ~20 | Quell-Positionen für Leibeigene |
-| TARGET | ~30 | Ziel-Positionen für Leibeigene |
+| QUANTITY | 6 | Anzahl [1,2,3,5,10,alle] |
+| SOURCE | ~35 | Quell-Bereiche (25 fest + Baustellen) |
+| TARGET | ~35 | Ziel-Bereiche (25 fest + Baustellen) |
 | CATEGORY | 5 | Segen-Kategorien |
 | TAX_LEVEL | 5 | Steuerstufen |
 | ON_OFF | 2 | AN/AUS |
@@ -322,9 +456,9 @@ Step 2: AN oder AUS?
 
 ---
 
-### TECHNISCHE IMPLEMENTIERUNG
+## 5. TECHNISCHE IMPLEMENTIERUNG
 
-#### Phase-Tracking
+### Phase-Tracking
 ```python
 class ActionPhase(Enum):
     MAIN = "main"
@@ -338,134 +472,51 @@ class ActionPhase(Enum):
     CATEGORY = "category"
     TAX_LEVEL = "tax_level"
     ON_OFF = "on_off"
-
-class SiedlerEnvMultiStep(gym.Env):
-    def __init__(self):
-        self.current_phase = ActionPhase.MAIN
-        self.pending_main_action = None
-        self.pending_building = None
-        self.pending_source = None
-        self.pending_quantity = None
-        # ... weitere pending states
-
-        # Action Spaces für jede Phase
-        self.action_spaces = {
-            ActionPhase.MAIN: Discrete(15),
-            ActionPhase.BUILDING: Discrete(28),
-            ActionPhase.POSITION: Discrete(50),
-            ActionPhase.TECH: Discrete(50),
-            ActionPhase.SOLDIER: Discrete(22),
-            ActionPhase.QUANTITY: Discrete(10),
-            ActionPhase.SOURCE: Discrete(20),
-            ActionPhase.TARGET: Discrete(30),
-            ActionPhase.CATEGORY: Discrete(5),
-            ActionPhase.TAX_LEVEL: Discrete(5),
-            ActionPhase.ON_OFF: Discrete(2),
-        }
-
-    @property
-    def action_space(self):
-        return self.action_spaces[self.current_phase]
 ```
 
-#### Flow-Definitionen
+### Flow-Definitionen (12 Actions, "Abziehen" entfernt!)
 ```python
 ACTION_FLOWS = {
     "wait": [ActionPhase.MAIN],
     "build": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION],
-    "upgrade": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION],  # Position optional
+    "upgrade": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION],
     "research": [ActionPhase.MAIN, ActionPhase.TECH],
     "recruit": [ActionPhase.MAIN, ActionPhase.SOLDIER, ActionPhase.QUANTITY],
     "buy_serf": [ActionPhase.MAIN, ActionPhase.QUANTITY],
     "dismiss_serf": [ActionPhase.MAIN, ActionPhase.SOURCE, ActionPhase.QUANTITY],
     "assign_serf": [ActionPhase.MAIN, ActionPhase.SOURCE, ActionPhase.QUANTITY, ActionPhase.TARGET],
-    "recall_serf": [ActionPhase.MAIN, ActionPhase.SOURCE, ActionPhase.QUANTITY],
-    "demolish": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION],  # Position optional
+    # "recall_serf" ENTFERNT - jetzt Teil von assign_serf mit target=Frei!
+    "demolish": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION],
     "bless": [ActionPhase.MAIN, ActionPhase.CATEGORY],
     "tax": [ActionPhase.MAIN, ActionPhase.TAX_LEVEL],
     "alarm": [ActionPhase.MAIN, ActionPhase.ON_OFF],
 }
 ```
 
-#### Masken-Berechnung
+### MAIN Action Indices
 ```python
-def action_masks(self):
-    if self.current_phase == ActionPhase.MAIN:
-        return self._mask_main()
-    elif self.current_phase == ActionPhase.BUILDING:
-        return self._mask_building()
-    elif self.current_phase == ActionPhase.POSITION:
-        return self._mask_position()
-    # ... etc
-
-def _mask_main(self):
-    """Maske für Haupt-Actions - prüft ob Folge-Steps möglich sind."""
-    mask = np.zeros(15, dtype=bool)
-
-    mask[0] = True  # Wait immer erlaubt
-
-    # Bauen: Gibt es Gebäude die baubar sind UND Positionen haben?
-    if self._has_any_buildable_with_position():
-        mask[1] = True
-
-    # Upgrade: Gibt es Gebäude die upgradebar sind?
-    if self._has_any_upgradeable():
-        mask[2] = True
-
-    # Forschen: Gibt es Techs die erforschbar sind?
-    if self._has_any_researchable():
-        mask[3] = True
-
-    # Rekrutieren: Gibt es Soldaten die rekrutierbar sind?
-    if self._has_any_recruitable():
-        mask[4] = True
-
-    # Leibeigene kaufen: Genug Taler?
-    if self.resources["Taler"] >= SERF_COST:
-        mask[5] = True
-
-    # Leibeigene entlassen: Gibt es Leibeigene?
-    if self.total_leibeigene > 0:
-        mask[6] = True
-
-    # Leibeigene zuweisen: Gibt es Leibeigene UND Ziele?
-    if self._has_serfs_to_assign() and self._has_assignment_targets():
-        mask[7] = True
-
-    # Leibeigene abziehen: Gibt es arbeitende Leibeigene?
-    if self._has_working_serfs():
-        mask[8] = True
-
-    # Abreißen: Gibt es Gebäude?
-    if self._has_any_building():
-        mask[9] = True
-
-    # Segnen: Kloster gebaut + Faith + kein Cooldown?
-    if self._can_bless():
-        mask[10] = True
-
-    # Steuern: Immer erlaubt
-    mask[11] = True
-
-    # Alarm: Cooldown prüfen
-    if self._can_toggle_alarm():
-        mask[12] = True
-
-    return mask
+MAIN_ACTIONS = {
+    0: "wait",
+    1: "build",
+    2: "upgrade",
+    3: "research",
+    4: "recruit",
+    5: "buy_serf",
+    6: "dismiss_serf",
+    7: "assign_serf",  # Inkludiert jetzt auch "abziehen" (Ziel=Frei)
+    8: "demolish",
+    9: "bless",
+    10: "tax",
+    11: "alarm",
+}
 ```
 
 ---
 
-## 2. LAGER-SYSTEM FÜR REFINER
+## 6. LAGER-SYSTEM FÜR REFINER
 
 ### Status
 **OFFEN** - Muss mit echten Spieldateien überprüft werden
-
-### Vermutete Mechanik (zu verifizieren)
-Arbeiter holen Ressourcen von:
-1. **Gebaute Minen** (wenn Mine auf Schacht gebaut UND Worker dort arbeiten)
-2. **Lager** (wenn vorhanden und Ressourcen dort gelagert)
-3. **HQ** (Fallback)
 
 ### Zu prüfen
 - [ ] Wie funktioniert Ressourcen-Fluss im echten Spiel?
@@ -474,78 +525,31 @@ Arbeiter holen Ressourcen von:
 
 ---
 
-## 3. DYNAMISCHE BAUPLÄTZE
+## 7. DYNAMISCHE BAUPLÄTZE
 
 ### Beschreibung
-Bauplätze ändern sich dynamisch:
 - Bäume fällen → neue Positionen werden frei
 - Gebäude abreißen → Position wird wieder frei
 - Gebäude bauen → Position wird belegt
 
-### Aktuelle Daten
-```
-Zone A (sofort bebaubar):     ~1962 Positionen
-Zone B (nach Holzfällen):     ~238 Positionen
-Permanent blockiert:          ~290 Positionen
-Bäume im Gebiet:              ~538
-```
-
-### Benötigte Tracking-Logik
-```python
-# Beim Baum fällen
-def _on_tree_removed(self, tree_position):
-    # Prüfe ob neue Bauplätze frei werden
-    for zone_b_pos in self.zone_b_positions:
-        if tree_position in zone_b_pos["blocking_trees"]:
-            zone_b_pos["blocking_trees"].remove(tree_position)
-            if len(zone_b_pos["blocking_trees"]) == 0:
-                self.available_positions.append(zone_b_pos)
-
-# Beim Gebäude abreißen
-def _on_building_demolished(self, building, position):
-    self.available_positions.append(position)
-    self.used_positions.remove(position)
-
-# Beim Gebäude bauen
-def _on_building_placed(self, building, position):
-    self.available_positions.remove(position)
-    self.used_positions.append(position)
-```
-
 ---
 
-## 4. ALLE ARBEITER-LAUFWEGE SIMULIEREN
-
-### Beschreibung
-Jeder Arbeiter (nicht nur Leibeigene) soll realistische Laufwege haben.
-
-### Bereits implementiert
-- **Leibeigene (Serfs)**: Laufen zur Ressource, kein WorkTime
-- **Worker mit WorkTime**: Laufen zu Farm → Wohnhaus → Arbeit
+## 8. ALLE ARBEITER-LAUFWEGE SIMULIEREN
 
 ### Zu erweitern
-- **Refiner-Worker**: Laufen zur Ressourcen-Quelle (Mine/Lager/HQ) und zurück
-- **Transporte**: Ressourcen-Transport zwischen Gebäuden
-
-### Auswirkung auf Gameplay
-- **Platzierung wichtig**: Schmiede nahe Eisenmine = schnellere Produktion
-- **Lager strategisch**: Kann Laufwege verkürzen
-- **Agent lernt**: Optimale Gebäude-Platzierung
+- **Refiner-Worker**: Laufen zur Ressourcen-Quelle und zurück
+- **Auswirkung**: Platzierung wichtig (Schmiede nahe Eisenmine = schneller)
 
 ---
 
-## 5. OFFENE FRAGEN
+## 9. OFFENE FRAGEN
 
 ### Multi-Step System
-- [ ] Soll "Abziehen" mit "Zuweisen" zusammengeführt werden (Ziel="Frei")?
+- [x] ~~"Abziehen" mit "Zuweisen" zusammenführen~~ ✓ ERLEDIGT
+- [x] ~~Positionen: Top N oder alle?~~ ✓ ERLEDIGT - Dynamisch, nur verfügbare
 - [ ] Observation: Was sieht der Agent in jedem Step?
-- [ ] Reward: Wann gibt es Reward (nur am Ende? Zwischen-Rewards?)?
+- [ ] Reward: Wann gibt es Reward (nur am Ende? Zwischen-Rewards?)
 - [ ] Reset: Was passiert bei Episode-Ende mitten im Flow?
-
-### Positionen
-- [ ] Wie viele Positionen maximal zeigen? (30? 50? dynamisch?)
-- [ ] Positions-Features in Observation?
-- [ ] Sortierung der Positionen (nach Distanz? Nutzen?)
 
 ### Leibeigene
 - [ ] Maximale Anzahl Leibeigene?
@@ -554,25 +558,13 @@ Jeder Arbeiter (nicht nur Leibeigene) soll realistische Laufwege haben.
 
 ---
 
-## NÄCHSTE SCHRITTE
-
-1. [ ] Weitere Änderungen besprechen und hier dokumentieren
-2. [ ] Lager-System mit echtem Spiel verifizieren
-3. [ ] Prioritäten festlegen
-4. [ ] Abhängigkeiten klären
-5. [ ] Implementierung starten
-
----
-
 ## ÄNDERUNGSHISTORIE
 
 | Datum | Änderung |
 |-------|----------|
 | 2026-01-26 | Dokument erstellt |
-| 2026-01-26 | Two-Step System dokumentiert |
-| 2026-01-26 | Lager-System als offen markiert |
-| 2026-01-26 | Dynamische Bauplätze dokumentiert |
-| 2026-01-26 | **GROSSES UPDATE**: Multi-Step für ALLE Actions dokumentiert |
-| 2026-01-26 | Alle 13 Action-Typen mit Flows definiert |
-| 2026-01-26 | Technische Implementierung skizziert |
-| 2026-01-26 | Arbeiter-Laufwege als Anforderung hinzugefügt |
+| 2026-01-26 | Multi-Step für alle Actions dokumentiert |
+| 2026-01-26 | **"Abziehen" ENTFERNT** - in "Zuweisen" integriert (Ziel=Frei) |
+| 2026-01-26 | **Dynamische Positionen** - nur aktuell verfügbare (Option C) |
+| 2026-01-26 | **Vollständige Bereichs-Liste** für Leibeigene (26 feste + Baustellen) |
+| 2026-01-26 | Masken-Logik für Quell/Ziel-Bereiche dokumentiert |

@@ -1,0 +1,5587 @@
+{
+  "hq_position": {
+    "x": 41100,
+    "y": 23100
+  },
+  "grid_scale": {
+    "x": 33.47480106100796,
+    "y": 33.75401069518717
+  },
+  "quadrant_offset": {
+    "x": 25240.0,
+    "y": 0
+  },
+  "trees_count": 909,
+  "trees_all": [
+    {
+      "x": 42330.0,
+      "y": 24030.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 1542.0
+    },
+    {
+      "x": 41745.01,
+      "y": 21625.85,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 1609.0
+    },
+    {
+      "x": 42423.56,
+      "y": 22173.18,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 1616.0
+    },
+    {
+      "x": 42280.0,
+      "y": 21879.22,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 1698.0
+    },
+    {
+      "x": 41780.0,
+      "y": 21531.76,
+      "type": "XD_Fir2",
+      "distance_to_hq": 1709.0
+    },
+    {
+      "x": 41854.17,
+      "y": 21529.4,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 1742.0
+    },
+    {
+      "x": 42934.41,
+      "y": 23180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 1836.0
+    },
+    {
+      "x": 42920.0,
+      "y": 22820.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 1841.0
+    },
+    {
+      "x": 42948.17,
+      "y": 23123.9,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 1848.0
+    },
+    {
+      "x": 42920.0,
+      "y": 23420.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 1848.0
+    },
+    {
+      "x": 43075.51,
+      "y": 23120.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 1976.0
+    },
+    {
+      "x": 43109.36,
+      "y": 23270.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 2017.0
+    },
+    {
+      "x": 41169.3,
+      "y": 21056.69,
+      "type": "XD_Fir1",
+      "distance_to_hq": 2044.0
+    },
+    {
+      "x": 43170.0,
+      "y": 23270.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 2077.0
+    },
+    {
+      "x": 43180.0,
+      "y": 23080.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2080.0
+    },
+    {
+      "x": 43179.96,
+      "y": 23180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2081.0
+    },
+    {
+      "x": 40980.0,
+      "y": 20980.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2123.0
+    },
+    {
+      "x": 43223.4,
+      "y": 23475.51,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 2156.0
+    },
+    {
+      "x": 41852.76,
+      "y": 21052.08,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2182.0
+    },
+    {
+      "x": 42980.0,
+      "y": 21953.13,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2202.0
+    },
+    {
+      "x": 43135.46,
+      "y": 23954.63,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2208.0
+    },
+    {
+      "x": 41023.74,
+      "y": 20880.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2221.0
+    },
+    {
+      "x": 43228.61,
+      "y": 23880.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2267.0
+    },
+    {
+      "x": 42580.0,
+      "y": 21380.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2269.0
+    },
+    {
+      "x": 43254.34,
+      "y": 23945.36,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2314.0
+    },
+    {
+      "x": 42874.47,
+      "y": 21580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2336.0
+    },
+    {
+      "x": 42320.0,
+      "y": 21058.2,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2379.0
+    },
+    {
+      "x": 42780.0,
+      "y": 21380.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 2404.0
+    },
+    {
+      "x": 42420.0,
+      "y": 21080.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2413.0
+    },
+    {
+      "x": 42880.0,
+      "y": 21454.35,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2424.0
+    },
+    {
+      "x": 43403.15,
+      "y": 24006.23,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 2475.0
+    },
+    {
+      "x": 43469.97,
+      "y": 23820.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 2477.0
+    },
+    {
+      "x": 41380.0,
+      "y": 20560.69,
+      "type": "XD_Fir2",
+      "distance_to_hq": 2555.0
+    },
+    {
+      "x": 42262.39,
+      "y": 20820.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2559.0
+    },
+    {
+      "x": 43220.0,
+      "y": 21657.26,
+      "type": "XD_Fir1",
+      "distance_to_hq": 2564.0
+    },
+    {
+      "x": 43460.07,
+      "y": 24180.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2595.0
+    },
+    {
+      "x": 43680.0,
+      "y": 22659.26,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2617.0
+    },
+    {
+      "x": 42435.5,
+      "y": 20847.56,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2619.0
+    },
+    {
+      "x": 41730.0,
+      "y": 20530.0,
+      "type": "XD_DarkTree6",
+      "distance_to_hq": 2646.0
+    },
+    {
+      "x": 43520.0,
+      "y": 24178.24,
+      "type": "XD_Fir2",
+      "distance_to_hq": 2649.0
+    },
+    {
+      "x": 41820.0,
+      "y": 20545.95,
+      "type": "XD_Fir1",
+      "distance_to_hq": 2654.0
+    },
+    {
+      "x": 43380.0,
+      "y": 21720.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2665.0
+    },
+    {
+      "x": 42880.0,
+      "y": 21078.44,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2694.0
+    },
+    {
+      "x": 43552.17,
+      "y": 24220.7,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2696.0
+    },
+    {
+      "x": 43456.44,
+      "y": 24420.7,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2701.0
+    },
+    {
+      "x": 43520.0,
+      "y": 24330.11,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2715.0
+    },
+    {
+      "x": 43620.0,
+      "y": 24171.56,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2738.0
+    },
+    {
+      "x": 43742.58,
+      "y": 22346.54,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2748.0
+    },
+    {
+      "x": 43033.99,
+      "y": 21120.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2768.0
+    },
+    {
+      "x": 43720.0,
+      "y": 24037.17,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2783.0
+    },
+    {
+      "x": 43624.49,
+      "y": 24348.11,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2816.0
+    },
+    {
+      "x": 43731.9,
+      "y": 24250.01,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2872.0
+    },
+    {
+      "x": 42580.0,
+      "y": 20620.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2888.0
+    },
+    {
+      "x": 42776.07,
+      "y": 20721.11,
+      "type": "XD_Fir1",
+      "distance_to_hq": 2910.0
+    },
+    {
+      "x": 43627.8,
+      "y": 24580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 2929.0
+    },
+    {
+      "x": 43743.67,
+      "y": 24378.05,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 2936.0
+    },
+    {
+      "x": 43589.16,
+      "y": 24715.31,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 2967.0
+    },
+    {
+      "x": 43580.27,
+      "y": 24770.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 2990.0
+    },
+    {
+      "x": 41428.39,
+      "y": 20064.77,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3053.0
+    },
+    {
+      "x": 40873.41,
+      "y": 20042.24,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3066.0
+    },
+    {
+      "x": 44168.23,
+      "y": 23460.11,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3089.0
+    },
+    {
+      "x": 43925.64,
+      "y": 24350.76,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3090.0
+    },
+    {
+      "x": 44137.39,
+      "y": 22275.51,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3147.0
+    },
+    {
+      "x": 44275.62,
+      "y": 22879.29,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3183.0
+    },
+    {
+      "x": 44320.0,
+      "y": 23120.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3220.0
+    },
+    {
+      "x": 44374.3,
+      "y": 22665.5,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3303.0
+    },
+    {
+      "x": 40472.42,
+      "y": 19845.06,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3315.0
+    },
+    {
+      "x": 44478.34,
+      "y": 23520.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3404.0
+    },
+    {
+      "x": 44525.39,
+      "y": 23764.6,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3489.0
+    },
+    {
+      "x": 37679.75,
+      "y": 22340.18,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3504.0
+    },
+    {
+      "x": 37620.0,
+      "y": 23534.29,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3507.0
+    },
+    {
+      "x": 40567.29,
+      "y": 19630.0,
+      "type": "XD_DarkTree2",
+      "distance_to_hq": 3511.0
+    },
+    {
+      "x": 39820.0,
+      "y": 19826.96,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3514.0
+    },
+    {
+      "x": 44620.0,
+      "y": 23280.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3525.0
+    },
+    {
+      "x": 37565.34,
+      "y": 23345.09,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3543.0
+    },
+    {
+      "x": 37580.0,
+      "y": 22480.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3574.0
+    },
+    {
+      "x": 44580.0,
+      "y": 23920.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3575.0
+    },
+    {
+      "x": 37548.26,
+      "y": 22666.57,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3578.0
+    },
+    {
+      "x": 37551.49,
+      "y": 22455.9,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3606.0
+    },
+    {
+      "x": 44680.0,
+      "y": 23560.11,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3609.0
+    },
+    {
+      "x": 44680.0,
+      "y": 23624.11,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3618.0
+    },
+    {
+      "x": 37545.19,
+      "y": 23775.38,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3618.0
+    },
+    {
+      "x": 39649.93,
+      "y": 19780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3623.0
+    },
+    {
+      "x": 37480.0,
+      "y": 23320.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3627.0
+    },
+    {
+      "x": 39857.39,
+      "y": 19670.0,
+      "type": "XD_DarkTree6",
+      "distance_to_hq": 3648.0
+    },
+    {
+      "x": 37463.34,
+      "y": 23420.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3651.0
+    },
+    {
+      "x": 40630.0,
+      "y": 19470.0,
+      "type": "XD_DarkTree5",
+      "distance_to_hq": 3660.0
+    },
+    {
+      "x": 37507.35,
+      "y": 22170.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 3711.0
+    },
+    {
+      "x": 37429.98,
+      "y": 22548.92,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3711.0
+    },
+    {
+      "x": 37524.09,
+      "y": 24137.14,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3723.0
+    },
+    {
+      "x": 37420.0,
+      "y": 22475.64,
+      "type": "XD_Fir1",
+      "distance_to_hq": 3733.0
+    },
+    {
+      "x": 37380.0,
+      "y": 23468.85,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3738.0
+    },
+    {
+      "x": 44765.39,
+      "y": 23853.94,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3742.0
+    },
+    {
+      "x": 37439.51,
+      "y": 23880.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3743.0
+    },
+    {
+      "x": 37420.0,
+      "y": 22376.37,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3750.0
+    },
+    {
+      "x": 37336.72,
+      "y": 23180.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3764.0
+    },
+    {
+      "x": 37730.0,
+      "y": 24780.07,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 3766.0
+    },
+    {
+      "x": 37662.94,
+      "y": 24652.5,
+      "type": "XD_Fir1",
+      "distance_to_hq": 3771.0
+    },
+    {
+      "x": 37467.28,
+      "y": 24141.37,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3779.0
+    },
+    {
+      "x": 37920.0,
+      "y": 25156.16,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3787.0
+    },
+    {
+      "x": 37320.0,
+      "y": 23380.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 3790.0
+    },
+    {
+      "x": 44880.0,
+      "y": 23534.14,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3805.0
+    },
+    {
+      "x": 44927.43,
+      "y": 23146.13,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3828.0
+    },
+    {
+      "x": 37320.0,
+      "y": 22450.56,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3835.0
+    },
+    {
+      "x": 37380.0,
+      "y": 22159.4,
+      "type": "XD_Fir2",
+      "distance_to_hq": 3837.0
+    },
+    {
+      "x": 37430.0,
+      "y": 21930.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 3852.0
+    },
+    {
+      "x": 37539.56,
+      "y": 24569.01,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3852.0
+    },
+    {
+      "x": 37337.94,
+      "y": 22268.92,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3853.0
+    },
+    {
+      "x": 37475.69,
+      "y": 24520.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 3893.0
+    },
+    {
+      "x": 44980.0,
+      "y": 23633.32,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3916.0
+    },
+    {
+      "x": 37678.27,
+      "y": 25030.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 3929.0
+    },
+    {
+      "x": 37279.13,
+      "y": 22172.61,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 3932.0
+    },
+    {
+      "x": 37530.92,
+      "y": 24776.5,
+      "type": "XD_Fir1",
+      "distance_to_hq": 3943.0
+    },
+    {
+      "x": 37220.0,
+      "y": 22345.35,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3953.0
+    },
+    {
+      "x": 37120.0,
+      "y": 23327.27,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 3986.0
+    },
+    {
+      "x": 37330.0,
+      "y": 21770.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 3998.0
+    },
+    {
+      "x": 44979.03,
+      "y": 24145.55,
+      "type": "XD_Fir2",
+      "distance_to_hq": 4017.0
+    },
+    {
+      "x": 37377.77,
+      "y": 24637.04,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 4027.0
+    },
+    {
+      "x": 44932.47,
+      "y": 24473.36,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4071.0
+    },
+    {
+      "x": 37430.0,
+      "y": 24930.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 4101.0
+    },
+    {
+      "x": 37380.0,
+      "y": 24843.52,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4108.0
+    },
+    {
+      "x": 37236.63,
+      "y": 24680.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4174.0
+    },
+    {
+      "x": 40169.29,
+      "y": 18965.12,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 4238.0
+    },
+    {
+      "x": 37393.22,
+      "y": 25230.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 4275.0
+    },
+    {
+      "x": 39923.26,
+      "y": 18938.18,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4325.0
+    },
+    {
+      "x": 37230.0,
+      "y": 21170.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 4325.0
+    },
+    {
+      "x": 37383.85,
+      "y": 20870.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 4334.0
+    },
+    {
+      "x": 38080.0,
+      "y": 19780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 4488.0
+    },
+    {
+      "x": 37130.0,
+      "y": 20987.05,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 4497.0
+    },
+    {
+      "x": 45465.64,
+      "y": 24432.53,
+      "type": "XD_Fir1",
+      "distance_to_hq": 4564.0
+    },
+    {
+      "x": 37106.06,
+      "y": 20796.28,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 4611.0
+    },
+    {
+      "x": 45720.0,
+      "y": 23332.97,
+      "type": "XD_Fir1",
+      "distance_to_hq": 4626.0
+    },
+    {
+      "x": 37943.12,
+      "y": 19680.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 4654.0
+    },
+    {
+      "x": 36930.0,
+      "y": 21030.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 4656.0
+    },
+    {
+      "x": 36384.65,
+      "y": 23407.66,
+      "type": "XD_DeadTree03",
+      "distance_to_hq": 4725.0
+    },
+    {
+      "x": 45580.0,
+      "y": 24825.44,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4801.0
+    },
+    {
+      "x": 37420.0,
+      "y": 19937.64,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4852.0
+    },
+    {
+      "x": 37664.2,
+      "y": 19620.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 4890.0
+    },
+    {
+      "x": 37467.43,
+      "y": 19820.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4894.0
+    },
+    {
+      "x": 37720.0,
+      "y": 19480.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4953.0
+    },
+    {
+      "x": 45738.95,
+      "y": 24841.67,
+      "type": "XD_Fir1",
+      "distance_to_hq": 4955.0
+    },
+    {
+      "x": 37243.12,
+      "y": 19980.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4961.0
+    },
+    {
+      "x": 36120.0,
+      "y": 23139.19,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 4980.0
+    },
+    {
+      "x": 45934.05,
+      "y": 24369.75,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 4998.0
+    },
+    {
+      "x": 36054.36,
+      "y": 23674.96,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 5078.0
+    },
+    {
+      "x": 37476.13,
+      "y": 19420.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5165.0
+    },
+    {
+      "x": 35921.45,
+      "y": 22956.2,
+      "type": "XD_DeadTree05",
+      "distance_to_hq": 5181.0
+    },
+    {
+      "x": 35957.23,
+      "y": 24068.04,
+      "type": "XD_DeadTree06",
+      "distance_to_hq": 5233.0
+    },
+    {
+      "x": 46280.0,
+      "y": 22046.26,
+      "type": "XD_Fir1",
+      "distance_to_hq": 5286.0
+    },
+    {
+      "x": 35821.18,
+      "y": 23458.35,
+      "type": "XD_DeadTree01",
+      "distance_to_hq": 5291.0
+    },
+    {
+      "x": 35820.0,
+      "y": 23780.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 5324.0
+    },
+    {
+      "x": 40880.0,
+      "y": 17780.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5325.0
+    },
+    {
+      "x": 35870.0,
+      "y": 24236.51,
+      "type": "XD_DeadTree02",
+      "distance_to_hq": 5352.0
+    },
+    {
+      "x": 35730.0,
+      "y": 23030.0,
+      "type": "XD_DeadTree04",
+      "distance_to_hq": 5370.0
+    },
+    {
+      "x": 35720.0,
+      "y": 23241.73,
+      "type": "XD_DeadTree01",
+      "distance_to_hq": 5382.0
+    },
+    {
+      "x": 46142.03,
+      "y": 21163.01,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 5401.0
+    },
+    {
+      "x": 35772.27,
+      "y": 24029.18,
+      "type": "XD_DeadTree01",
+      "distance_to_hq": 5408.0
+    },
+    {
+      "x": 45580.0,
+      "y": 19980.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 5459.0
+    },
+    {
+      "x": 35876.7,
+      "y": 24720.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5469.0
+    },
+    {
+      "x": 35630.0,
+      "y": 23451.92,
+      "type": "XD_DeadTree02",
+      "distance_to_hq": 5481.0
+    },
+    {
+      "x": 35664.49,
+      "y": 22380.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5483.0
+    },
+    {
+      "x": 35668.61,
+      "y": 23870.41,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5486.0
+    },
+    {
+      "x": 35793.25,
+      "y": 24609.01,
+      "type": "XD_DeadTree03",
+      "distance_to_hq": 5517.0
+    },
+    {
+      "x": 35545.81,
+      "y": 22953.13,
+      "type": "XD_DeadTree02",
+      "distance_to_hq": 5556.0
+    },
+    {
+      "x": 35665.36,
+      "y": 24358.12,
+      "type": "XD_DeadTree02",
+      "distance_to_hq": 5578.0
+    },
+    {
+      "x": 35530.0,
+      "y": 22770.0,
+      "type": "XD_DeadTree04",
+      "distance_to_hq": 5580.0
+    },
+    {
+      "x": 35478.64,
+      "y": 22440.7,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 5660.0
+    },
+    {
+      "x": 44180.0,
+      "y": 18341.15,
+      "type": "XD_Fir2",
+      "distance_to_hq": 5669.0
+    },
+    {
+      "x": 35720.0,
+      "y": 24963.55,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5694.0
+    },
+    {
+      "x": 41075.76,
+      "y": 17380.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5720.0
+    },
+    {
+      "x": 44520.0,
+      "y": 18478.34,
+      "type": "XD_Fir2",
+      "distance_to_hq": 5749.0
+    },
+    {
+      "x": 35564.49,
+      "y": 21520.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5757.0
+    },
+    {
+      "x": 35631.41,
+      "y": 24920.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 5763.0
+    },
+    {
+      "x": 35420.0,
+      "y": 22024.39,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5781.0
+    },
+    {
+      "x": 41337.41,
+      "y": 17320.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 5785.0
+    },
+    {
+      "x": 46868.65,
+      "y": 23555.04,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 5787.0
+    },
+    {
+      "x": 35359.38,
+      "y": 22320.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 5793.0
+    },
+    {
+      "x": 35537.34,
+      "y": 24729.51,
+      "type": "XD_DeadTree01",
+      "distance_to_hq": 5796.0
+    },
+    {
+      "x": 42070.0,
+      "y": 17370.0,
+      "type": "XD_DarkTree8",
+      "distance_to_hq": 5812.0
+    },
+    {
+      "x": 42520.0,
+      "y": 17431.4,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 5844.0
+    },
+    {
+      "x": 44370.0,
+      "y": 18230.0,
+      "type": "XD_DarkTree6",
+      "distance_to_hq": 5866.0
+    },
+    {
+      "x": 40880.0,
+      "y": 17234.1,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 5870.0
+    },
+    {
+      "x": 35341.5,
+      "y": 21880.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 5886.0
+    },
+    {
+      "x": 35444.05,
+      "y": 21335.7,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5925.0
+    },
+    {
+      "x": 35353.53,
+      "y": 21620.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 5934.0
+    },
+    {
+      "x": 41370.0,
+      "y": 17170.0,
+      "type": "XD_DarkTree8",
+      "distance_to_hq": 5936.0
+    },
+    {
+      "x": 35178.89,
+      "y": 22644.15,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5939.0
+    },
+    {
+      "x": 44539.52,
+      "y": 18230.11,
+      "type": "XD_Fir2",
+      "distance_to_hq": 5962.0
+    },
+    {
+      "x": 35254.49,
+      "y": 21869.75,
+      "type": "XD_DeadTree02",
+      "distance_to_hq": 5974.0
+    },
+    {
+      "x": 35180.0,
+      "y": 22241.42,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 5982.0
+    },
+    {
+      "x": 41779.46,
+      "y": 17120.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 6018.0
+    },
+    {
+      "x": 35264.9,
+      "y": 21567.37,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6033.0
+    },
+    {
+      "x": 43225.85,
+      "y": 17421.03,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6064.0
+    },
+    {
+      "x": 42949.05,
+      "y": 17320.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6069.0
+    },
+    {
+      "x": 35020.0,
+      "y": 22520.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6108.0
+    },
+    {
+      "x": 41461.93,
+      "y": 16980.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6131.0
+    },
+    {
+      "x": 35264.49,
+      "y": 21159.75,
+      "type": "XD_Fir1",
+      "distance_to_hq": 6150.0
+    },
+    {
+      "x": 35321.12,
+      "y": 20980.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6155.0
+    },
+    {
+      "x": 35220.0,
+      "y": 21275.7,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6156.0
+    },
+    {
+      "x": 35820.0,
+      "y": 19820.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 6216.0
+    },
+    {
+      "x": 46870.0,
+      "y": 20730.0,
+      "type": "XD_DarkTree2",
+      "distance_to_hq": 6238.0
+    },
+    {
+      "x": 35237.72,
+      "y": 20961.4,
+      "type": "XD_Fir2",
+      "distance_to_hq": 6240.0
+    },
+    {
+      "x": 43160.09,
+      "y": 17180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6268.0
+    },
+    {
+      "x": 42180.0,
+      "y": 16920.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6274.0
+    },
+    {
+      "x": 35172.21,
+      "y": 21021.05,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6282.0
+    },
+    {
+      "x": 35127.57,
+      "y": 21145.47,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6284.0
+    },
+    {
+      "x": 42968.44,
+      "y": 17046.79,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6335.0
+    },
+    {
+      "x": 41931.41,
+      "y": 16820.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6335.0
+    },
+    {
+      "x": 36257.34,
+      "y": 18880.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6423.0
+    },
+    {
+      "x": 35071.04,
+      "y": 20880.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6425.0
+    },
+    {
+      "x": 35620.0,
+      "y": 19720.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6439.0
+    },
+    {
+      "x": 42659.05,
+      "y": 16851.54,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6440.0
+    },
+    {
+      "x": 35936.06,
+      "y": 19176.93,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6485.0
+    },
+    {
+      "x": 35628.67,
+      "y": 19545.42,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6525.0
+    },
+    {
+      "x": 43020.0,
+      "y": 16842.33,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6546.0
+    },
+    {
+      "x": 35020.0,
+      "y": 20634.29,
+      "type": "XD_Fir2",
+      "distance_to_hq": 6561.0
+    },
+    {
+      "x": 35620.0,
+      "y": 19320.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6657.0
+    },
+    {
+      "x": 35920.0,
+      "y": 18880.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 6681.0
+    },
+    {
+      "x": 43458.67,
+      "y": 16842.83,
+      "type": "XD_Fir2",
+      "distance_to_hq": 6687.0
+    },
+    {
+      "x": 35720.0,
+      "y": 19020.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 6752.0
+    },
+    {
+      "x": 43622.5,
+      "y": 16725.92,
+      "type": "XD_Fir2",
+      "distance_to_hq": 6855.0
+    },
+    {
+      "x": 47977.34,
+      "y": 23377.08,
+      "type": "XD_Fir2",
+      "distance_to_hq": 6883.0
+    },
+    {
+      "x": 35936.2,
+      "y": 18545.18,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6886.0
+    },
+    {
+      "x": 35657.43,
+      "y": 18879.37,
+      "type": "XD_Fir2",
+      "distance_to_hq": 6887.0
+    },
+    {
+      "x": 44380.0,
+      "y": 16967.93,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 6954.0
+    },
+    {
+      "x": 40580.0,
+      "y": 16073.89,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 7045.0
+    },
+    {
+      "x": 48080.0,
+      "y": 22120.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 7048.0
+    },
+    {
+      "x": 35742.08,
+      "y": 18520.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7049.0
+    },
+    {
+      "x": 43766.41,
+      "y": 16466.81,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7149.0
+    },
+    {
+      "x": 40262.17,
+      "y": 15976.9,
+      "type": "XD_Fir2",
+      "distance_to_hq": 7172.0
+    },
+    {
+      "x": 35580.0,
+      "y": 18459.61,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7211.0
+    },
+    {
+      "x": 40720.0,
+      "y": 15880.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 7230.0
+    },
+    {
+      "x": 44620.0,
+      "y": 16774.72,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7239.0
+    },
+    {
+      "x": 40468.04,
+      "y": 15867.18,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7260.0
+    },
+    {
+      "x": 40020.0,
+      "y": 15920.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 7261.0
+    },
+    {
+      "x": 41120.0,
+      "y": 15820.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7280.0
+    },
+    {
+      "x": 44122.5,
+      "y": 16455.71,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7299.0
+    },
+    {
+      "x": 44439.83,
+      "y": 16520.0,
+      "type": "XD_DarkTree1",
+      "distance_to_hq": 7379.0
+    },
+    {
+      "x": 35463.9,
+      "y": 18280.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 7416.0
+    },
+    {
+      "x": 35920.0,
+      "y": 17753.63,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 7444.0
+    },
+    {
+      "x": 39780.0,
+      "y": 15749.91,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7468.0
+    },
+    {
+      "x": 41256.48,
+      "y": 15557.9,
+      "type": "XD_Fir1",
+      "distance_to_hq": 7544.0
+    },
+    {
+      "x": 35675.97,
+      "y": 17819.05,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 7570.0
+    },
+    {
+      "x": 48649.64,
+      "y": 23859.16,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7588.0
+    },
+    {
+      "x": 48679.16,
+      "y": 22580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 7597.0
+    },
+    {
+      "x": 35255.75,
+      "y": 18166.67,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 7648.0
+    },
+    {
+      "x": 35469.48,
+      "y": 17920.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 7651.0
+    },
+    {
+      "x": 33680.0,
+      "y": 21221.45,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7654.0
+    },
+    {
+      "x": 36020.0,
+      "y": 17356.5,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7668.0
+    },
+    {
+      "x": 35480.0,
+      "y": 17861.27,
+      "type": "XD_Fir2",
+      "distance_to_hq": 7683.0
+    },
+    {
+      "x": 33620.0,
+      "y": 21331.66,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7686.0
+    },
+    {
+      "x": 39652.79,
+      "y": 15532.62,
+      "type": "XD_Fir2",
+      "distance_to_hq": 7705.0
+    },
+    {
+      "x": 35580.0,
+      "y": 17680.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7736.0
+    },
+    {
+      "x": 35280.0,
+      "y": 17974.14,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 7755.0
+    },
+    {
+      "x": 45659.53,
+      "y": 16749.51,
+      "type": "XD_DarkTree8",
+      "distance_to_hq": 7818.0
+    },
+    {
+      "x": 35570.0,
+      "y": 17570.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 7821.0
+    },
+    {
+      "x": 35804.93,
+      "y": 17330.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 7831.0
+    },
+    {
+      "x": 46120.0,
+      "y": 17053.81,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 7859.0
+    },
+    {
+      "x": 33938.68,
+      "y": 19844.29,
+      "type": "XD_Fir1",
+      "distance_to_hq": 7867.0
+    },
+    {
+      "x": 48936.92,
+      "y": 22327.65,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7875.0
+    },
+    {
+      "x": 48980.0,
+      "y": 23080.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7880.0
+    },
+    {
+      "x": 48990.0,
+      "y": 23510.0,
+      "type": "XD_DarkTree3",
+      "distance_to_hq": 7901.0
+    },
+    {
+      "x": 45937.54,
+      "y": 16824.22,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 7924.0
+    },
+    {
+      "x": 35820.0,
+      "y": 17070.3,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8015.0
+    },
+    {
+      "x": 35373.02,
+      "y": 17476.91,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 8026.0
+    },
+    {
+      "x": 35601.91,
+      "y": 17230.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 8043.0
+    },
+    {
+      "x": 44860.89,
+      "y": 15957.37,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8072.0
+    },
+    {
+      "x": 39680.0,
+      "y": 15120.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8105.0
+    },
+    {
+      "x": 45080.0,
+      "y": 15949.77,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8183.0
+    },
+    {
+      "x": 39380.0,
+      "y": 15046.07,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 8236.0
+    },
+    {
+      "x": 44820.0,
+      "y": 15738.34,
+      "type": "XD_Fir2",
+      "distance_to_hq": 8248.0
+    },
+    {
+      "x": 46347.39,
+      "y": 16727.73,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8255.0
+    },
+    {
+      "x": 49378.54,
+      "y": 22320.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 8315.0
+    },
+    {
+      "x": 38820.0,
+      "y": 15037.12,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8379.0
+    },
+    {
+      "x": 49530.0,
+      "y": 22946.39,
+      "type": "XD_DarkTree5",
+      "distance_to_hq": 8431.0
+    },
+    {
+      "x": 49542.54,
+      "y": 23327.09,
+      "type": "XD_Fir1",
+      "distance_to_hq": 8446.0
+    },
+    {
+      "x": 38641.78,
+      "y": 14980.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8484.0
+    },
+    {
+      "x": 33170.0,
+      "y": 20085.55,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 8484.0
+    },
+    {
+      "x": 49430.0,
+      "y": 24763.87,
+      "type": "XD_DarkTree5",
+      "distance_to_hq": 8495.0
+    },
+    {
+      "x": 49423.89,
+      "y": 21379.59,
+      "type": "XD_Fir1",
+      "distance_to_hq": 8500.0
+    },
+    {
+      "x": 49580.0,
+      "y": 24220.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 8554.0
+    },
+    {
+      "x": 33130.0,
+      "y": 19930.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 8577.0
+    },
+    {
+      "x": 49520.0,
+      "y": 24780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8586.0
+    },
+    {
+      "x": 49430.0,
+      "y": 20970.0,
+      "type": "XD_DarkTree5",
+      "distance_to_hq": 8598.0
+    },
+    {
+      "x": 49520.0,
+      "y": 24980.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 8627.0
+    },
+    {
+      "x": 49752.29,
+      "y": 23180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8653.0
+    },
+    {
+      "x": 49740.25,
+      "y": 22540.29,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 8658.0
+    },
+    {
+      "x": 44920.0,
+      "y": 15259.64,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8721.0
+    },
+    {
+      "x": 45220.0,
+      "y": 15365.13,
+      "type": "XD_Fir1",
+      "distance_to_hq": 8764.0
+    },
+    {
+      "x": 49920.0,
+      "y": 23958.69,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8862.0
+    },
+    {
+      "x": 49974.67,
+      "y": 23020.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 8875.0
+    },
+    {
+      "x": 32229.85,
+      "y": 22598.95,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 8884.0
+    },
+    {
+      "x": 49637.62,
+      "y": 20631.74,
+      "type": "XD_Fir1",
+      "distance_to_hq": 8887.0
+    },
+    {
+      "x": 45225.95,
+      "y": 15154.88,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 8953.0
+    },
+    {
+      "x": 50020.0,
+      "y": 23920.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 8958.0
+    },
+    {
+      "x": 32130.0,
+      "y": 22730.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 8978.0
+    },
+    {
+      "x": 40520.0,
+      "y": 14127.4,
+      "type": "XD_Fir1",
+      "distance_to_hq": 8991.0
+    },
+    {
+      "x": 33956.66,
+      "y": 17580.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 9028.0
+    },
+    {
+      "x": 49368.47,
+      "y": 19458.36,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9035.0
+    },
+    {
+      "x": 50120.0,
+      "y": 22344.25,
+      "type": "XD_Fir2",
+      "distance_to_hq": 9052.0
+    },
+    {
+      "x": 50146.78,
+      "y": 23470.0,
+      "type": "XD_DarkTree8",
+      "distance_to_hq": 9054.0
+    },
+    {
+      "x": 32183.94,
+      "y": 21475.6,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 9063.0
+    },
+    {
+      "x": 50161.16,
+      "y": 22553.54,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9078.0
+    },
+    {
+      "x": 32130.0,
+      "y": 21527.89,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 9107.0
+    },
+    {
+      "x": 49664.45,
+      "y": 19980.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9115.0
+    },
+    {
+      "x": 49570.0,
+      "y": 19642.18,
+      "type": "XD_DarkTree5",
+      "distance_to_hq": 9149.0
+    },
+    {
+      "x": 38580.0,
+      "y": 14240.63,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9211.0
+    },
+    {
+      "x": 50336.21,
+      "y": 22920.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9238.0
+    },
+    {
+      "x": 49552.08,
+      "y": 19370.0,
+      "type": "XD_DarkTree5",
+      "distance_to_hq": 9239.0
+    },
+    {
+      "x": 41720.0,
+      "y": 13866.97,
+      "type": "XD_Fir1",
+      "distance_to_hq": 9254.0
+    },
+    {
+      "x": 49126.41,
+      "y": 18480.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9261.0
+    },
+    {
+      "x": 45430.0,
+      "y": 14870.0,
+      "type": "XD_DarkTree2",
+      "distance_to_hq": 9300.0
+    },
+    {
+      "x": 47034.99,
+      "y": 15932.72,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9306.0
+    },
+    {
+      "x": 50470.0,
+      "y": 23370.0,
+      "type": "XD_DarkTree2",
+      "distance_to_hq": 9374.0
+    },
+    {
+      "x": 50457.03,
+      "y": 22480.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9378.0
+    },
+    {
+      "x": 49390.0,
+      "y": 18610.0,
+      "type": "XD_DarkTree3",
+      "distance_to_hq": 9428.0
+    },
+    {
+      "x": 31780.0,
+      "y": 24639.97,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9446.0
+    },
+    {
+      "x": 31654.42,
+      "y": 23441.8,
+      "type": "XD_DeadTree04",
+      "distance_to_hq": 9452.0
+    },
+    {
+      "x": 49821.39,
+      "y": 19427.34,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9463.0
+    },
+    {
+      "x": 45356.29,
+      "y": 14632.79,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9477.0
+    },
+    {
+      "x": 50039.04,
+      "y": 19937.05,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9482.0
+    },
+    {
+      "x": 50180.0,
+      "y": 20360.3,
+      "type": "XD_DarkTree1",
+      "distance_to_hq": 9484.0
+    },
+    {
+      "x": 45680.0,
+      "y": 14780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9497.0
+    },
+    {
+      "x": 33234.81,
+      "y": 17728.17,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9525.0
+    },
+    {
+      "x": 49135.45,
+      "y": 17980.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9528.0
+    },
+    {
+      "x": 31620.0,
+      "y": 24131.79,
+      "type": "XD_DeadTree01",
+      "distance_to_hq": 9536.0
+    },
+    {
+      "x": 48580.0,
+      "y": 17180.0,
+      "type": "XD_DarkTree1",
+      "distance_to_hq": 9539.0
+    },
+    {
+      "x": 47420.0,
+      "y": 15920.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9565.0
+    },
+    {
+      "x": 49630.0,
+      "y": 18745.5,
+      "type": "XD_DarkTree8",
+      "distance_to_hq": 9577.0
+    },
+    {
+      "x": 50420.0,
+      "y": 20880.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9581.0
+    },
+    {
+      "x": 45222.53,
+      "y": 14428.44,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9602.0
+    },
+    {
+      "x": 49580.0,
+      "y": 18548.18,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9624.0
+    },
+    {
+      "x": 31573.5,
+      "y": 24475.15,
+      "type": "XD_Fir2",
+      "distance_to_hq": 9625.0
+    },
+    {
+      "x": 46980.0,
+      "y": 15469.36,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9633.0
+    },
+    {
+      "x": 31621.48,
+      "y": 24871.45,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9643.0
+    },
+    {
+      "x": 49153.72,
+      "y": 17780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9652.0
+    },
+    {
+      "x": 31470.0,
+      "y": 23830.0,
+      "type": "XD_DeadTree04",
+      "distance_to_hq": 9658.0
+    },
+    {
+      "x": 37138.12,
+      "y": 14265.16,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9683.0
+    },
+    {
+      "x": 31470.0,
+      "y": 24370.0,
+      "type": "XD_DeadTree04",
+      "distance_to_hq": 9713.0
+    },
+    {
+      "x": 48521.11,
+      "y": 16822.55,
+      "type": "XD_DarkTree1",
+      "distance_to_hq": 9720.0
+    },
+    {
+      "x": 31438.69,
+      "y": 24231.79,
+      "type": "XD_DeadTree01",
+      "distance_to_hq": 9727.0
+    },
+    {
+      "x": 49440.59,
+      "y": 18080.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 9735.0
+    },
+    {
+      "x": 50280.0,
+      "y": 19830.7,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9745.0
+    },
+    {
+      "x": 48935.77,
+      "y": 17280.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9761.0
+    },
+    {
+      "x": 48220.0,
+      "y": 16380.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 9790.0
+    },
+    {
+      "x": 40280.0,
+      "y": 13325.09,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9809.0
+    },
+    {
+      "x": 31369.83,
+      "y": 24755.8,
+      "type": "XD_DeadTree01",
+      "distance_to_hq": 9870.0
+    },
+    {
+      "x": 41977.95,
+      "y": 13266.88,
+      "type": "XD_Fir1",
+      "distance_to_hq": 9872.0
+    },
+    {
+      "x": 40665.5,
+      "y": 13220.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 9890.0
+    },
+    {
+      "x": 31368.69,
+      "y": 24932.01,
+      "type": "XD_DeadTree02",
+      "distance_to_hq": 9902.0
+    },
+    {
+      "x": 43450.71,
+      "y": 13480.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 9903.0
+    },
+    {
+      "x": 46526.55,
+      "y": 14720.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 9984.0
+    },
+    {
+      "x": 49151.42,
+      "y": 17180.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 9994.0
+    },
+    {
+      "x": 49857.16,
+      "y": 18234.3,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 10018.0
+    },
+    {
+      "x": 31230.0,
+      "y": 20916.83,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 10109.0
+    },
+    {
+      "x": 49420.0,
+      "y": 17342.99,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 10118.0
+    },
+    {
+      "x": 38620.0,
+      "y": 13272.3,
+      "type": "XD_Fir2",
+      "distance_to_hq": 10136.0
+    },
+    {
+      "x": 43420.0,
+      "y": 13220.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 10149.0
+    },
+    {
+      "x": 47926.3,
+      "y": 15580.0,
+      "type": "XD_DarkTree1",
+      "distance_to_hq": 10156.0
+    },
+    {
+      "x": 48020.0,
+      "y": 15649.95,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 10168.0
+    },
+    {
+      "x": 49230.0,
+      "y": 16930.0,
+      "type": "XD_DarkTree8",
+      "distance_to_hq": 10206.0
+    },
+    {
+      "x": 31093.72,
+      "y": 20930.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 10239.0
+    },
+    {
+      "x": 46870.0,
+      "y": 14633.53,
+      "type": "XD_DarkTree7",
+      "distance_to_hq": 10246.0
+    },
+    {
+      "x": 48680.0,
+      "y": 16080.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 10331.0
+    },
+    {
+      "x": 47720.0,
+      "y": 15066.57,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 10410.0
+    },
+    {
+      "x": 30901.43,
+      "y": 20981.97,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 10416.0
+    },
+    {
+      "x": 48322.51,
+      "y": 15553.61,
+      "type": "XD_Fir1",
+      "distance_to_hq": 10446.0
+    },
+    {
+      "x": 30870.0,
+      "y": 20929.01,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 10458.0
+    },
+    {
+      "x": 40278.02,
+      "y": 12643.04,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 10489.0
+    },
+    {
+      "x": 41380.0,
+      "y": 12539.94,
+      "type": "XD_Fir2",
+      "distance_to_hq": 10564.0
+    },
+    {
+      "x": 47930.0,
+      "y": 14970.0,
+      "type": "XD_DarkTree7",
+      "distance_to_hq": 10618.0
+    },
+    {
+      "x": 46530.0,
+      "y": 13970.0,
+      "type": "XD_DarkTree8",
+      "distance_to_hq": 10623.0
+    },
+    {
+      "x": 42180.0,
+      "y": 12478.5,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 10676.0
+    },
+    {
+      "x": 32580.0,
+      "y": 16620.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 10704.0
+    },
+    {
+      "x": 47441.34,
+      "y": 14470.62,
+      "type": "XD_Fir1",
+      "distance_to_hq": 10709.0
+    },
+    {
+      "x": 47820.0,
+      "y": 14720.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 10742.0
+    },
+    {
+      "x": 47641.8,
+      "y": 14551.27,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 10765.0
+    },
+    {
+      "x": 30570.0,
+      "y": 20730.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 10793.0
+    },
+    {
+      "x": 47980.0,
+      "y": 14720.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 10842.0
+    },
+    {
+      "x": 30499.64,
+      "y": 20730.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 10862.0
+    },
+    {
+      "x": 46480.0,
+      "y": 13645.42,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 10878.0
+    },
+    {
+      "x": 47090.0,
+      "y": 13997.87,
+      "type": "XD_DarkTree3",
+      "distance_to_hq": 10896.0
+    },
+    {
+      "x": 41830.05,
+      "y": 12220.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 10904.0
+    },
+    {
+      "x": 48034.89,
+      "y": 14680.0,
+      "type": "XD_DarkTree1",
+      "distance_to_hq": 10908.0
+    },
+    {
+      "x": 46730.0,
+      "y": 13630.0,
+      "type": "XD_DarkTree2",
+      "distance_to_hq": 11017.0
+    },
+    {
+      "x": 48257.81,
+      "y": 14666.71,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11061.0
+    },
+    {
+      "x": 39920.0,
+      "y": 12080.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11083.0
+    },
+    {
+      "x": 47080.0,
+      "y": 13720.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11124.0
+    },
+    {
+      "x": 30230.0,
+      "y": 20684.54,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 11135.0
+    },
+    {
+      "x": 47190.0,
+      "y": 13690.0,
+      "type": "XD_DarkTree4",
+      "distance_to_hq": 11209.0
+    },
+    {
+      "x": 30206.53,
+      "y": 20430.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 11216.0
+    },
+    {
+      "x": 30128.23,
+      "y": 20518.69,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 11271.0
+    },
+    {
+      "x": 31548.7,
+      "y": 16870.91,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11403.0
+    },
+    {
+      "x": 30016.46,
+      "y": 20383.63,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 11412.0
+    },
+    {
+      "x": 32641.38,
+      "y": 15354.66,
+      "type": "XD_Fir1",
+      "distance_to_hq": 11469.0
+    },
+    {
+      "x": 37748.27,
+      "y": 12120.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11480.0
+    },
+    {
+      "x": 47863.27,
+      "y": 13820.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11483.0
+    },
+    {
+      "x": 31457.88,
+      "y": 16820.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11507.0
+    },
+    {
+      "x": 47726.08,
+      "y": 13659.35,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11534.0
+    },
+    {
+      "x": 31466.11,
+      "y": 16720.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11555.0
+    },
+    {
+      "x": 39827.3,
+      "y": 11580.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11590.0
+    },
+    {
+      "x": 31264.71,
+      "y": 16941.93,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11604.0
+    },
+    {
+      "x": 36575.64,
+      "y": 12363.17,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11651.0
+    },
+    {
+      "x": 36720.0,
+      "y": 12234.61,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11715.0
+    },
+    {
+      "x": 36920.0,
+      "y": 12135.22,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11735.0
+    },
+    {
+      "x": 36620.0,
+      "y": 12252.73,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11736.0
+    },
+    {
+      "x": 36652.89,
+      "y": 12180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11791.0
+    },
+    {
+      "x": 37044.49,
+      "y": 12025.56,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11794.0
+    },
+    {
+      "x": 36780.0,
+      "y": 12120.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11799.0
+    },
+    {
+      "x": 36720.0,
+      "y": 12120.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11821.0
+    },
+    {
+      "x": 36380.0,
+      "y": 12259.75,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11823.0
+    },
+    {
+      "x": 36536.91,
+      "y": 12147.47,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11865.0
+    },
+    {
+      "x": 29670.0,
+      "y": 19897.73,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 11870.0
+    },
+    {
+      "x": 31180.0,
+      "y": 16556.34,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11884.0
+    },
+    {
+      "x": 36745.13,
+      "y": 12035.9,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11890.0
+    },
+    {
+      "x": 36480.0,
+      "y": 12136.07,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11898.0
+    },
+    {
+      "x": 29570.0,
+      "y": 20027.23,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 11932.0
+    },
+    {
+      "x": 36620.0,
+      "y": 12033.03,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 11939.0
+    },
+    {
+      "x": 36680.0,
+      "y": 11974.73,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 11971.0
+    },
+    {
+      "x": 44980.0,
+      "y": 11720.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12023.0
+    },
+    {
+      "x": 40920.0,
+      "y": 11056.57,
+      "type": "XD_Fir2",
+      "distance_to_hq": 12045.0
+    },
+    {
+      "x": 45420.0,
+      "y": 11835.84,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12064.0
+    },
+    {
+      "x": 43554.8,
+      "y": 11273.76,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12078.0
+    },
+    {
+      "x": 38347.0,
+      "y": 11336.23,
+      "type": "XD_Fir1",
+      "distance_to_hq": 12082.0
+    },
+    {
+      "x": 43680.0,
+      "y": 11280.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 12098.0
+    },
+    {
+      "x": 44957.11,
+      "y": 11580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12149.0
+    },
+    {
+      "x": 37958.83,
+      "y": 11275.58,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12235.0
+    },
+    {
+      "x": 29678.41,
+      "y": 18708.38,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 12237.0
+    },
+    {
+      "x": 30680.0,
+      "y": 16680.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12239.0
+    },
+    {
+      "x": 42341.64,
+      "y": 10920.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12243.0
+    },
+    {
+      "x": 29630.0,
+      "y": 18770.08,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 12260.0
+    },
+    {
+      "x": 36870.71,
+      "y": 11580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12272.0
+    },
+    {
+      "x": 29703.99,
+      "y": 18330.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 12354.0
+    },
+    {
+      "x": 38258.79,
+      "y": 11074.77,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12356.0
+    },
+    {
+      "x": 38676.56,
+      "y": 10980.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12360.0
+    },
+    {
+      "x": 45380.0,
+      "y": 11432.2,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12428.0
+    },
+    {
+      "x": 37354.04,
+      "y": 11246.53,
+      "type": "XD_Fir2",
+      "distance_to_hq": 12431.0
+    },
+    {
+      "x": 37220.29,
+      "y": 11280.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12440.0
+    },
+    {
+      "x": 45565.25,
+      "y": 11457.76,
+      "type": "XD_Fir1",
+      "distance_to_hq": 12469.0
+    },
+    {
+      "x": 37380.0,
+      "y": 11157.87,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12508.0
+    },
+    {
+      "x": 28561.69,
+      "y": 23030.0,
+      "type": "XD_DeadTree04",
+      "distance_to_hq": 12539.0
+    },
+    {
+      "x": 28580.0,
+      "y": 22020.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 12566.0
+    },
+    {
+      "x": 37575.12,
+      "y": 11025.18,
+      "type": "XD_Fir2",
+      "distance_to_hq": 12579.0
+    },
+    {
+      "x": 28820.0,
+      "y": 20367.83,
+      "type": "XD_Fir1",
+      "distance_to_hq": 12580.0
+    },
+    {
+      "x": 37420.0,
+      "y": 11070.13,
+      "type": "XD_Fir1",
+      "distance_to_hq": 12580.0
+    },
+    {
+      "x": 36436.04,
+      "y": 11380.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12614.0
+    },
+    {
+      "x": 45870.18,
+      "y": 11420.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12617.0
+    },
+    {
+      "x": 37380.0,
+      "y": 11020.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12640.0
+    },
+    {
+      "x": 35862.3,
+      "y": 11580.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12655.0
+    },
+    {
+      "x": 44737.54,
+      "y": 10965.79,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12668.0
+    },
+    {
+      "x": 38320.0,
+      "y": 10680.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12727.0
+    },
+    {
+      "x": 45561.09,
+      "y": 11180.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 12727.0
+    },
+    {
+      "x": 36020.0,
+      "y": 11420.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12737.0
+    },
+    {
+      "x": 28542.77,
+      "y": 20941.65,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12741.0
+    },
+    {
+      "x": 46020.0,
+      "y": 11342.02,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12746.0
+    },
+    {
+      "x": 36349.22,
+      "y": 11260.16,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12757.0
+    },
+    {
+      "x": 38538.48,
+      "y": 10580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12779.0
+    },
+    {
+      "x": 45120.0,
+      "y": 10969.22,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12780.0
+    },
+    {
+      "x": 45332.28,
+      "y": 11036.67,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12784.0
+    },
+    {
+      "x": 41839.25,
+      "y": 10320.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12801.0
+    },
+    {
+      "x": 37529.82,
+      "y": 10766.66,
+      "type": "XD_Fir1",
+      "distance_to_hq": 12840.0
+    },
+    {
+      "x": 45778.22,
+      "y": 11126.02,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12855.0
+    },
+    {
+      "x": 44980.0,
+      "y": 10826.18,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12872.0
+    },
+    {
+      "x": 37569.89,
+      "y": 10720.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12873.0
+    },
+    {
+      "x": 36130.25,
+      "y": 11220.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12878.0
+    },
+    {
+      "x": 35980.0,
+      "y": 11280.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12881.0
+    },
+    {
+      "x": 35749.8,
+      "y": 11380.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 12883.0
+    },
+    {
+      "x": 36044.96,
+      "y": 11220.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12911.0
+    },
+    {
+      "x": 37920.0,
+      "y": 10568.93,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12928.0
+    },
+    {
+      "x": 45970.48,
+      "y": 11120.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12932.0
+    },
+    {
+      "x": 45635.16,
+      "y": 10980.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12941.0
+    },
+    {
+      "x": 35742.32,
+      "y": 11320.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 12941.0
+    },
+    {
+      "x": 38743.66,
+      "y": 10371.95,
+      "type": "XD_Fir1",
+      "distance_to_hq": 12944.0
+    },
+    {
+      "x": 35920.0,
+      "y": 11236.72,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12945.0
+    },
+    {
+      "x": 37531.64,
+      "y": 10633.88,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 12967.0
+    },
+    {
+      "x": 46234.14,
+      "y": 11170.05,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 12988.0
+    },
+    {
+      "x": 35463.67,
+      "y": 11380.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13005.0
+    },
+    {
+      "x": 31753.87,
+      "y": 13976.02,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13061.0
+    },
+    {
+      "x": 37443.69,
+      "y": 10520.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13101.0
+    },
+    {
+      "x": 45934.34,
+      "y": 10920.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13104.0
+    },
+    {
+      "x": 36840.26,
+      "y": 10680.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13130.0
+    },
+    {
+      "x": 46153.01,
+      "y": 10975.46,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13135.0
+    },
+    {
+      "x": 45520.0,
+      "y": 10674.9,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13188.0
+    },
+    {
+      "x": 38962.73,
+      "y": 10058.89,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13215.0
+    },
+    {
+      "x": 39940.5,
+      "y": 9922.418,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13228.0
+    },
+    {
+      "x": 45820.0,
+      "y": 10728.22,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13242.0
+    },
+    {
+      "x": 44430.62,
+      "y": 10280.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 13246.0
+    },
+    {
+      "x": 37056.52,
+      "y": 10437.88,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13292.0
+    },
+    {
+      "x": 38362.79,
+      "y": 10078.48,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13306.0
+    },
+    {
+      "x": 45220.0,
+      "y": 10420.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13333.0
+    },
+    {
+      "x": 31080.0,
+      "y": 14249.71,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13369.0
+    },
+    {
+      "x": 34380.0,
+      "y": 11522.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13387.0
+    },
+    {
+      "x": 36920.0,
+      "y": 10380.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13389.0
+    },
+    {
+      "x": 39125.38,
+      "y": 9824.122,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13422.0
+    },
+    {
+      "x": 30480.0,
+      "y": 14880.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13430.0
+    },
+    {
+      "x": 44680.0,
+      "y": 10147.37,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13438.0
+    },
+    {
+      "x": 36928.26,
+      "y": 10320.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13444.0
+    },
+    {
+      "x": 45058.8,
+      "y": 10230.63,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13465.0
+    },
+    {
+      "x": 28920.0,
+      "y": 17354.82,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13467.0
+    },
+    {
+      "x": 38720.0,
+      "y": 9820.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13492.0
+    },
+    {
+      "x": 38624.96,
+      "y": 9780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13548.0
+    },
+    {
+      "x": 39130.09,
+      "y": 9655.199,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13588.0
+    },
+    {
+      "x": 40520.0,
+      "y": 9521.541,
+      "type": "XD_Fir2",
+      "distance_to_hq": 13591.0
+    },
+    {
+      "x": 28420.0,
+      "y": 18080.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 13638.0
+    },
+    {
+      "x": 31677.21,
+      "y": 13220.11,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13653.0
+    },
+    {
+      "x": 34120.0,
+      "y": 11320.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 13693.0
+    },
+    {
+      "x": 44656.95,
+      "y": 9820.451,
+      "type": "XD_Fir1",
+      "distance_to_hq": 13748.0
+    },
+    {
+      "x": 33745.2,
+      "y": 11380.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 13837.0
+    },
+    {
+      "x": 39240.51,
+      "y": 9380.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13845.0
+    },
+    {
+      "x": 34038.04,
+      "y": 11180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13855.0
+    },
+    {
+      "x": 39473.2,
+      "y": 9320.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13876.0
+    },
+    {
+      "x": 39130.86,
+      "y": 9326.831,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13913.0
+    },
+    {
+      "x": 44420.0,
+      "y": 9580.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13922.0
+    },
+    {
+      "x": 33559.0,
+      "y": 11380.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 13936.0
+    },
+    {
+      "x": 34443.24,
+      "y": 10821.71,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 13967.0
+    },
+    {
+      "x": 38324.68,
+      "y": 9365.762,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14012.0
+    },
+    {
+      "x": 30851.69,
+      "y": 13420.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14097.0
+    },
+    {
+      "x": 38320.0,
+      "y": 9280.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14097.0
+    },
+    {
+      "x": 30755.08,
+      "y": 13520.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14099.0
+    },
+    {
+      "x": 33280.0,
+      "y": 11360.39,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14106.0
+    },
+    {
+      "x": 39580.0,
+      "y": 9067.094,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14115.0
+    },
+    {
+      "x": 38346.25,
+      "y": 9232.897,
+      "type": "XD_Fir2",
+      "distance_to_hq": 14138.0
+    },
+    {
+      "x": 38575.65,
+      "y": 9180.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14147.0
+    },
+    {
+      "x": 38158.7,
+      "y": 9220.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14188.0
+    },
+    {
+      "x": 38322.79,
+      "y": 9180.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14194.0
+    },
+    {
+      "x": 33425.39,
+      "y": 11153.59,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14199.0
+    },
+    {
+      "x": 27327.95,
+      "y": 19455.59,
+      "type": "XD_Fir1",
+      "distance_to_hq": 14246.0
+    },
+    {
+      "x": 33439.21,
+      "y": 11080.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14254.0
+    },
+    {
+      "x": 40577.37,
+      "y": 8842.311,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14267.0
+    },
+    {
+      "x": 26934.3,
+      "y": 20924.45,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14332.0
+    },
+    {
+      "x": 34052.48,
+      "y": 10620.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14332.0
+    },
+    {
+      "x": 39851.35,
+      "y": 8780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14374.0
+    },
+    {
+      "x": 33020.0,
+      "y": 11175.63,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14404.0
+    },
+    {
+      "x": 34633.37,
+      "y": 10220.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14412.0
+    },
+    {
+      "x": 34141.77,
+      "y": 10450.95,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14437.0
+    },
+    {
+      "x": 26660.4,
+      "y": 22676.43,
+      "type": "XD_Fir1",
+      "distance_to_hq": 14446.0
+    },
+    {
+      "x": 34220.0,
+      "y": 10371.76,
+      "type": "XD_Fir2",
+      "distance_to_hq": 14469.0
+    },
+    {
+      "x": 37672.29,
+      "y": 9020.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14491.0
+    },
+    {
+      "x": 26780.0,
+      "y": 20520.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14551.0
+    },
+    {
+      "x": 27420.0,
+      "y": 18120.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14558.0
+    },
+    {
+      "x": 26833.19,
+      "y": 20180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14563.0
+    },
+    {
+      "x": 40964.14,
+      "y": 8520.947,
+      "type": "XD_Fir2",
+      "distance_to_hq": 14580.0
+    },
+    {
+      "x": 26562.14,
+      "y": 21739.49,
+      "type": "XD_Fir1",
+      "distance_to_hq": 14601.0
+    },
+    {
+      "x": 39763.65,
+      "y": 8558.521,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14603.0
+    },
+    {
+      "x": 28145.16,
+      "y": 16320.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14622.0
+    },
+    {
+      "x": 30568.98,
+      "y": 12939.69,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14633.0
+    },
+    {
+      "x": 26858.15,
+      "y": 19725.29,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14636.0
+    },
+    {
+      "x": 26627.88,
+      "y": 20836.41,
+      "type": "XD_DeadTree06",
+      "distance_to_hq": 14648.0
+    },
+    {
+      "x": 27380.0,
+      "y": 17948.45,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14655.0
+    },
+    {
+      "x": 26820.0,
+      "y": 19780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14661.0
+    },
+    {
+      "x": 32264.26,
+      "y": 11380.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14677.0
+    },
+    {
+      "x": 39746.41,
+      "y": 8477.012,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14686.0
+    },
+    {
+      "x": 39661.6,
+      "y": 8480.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14691.0
+    },
+    {
+      "x": 27062.23,
+      "y": 18755.4,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14695.0
+    },
+    {
+      "x": 32820.0,
+      "y": 10956.98,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14697.0
+    },
+    {
+      "x": 26958.63,
+      "y": 19080.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14702.0
+    },
+    {
+      "x": 27064.42,
+      "y": 18673.79,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14717.0
+    },
+    {
+      "x": 28455.96,
+      "y": 15544.77,
+      "type": "XD_Fir2",
+      "distance_to_hq": 14729.0
+    },
+    {
+      "x": 26953.89,
+      "y": 18980.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14734.0
+    },
+    {
+      "x": 27245.88,
+      "y": 18080.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14736.0
+    },
+    {
+      "x": 40166.87,
+      "y": 8359.132,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14770.0
+    },
+    {
+      "x": 27074.35,
+      "y": 18420.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 14786.0
+    },
+    {
+      "x": 33480.0,
+      "y": 10420.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14793.0
+    },
+    {
+      "x": 26980.0,
+      "y": 18629.64,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14811.0
+    },
+    {
+      "x": 40057.77,
+      "y": 8320.052,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14817.0
+    },
+    {
+      "x": 40620.0,
+      "y": 8280.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14828.0
+    },
+    {
+      "x": 32920.0,
+      "y": 10724.15,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14835.0
+    },
+    {
+      "x": 32454.38,
+      "y": 11031.55,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14846.0
+    },
+    {
+      "x": 42927.7,
+      "y": 8358.409,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14854.0
+    },
+    {
+      "x": 41452.23,
+      "y": 8223.708,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14880.0
+    },
+    {
+      "x": 35580.0,
+      "y": 9277.591,
+      "type": "XD_Fir1",
+      "distance_to_hq": 14884.0
+    },
+    {
+      "x": 30320.0,
+      "y": 12833.65,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14886.0
+    },
+    {
+      "x": 26220.0,
+      "y": 22629.46,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14887.0
+    },
+    {
+      "x": 27026.13,
+      "y": 18222.89,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14895.0
+    },
+    {
+      "x": 33321.78,
+      "y": 10320.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 14961.0
+    },
+    {
+      "x": 30528.92,
+      "y": 12464.64,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 14995.0
+    },
+    {
+      "x": 27930.7,
+      "y": 15920.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 14999.0
+    },
+    {
+      "x": 26099.95,
+      "y": 22437.14,
+      "type": "XD_DeadTree05",
+      "distance_to_hq": 15015.0
+    },
+    {
+      "x": 43520.0,
+      "y": 8230.839,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15065.0
+    },
+    {
+      "x": 40236.6,
+      "y": 8057.512,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15067.0
+    },
+    {
+      "x": 26824.67,
+      "y": 18121.73,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15118.0
+    },
+    {
+      "x": 37058.2,
+      "y": 8527.245,
+      "type": "XD_Fir1",
+      "distance_to_hq": 15123.0
+    },
+    {
+      "x": 26380.0,
+      "y": 19546.66,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15143.0
+    },
+    {
+      "x": 41243.65,
+      "y": 7932.086,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15169.0
+    },
+    {
+      "x": 40736.78,
+      "y": 7920.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15184.0
+    },
+    {
+      "x": 30263.39,
+      "y": 12432.04,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15206.0
+    },
+    {
+      "x": 26262.64,
+      "y": 19676.66,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15227.0
+    },
+    {
+      "x": 36780.0,
+      "y": 8480.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15245.0
+    },
+    {
+      "x": 26467.58,
+      "y": 18772.75,
+      "type": "XD_Fir1",
+      "distance_to_hq": 15259.0
+    },
+    {
+      "x": 41420.0,
+      "y": 7827.132,
+      "type": "XD_Fir2",
+      "distance_to_hq": 15276.0
+    },
+    {
+      "x": 43244.27,
+      "y": 7972.415,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15279.0
+    },
+    {
+      "x": 26157.85,
+      "y": 19765.23,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15310.0
+    },
+    {
+      "x": 36659.28,
+      "y": 8420.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 15337.0
+    },
+    {
+      "x": 25920.0,
+      "y": 20854.43,
+      "type": "XD_Fir2",
+      "distance_to_hq": 15345.0
+    },
+    {
+      "x": 28556.21,
+      "y": 14180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15392.0
+    },
+    {
+      "x": 42553.91,
+      "y": 7769.78,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15399.0
+    },
+    {
+      "x": 25880.0,
+      "y": 20731.79,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15403.0
+    },
+    {
+      "x": 42342.03,
+      "y": 7720.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15430.0
+    },
+    {
+      "x": 33765.15,
+      "y": 9520.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15434.0
+    },
+    {
+      "x": 38880.0,
+      "y": 7820.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 15440.0
+    },
+    {
+      "x": 30820.0,
+      "y": 11543.05,
+      "type": "XD_Fir2",
+      "distance_to_hq": 15467.0
+    },
+    {
+      "x": 40751.68,
+      "y": 7626.255,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15478.0
+    },
+    {
+      "x": 42925.0,
+      "y": 7720.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15488.0
+    },
+    {
+      "x": 40870.85,
+      "y": 7576.611,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15525.0
+    },
+    {
+      "x": 26045.89,
+      "y": 19120.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15571.0
+    },
+    {
+      "x": 40323.63,
+      "y": 7541.127,
+      "type": "XD_Fir2",
+      "distance_to_hq": 15578.0
+    },
+    {
+      "x": 39156.94,
+      "y": 7633.446,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15588.0
+    },
+    {
+      "x": 30641.31,
+      "y": 11520.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 15604.0
+    },
+    {
+      "x": 30820.0,
+      "y": 11353.23,
+      "type": "XD_Fir2",
+      "distance_to_hq": 15610.0
+    },
+    {
+      "x": 36375.11,
+      "y": 8220.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15612.0
+    },
+    {
+      "x": 36656.22,
+      "y": 8120.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15625.0
+    },
+    {
+      "x": 39280.0,
+      "y": 7580.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15626.0
+    },
+    {
+      "x": 39080.0,
+      "y": 7578.311,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15653.0
+    },
+    {
+      "x": 40637.1,
+      "y": 7431.825,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15675.0
+    },
+    {
+      "x": 26120.0,
+      "y": 18477.93,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15677.0
+    },
+    {
+      "x": 41521.08,
+      "y": 7420.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15686.0
+    },
+    {
+      "x": 42020.0,
+      "y": 7427.046,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15700.0
+    },
+    {
+      "x": 32676.15,
+      "y": 9846.177,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15704.0
+    },
+    {
+      "x": 38480.0,
+      "y": 7580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15740.0
+    },
+    {
+      "x": 41957.56,
+      "y": 7380.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 15743.0
+    },
+    {
+      "x": 39020.0,
+      "y": 7473.971,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15764.0
+    },
+    {
+      "x": 30380.0,
+      "y": 11527.68,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15775.0
+    },
+    {
+      "x": 38540.83,
+      "y": 7530.652,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15778.0
+    },
+    {
+      "x": 38580.0,
+      "y": 7480.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15822.0
+    },
+    {
+      "x": 38720.0,
+      "y": 7457.752,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15822.0
+    },
+    {
+      "x": 41268.17,
+      "y": 7272.356,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15829.0
+    },
+    {
+      "x": 28226.68,
+      "y": 13880.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15834.0
+    },
+    {
+      "x": 27045.91,
+      "y": 15773.64,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15849.0
+    },
+    {
+      "x": 25420.0,
+      "y": 20731.79,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15858.0
+    },
+    {
+      "x": 25380.0,
+      "y": 20854.43,
+      "type": "XD_Fir2",
+      "distance_to_hq": 15880.0
+    },
+    {
+      "x": 38729.88,
+      "y": 7380.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15898.0
+    },
+    {
+      "x": 38642.44,
+      "y": 7380.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 15911.0
+    },
+    {
+      "x": 29920.0,
+      "y": 11760.39,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15924.0
+    },
+    {
+      "x": 42080.0,
+      "y": 7180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15950.0
+    },
+    {
+      "x": 39044.86,
+      "y": 7280.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 15953.0
+    },
+    {
+      "x": 40929.16,
+      "y": 7130.429,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 15970.0
+    },
+    {
+      "x": 26780.0,
+      "y": 15958.75,
+      "type": "XD_Fir1",
+      "distance_to_hq": 16002.0
+    },
+    {
+      "x": 38381.34,
+      "y": 7311.35,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 16021.0
+    },
+    {
+      "x": 38213.37,
+      "y": 7330.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 16032.0
+    },
+    {
+      "x": 41522.71,
+      "y": 7070.514,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 16035.0
+    },
+    {
+      "x": 38633.36,
+      "y": 7238.5,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 16052.0
+    },
+    {
+      "x": 27520.0,
+      "y": 14480.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 16085.0
+    },
+    {
+      "x": 26633.36,
+      "y": 15974.08,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 16126.0
+    },
+    {
+      "x": 31879.54,
+      "y": 9857.667,
+      "type": "XD_Fir1",
+      "distance_to_hq": 16136.0
+    },
+    {
+      "x": 26748.28,
+      "y": 15673.32,
+      "type": "XD_Fir1",
+      "distance_to_hq": 16159.0
+    },
+    {
+      "x": 39171.62,
+      "y": 7048.059,
+      "type": "XD_Fir2",
+      "distance_to_hq": 16167.0
+    },
+    {
+      "x": 27380.0,
+      "y": 14520.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 16182.0
+    },
+    {
+      "x": 41880.0,
+      "y": 6880.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 16239.0
+    },
+    {
+      "x": 41549.33,
+      "y": 6866.958,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 16239.0
+    },
+    {
+      "x": 28045.83,
+      "y": 13421.25,
+      "type": "XD_Fir1",
+      "distance_to_hq": 16251.0
+    },
+    {
+      "x": 26466.87,
+      "y": 15852.05,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 16330.0
+    },
+    {
+      "x": 25254.11,
+      "y": 19120.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 16338.0
+    },
+    {
+      "x": 40322.22,
+      "y": 6680.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 16438.0
+    },
+    {
+      "x": 40280.0,
+      "y": 6544.165,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 16576.0
+    },
+    {
+      "x": 38180.0,
+      "y": 6720.3,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 16638.0
+    },
+    {
+      "x": 38978.58,
+      "y": 6507.539,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 16728.0
+    },
+    {
+      "x": 32780.0,
+      "y": 8563.483,
+      "type": "XD_Fir1",
+      "distance_to_hq": 16749.0
+    },
+    {
+      "x": 40580.0,
+      "y": 6353.723,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 16754.0
+    },
+    {
+      "x": 37868.42,
+      "y": 6637.64,
+      "type": "XD_Fir1",
+      "distance_to_hq": 16777.0
+    },
+    {
+      "x": 40331.49,
+      "y": 6327.371,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 16790.0
+    },
+    {
+      "x": 30472.47,
+      "y": 10029.92,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 16846.0
+    },
+    {
+      "x": 37975.08,
+      "y": 6545.109,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 16847.0
+    },
+    {
+      "x": 39844.14,
+      "y": 6234.191,
+      "type": "XD_Fir2",
+      "distance_to_hq": 16913.0
+    },
+    {
+      "x": 38240.05,
+      "y": 6420.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 16923.0
+    },
+    {
+      "x": 39720.0,
+      "y": 6227.244,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 16929.0
+    },
+    {
+      "x": 32359.64,
+      "y": 8545.293,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 16977.0
+    },
+    {
+      "x": 38930.0,
+      "y": 6230.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 17009.0
+    },
+    {
+      "x": 31820.0,
+      "y": 8650.203,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17173.0
+    },
+    {
+      "x": 38472.84,
+      "y": 6120.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 17182.0
+    },
+    {
+      "x": 38420.0,
+      "y": 6120.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17190.0
+    },
+    {
+      "x": 38522.95,
+      "y": 6057.675,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17236.0
+    },
+    {
+      "x": 26720.0,
+      "y": 13558.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17258.0
+    },
+    {
+      "x": 38680.0,
+      "y": 5960.94,
+      "type": "XD_Fir2",
+      "distance_to_hq": 17309.0
+    },
+    {
+      "x": 26580.0,
+      "y": 13657.16,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17320.0
+    },
+    {
+      "x": 41053.46,
+      "y": 5778.594,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17321.0
+    },
+    {
+      "x": 38627.13,
+      "y": 5930.804,
+      "type": "XD_Fir1",
+      "distance_to_hq": 17346.0
+    },
+    {
+      "x": 37980.0,
+      "y": 6030.295,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17352.0
+    },
+    {
+      "x": 28380.0,
+      "y": 11120.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17473.0
+    },
+    {
+      "x": 39399.23,
+      "y": 5704.686,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 17478.0
+    },
+    {
+      "x": 38128.68,
+      "y": 5870.151,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17484.0
+    },
+    {
+      "x": 38620.0,
+      "y": 5747.582,
+      "type": "XD_Fir1",
+      "distance_to_hq": 17529.0
+    },
+    {
+      "x": 38148.97,
+      "y": 5820.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 17530.0
+    },
+    {
+      "x": 38044.66,
+      "y": 5836.214,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17532.0
+    },
+    {
+      "x": 39464.59,
+      "y": 5620.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17556.0
+    },
+    {
+      "x": 39412.17,
+      "y": 5586.465,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 17595.0
+    },
+    {
+      "x": 28727.78,
+      "y": 10580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17602.0
+    },
+    {
+      "x": 37927.01,
+      "y": 5773.413,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17615.0
+    },
+    {
+      "x": 39469.96,
+      "y": 5560.016,
+      "type": "XD_Fir1",
+      "distance_to_hq": 17616.0
+    },
+    {
+      "x": 26820.0,
+      "y": 12780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17619.0
+    },
+    {
+      "x": 28227.74,
+      "y": 11064.88,
+      "type": "XD_Fir1",
+      "distance_to_hq": 17622.0
+    },
+    {
+      "x": 38740.16,
+      "y": 5620.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 17639.0
+    },
+    {
+      "x": 39520.0,
+      "y": 5520.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17651.0
+    },
+    {
+      "x": 38820.0,
+      "y": 5569.122,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17679.0
+    },
+    {
+      "x": 33840.09,
+      "y": 6945.911,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17710.0
+    },
+    {
+      "x": 27232.21,
+      "y": 12073.85,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17717.0
+    },
+    {
+      "x": 27720.0,
+      "y": 11480.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 17721.0
+    },
+    {
+      "x": 39620.0,
+      "y": 5420.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 17742.0
+    },
+    {
+      "x": 37980.0,
+      "y": 5628.926,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17747.0
+    },
+    {
+      "x": 26664.36,
+      "y": 12680.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17803.0
+    },
+    {
+      "x": 28623.95,
+      "y": 10370.89,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17824.0
+    },
+    {
+      "x": 29263.78,
+      "y": 9757.828,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17836.0
+    },
+    {
+      "x": 25849.89,
+      "y": 13820.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17852.0
+    },
+    {
+      "x": 38863.37,
+      "y": 5380.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17861.0
+    },
+    {
+      "x": 38748.13,
+      "y": 5379.703,
+      "type": "XD_Fir2",
+      "distance_to_hq": 17876.0
+    },
+    {
+      "x": 27191.54,
+      "y": 11825.82,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 17904.0
+    },
+    {
+      "x": 38880.0,
+      "y": 5328.5,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17910.0
+    },
+    {
+      "x": 27220.0,
+      "y": 11759.66,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17924.0
+    },
+    {
+      "x": 27360.13,
+      "y": 11580.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 17930.0
+    },
+    {
+      "x": 38680.0,
+      "y": 5320.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 17944.0
+    },
+    {
+      "x": 26573.3,
+      "y": 12535.57,
+      "type": "XD_Fir1",
+      "distance_to_hq": 17962.0
+    },
+    {
+      "x": 27234.1,
+      "y": 11631.18,
+      "type": "XD_Fir1",
+      "distance_to_hq": 17994.0
+    },
+    {
+      "x": 25734.24,
+      "y": 13721.81,
+      "type": "XD_Fir1",
+      "distance_to_hq": 18002.0
+    },
+    {
+      "x": 34460.88,
+      "y": 6343.152,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 18024.0
+    },
+    {
+      "x": 29550.93,
+      "y": 9180.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 18087.0
+    },
+    {
+      "x": 29620.0,
+      "y": 9080.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 18120.0
+    },
+    {
+      "x": 25565.76,
+      "y": 13721.81,
+      "type": "XD_Fir1",
+      "distance_to_hq": 18146.0
+    },
+    {
+      "x": 25450.11,
+      "y": 13820.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 18194.0
+    },
+    {
+      "x": 29042.43,
+      "y": 9137.738,
+      "type": "XD_Fir1",
+      "distance_to_hq": 18448.0
+    },
+    {
+      "x": 38278.61,
+      "y": 4823.21,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 18493.0
+    },
+    {
+      "x": 29880.0,
+      "y": 8365.454,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 18520.0
+    },
+    {
+      "x": 29680.0,
+      "y": 8464.492,
+      "type": "XD_Fir2",
+      "distance_to_hq": 18564.0
+    },
+    {
+      "x": 36678.53,
+      "y": 4979.653,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 18652.0
+    },
+    {
+      "x": 36951.51,
+      "y": 4880.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 18686.0
+    },
+    {
+      "x": 29072.73,
+      "y": 8560.594,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 18869.0
+    },
+    {
+      "x": 36545.98,
+      "y": 4764.642,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 18892.0
+    },
+    {
+      "x": 29020.0,
+      "y": 8545.256,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 18915.0
+    },
+    {
+      "x": 29460.83,
+      "y": 8165.083,
+      "type": "XD_Fir2",
+      "distance_to_hq": 18935.0
+    },
+    {
+      "x": 26770.0,
+      "y": 10704.23,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 18947.0
+    },
+    {
+      "x": 35124.92,
+      "y": 5077.619,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 18987.0
+    },
+    {
+      "x": 26820.0,
+      "y": 10543.71,
+      "type": "XD_Fir2",
+      "distance_to_hq": 19015.0
+    },
+    {
+      "x": 26364.93,
+      "y": 11020.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 19054.0
+    },
+    {
+      "x": 37158.97,
+      "y": 4442.101,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19070.0
+    },
+    {
+      "x": 27200.21,
+      "y": 10002.03,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 19099.0
+    },
+    {
+      "x": 26470.0,
+      "y": 10803.69,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 19111.0
+    },
+    {
+      "x": 26351.99,
+      "y": 10870.59,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19159.0
+    },
+    {
+      "x": 27075.83,
+      "y": 10020.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 19177.0
+    },
+    {
+      "x": 32869.05,
+      "y": 5772.55,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19183.0
+    },
+    {
+      "x": 29820.0,
+      "y": 7580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19186.0
+    },
+    {
+      "x": 26839.34,
+      "y": 10239.21,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 19203.0
+    },
+    {
+      "x": 27261.17,
+      "y": 9763.883,
+      "type": "XD_Fir2",
+      "distance_to_hq": 19219.0
+    },
+    {
+      "x": 29742.3,
+      "y": 7580.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 19232.0
+    },
+    {
+      "x": 32520.0,
+      "y": 5875.318,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 19243.0
+    },
+    {
+      "x": 36420.0,
+      "y": 4430.586,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 19247.0
+    },
+    {
+      "x": 32520.0,
+      "y": 5820.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19293.0
+    },
+    {
+      "x": 26930.0,
+      "y": 9977.117,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 19313.0
+    },
+    {
+      "x": 29438.6,
+      "y": 7680.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 19333.0
+    },
+    {
+      "x": 27247.22,
+      "y": 9567.434,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19366.0
+    },
+    {
+      "x": 31955.42,
+      "y": 5962.201,
+      "type": "XD_Fir2",
+      "distance_to_hq": 19425.0
+    },
+    {
+      "x": 31871.74,
+      "y": 5962.055,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 19465.0
+    },
+    {
+      "x": 32320.0,
+      "y": 5670.029,
+      "type": "XD_Fir2",
+      "distance_to_hq": 19516.0
+    },
+    {
+      "x": 27320.0,
+      "y": 9138.68,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 19616.0
+    },
+    {
+      "x": 32875.0,
+      "y": 5280.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 19627.0
+    },
+    {
+      "x": 34655.29,
+      "y": 4420.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 19760.0
+    },
+    {
+      "x": 27370.0,
+      "y": 8870.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 19774.0
+    },
+    {
+      "x": 36439.3,
+      "y": 3851.039,
+      "type": "XD_Fir2",
+      "distance_to_hq": 19805.0
+    },
+    {
+      "x": 32663.07,
+      "y": 5180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19807.0
+    },
+    {
+      "x": 33180.0,
+      "y": 4880.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19867.0
+    },
+    {
+      "x": 27220.0,
+      "y": 8867.103,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19880.0
+    },
+    {
+      "x": 28920.0,
+      "y": 7343.08,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19916.0
+    },
+    {
+      "x": 27293.65,
+      "y": 8730.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 19928.0
+    },
+    {
+      "x": 32651.6,
+      "y": 5020.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 19956.0
+    },
+    {
+      "x": 28833.28,
+      "y": 7180.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20098.0
+    },
+    {
+      "x": 27031.63,
+      "y": 8680.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 20146.0
+    },
+    {
+      "x": 34020.0,
+      "y": 4223.908,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20160.0
+    },
+    {
+      "x": 34066.27,
+      "y": 4180.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 20185.0
+    },
+    {
+      "x": 28874.24,
+      "y": 7031.664,
+      "type": "XD_Fir1",
+      "distance_to_hq": 20191.0
+    },
+    {
+      "x": 29066.13,
+      "y": 6850.817,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20220.0
+    },
+    {
+      "x": 33967.28,
+      "y": 4120.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 20276.0
+    },
+    {
+      "x": 26870.0,
+      "y": 8630.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 20295.0
+    },
+    {
+      "x": 29077.32,
+      "y": 6720.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20319.0
+    },
+    {
+      "x": 33780.0,
+      "y": 4137.626,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 20326.0
+    },
+    {
+      "x": 28968.9,
+      "y": 6780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 20335.0
+    },
+    {
+      "x": 29020.0,
+      "y": 6733.22,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20342.0
+    },
+    {
+      "x": 33225.76,
+      "y": 4320.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 20364.0
+    },
+    {
+      "x": 26677.43,
+      "y": 8694.233,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 20385.0
+    },
+    {
+      "x": 29076.97,
+      "y": 6580.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 20432.0
+    },
+    {
+      "x": 34280.0,
+      "y": 3780.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 20488.0
+    },
+    {
+      "x": 29020.0,
+      "y": 6551.131,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20489.0
+    },
+    {
+      "x": 34220.0,
+      "y": 3754.462,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 20533.0
+    },
+    {
+      "x": 31863.45,
+      "y": 4720.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20570.0
+    },
+    {
+      "x": 28980.0,
+      "y": 6470.61,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 20577.0
+    },
+    {
+      "x": 33738.84,
+      "y": 3851.336,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 20608.0
+    },
+    {
+      "x": 35080.0,
+      "y": 3320.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 20676.0
+    },
+    {
+      "x": 31820.0,
+      "y": 4579.975,
+      "type": "XD_Fir1",
+      "distance_to_hq": 20715.0
+    },
+    {
+      "x": 34144.03,
+      "y": 3571.161,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20731.0
+    },
+    {
+      "x": 31637.31,
+      "y": 4646.344,
+      "type": "XD_Fir1",
+      "distance_to_hq": 20738.0
+    },
+    {
+      "x": 34947.11,
+      "y": 3220.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 20810.0
+    },
+    {
+      "x": 31645.78,
+      "y": 4520.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 20847.0
+    },
+    {
+      "x": 29220.0,
+      "y": 5948.087,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 20864.0
+    },
+    {
+      "x": 35480.0,
+      "y": 2973.071,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 20897.0
+    },
+    {
+      "x": 31380.0,
+      "y": 4562.618,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20931.0
+    },
+    {
+      "x": 31220.0,
+      "y": 4631.365,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 20945.0
+    },
+    {
+      "x": 34431.35,
+      "y": 3224.695,
+      "type": "XD_Fir1",
+      "distance_to_hq": 20964.0
+    },
+    {
+      "x": 28980.0,
+      "y": 5929.563,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 21017.0
+    },
+    {
+      "x": 34173.4,
+      "y": 3249.419,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 21024.0
+    },
+    {
+      "x": 35144.38,
+      "y": 2864.91,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 21093.0
+    },
+    {
+      "x": 35573.88,
+      "y": 2741.666,
+      "type": "XD_Fir1",
+      "distance_to_hq": 21095.0
+    },
+    {
+      "x": 34168.67,
+      "y": 3080.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 21186.0
+    },
+    {
+      "x": 33462.63,
+      "y": 3220.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 21297.0
+    },
+    {
+      "x": 35338.6,
+      "y": 2533.976,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 21358.0
+    },
+    {
+      "x": 33724.16,
+      "y": 3052.994,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 21361.0
+    },
+    {
+      "x": 34766.91,
+      "y": 2546.306,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 21507.0
+    },
+    {
+      "x": 34120.0,
+      "y": 2637.021,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 21621.0
+    },
+    {
+      "x": 29041.83,
+      "y": 5120.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 21649.0
+    },
+    {
+      "x": 33367.36,
+      "y": 2869.269,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 21658.0
+    },
+    {
+      "x": 32673.48,
+      "y": 3064.109,
+      "type": "XD_Fir2",
+      "distance_to_hq": 21736.0
+    },
+    {
+      "x": 32577.16,
+      "y": 2820.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 21998.0
+    },
+    {
+      "x": 33580.0,
+      "y": 2422.376,
+      "type": "XD_Fir1",
+      "distance_to_hq": 22003.0
+    },
+    {
+      "x": 31744.41,
+      "y": 3129.171,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22054.0
+    },
+    {
+      "x": 32934.2,
+      "y": 2565.058,
+      "type": "XD_Fir1",
+      "distance_to_hq": 22099.0
+    },
+    {
+      "x": 32733.22,
+      "y": 2580.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 22160.0
+    },
+    {
+      "x": 28465.38,
+      "y": 4880.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 22172.0
+    },
+    {
+      "x": 25983.63,
+      "y": 6825.533,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 22212.0
+    },
+    {
+      "x": 30564.47,
+      "y": 3533.956,
+      "type": "XD_Fir2",
+      "distance_to_hq": 22222.0
+    },
+    {
+      "x": 32322.1,
+      "y": 2678.671,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22228.0
+    },
+    {
+      "x": 28328.93,
+      "y": 4880.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 22250.0
+    },
+    {
+      "x": 28469.36,
+      "y": 4780.0,
+      "type": "XD_Fir1",
+      "distance_to_hq": 22252.0
+    },
+    {
+      "x": 33080.0,
+      "y": 2320.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22274.0
+    },
+    {
+      "x": 28726.94,
+      "y": 4551.532,
+      "type": "XD_Fir1",
+      "distance_to_hq": 22297.0
+    },
+    {
+      "x": 31966.48,
+      "y": 2722.781,
+      "type": "XD_Fir1",
+      "distance_to_hq": 22331.0
+    },
+    {
+      "x": 25920.0,
+      "y": 6680.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 22362.0
+    },
+    {
+      "x": 28665.35,
+      "y": 4452.501,
+      "type": "XD_Fir1",
+      "distance_to_hq": 22413.0
+    },
+    {
+      "x": 30621.97,
+      "y": 3280.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22419.0
+    },
+    {
+      "x": 31920.0,
+      "y": 2620.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22443.0
+    },
+    {
+      "x": 28720.0,
+      "y": 4380.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 22443.0
+    },
+    {
+      "x": 30253.77,
+      "y": 3420.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22471.0
+    },
+    {
+      "x": 26134.47,
+      "y": 6328.451,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 22478.0
+    },
+    {
+      "x": 25896.15,
+      "y": 6530.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 22488.0
+    },
+    {
+      "x": 31367.5,
+      "y": 2820.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22494.0
+    },
+    {
+      "x": 25720.0,
+      "y": 6680.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22498.0
+    },
+    {
+      "x": 31856.73,
+      "y": 2568.205,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 22516.0
+    },
+    {
+      "x": 25801.63,
+      "y": 6530.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 22552.0
+    },
+    {
+      "x": 30080.0,
+      "y": 3420.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 22555.0
+    },
+    {
+      "x": 28342.41,
+      "y": 4480.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22571.0
+    },
+    {
+      "x": 30480.0,
+      "y": 3180.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22574.0
+    },
+    {
+      "x": 30221.49,
+      "y": 3320.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22574.0
+    },
+    {
+      "x": 27980.0,
+      "y": 4720.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 22582.0
+    },
+    {
+      "x": 25580.0,
+      "y": 6680.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22594.0
+    },
+    {
+      "x": 30150.91,
+      "y": 3321.092,
+      "type": "XD_Fir1",
+      "distance_to_hq": 22607.0
+    },
+    {
+      "x": 25920.0,
+      "y": 6323.376,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 22625.0
+    },
+    {
+      "x": 25316.37,
+      "y": 6825.533,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 22671.0
+    },
+    {
+      "x": 30137.05,
+      "y": 3244.159,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 22681.0
+    },
+    {
+      "x": 26024.1,
+      "y": 6112.413,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 22713.0
+    },
+    {
+      "x": 25380.0,
+      "y": 6680.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 22732.0
+    },
+    {
+      "x": 28239.88,
+      "y": 4338.485,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22746.0
+    },
+    {
+      "x": 27929.99,
+      "y": 4548.85,
+      "type": "XD_Fir1",
+      "distance_to_hq": 22751.0
+    },
+    {
+      "x": 25498.37,
+      "y": 6530.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 22759.0
+    },
+    {
+      "x": 28220.0,
+      "y": 4280.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 22805.0
+    },
+    {
+      "x": 25870.0,
+      "y": 6116.847,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 22812.0
+    },
+    {
+      "x": 25403.85,
+      "y": 6530.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 22824.0
+    },
+    {
+      "x": 25780.0,
+      "y": 6065.545,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22910.0
+    },
+    {
+      "x": 28020.0,
+      "y": 4280.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 22919.0
+    },
+    {
+      "x": 27529.68,
+      "y": 4580.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 22960.0
+    },
+    {
+      "x": 25380.0,
+      "y": 6323.376,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 22991.0
+    },
+    {
+      "x": 30956.85,
+      "y": 2424.505,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 23030.0
+    },
+    {
+      "x": 31320.0,
+      "y": 2248.548,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 23031.0
+    },
+    {
+      "x": 25520.0,
+      "y": 6065.545,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 23085.0
+    },
+    {
+      "x": 25430.0,
+      "y": 6116.847,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 23108.0
+    },
+    {
+      "x": 27280.0,
+      "y": 4573.246,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 23113.0
+    },
+    {
+      "x": 31580.0,
+      "y": 2020.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 23130.0
+    },
+    {
+      "x": 25275.9,
+      "y": 6112.413,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 23216.0
+    },
+    {
+      "x": 25820.0,
+      "y": 5543.047,
+      "type": "XD_Fir1",
+      "distance_to_hq": 23275.0
+    },
+    {
+      "x": 27224.52,
+      "y": 4337.626,
+      "type": "XD_Fir2",
+      "distance_to_hq": 23336.0
+    },
+    {
+      "x": 25680.0,
+      "y": 5480.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 23415.0
+    },
+    {
+      "x": 30833.42,
+      "y": 2046.164,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 23424.0
+    },
+    {
+      "x": 30946.67,
+      "y": 1976.576,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 23437.0
+    },
+    {
+      "x": 25620.0,
+      "y": 5480.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 23454.0
+    },
+    {
+      "x": 25770.0,
+      "y": 5330.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 23469.0
+    },
+    {
+      "x": 25480.0,
+      "y": 5543.047,
+      "type": "XD_Fir1",
+      "distance_to_hq": 23500.0
+    },
+    {
+      "x": 31256.61,
+      "y": 1756.108,
+      "type": "XD_Fir1",
+      "distance_to_hq": 23504.0
+    },
+    {
+      "x": 25530.0,
+      "y": 5330.0,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 23626.0
+    },
+    {
+      "x": 25675.78,
+      "y": 5193.959,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 23633.0
+    },
+    {
+      "x": 30769.57,
+      "y": 1820.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 23655.0
+    },
+    {
+      "x": 25624.22,
+      "y": 5193.959,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 23667.0
+    },
+    {
+      "x": 30080.0,
+      "y": 1820.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 23964.0
+    },
+    {
+      "x": 30661.44,
+      "y": 1480.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 24008.0
+    },
+    {
+      "x": 25807.96,
+      "y": 4587.234,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 24012.0
+    },
+    {
+      "x": 25708.56,
+      "y": 4608.339,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 24059.0
+    },
+    {
+      "x": 25591.44,
+      "y": 4608.339,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 24134.0
+    },
+    {
+      "x": 25492.04,
+      "y": 4587.234,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 24214.0
+    },
+    {
+      "x": 29935.76,
+      "y": 1545.901,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 24274.0
+    },
+    {
+      "x": 29668.52,
+      "y": 1624.508,
+      "type": "XD_Fir1",
+      "distance_to_hq": 24328.0
+    },
+    {
+      "x": 30053.34,
+      "y": 1380.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 24368.0
+    },
+    {
+      "x": 29720.0,
+      "y": 1537.387,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 24381.0
+    },
+    {
+      "x": 29755.79,
+      "y": 1459.689,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 24433.0
+    },
+    {
+      "x": 29720.0,
+      "y": 1464.452,
+      "type": "XD_Fir2",
+      "distance_to_hq": 24446.0
+    },
+    {
+      "x": 29641.5,
+      "y": 1452.931,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 24493.0
+    },
+    {
+      "x": 29668.36,
+      "y": 1378.482,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 24546.0
+    },
+    {
+      "x": 29020.0,
+      "y": 1680.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 24592.0
+    },
+    {
+      "x": 29520.0,
+      "y": 1320.0,
+      "type": "XD_Fir2",
+      "distance_to_hq": 24667.0
+    },
+    {
+      "x": 28970.0,
+      "y": 1470.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 24799.0
+    },
+    {
+      "x": 28853.18,
+      "y": 1530.752,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 24804.0
+    },
+    {
+      "x": 29530.0,
+      "y": 1030.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 24919.0
+    },
+    {
+      "x": 28841.33,
+      "y": 1348.227,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 24968.0
+    },
+    {
+      "x": 29283.56,
+      "y": 970.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 25087.0
+    },
+    {
+      "x": 28430.0,
+      "y": 1430.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 25102.0
+    },
+    {
+      "x": 28744.54,
+      "y": 1180.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 25162.0
+    },
+    {
+      "x": 28487.64,
+      "y": 1270.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 25212.0
+    },
+    {
+      "x": 29162.69,
+      "y": 867.7498,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 25234.0
+    },
+    {
+      "x": 28580.0,
+      "y": 1177.705,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 25246.0
+    },
+    {
+      "x": 28976.98,
+      "y": 948.9194,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 25251.0
+    },
+    {
+      "x": 28771.01,
+      "y": 920.0,
+      "type": "XD_Fir2_small",
+      "distance_to_hq": 25376.0
+    },
+    {
+      "x": 28308.47,
+      "y": 1130.0,
+      "type": "XD_PineNorth3",
+      "distance_to_hq": 25423.0
+    },
+    {
+      "x": 28770.0,
+      "y": 830.0,
+      "type": "XD_PineNorth2",
+      "distance_to_hq": 25455.0
+    },
+    {
+      "x": 28320.0,
+      "y": 980.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 25546.0
+    },
+    {
+      "x": 28617.11,
+      "y": 772.4845,
+      "type": "XD_PineNorth1",
+      "distance_to_hq": 25580.0
+    },
+    {
+      "x": 28125.29,
+      "y": 820.0,
+      "type": "XD_Fir1_small",
+      "distance_to_hq": 25783.0
+    },
+    {
+      "x": 25675.08,
+      "y": 2145.104,
+      "type": "XD_LargeCampFire",
+      "distance_to_hq": 26020.0
+    },
+    {
+      "x": 25624.92,
+      "y": 2145.104,
+      "type": "XD_LargeCampFire",
+      "distance_to_hq": 26050.0
+    }
+  ],
+  "mine_shafts": {
+    "Eisen": [
+      {
+        "x": 36275.84,
+        "y": 8927.041,
+        "distance_to_hq": 14971.0
+      },
+      {
+        "x": 37495.02,
+        "y": 7801.381,
+        "distance_to_hq": 15718.0
+      },
+      {
+        "x": 37784.37,
+        "y": 7265.83,
+        "distance_to_hq": 16178.0
+      }
+    ],
+    "Stein": [
+      {
+        "x": 40056.03,
+        "y": 14890.56,
+        "distance_to_hq": 8276.0
+      },
+      {
+        "x": 39320.85,
+        "y": 14715.73,
+        "distance_to_hq": 8571.0
+      },
+      {
+        "x": 38633.13,
+        "y": 14720.38,
+        "distance_to_hq": 8735.0
+      }
+    ],
+    "Lehm": [
+      {
+        "x": 35180.72,
+        "y": 19552.98,
+        "distance_to_hq": 6901.0
+      },
+      {
+        "x": 35106.41,
+        "y": 18871.68,
+        "distance_to_hq": 7335.0
+      },
+      {
+        "x": 34991.41,
+        "y": 17996.99,
+        "distance_to_hq": 7960.0
+      }
+    ],
+    "Schwefel": [
+      {
+        "x": 44304.14,
+        "y": 21484.33,
+        "distance_to_hq": 3588.0
+      },
+      {
+        "x": 44005.73,
+        "y": 20978.49,
+        "distance_to_hq": 3598.0
+      },
+      {
+        "x": 44576.42,
+        "y": 22119.58,
+        "distance_to_hq": 3612.0
+      }
+    ]
+  },
+  "deposits": {
+    "Eisen": [
+      {
+        "x": 34325.0,
+        "y": 7950.0,
+        "amount": 4000,
+        "distance_to_hq": 16596.0
+      },
+      {
+        "x": 36325.0,
+        "y": 6750.0,
+        "amount": 4000,
+        "distance_to_hq": 17033.0
+      }
+    ],
+    "Stein": [
+      {
+        "x": 42800.0,
+        "y": 15100.0,
+        "amount": 4000,
+        "distance_to_hq": 8179.0
+      }
+    ],
+    "Lehm": [
+      {
+        "x": 31125.0,
+        "y": 18750.0,
+        "amount": 4000,
+        "distance_to_hq": 10882.0
+      }
+    ],
+    "Schwefel": [
+      {
+        "x": 48125.0,
+        "y": 20950.0,
+        "amount": 4000,
+        "distance_to_hq": 7347.0
+      },
+      {
+        "x": 47725.0,
+        "y": 18550.0,
+        "amount": 4000,
+        "distance_to_hq": 8037.0
+      }
+    ]
+  }
+}

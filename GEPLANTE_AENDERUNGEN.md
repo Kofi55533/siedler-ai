@@ -19,6 +19,8 @@ Dieses Dokument sammelt alle besprochenen Änderungen bevor sie implementiert we
 | 5 | Alle Arbeiter-Laufwege simulieren | Hoch | Besprochen |
 | 6 | **Fehlende/Vereinfachte Effekte** | Hoch | **Mit Original abgleichen!** |
 | 7 | **Kartendaten unvollständig** | Hoch | **Mit echten Spieldaten abgleichen!** |
+| 8 | **Camp-System** | Hoch | **Mit Original abgleichen!** |
+| 9 | **Offene Design-Fragen** | Hoch | **Benutzer muss entscheiden!** |
 
 ---
 
@@ -577,19 +579,85 @@ MAIN_ACTIONS = {
 
 ---
 
-## 9. OFFENE FRAGEN
+## 9. OFFENE FRAGEN - VOM BENUTZER ZU BEANTWORTEN
 
-### Multi-Step System
+> **Diese Fragen müssen beantwortet werden bevor implementiert wird!**
+
+---
+
+### 9.1 Multi-Step System
 - [x] ~~"Abziehen" mit "Zuweisen" zusammenführen~~ ✓ ERLEDIGT
 - [x] ~~Positionen: Top N oder alle?~~ ✓ ERLEDIGT - ALLE ~2200 Positionen, Maske filtert
-- [ ] Observation: Was sieht der Agent in jedem Step?
-- [ ] Reward: Wann gibt es Reward (nur am Ende? Zwischen-Rewards?)
-- [ ] Reset: Was passiert bei Episode-Ende mitten im Flow?
+- [ ] **Observation**: Was sieht der Agent in jedem Step?
+  - Gleiche Observation wie vorher?
+  - Oder erweitert mit "aktueller Phase" und "bisherige Auswahlen"?
+- [ ] **Reward**: Wann gibt es Reward?
+  - Nur am Ende des Multi-Step Flows?
+  - Zwischen-Rewards pro Step?
+  - Negativer Reward für ungültige Aktionen?
+- [ ] **Reset**: Was passiert bei Episode-Ende mitten im Flow?
+  - Flow abbrechen und neuen starten?
+  - Oder Flow zu Ende führen?
 
-### Leibeigene
-- [ ] Maximale Anzahl Leibeigene?
-- [ ] Kosten pro Leibeigener?
-- [ ] Können Leibeigene sterben/verschwinden?
+---
+
+### 9.2 Leibeigene
+- [ ] **Maximale Anzahl** Leibeigene?
+- [ ] **Kosten** pro Leibeigener? (aktuell: 50 Taler?)
+- [ ] Können Leibeigene **sterben/verschwinden**?
+- [ ] **Kapazitätslimit** durch Dorfzentrum?
+
+---
+
+### 9.3 Camp-System (MIT ORIGINAL ABGLEICHEN!)
+
+> **⚠️ Aktuell vereinfacht - muss mit Spieldaten abgeglichen werden!**
+
+**Aktuell implementiert:**
+```python
+# Worker campen am Arbeitsplatz wenn kein Bauernhof in Nähe
+# Nur +10% Regeneration statt voller Erholung
+```
+
+**Offene Fragen für Original-Abgleich:**
+- [ ] **Wo werden Camps platziert?** (am Arbeitsplatz? Separate Position?)
+- [ ] **Wer platziert Camps?** (automatisch vom Spiel? Spieler muss bauen?)
+- [ ] **Camp-Kapazität?** (wie viele Worker pro Camp?)
+- [ ] **Camp-Reichweite?** (wie weit darf Arbeitsplatz entfernt sein?)
+- [ ] **Regenerations-Rate im Camp?** (aktuell: 10% - ist das korrekt?)
+- [ ] **Sind Camps Gebäude?** (oder nur virtuell?)
+- [ ] **Kosten/Bauzeit für Camps?**
+
+**Zu prüfen in Spieldateien:**
+- [ ] `entities/Buildings/B_Camp/` oder ähnlich
+- [ ] `logic.xml` - Worker-Verhalten ohne Bauernhof
+- [ ] Wie entscheidet das Spiel wo Worker schlafen?
+
+---
+
+### 9.4 Worker-Verhalten
+- [ ] **Wohin gehen Worker zum Essen?** (Bauernhof? Wohnhaus? Taverne?)
+- [ ] **Wie weit laufen Worker maximal?** (Radius vom Arbeitsplatz?)
+- [ ] **Priorität**: Arbeiten vs. Essen vs. Schlafen?
+- [ ] **Erschöpfung**: Was passiert bei 0% WorkTime? (Streik? Langsamer?)
+
+---
+
+### 9.5 Produktions-Ketten
+- [ ] **Lager-System**: Woher holen Refiner ihre Input-Ressourcen?
+  - Direkt von Mine?
+  - Aus zentralem Lager?
+  - Leibeigene transportieren?
+- [ ] **Output-Transport**: Wohin gehen fertige Waren?
+- [ ] **Puffer**: Haben Gebäude interne Lager?
+
+---
+
+### 9.6 Soldaten-Rekrutierung
+- [ ] **Woher kommen Rekruten?** (Leibeigene werden Soldaten? Oder separate?)
+- [ ] **Ausbildungszeit?** (wie lange dauert Rekrutierung?)
+- [ ] **Kaserne-Kapazität?** (wie viele gleichzeitig ausbilden?)
+- [ ] **Ausrüstung**: Automatisch oder muss produziert werden?
 
 ---
 
@@ -1005,3 +1073,6 @@ walk_time = distance / SERF_SPEED  # Gerade Linie!
 | 2026-01-27 | Gebäude-Größen nur geschätzt, Kollision nicht implementiert |
 | 2026-01-27 | Bauplatz-Positionen unvollständig (~20 statt ~2200) |
 | 2026-01-27 | Pfadfindung nur Luftlinie, keine A* mit Hindernissen |
+| 2026-01-27 | **Abschnitt 9 erweitert** - Offene Fragen für Benutzer-Entscheidungen |
+| 2026-01-27 | Camp-System muss mit Original abgeglichen werden |
+| 2026-01-27 | Worker-Verhalten, Produktions-Ketten, Soldaten-Rekrutierung als offene Fragen |

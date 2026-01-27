@@ -864,44 +864,51 @@ self.current_research = None
 
 **Keine der folgenden Effekte wird jemals angewendet:**
 
+#### TRAINING-RELEVANT → MÜSSEN implementiert + abgeglichen werden!
+
+| Effekt-Typ | Technologien | Was es tun SOLLTE | Warum relevant |
+|-----------|-------------|-------------------|----------------|
+| `build_speed_bonus` | Ziegelbrennen (+15) | Schneller bauen | Bauzeit = Engpass in Produktionskette! |
+| `worker_speed_bonus` | Straßenbau (+20) | Worker laufen schneller | Laufzeit beeinflusst ALLE Produktions-Zyklen! |
+| `archer_training_speed` | Schützenschule (+20) | Schnellere Schützen-Rekrutierung | **DIREKT relevant für Scharfschützen-Ziel!** |
+| `infantry_training_speed` | Infanterie-Ausbildung (+20) | Schnellere Infanterie-Rekrutierung | Soldaten-Produktion beschleunigen |
+| `payday_bonus` | Lohnbuchhaltung (+10), Finanzplanung (+20) | Lohn-Kosten reduzieren | Wirtschaft = mehr Ressourcen für Produktion |
+| `trade_bonus` | Handelsrecht (+5), Handelsgilden (+10) | Handelsgewinne erhöhen | Wirtschaft = mehr Taler |
+
+#### MILITÄR-RELEVANT → Implementieren wenn Kampf simuliert wird
+
 | Effekt-Typ | Technologien | Was es tun SOLLTE |
 |-----------|-------------|-------------------|
 | `armor_bonus` | Kettenpanzer (+5), Lederrüstung (+2), Kettenrüstung (+4), Plattenpanzer (+6) | Rüstung von Nahkämpfern erhöhen |
 | `speed_bonus` | Pferdezucht (+50) | Kavallerie-Geschwindigkeit |
 | `building_armor_bonus` | Mauerbau (+3) | Gebäude-Verteidigung erhöhen |
-| `build_speed_bonus` | Ziegelbrennen (+15) | Schneller bauen |
 | `bow_damage_bonus` | Langbögen (+2), Kompositbögen (+4) | Bogenschaden erhöhen |
 | `cannon_damage_bonus` | Schwarzpulver (+3), Sprengstoff (+5) | Kanonenschaden erhöhen |
 | `melee_damage_bonus` | Schwertschmied (+2), Waffenmeister (+4) | Nahkampfschaden erhöhen |
 | `archer_armor_bonus` | Schützenrüstung (+1/+2/+3) | Schützen-Rüstung erhöhen |
 | `spear_damage_bonus` | Speerträger (+2), Hellebarden (+4) | Speer-Schaden erhöhen |
-| `payday_bonus` | Lohnbuchhaltung (+10), Finanzplanung (+20) | Lohn-Kosten reduzieren? |
-| `trade_bonus` | Handelsrecht (+5), Handelsgilden (+10) | Handelsgewinne erhöhen? |
-| `exploration_bonus` | Kartographie (+5) | Erkundung verbessern? |
-| `worker_armor_bonus` | Bürgerwehr (+1) | Worker-Rüstung |
-| `worker_speed_bonus` | Straßenbau (+20) | Worker laufen schneller |
-| `infantry_training_speed` | Infanterie-Ausbildung (+20) | Schnellere Rekrutierung |
-| `archer_training_speed` | Schützenschule (+20) | Schnellere Rekrutierung |
 | `cavalry_speed_bonus` | Reitkunst (+50) | Kavallerie schneller |
 | `cannon_speed_bonus` | Artillerie-Training (+30) | Kanonen schneller |
+
+#### UNKLAR → Relevanz klären
+
+| Effekt-Typ | Technologien | Was es tun SOLLTE |
+|-----------|-------------|-------------------|
+| `exploration_bonus` | Kartographie (+5) | Erkundung verbessern? |
+| `worker_armor_bonus` | Bürgerwehr (+1) | Worker-Rüstung (relevant bei Angriffen?) |
 
 **Zusätzlich: `game_data.json` hat LEERE Effekte!**
 - Alle 204 Technologie-Einträge in `game_data.json` haben `"effects": []`
 - Die Effekt-Werte in `environment.py` sind **manuell geschätzt**, NICHT aus Spieldateien!
-
-**Relevanz für AI-Training:**
-- **Militär-Effekte** (armor, damage, speed): Relevant wenn Kampf simuliert wird
-- **`build_speed_bonus`**: DIREKT RELEVANT - schnelleres Bauen beeinflusst Produktionskette!
-- **`worker_speed_bonus`**: DIREKT RELEVANT - Worker laufen schneller = mehr Produktion!
-- **`payday_bonus`**: RELEVANT - Lohnkosten beeinflussen Wirtschaft
-- **`training_speed`**: RELEVANT - schnellere Scharfschützen-Produktion!
+- **→ Alle Werte MÜSSEN mit dem Original-Spiel abgeglichen werden!**
 
 **Zu prüfen in Spieldateien:**
 - [ ] Welche Effekte existieren WIRKLICH im Original?
-- [ ] Exakte Werte für jeden Effekt
-- [ ] Wie werden Effekte angewendet? (Multiplikator? Addiert?)
+- [ ] Exakte Werte für jeden Effekt (die aktuellen Werte sind geraten!)
+- [ ] Wie werden Effekte angewendet? (Multiplikator? Addiert? Prozent?)
 - [ ] Gibt es Effekte die NICHT in der Datenbank stehen?
 - [ ] `Technologies.xml` oder `logic.xml` - Effekt-Definitionen
+- [ ] Gelten `training_speed` Boni auch für Scharfschützen?
 
 **Zu implementieren:**
 ```python

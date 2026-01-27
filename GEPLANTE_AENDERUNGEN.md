@@ -2,7 +2,7 @@
 
 > **Erstellt:** 2026-01-26
 > **Status:** In Diskussion - NOCH NICHT IMPLEMENTIERT
-> **Letzte Aktualisierung:** 2026-01-26
+> **Letzte Aktualisierung:** 2026-01-27
 
 ---
 
@@ -17,6 +17,7 @@ Dieses Dokument sammelt alle besprochenen Änderungen bevor sie implementiert we
 | 3 | Lager-System für Refiner | Mittel | Offen (später prüfen) |
 | 4 | Dynamische Bauplätze | Hoch | Besprochen |
 | 5 | Alle Arbeiter-Laufwege simulieren | Hoch | Besprochen |
+| 6 | **Fehlende/Vereinfachte Effekte** | Hoch | **Mit Original abgleichen!** |
 
 ---
 
@@ -591,6 +592,192 @@ MAIN_ACTIONS = {
 
 ---
 
+## 10. FEHLENDE/VEREINFACHTE EFFEKTE
+
+> **⚠️ WICHTIG: Mit Original-Spieldateien abgleichen!**
+>
+> Die folgenden Effekte sind entweder nicht implementiert oder stark vereinfacht.
+> Vor der Implementierung müssen die echten Werte aus den Spieldateien (XML, LUA) extrahiert werden.
+
+---
+
+### 10.1 KAPELLE (NICHT IMPLEMENTIERT)
+
+**Status:** ❌ Komplett fehlend
+
+**Im Original-Spiel:**
+- Kapelle = einfacheres religiöses Gebäude
+- Produziert Faith (weniger als Kloster)
+- Kann KEINE Segen sprechen (nur Kloster kann das)
+- Motivation-Effekt? (zu prüfen)
+
+**Zu prüfen in Spieldateien:**
+- [ ] `entities/Buildings/B_ChurchVillage/` - Kapelle-Daten
+- [ ] Faith-Produktion pro Sekunde
+- [ ] Motivation-Effekt falls vorhanden
+- [ ] Kosten und Bauzeit
+- [ ] Worker-Anzahl
+
+---
+
+### 10.2 SEGEN-EFFEKTE (VEREINFACHT)
+
+**Status:** ⚠️ Teilweise implementiert
+
+**Aktuell implementiert:**
+```python
+# Nur GLOBALER Motivation-Bonus!
+for cat in BLESS_CATEGORIES:
+    if self.bless_active_times.get(cat, 0) > 0:
+        motivation += BLESS_MOTIVATION_BONUS  # +30% global
+```
+
+**Problem:** Die `worker_types` Liste wird **IGNORIERT**!
+
+**Im Original-Spiel:**
+- Segen wirkt NUR auf Worker der jeweiligen Kategorie
+- Nicht alle Worker bekommen +30%!
+
+**5 Segen-Kategorien und ihre Worker:**
+
+| # | Kategorie | Worker-Typen | Aktuell |
+|---|-----------|--------------|---------|
+| 0 | Construction | Miner, Farmer, BrickMaker, Sawmillworker, Stonecutter | ❌ Ignoriert |
+| 1 | Research | Scholar, Priest, Engineer, MasterBuilder | ❌ Ignoriert |
+| 2 | Weapons | Smith, Alchemist, Smelter, Gunsmith | ❌ Ignoriert |
+| 3 | Financial | Trader, Treasurer | ❌ Ignoriert |
+| 4 | Canonisation | ALLE Worker | ✓ Korrekt (da global) |
+
+**Zu implementieren:**
+```python
+def _get_worker_motivation(self, worker_type):
+    """Motivation für spezifischen Worker-Typ."""
+    base_motivation = self._get_base_motivation()
+
+    # Segen-Bonus nur wenn dieser Worker-Typ gesegnet
+    for cat, info in BLESS_CATEGORIES.items():
+        if self.bless_active_times.get(cat, 0) > 0:
+            if "ALL" in info["worker_types"] or worker_type in info["worker_types"]:
+                base_motivation += BLESS_MOTIVATION_BONUS
+                break  # Nur einmal Bonus!
+
+    return base_motivation
+```
+
+**Zu prüfen in Spieldateien:**
+- [ ] `extra2/logic.xml` - BlessingBonus Details
+- [ ] Welche Worker-Typen existieren genau?
+- [ ] Stapeln sich Segen (mehrere Kategorien)?
+- [ ] Was passiert bei Canonisation + andere Kategorie?
+
+---
+
+### 10.3 FORSCHUNGS-QUEUES (VEREINFACHT)
+
+**Status:** ⚠️ Vereinfacht - nur eine globale Queue
+
+**Aktuell implementiert:**
+- Eine einzige `active_research` Variable
+- Alle Forschungen laufen im gleichen "Slot"
+- `requires_building` prüft nur Voraussetzung
+
+**Im Original-Spiel:**
+- **Hochschule**: Allgemeine Technologien
+- **Schmiede**: Waffen/Rüstungs-Technologien
+- **Alchimistenhütte**: Schießpulver/Bomben
+- **Hauptquartier**: Militär-Strategien
+- **Bank**: Wirtschafts-Forschungen
+
+**Mögliche Auswirkungen:**
+- Parallel forschen? (zu prüfen)
+- Jedes Gebäude hat eigene Gelehrte?
+
+**Zu prüfen in Spieldateien:**
+- [ ] `Technologies.xml` - Alle Technologien und ihre Gebäude
+- [ ] Kann man parallel forschen an verschiedenen Orten?
+- [ ] Welche Gebäude haben Forschungs-Slots?
+- [ ] Wie viele Gelehrte pro Gebäude?
+
+---
+
+### 10.4 FAITH-PRODUKTION (VEREINFACHT)
+
+**Status:** ⚠️ Stark vereinfacht
+
+**Aktuell implementiert:**
+```python
+# Vereinfacht: 6 Priester pro Kloster, Faith linear
+priests = total_monasteries * 6
+self.faith = min(self.faith + priests * TIME_STEP, ...)
+```
+
+**Im Original-Spiel:**
+- Priester = echte Worker mit WorkTime
+- Faith-Produktion hängt von Priester-Effizienz ab
+- Kapelle produziert auch Faith (weniger)
+
+**Zu prüfen in Spieldateien:**
+- [ ] `entities/Buildings/B_Monastery/` - Kloster-Daten
+- [ ] Faith pro Priester pro Sekunde
+- [ ] Wie viele Priester maximal?
+- [ ] Priester-WorkTime Einfluss
+
+---
+
+### 10.5 KLOSTER MOTIVATION-EFFEKT (ZU VERIFIZIEREN)
+
+**Status:** ✓ Implementiert, aber Werte prüfen
+
+**Aktuell implementiert:**
+```python
+"Kloster_1": motivation_effect=0.08  # +8%
+"Kloster_2": motivation_effect=0.10  # +10%
+"Kloster_3": motivation_effect=0.15  # +15%
+```
+
+**Zu prüfen in Spieldateien:**
+- [ ] `extra2/logic.xml` - Monastery MotivationEffect
+- [ ] Sind die Werte 0.08/0.10/0.15 korrekt?
+- [ ] Gilt Effekt für alle Worker oder nur bestimmte?
+
+---
+
+### 10.6 CHECKLISTE: MIT ORIGINAL ABGLEICHEN
+
+**Spieldateien zu analysieren:**
+
+| Datei | Zu prüfen | Status |
+|-------|-----------|--------|
+| `extra2/logic.xml` | Segen, Motivation, Timing | ⬜ Offen |
+| `Technologies.xml` | Alle Techs, Forschungs-Orte | ⬜ Offen |
+| `entities/Buildings/B_ChurchVillage/` | Kapelle-Daten | ⬜ Offen |
+| `entities/Buildings/B_Monastery/` | Kloster-Daten, Priester | ⬜ Offen |
+| `entities/Workers/` | Worker-Typen, Kategorien | ⬜ Offen |
+
+**Fragen für Original-Abgleich:**
+
+1. **Kapelle:**
+   - [ ] Existiert Kapelle? Welche Effekte?
+   - [ ] Faith-Produktion?
+   - [ ] Motivation-Bonus?
+
+2. **Segen:**
+   - [ ] Wirkt Segen nur auf bestimmte Worker?
+   - [ ] Stapeln sich mehrere Segen?
+   - [ ] Exakte Bonus-Werte?
+
+3. **Forschung:**
+   - [ ] Parallele Forschung möglich?
+   - [ ] Separate Queues pro Gebäude?
+   - [ ] Gelehrte pro Gebäude?
+
+4. **Faith:**
+   - [ ] Faith pro Priester?
+   - [ ] Priester-WorkTime Einfluss?
+   - [ ] Max Faith Cap?
+
+---
+
 ## ÄNDERUNGSHISTORIE
 
 | Datum | Änderung |
@@ -603,3 +790,7 @@ MAIN_ACTIONS = {
 | 2026-01-26 | Masken-Logik für Quell/Ziel-Bereiche dokumentiert |
 | 2026-01-26 | **POSITION korrigiert**: ~2200 alle Positionen (keine Begrenzung!) |
 | 2026-01-26 | Feste Index-Zuordnung für Positionen dokumentiert |
+| 2026-01-27 | **NEU: Abschnitt 10** - Fehlende/Vereinfachte Effekte dokumentiert |
+| 2026-01-27 | Kapelle fehlt komplett, Segen ignoriert worker_types |
+| 2026-01-27 | Forschungs-Queues vereinfacht (nur global), Faith-Produktion vereinfacht |
+| 2026-01-27 | **Checkliste für Original-Abgleich** mit Spieldateien hinzugefügt |

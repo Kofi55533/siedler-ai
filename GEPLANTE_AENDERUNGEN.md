@@ -1225,7 +1225,20 @@ walk_time = distance / SERF_SPEED  # Gerade Linie!
 
 ---
 
-### 12.3 STEUERSYSTEM
+### 12.3 ZAHLTAG / STEUERSYSTEM (DETAILLIERT ABGLEICHEN!)
+
+> **⚠️ Das Zahltag-System hat viele offene Fragen!**
+
+#### Aktuell implementiert (environment.py Zeile 3132-3144):
+```python
+# Alle INCOME_CYCLE (40) Ticks:
+if self.current_time % INCOME_CYCLE == 0:
+    tax_income = tax_info["regular_tax"] * total_workers  # Steuern pro Worker
+    self.resources[RESOURCE_TALER] += tax_income
+    self.base_motivation += tax_info["motivation_change"]  # Motivation ändern
+```
+
+#### Steuerstufen (Zeile 752-756)
 
 | Stufe | Taler/Worker | Motivation-Änderung | Abzugleichen? |
 |-------|-------------|--------------------|-|
@@ -1234,6 +1247,79 @@ walk_time = distance / SERF_SPEED  # Gerade Linie!
 | 2 - Normal | 10 | 0.0 | ⬜ |
 | 3 - Hoch | 15 | -0.08 | ⬜ |
 | 4 - Sehr hoch | 20 | -0.12 | ⬜ |
+
+#### Offene Fragen zum Zahltag (MIT ORIGINAL ABGLEICHEN!)
+
+1. **Wann beginnt der Zahltag-Zyklus?**
+   - [ ] Erst wenn erstes Gebäude mit steuerzahlenden Workern gebaut wird?
+   - [ ] Oder sofort ab Spielstart?
+   - [ ] Aktuell: Startet sofort bei `current_time % 40 == 0` (wahrscheinlich FALSCH!)
+
+2. **Wie oft ist Zahltag?**
+   - [ ] Aktuell: Alle 40 Sekunden (`INCOME_CYCLE = 40`) - stimmt das?
+   - [ ] Im Original: Fester Zyklus oder variabel?
+
+3. **Wer zahlt Steuern?**
+   - [ ] Aktuell: ALLE Worker (`total_workers`) - ist das korrekt?
+   - [ ] Zahlen Leibeigene auch Steuern? (wahrscheinlich NEIN!)
+   - [ ] Zahlen nur Worker in Gebäuden? Oder auch freie Worker?
+   - [ ] Zählen Soldaten als "Worker" für Steuern?
+
+4. **Schmälert Militär den Zahltag?**
+   - [ ] Kosten Soldaten Sold/Unterhalt pro Zahltag?
+   - [ ] Wenn ja: Wie viel pro Soldaten-Typ?
+   - [ ] Werden Soldaten-Kosten VOM Steuer-Einkommen abgezogen?
+   - [ ] Oder ist Militär-Unterhalt ein separater Abzug?
+   - [ ] Aktuell: Militär hat KEINE laufenden Kosten (nur Rekrutierungskosten!)
+
+5. **Gebäude-Einkommen (`taler_income`)**
+   - [ ] Jedes Gebäude hat ein `taler_income` (z.B. Steinmine_1 = 20 Taler)
+   - [ ] Wann wird das ausgezahlt? Am Zahltag? Oder kontinuierlich?
+   - [ ] Aktuell: `_get_taler_income()` summiert es, wird aber NUR in Observation genutzt!
+   - [ ] Das `taler_income` wird aktuell NICHT zum Steuer-Einkommen addiert!
+   - [ ] → Bug? Oder separate Mechanik?
+
+6. **Steuer pro Worker - exakte Berechnung:**
+   - [ ] Ist `regular_tax` wirklich ein fester Betrag PRO Worker?
+   - [ ] Oder ist es ein Prozentsatz?
+   - [ ] Oder ist es ein Gesamtbetrag?
+   - [ ] Kommentar sagt "aus extra2/logic.xml" - aber Werte verifizieren!
+
+7. **Motivation-Änderung:**
+   - [ ] Wird Motivation pro Zahltag geändert? (aktuell: ja)
+   - [ ] Oder ist es ein permanenter Modifikator?
+   - [ ] Stapelt sich Motivation-Änderung? (aktuell: ja, kann bis 3.0 oder 0.25!)
+
+#### Gebäude-Einkommen (taler_income pro Gebäude)
+
+> **⚠️ Diese Werte werden aktuell NUR in der Observation genutzt, nicht im Zahltag!**
+
+| Gebäude | taler_income | Abzugleichen? |
+|---------|-------------|----------------|
+| Hochschule_1 | 35 | ⬜ |
+| Hochschule_2 | 50 | ⬜ |
+| Steinmine_1/2/3 | 20/30/40 | ⬜ |
+| Lehmmine_1/2/3 | 10/15/20 | ⬜ |
+| Eisenmine_1/2/3 | 25/35/45 | ⬜ |
+| Schwefelmine_1/2/3 | 25/35/45 | ⬜ |
+| Sägemühle_1/2 | 12/18 | ⬜ |
+| Lehmhütte_1/2 | 12/18 | ⬜ |
+| Schmiede_1/2/3 | 12/18/24 | ⬜ |
+| Alchimistenhütte_1/2 | 12/18 | ⬜ |
+| Steinmetzhütte_1/2 | 12/18 | ⬜ |
+| Bank_1/2 | 30/45 | ⬜ |
+| Taverne_1/2 | 25/40 | ⬜ |
+| Büchsenmacherei_1/2 | 15/25 | ⬜ |
+| Kanongießerei_1/2 | 5/10 | ⬜ |
+| Architektenstube | 10 | ⬜ |
+| Wetterkraftwerk | 10 | ⬜ |
+
+**Zu prüfen in Spieldateien:**
+- [ ] `extra2/logic.xml` - PaydayUpdate, RegularTax Definitionen
+- [ ] Wie interagieren Steuern + Gebäude-Einkommen?
+- [ ] Gibt es Militär-Unterhaltskosten?
+- [ ] Wann genau startet der erste Zahltag?
+- [ ] Welche Einheiten zählen als "steuerzahlend"?
 
 ---
 
@@ -1628,3 +1714,6 @@ walk_time = distance / SERF_SPEED  # Gerade Linie!
 | 2026-01-27 | **NEU: Abschnitt 12** - ALLE ~400+ hardcoded Werte aus environment.py aufgelistet |
 | 2026-01-27 | Gebäude-Kosten, Soldaten, Technologien, Worker-Simulation, Steuern, Segen, etc. |
 | 2026-01-27 | Prioritäts-Reihenfolge: Scharfschützen-Pfad → Gebäude → Worker → Rest |
+| 2026-01-27 | **Abschnitt 12.3 erweitert** - Zahltag-System detailliert mit offenen Fragen |
+| 2026-01-27 | Zahltag: Wann Start? Wer zahlt? Militär-Kosten? Gebäude-Einkommen Bug? |
+| 2026-01-27 | taler_income pro Gebäude wird NUR in Observation genutzt, nicht im Zahltag! |

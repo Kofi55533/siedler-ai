@@ -18,6 +18,7 @@ Dieses Dokument sammelt alle besprochenen Änderungen bevor sie implementiert we
 | 4 | Dynamische Bauplätze | Hoch | Besprochen |
 | 5 | Alle Arbeiter-Laufwege simulieren | Hoch | Besprochen |
 | 6 | **Fehlende/Vereinfachte Effekte** | Hoch | **Mit Original abgleichen!** |
+| 7 | **Kartendaten unvollständig** | Hoch | **Mit echten Spieldaten abgleichen!** |
 
 ---
 
@@ -778,6 +779,211 @@ self.faith = min(self.faith + priests * TIME_STEP, ...)
 
 ---
 
+## 11. KARTENDATEN - MIT ECHTEN SPIELDATEN ABGLEICHEN
+
+> **⚠️ KRITISCH: Kartendaten sind unvollständig/approximiert!**
+>
+> Die aktuellen Kartendaten müssen mit den **ECHTEN Spieldateien** abgeglichen werden.
+> Ohne korrekte Daten kann der Agent keine realistischen Entscheidungen lernen.
+
+---
+
+### 11.1 BEGEHBARKEITS-GRID (NICHT ECHT!)
+
+**Status:** ❌ **KRITISCH** - Nur Terrain-Höhe, KEINE echte Blocking-Map!
+
+**Aktuell vorhanden:**
+```python
+# create_walkable_map.py Kommentar:
+# WICHTIG: Die Binärdatei enthält NICHT direkt Blocking-Daten!
+# Die Terrain-Datei zeigt nur Höhen, nicht die tatsächliche Blocking-Map.
+# HINWEIS: Alle Ressourcen-Positionen SIND im echten Spiel begehbar!
+```
+
+**Problem:**
+- `walkable_grid.png` zeigt nur Terrain-Höhen (approximiert)
+- Keine echte Blocking-Map aus Spieldateien
+- Pfadfindung basiert nur auf Luftlinien-Distanz
+
+**Auswirkungen:**
+- Worker-Laufzeiten sind UNGENAU
+- Keine Kollisionsvermeidung mit Bergen/Wasser
+- A* Pfadfindung kann nicht korrekt arbeiten
+
+**Zu extrahieren aus Spieldateien:**
+- [ ] Echte Blocking-Map (welche Tiles sind begehbar?)
+- [ ] Terrain-Typen (Wasser, Berg, Wald, etc.)
+- [ ] Passierbarkeit pro Tile
+
+---
+
+### 11.2 GEBÄUDE-GRÖßEN (NUR GESCHÄTZT)
+
+**Status:** ⚠️ Geschätzte Werte, nicht verifiziert
+
+**Aktuell implementiert:**
+```python
+BUILDING_FOOTPRINT = {
+    "small": 400,   # Wohnhaus, Bauernhof, etc.
+    "medium": 600,  # Hochschule, Schmiede, etc.
+    "large": 800,   # Hauptquartier, Dorfzentrum
+}
+```
+
+**Problem:**
+- Werte sind GESCHÄTZT, nicht aus Spieldateien
+- Gebäude-Kollision nicht implementiert
+- Unklar: Welche Tiles blockiert ein Gebäude?
+
+**Zu extrahieren aus Spieldateien:**
+- [ ] Exakte Gebäude-Größen (pro Gebäude-Typ)
+- [ ] Blocking-Bereich pro Gebäude (welche Tiles werden blockiert?)
+- [ ] Bau-Anforderungen (freie Fläche, Terrain-Typ)
+
+---
+
+### 11.3 BAUPLATZ-POSITIONEN (UNVOLLSTÄNDIG)
+
+**Status:** ⚠️ Nur ~20 Beispiel-Positionen, nicht alle ~2200
+
+**Aktuell vorhanden:**
+```python
+# map_config_wintersturm.py
+BUILDING_ZONES_PLAYER_1 = {
+    "zone_a_immediate": [
+        # Nur die 20 nächsten freien Bauplätze!
+        {"x": 40900, "y": 22900, "distance": 283},
+        ...
+    ],
+    "summary": {
+        "immediate_slots": 1962,  # Behauptet 1962, aber nur 20 gelistet!
+        "after_logging_slots": 238,
+    }
+}
+```
+
+**Problem:**
+- Summary sagt 1962 Positionen, aber nur ~20 sind gelistet
+- Woher kommen die ~2200 Positionen für Multi-Step System?
+- Bauplatz-Grid muss aus Spieldateien extrahiert werden
+
+**Zu extrahieren aus Spieldateien:**
+- [ ] Alle bebaubaren Positionen im Spieler 1 Quadrant
+- [ ] Welche Positionen werden durch Bäume blockiert?
+- [ ] Grid-Auflösung für Bauplätze (400x400? 100x100?)
+
+---
+
+### 11.4 BÄUME (POSITIONEN VORHANDEN)
+
+**Status:** ✅ 909 Bäume mit exakten Positionen
+
+**Aktuell vorhanden:**
+```python
+# player1_resources.json
+{
+    "trees_count": 909,
+    "trees_all": [
+        {"x": 42330.0, "y": 24030.0, "type": "XD_PineNorth3", "distance_to_hq": 1542.0},
+        ...
+    ]
+}
+```
+
+**Zu prüfen:**
+- [ ] Sind alle 909 Bäume korrekt? (mit Spiel vergleichen)
+- [ ] Welchen Bereich blockiert ein Baum?
+- [ ] Wachsen Bäume nach? (wahrscheinlich nicht in EMS)
+
+---
+
+### 11.5 GEBÄUDE-KOLLISION (NICHT IMPLEMENTIERT)
+
+**Status:** ❌ Komplett fehlend
+
+**Aktuell:**
+- Keine Prüfung ob Gebäude sich überlappen
+- Keine dynamische Blockierung nach Bau
+
+**Benötigt:**
+```python
+def _is_position_free(self, x, y, building_type):
+    """Prüft ob Position frei ist für Gebäude."""
+    footprint = BUILDING_FOOTPRINTS[building_type]
+
+    # Prüfe alle gebauten Gebäude
+    for building, positions in self.building_positions.items():
+        for pos in positions:
+            if self._overlaps(x, y, footprint, pos, BUILDING_FOOTPRINTS[building]):
+                return False
+
+    # Prüfe Bäume
+    for tree in self.remaining_trees:
+        if self._in_footprint(tree, x, y, footprint):
+            return False
+
+    return True
+```
+
+---
+
+### 11.6 PFADFINDUNG (VEREINFACHT)
+
+**Status:** ⚠️ Nur Luftlinien-Distanz
+
+**Aktuell implementiert:**
+```python
+# Laufzeit = Distanz / Geschwindigkeit
+walk_time = distance / SERF_SPEED  # Gerade Linie!
+```
+
+**Problem:**
+- Keine Hindernisse berücksichtigt
+- Keine A* Pfadfindung um Berge/Gebäude
+- Worker "fliegen" durch Hindernisse
+
+**Benötigt (nach echten Blocking-Daten):**
+- [ ] A* Pfadfindung mit echter Blocking-Map
+- [ ] Dynamische Pfade (um neue Gebäude herum)
+- [ ] Verschiedene Geschwindigkeiten pro Terrain?
+
+---
+
+### 11.7 CHECKLISTE: ECHTE KARTENDATEN EXTRAHIEREN
+
+**Benötigte Spieldateien:**
+
+| Datei | Zu extrahieren | Status |
+|-------|----------------|--------|
+| `terrain.bin` / `blocking.bin` | Echte Begehbarkeits-Map | ⬜ Offen |
+| `entities/Buildings/*/` | Gebäude-Größen, Footprints | ⬜ Offen |
+| `mapdata.xml` | Alle Bauplatz-Positionen | ⬜ Teilweise |
+| `logic.xml` | Grid-Auflösung, Bau-Regeln | ⬜ Offen |
+
+**Fragen für Karten-Abgleich:**
+
+1. **Begehbarkeit:**
+   - [ ] Wo ist die echte Blocking-Map?
+   - [ ] Welches Format? (Binary, XML?)
+   - [ ] Wie groß ist ein Tile?
+
+2. **Gebäude:**
+   - [ ] Exakte Größe pro Gebäude-Typ?
+   - [ ] Welche Tiles blockiert ein Gebäude?
+   - [ ] Mindestabstand zwischen Gebäuden?
+
+3. **Bauplätze:**
+   - [ ] Wie werden Bauplätze im Spiel berechnet?
+   - [ ] Grid-basiert oder frei platzierbar?
+   - [ ] Welche Terrain-Typen sind bebaubar?
+
+4. **Pfadfindung:**
+   - [ ] Welchen Algorithmus nutzt das Spiel?
+   - [ ] Verschiedene Geschwindigkeiten pro Terrain?
+   - [ ] Maximale Pfadlänge?
+
+---
+
 ## ÄNDERUNGSHISTORIE
 
 | Datum | Änderung |
@@ -794,3 +1000,8 @@ self.faith = min(self.faith + priests * TIME_STEP, ...)
 | 2026-01-27 | Kapelle fehlt komplett, Segen ignoriert worker_types |
 | 2026-01-27 | Forschungs-Queues vereinfacht (nur global), Faith-Produktion vereinfacht |
 | 2026-01-27 | **Checkliste für Original-Abgleich** mit Spieldateien hinzugefügt |
+| 2026-01-27 | **NEU: Abschnitt 11** - Kartendaten müssen mit echten Spieldaten abgeglichen werden |
+| 2026-01-27 | Begehbarkeits-Grid ist NICHT echt (nur Terrain-Höhe approximiert) |
+| 2026-01-27 | Gebäude-Größen nur geschätzt, Kollision nicht implementiert |
+| 2026-01-27 | Bauplatz-Positionen unvollständig (~20 statt ~2200) |
+| 2026-01-27 | Pfadfindung nur Luftlinie, keine A* mit Hindernissen |

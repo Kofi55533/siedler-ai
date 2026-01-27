@@ -389,50 +389,81 @@ def _mask_target_areas(self):
 
 ## 3. DYNAMISCHE POSITIONEN FÜR BAUEN
 
-### Prinzip: Nur aktuell verfügbare Positionen (Option C)
+### Prinzip: Alle möglichen Positionen, nur verfügbare in Maske (Option C)
 
-Der Agent sieht **NUR Positionen die gerade verfügbar sind** - keine feste Liste!
+Der Agent hat Zugriff auf **ALLE möglichen Positionen** - die Maske filtert auf aktuell verfügbare!
+
+**Keine künstliche Begrenzung!**
+
+```python
+# Alle Positionen sind im Action Space
+# Zone A: ~1962 sofort bebaubar
+# Zone B: ~238 nach Holzfällen
+# Gesamt: ~2200 mögliche Positionen
+
+MAX_POSITIONS = 2200  # Alle möglichen Positionen!
+```
+
+### Gymnasium Action Space (fest) + Maske (dynamisch)
 
 ```python
 class ActionPhase:
     POSITION = "position"
 
-# Action Space für Positionen ist DYNAMISCH
-def _get_position_action_space(self):
-    available = self._get_available_positions_for(self.pending_building)
-    return Discrete(len(available))  # Variiert!
+# Action Space ist FEST (alle möglichen Positionen)
+self.action_spaces[ActionPhase.POSITION] = Discrete(MAX_POSITIONS)  # 2200
 
 def _mask_position(self):
-    """Alle angezeigten Positionen sind gültig - Maske ist alles True."""
-    available = self._get_available_positions_for(self.pending_building)
-    return np.ones(len(available), dtype=bool)
-```
-
-### Problem: Variabler Action Space
-
-Gymnasium erwartet **festen** Action Space. Lösung:
-
-```python
-# Feste maximale Größe, aber nur verfügbare sind in Maske True
-MAX_POSITIONS = 200  # Genug für alle möglichen Positionen
-
-def _mask_position(self):
+    """Maske zeigt nur aktuell verfügbare Positionen."""
     mask = np.zeros(MAX_POSITIONS, dtype=bool)
+
     available = self._get_available_positions_for(self.pending_building)
 
-    for i in range(min(len(available), MAX_POSITIONS)):
-        mask[i] = True
+    # Nur verfügbare Positionen sind True
+    for pos in available:
+        pos_index = self.position_to_index[pos]  # Feste Index-Zuordnung
+        mask[pos_index] = True
 
     return mask
 ```
 
+### Feste Index-Zuordnung für Positionen
+
+Jede Position hat einen **festen Index** - ändert sich nie:
+
+```python
+# Beim Environment-Init: Alle Positionen bekommen festen Index
+self.all_positions = []  # Liste aller ~2200 Positionen
+self.position_to_index = {}  # Position -> Index Mapping
+self.index_to_position = {}  # Index -> Position Mapping
+
+# Zone A Positionen (0 - 1961)
+for i, pos in enumerate(zone_a_positions):
+    self.all_positions.append(pos)
+    self.position_to_index[pos] = i
+    self.index_to_position[i] = pos
+
+# Zone B Positionen (1962 - 2199)
+for i, pos in enumerate(zone_b_positions):
+    idx = 1962 + i
+    self.all_positions.append(pos)
+    self.position_to_index[pos] = idx
+    self.index_to_position[idx] = pos
+```
+
 ### Positions-Typen je nach Gebäude
 
-| Gebäude-Typ | Verfügbare Positionen |
-|-------------|----------------------|
-| Normale Gebäude | Alle freien Bauplätze (~1962 max) |
-| Minen | Nur freie Schacht-Positionen (max 3) |
-| Dorfzentrum | Nur Dorfzentrum-Slots (max 3) |
+| Gebäude-Typ | Verfügbare Positionen | Maske |
+|-------------|----------------------|-------|
+| Normale Gebäude | Alle freien Bauplätze | ~1962-2200 möglich |
+| Minen | Nur freie Schacht-Positionen | max 3 True |
+| Dorfzentrum | Nur Dorfzentrum-Slots | max 3 True |
+
+### Warum feste Indices wichtig sind
+
+Der Agent lernt: **"Position 1542 ist nahe HQ, gut für Wohnhaus"**
+
+Wenn Indices sich ändern würden, könnte der Agent nichts lernen!
 
 ---
 
@@ -442,7 +473,7 @@ def _mask_position(self):
 |-------|---------------------|--------------|
 | MAIN | 12 | Haupt-Action-Kategorien |
 | BUILDING | ~28 | Gebäude-Typen |
-| POSITION | max 200 | Dynamisch - nur verfügbare! |
+| POSITION | **~2200** | Alle Positionen (Maske filtert verfügbare) |
 | TECH | ~50 | Technologien |
 | SOLDIER | ~22 | Soldaten-Typen |
 | QUANTITY | 6 | Anzahl [1,2,3,5,10,alle] |
@@ -453,6 +484,8 @@ def _mask_position(self):
 | ON_OFF | 2 | AN/AUS |
 
 **Maximale Step-Tiefe:** 4 (bei Leibeigene zuweisen)
+
+**WICHTIG:** POSITION hat feste Größe (~2200), aber Maske ist meist sehr sparse (wenige True)!
 
 ---
 
@@ -546,7 +579,7 @@ MAIN_ACTIONS = {
 
 ### Multi-Step System
 - [x] ~~"Abziehen" mit "Zuweisen" zusammenführen~~ ✓ ERLEDIGT
-- [x] ~~Positionen: Top N oder alle?~~ ✓ ERLEDIGT - Dynamisch, nur verfügbare
+- [x] ~~Positionen: Top N oder alle?~~ ✓ ERLEDIGT - ALLE ~2200 Positionen, Maske filtert
 - [ ] Observation: Was sieht der Agent in jedem Step?
 - [ ] Reward: Wann gibt es Reward (nur am Ende? Zwischen-Rewards?)
 - [ ] Reset: Was passiert bei Episode-Ende mitten im Flow?
@@ -568,3 +601,5 @@ MAIN_ACTIONS = {
 | 2026-01-26 | **Dynamische Positionen** - nur aktuell verfügbare (Option C) |
 | 2026-01-26 | **Vollständige Bereichs-Liste** für Leibeigene (26 feste + Baustellen) |
 | 2026-01-26 | Masken-Logik für Quell/Ziel-Bereiche dokumentiert |
+| 2026-01-26 | **POSITION korrigiert**: ~2200 alle Positionen (keine Begrenzung!) |
+| 2026-01-26 | Feste Index-Zuordnung für Positionen dokumentiert |

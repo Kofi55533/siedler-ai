@@ -588,24 +588,17 @@ MAIN_ACTIONS = {
 ### 9.1 Multi-Step System
 - [x] ~~"Abziehen" mit "Zuweisen" zusammenführen~~ ✓ ERLEDIGT
 - [x] ~~Positionen: Top N oder alle?~~ ✓ ERLEDIGT - ALLE ~2200 Positionen, Maske filtert
-- [ ] **Observation**: Was sieht der Agent in jedem Step?
-  - Gleiche Observation wie vorher?
-  - Oder erweitert mit "aktueller Phase" und "bisherige Auswahlen"?
-- [ ] **Reward**: Wann gibt es Reward?
-  - Nur am Ende des Multi-Step Flows?
-  - Zwischen-Rewards pro Step?
-  - Negativer Reward für ungültige Aktionen?
-- [ ] **Reset**: Was passiert bei Episode-Ende mitten im Flow?
-  - Flow abbrechen und neuen starten?
-  - Oder Flow zu Ende führen?
+- [x] **Observation**: ✓ ENTSCHIEDEN - **Erweiterte Observation** (Phase + bisherige Auswahlen)
+- [x] **Reward**: ✓ ENTSCHIEDEN - **Nur am Ende des Flows** (sparse reward, Agent lernt selbst)
+- [x] **Reset**: ✓ ENTSCHIEDEN - **Flow zu Ende führen** (bisschen über 30 Min ist OK)
 
 ---
 
 ### 9.2 Leibeigene
-- [ ] **Maximale Anzahl** Leibeigene?
-- [ ] **Kosten** pro Leibeigener? (aktuell: 50 Taler?)
-- [ ] Können Leibeigene **sterben/verschwinden**?
-- [ ] **Kapazitätslimit** durch Dorfzentrum?
+- [x] **Maximale Anzahl**: ✓ ENTSCHIEDEN - Durch **Dorfzentrum-Kapazität** limitiert
+- [ ] **Kosten** pro Leibeigener? → Mit Original abgleichen
+- [x] **Sterben**: ✓ ENTSCHIEDEN - **NEIN**, Leibeigene können NICHT sterben
+- [x] **Essen/Motivation**: ✓ ENTSCHIEDEN - **NEIN**, Leibeigene brauchen NICHTS davon
 
 ---
 
@@ -1076,3 +1069,5 @@ walk_time = distance / SERF_SPEED  # Gerade Linie!
 | 2026-01-27 | **Abschnitt 9 erweitert** - Offene Fragen für Benutzer-Entscheidungen |
 | 2026-01-27 | Camp-System muss mit Original abgeglichen werden |
 | 2026-01-27 | Worker-Verhalten, Produktions-Ketten, Soldaten-Rekrutierung als offene Fragen |
+| 2026-01-27 | **Multi-Step ENTSCHIEDEN**: Erweiterte Obs, Reward nur am Ende, Flow zu Ende führen |
+| 2026-01-27 | **Leibeigene ENTSCHIEDEN**: Kein Sterben, kein Essen/Motivation, DZ-Kapazität limitiert |

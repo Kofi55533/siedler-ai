@@ -23,6 +23,7 @@ Dieses Dokument sammelt alle besprochenen Änderungen bevor sie implementiert we
 | 9 | **Offene Design-Fragen** | Hoch | **Benutzer muss entscheiden!** |
 | 10 | **Worker-Spawn/Despawn** | Hoch | **Mit Original abgleichen!** |
 | 11 | **Technologie-Effekte nicht angewendet** | Hoch | **Mit Original abgleichen!** |
+| 12 | **ALLE hardcoded Werte (~400+)** | Hoch | **Mit Original abgleichen!** |
 
 ---
 
@@ -1184,6 +1185,414 @@ walk_time = distance / SERF_SPEED  # Gerade Linie!
 
 ---
 
+## 12. ALLE HARDCODED WERTE - MIT ORIGINAL ABGLEICHEN!
+
+> **⚠️ KRITISCH: Der GESAMTE Code enthält hunderte manuell eingetragene Werte!**
+>
+> Alle diese Werte sind entweder geschätzt oder aus unvollständigen Quellen.
+> Sie MÜSSEN mit den echten Spieldateien (XML, LUA) abgeglichen werden.
+
+---
+
+### 12.1 SIMULATIONS-KONSTANTEN
+
+| Variable | Aktueller Wert | Datei | Zeile | Abzugleichen? |
+|----------|---------------|-------|-------|----------------|
+| `TIME_STEP` | 1s | environment.py | 731 | ⬜ Prüfen: Spiel-Tick-Rate |
+| `INCOME_CYCLE` | 40 Ticks | environment.py | 732 | ⬜ Wie oft zahlt das Spiel Löhne? |
+| `TOTAL_SIM_TIME` | 1800s (30 Min) | environment.py | 733 | ✅ Design-Entscheidung |
+| `MAX_POSSIBLE_LEIBEIGENE` | 300 | environment.py | 734 | ⬜ Echtes Limit? |
+| `SERF_BUY_COST` | 50 Taler | environment.py | 741 | ⬜ Kosten im Original? |
+
+---
+
+### 12.2 RESSOURCEN-SAMMELRATEN (Leibeigene)
+
+| Ressource | Rate/Sekunde | Datei | Zeile | Abzugleichen? |
+|-----------|-------------|-------|-------|----------------|
+| Holz (Wood) | 1.038 | environment.py | 61 | ⬜ |
+| Stein (Stone) | 0.528 | environment.py | 62 | ⬜ |
+| Lehm (Clay) | 0.528 | environment.py | 63 | ⬜ |
+| Eisen (Iron) | 0.642 | environment.py | 64 | ⬜ |
+| Schwefel (Sulfur) | 0.642 | environment.py | 65 | ⬜ |
+
+| Holz-Konstante | Wert | Zeile | Abzugleichen? |
+|----------------|------|-------|----------------|
+| `SERF_SEARCH_RADIUS` | 4500 | 71 | ⬜ Kommentar sagt "PU_Serf.xml" |
+| `WOOD_PER_TREE` | 75 | 72 | ⬜ Im Spiel 2 pro Fällung? |
+| `WOOD_PER_EXTRACTION` | 2 | 73 | ⬜ |
+| `EXTRACTION_TIME_WOOD` | 5.52s | 74 | ⬜ |
+
+---
+
+### 12.3 STEUERSYSTEM
+
+| Stufe | Taler/Worker | Motivation-Änderung | Abzugleichen? |
+|-------|-------------|--------------------|-|
+| 0 - Keine | 0 | +0.20 | ⬜ |
+| 1 - Niedrig | 5 | +0.08 | ⬜ |
+| 2 - Normal | 10 | 0.0 | ⬜ |
+| 3 - Hoch | 15 | -0.08 | ⬜ |
+| 4 - Sehr hoch | 20 | -0.12 | ⬜ |
+
+---
+
+### 12.4 SEGEN-SYSTEM
+
+| Konstante | Wert | Abzugleichen? |
+|-----------|------|----------------|
+| `BLESS_COOLDOWN` | 180s | ⬜ |
+| `BLESS_DURATION` | 180s | ⬜ |
+| `BLESS_MOTIVATION_BONUS` | +30% | ⬜ |
+| `BLESS_REQUIRED_FAITH` | 5000 | ⬜ |
+
+---
+
+### 12.5 MOTIVATION-SYSTEM
+
+| Konstante | Wert | Abzugleichen? |
+|-----------|------|----------------|
+| Basis-Motivation | 1.0 (100%) | ⬜ |
+| Maximum | 3.0 (300%) | ⬜ |
+| Minimum (Worker gehen) | 0.25 (25%) | ⬜ |
+| Schwelle "Glücklich" | 1.5 (150%) | ⬜ |
+| Schwelle "Traurig" | 1.0 (100%) | ⬜ |
+| Schwelle "Wütend" | 0.7 (70%) | ⬜ |
+| Kloster_1 Bonus | +0.08 | ⬜ |
+| Kloster_2 Bonus | +0.10 | ⬜ |
+| Kloster_3 Bonus | +0.15 | ⬜ |
+
+---
+
+### 12.6 GEBÄUDE-KAPAZITÄTEN
+
+#### Dorfzentrum (Max Worker im Dorf)
+| Level | Kapazität | Abzugleichen? |
+|-------|----------|----------------|
+| Dorfzentrum_1 | 75 | ⬜ |
+| Dorfzentrum_2 | 100 | ⬜ |
+| Dorfzentrum_3 | 150 | ⬜ |
+
+#### Wohnhaus (Schlafplätze)
+| Level | Kapazität | Abzugleichen? |
+|-------|----------|----------------|
+| Wohnhaus_1 | 6 | ⬜ |
+| Wohnhaus_2 | 9 | ⬜ |
+| Wohnhaus_3 | 12 | ⬜ |
+
+#### Bauernhof (Essplätze)
+| Level | Kapazität | Abzugleichen? |
+|-------|----------|----------------|
+| Bauernhof_1 | 8 | ⬜ |
+| Bauernhof_2 | 10 | ⬜ |
+| Bauernhof_3 | 12 | ⬜ |
+
+---
+
+### 12.7 GEBÄUDE - KOSTEN & BAUZEITEN
+
+> **Alle Gebäude-Werte sind potenziell geschätzt!**
+
+#### Wirtschafts-Gebäude
+
+| Gebäude | Bauzeit | Holz | Stein | Lehm | Taler | Worker | Abzugl.? |
+|---------|---------|------|-------|------|-------|--------|----------|
+| Hauptquartier_1 | 110s | 500 | 500 | 500 | - | 0 | ⬜ |
+| Hauptquartier_2 | 180s | 800 | 800 | 800 | - | 0 | ⬜ |
+| Hauptquartier_3 | 300s | 1200 | 1200 | 1200 | - | 0 | ⬜ |
+| Dorfzentrum_1 | 100s | 250 | 200 | 200 | - | 3 | ⬜ |
+| Dorfzentrum_2 | 150s | 450 | 400 | 400 | - | 5 | ⬜ |
+| Dorfzentrum_3 | 220s | 700 | 600 | 600 | - | 6 | ⬜ |
+| Wohnhaus_1 | 60s | 150 | 100 | 100 | - | 2 | ⬜ |
+| Wohnhaus_2 | 100s | 250 | 200 | 200 | - | 4 | ⬜ |
+| Wohnhaus_3 | 150s | 400 | 400 | 400 | - | 8 | ⬜ |
+| Bauernhof_1 | 80s | 200 | 100 | 150 | - | 2 | ⬜ |
+| Bauernhof_2 | 120s | 350 | 200 | 300 | - | 4 | ⬜ |
+| Bauernhof_3 | 180s | 550 | 400 | 500 | - | 6 | ⬜ |
+
+#### Produktions-Gebäude
+
+| Gebäude | Bauzeit | Kosten | Worker | Output | Abzugl.? |
+|---------|---------|--------|--------|--------|----------|
+| Hochschule_1 | 90s | 200H, 300L | 6 | Forschung 1.0x | ⬜ |
+| Hochschule_2 | 60s | (Upgrade) | 8 | Forschung 1.5x | ⬜ |
+| Sägemühle_1 | 100s | 300St, 150L | 6 | 3 Holz | ⬜ |
+| Sägemühle_2 | 160s | 200H, 400St, 300L | 6 | 5 Holz | ⬜ |
+| Lehmhütte_1 | 110s | 400H, 300St | 6 | 3 Lehm | ⬜ |
+| Lehmhütte_2 | 170s | 500H, 400St, 200L | 6 | 5 Lehm | ⬜ |
+| Schmiede_1 | 110s | 400H, 300St | 4 | 1 Eisen | ⬜ |
+| Schmiede_2 | 160s | 500H, 400St, 200L | 5 | 2 Eisen | ⬜ |
+| Schmiede_3 | 220s | 600H, 500St, 400L | 6 | 3 Eisen | ⬜ |
+| Alchimistenhütte_1 | 120s | 300H, 400St, 100L | 4 | 3 Schwefel | ⬜ |
+| Alchimistenhütte_2 | 180s | 400H, 500St, 300L | 6 | 5 Schwefel | ⬜ |
+| Steinmetzhütte_1 | 110s | 300H, 200L | 6 | 3 Stein | ⬜ |
+| Steinmetzhütte_2 | 170s | 400H, 200St, 400L | 6 | 5 Stein | ⬜ |
+| Bank_1 | 130s | 500H, 500St | 4 | 2 Taler | ⬜ |
+| Bank_2 | 200s | 600H, 600St, 200L | 6 | 4 Taler | ⬜ |
+
+#### Religiöse Gebäude
+
+| Gebäude | Bauzeit | Kosten | Worker | Motivation | Abzugl.? |
+|---------|---------|--------|--------|-----------|----------|
+| Kloster_1 | 140s | 500H, 550St | 6 | +0.08 | ⬜ |
+| Kloster_2 | 210s | 650H, 700St, 300L | 8 | +0.10 | ⬜ |
+| Kloster_3 | 300s | 800H, 900St, 500L | 10 | +0.15 | ⬜ |
+
+#### Militär-Gebäude
+
+| Gebäude | Bauzeit | Kosten | Abzugl.? |
+|---------|---------|--------|----------|
+| Kaserne_1 | 90s | 300H, 350St | ⬜ |
+| Kaserne_2 | 150s | 450H, 500St, 300L | ⬜ |
+| Schießplatz_1 | 90s | 300H, 350St, 100L | ⬜ |
+| Schießplatz_2 | 150s | 450H, 500St, 300L | ⬜ |
+| Stall_1 | 120s | 200H, 350St | ⬜ |
+| Stall_2 | 180s | 350H, 450St, 200L | ⬜ |
+| Kanongießerei_1 | 110s | 300H, 500L, 5T | ⬜ |
+| Kanongießerei_2 | 150s | 400H, 100St, 600L, 10T | ⬜ |
+| Büchsenmacherei_1 | 110s | 400St, 300S, 15T | ⬜ |
+| Büchsenmacherei_2 | 180s | 600St, 500S, 300E, 25T | ⬜ |
+
+#### Sonstige Gebäude
+
+| Gebäude | Bauzeit | Kosten | Abzugl.? |
+|---------|---------|--------|----------|
+| Markt_1 | 80s | 200H, 400St | ⬜ |
+| Markt_2 | 120s | 350H, 550St, 150L | ⬜ |
+| Taverne_1 | 100s | 300H, 400St, 100L, 25T | ⬜ |
+| Taverne_2 | 150s | 400H, 600St, 300L, 40T | ⬜ |
+| Turm_1 | 80s | 200H, 200St | ⬜ |
+| Turm_2 | 120s | 300H, 300St, 100L | ⬜ |
+| Turm_3 | 180s | 400H, 450St, 200L | ⬜ |
+| Architektenstube | 100s | 200H, 400St | ⬜ |
+| Brücke | 60s | 300H, 200St | ⬜ |
+| Wetterturm | 40s | 500H, 500S | ⬜ |
+| Wetterkraftwerk | 40s | 500H, 300St | ⬜ |
+
+---
+
+### 12.8 SOLDATEN - KOSTEN & AUSBILDUNGSZEITEN
+
+> **Besonders relevant: Scharfschützen!**
+
+| Einheit | Taler | Eisen | Holz | Schwefel | Ausb.Zeit | Abzugl.? |
+|---------|-------|-------|------|----------|-----------|----------|
+| **Scharfschützen** | **50** | - | - | **40** | **20s** | **⬜ PRIORITÄT!** |
+| **Scharfschützen_2** | **300** | - | - | **80** | **30s** | **⬜ PRIORITÄT!** |
+| Schwertkämpfer_1 | 30 | 20 | - | - | 15s | ⬜ |
+| Schwertkämpfer_2 | 40 | 30 | - | - | 20s | ⬜ |
+| Schwertkämpfer_3 | 50 | 40 | - | - | 25s | ⬜ |
+| Schwertkämpfer_4 | 60 | 50 | - | - | 30s | ⬜ |
+| Speerträger_1 | 30 | - | 20 | - | 15s | ⬜ |
+| Speerträger_2 | 40 | - | 30 | - | 20s | ⬜ |
+| Speerträger_3 | 50 | - | 40 | - | 25s | ⬜ |
+| Speerträger_4 | 60 | - | 50 | - | 30s | ⬜ |
+| Bogenschützen_1 | 30 | - | 30 | - | 15s | ⬜ |
+| Bogenschützen_2 | 40 | - | 40 | - | 20s | ⬜ |
+| Bogenschützen_3 | 50 | 40 | 40 | - | 25s | ⬜ |
+| Bogenschützen_4 | 60 | 50 | - | - | 30s | ⬜ |
+| Leichte Kavallerie_1 | 80 | 30 | - | - | 30s | ⬜ |
+| Leichte Kavallerie_2 | 100 | 40 | - | - | 40s | ⬜ |
+| Schwere Kavallerie_1 | 120 | 40 | - | - | 40s | ⬜ |
+| Schwere Kavallerie_2 | 150 | 50 | - | - | 50s | ⬜ |
+| Kanonen | 100 | 100 | - | - | 60s | ⬜ |
+| Dieb | 300 | 30 | - | - | 45s | ⬜ |
+| Späher | 100 | 50 | - | - | 15s | ⬜ |
+| Leibeigener | 50 | - | - | - | 10s | ⬜ |
+
+---
+
+### 12.9 TECHNOLOGIEN - KOSTEN & FORSCHUNGSZEITEN
+
+> **Besonders relevant: Scharfschützen-Pfad!**
+
+#### Scharfschützen-Forschungspfad (PRIORITÄT!)
+
+| Technologie | Kosten | Forschungszeit | Voraussetzung | Abzugl.? |
+|-------------|--------|---------------|---------------|----------|
+| **Mathematik** | 100T, 200H | 20s | - | **⬜ PRIORITÄT!** |
+| **Fernglas** | 300T, 300E | 30s | HQ_2 | **⬜ PRIORITÄT!** |
+| **Luntenschloss** | 300E, 300S | 50s | HQ_2 | **⬜ PRIORITÄT!** |
+| **Gezogener Lauf** | 500E, 400S | 70s | HQ_3 | **⬜ PRIORITÄT!** |
+
+#### Alle anderen Technologien
+
+| Technologie | Kosten | Forschungszeit | Abzugl.? |
+|-------------|--------|---------------|----------|
+| Konstruktion | 200H, 150L | 20s | ⬜ |
+| Zahnräder | 400St, 200E | 40s | ⬜ |
+| Flaschenzug | 200H, 300St | 40s | ⬜ |
+| Architektur | 600St, 500E | 80s | ⬜ |
+| Alchimie | 50H, 150St | 20s | ⬜ |
+| Legierungen | 200E, 300St | 40s | ⬜ |
+| Metallurgie | 400E, 400St | 60s | ⬜ |
+| Chemie | 500E, 600St | 80s | ⬜ |
+| Bildung | 50T, 150H | 20s | ⬜ |
+| Handelswesen | 300T | 40s | ⬜ |
+| Buchdruck | 200T, 200E | 40s | ⬜ |
+| Büchereien | 500T, 300H | 80s | ⬜ |
+| Wehrpflicht | 50T, 150H | 20s | ⬜ |
+| Stehendes Heer | 200T, 200E | 40s | ⬜ |
+| Taktiken | 400T, 400E | 60s | ⬜ |
+| Strategien | 600T, 600E | 80s | ⬜ |
+| Pferdezucht | 600T, 600E | 80s | ⬜ |
+| Lederrüstung | 100T, 100E | 15s | ⬜ |
+| Kettenrüstung | 200T, 200E | 25s | ⬜ |
+| Plattenrüstung | 300T, 300E | 35s | ⬜ |
+| Maurerarbeit | 200H, 400St | 20s | ⬜ |
+| Leichte Ziegel | 300L, 100H | 20s | ⬜ |
+| Pfeilherstellung | 200H, 100E | 15s | ⬜ |
+| Panzerbr. Pfeile | 300H, 200E | 25s | ⬜ |
+| Verb. Schießpulver | 400S, 200E | 30s | ⬜ |
+| Glühende Kugeln | 500S, 300E | 40s | ⬜ |
+| Schmiedekunst | 200T, 200E | 20s | ⬜ |
+| Eisenguss | 300T, 300E | 30s | ⬜ |
+| Weiche Rüstung | 100T, 100E | 15s | ⬜ |
+| Wattierte Rüstung | 200T, 200E | 20s | ⬜ |
+| Leder-Bogenschützenr. | 300T, 300E | 25s | ⬜ |
+| Holzalterung | 200H, 100T | 20s | ⬜ |
+| Drechselei | 300H, 200T | 25s | ⬜ |
+| Wettervorhersage | 200S, 200T | 30s | ⬜ |
+| Wettermanipulation | 400S, 400T | 50s | ⬜ |
+| Schuldschein | 300T | 30s | ⬜ |
+| Buchführung | 500T | 40s | ⬜ |
+| Waage | 200T, 100E | 20s | ⬜ |
+| Münzprägung | 400T, 200E | 30s | ⬜ |
+| Stadtwache | 200T, 200H | 25s | ⬜ |
+| Webstuhl | 200H, 100T | 20s | ⬜ |
+| Schuhe | 300H, 200T | 25s | ⬜ |
+| Kasernentraining | 300T, 200E | 30s | ⬜ |
+| Schießtraining | 300T, 200H | 30s | ⬜ |
+| Hufbeschlag | 200T, 200E | 50s | ⬜ |
+| Verb. Fahrgestell | 300E, 200H | 40s | ⬜ |
+
+---
+
+### 12.10 WORKER-SIMULATION (WorkTime-System)
+
+> **Quelle: `worker_simulation.py` - Werte möglicherweise aus Spieldateien, aber zu prüfen!**
+
+#### Worker-Geschwindigkeiten
+
+| Worker-Typ | Geschwindigkeit | Abzugleichen? |
+|-----------|----------------|----------------|
+| Leibeigener (Serf) | 400 Einheiten/s | ⬜ |
+| Alle anderen Worker | 320 Einheiten/s | ⬜ |
+
+#### Arbeitszyklen (WorkCycle / EatTime / RestTime)
+
+| Worker-Typ | Arbeit | Essen | Ruhe | Abzugl.? |
+|-----------|--------|-------|------|----------|
+| Farmer | 4.000ms | 2.000ms | 3.000ms | ⬜ |
+| Miner | 30.000ms | 2.000ms | 3.000ms | ⬜ |
+| Sawmill Worker | 40.000ms | 2.000ms | 3.000ms | ⬜ |
+| Brickmaker | 30.000ms | 2.000ms | 3.000ms | ⬜ |
+| Stonecutter | 15.000ms | 2.000ms | 3.000ms | ⬜ |
+| Smith | 30.000ms | 2.000ms | 3.000ms | ⬜ |
+| Alchemist | 20.000ms | 2.000ms | 3.000ms | ⬜ |
+| Priest | 4.000ms | 2.000ms | 3.000ms | ⬜ |
+| Trader | 18.000ms | 2.000ms | 3.000ms | ⬜ |
+| Treasurer | 15.000ms | 2.000ms | 3.000ms | ⬜ |
+| Smelter | 30.000ms | 2.000ms | 3.000ms | ⬜ |
+| Scholar | 4.000ms | 2.000ms | 3.000ms | ⬜ |
+| Engineer | 4.000ms | 3.000ms | 2.000ms | ⬜ |
+| Master Builder | 4.000ms | 2.000ms | 3.000ms | ⬜ |
+| Gunsmith | 20.000ms | 2.000ms | 3.000ms | ⬜ |
+| Coiner | 4.000ms | 500ms | 500ms | ⬜ |
+
+#### WorkTime-Parameter
+
+| Parameter | Normal | Coiner | Abzugl.? |
+|-----------|--------|--------|----------|
+| `work_time_change_work` | -50 | -100 | ⬜ |
+| `work_time_change_farm` | 0.7 (70%) | 0.1 (10%) | ⬜ |
+| `work_time_change_residence` | 0.5 (50%) | 0.1 (10%) | ⬜ |
+| `work_time_change_camp` | 0.1 (10%) | 0.2 (20%) | ⬜ |
+| `work_time_max_farm` | 100 | 200 | ⬜ |
+| `work_time_max_residence` | 400 | 200 | ⬜ |
+| `exhausted_malus` | 0.2 (20%) | 0.05 (5%) | ⬜ |
+| `WORK_TIME_START` | 100 | - | ⬜ |
+| `CAMPER_RANGE` | 5000 | - | ⬜ |
+
+---
+
+### 12.11 MINEN & PRODUKTIONS-KONFIGURATION
+
+#### Minen-Worker pro Level
+
+| Mine Level | Max Worker | Output-Menge | Abzugleichen? |
+|------------|-----------|-------------|----------------|
+| Level 1 | 5 | 4 | ⬜ |
+| Level 2 | 6 | 5 | ⬜ |
+| Level 3 | 7 | 6 | ⬜ |
+
+#### Raffinerie-Konfiguration
+
+| Raffinerie | Initial-Faktor | Transport-Menge | Abzugleichen? |
+|-----------|----------------|----------------|----------------|
+| Sägemühle | 4 | 5 | ⬜ |
+| Lehmhütte | 4 | 5 | ⬜ |
+| Schmiede | 4 | 5 | ⬜ |
+| Alchimistenhütte | 3 | 5 | ⬜ |
+| Steinmetzhütte | 4 | 5 | ⬜ |
+
+#### Gelehrte pro Hochschule-Level
+
+| Level | Gelehrte | Abzugleichen? |
+|-------|---------|----------------|
+| Level 1 | 1 | ⬜ |
+| Level 2 | 2 | ⬜ |
+
+---
+
+### 12.12 BAUGESCHWINDIGKEIT
+
+| Leibeigene | Geschwindigkeit | Formel | Abzugleichen? |
+|-----------|----------------|--------|----------------|
+| 1 Serf | 1.0x | Basis | ⬜ |
+| 2 Serfs | 1.5x | 1.0 + 0.5*(n-1) | ⬜ |
+| 3 Serfs | 2.0x | 1.0 + 0.5*(n-1) | ⬜ |
+| 4 Serfs | 2.5x | 1.0 + 0.5*(n-1) | ⬜ |
+
+---
+
+### 12.13 START-RESSOURCEN (Wintersturm-Karte)
+
+| Ressource | Startwert | Abzugleichen? |
+|-----------|----------|----------------|
+| Taler | 500 | ⬜ |
+| Lehm | 2400 | ⬜ |
+| Holz | 1750 | ⬜ |
+| Stein | 700 | ⬜ |
+| Eisen | 50 | ⬜ |
+| Schwefel | 50 | ⬜ |
+
+---
+
+### 12.14 ZUSAMMENFASSUNG
+
+**Gesamt abzugleichende Werte: ~400+**
+
+| Kategorie | Anzahl Werte | Priorität |
+|-----------|-------------|-----------|
+| Scharfschützen-Pfad (Techs + Einheiten) | ~12 | 🔴 HÖCHSTE |
+| Gebäude-Kosten & Bauzeiten | ~120 | 🟡 Hoch |
+| Technologie-Kosten & Zeiten | ~100 | 🟡 Hoch |
+| Soldaten-Kosten & Zeiten | ~50 | 🟡 Hoch |
+| Worker-Simulation (WorkTime) | ~40 | 🟡 Hoch |
+| Steuern/Segen/Motivation | ~25 | 🟠 Mittel |
+| Minen/Produktion | ~20 | 🟠 Mittel |
+| Simulations-Konstanten | ~10 | 🟠 Mittel |
+| Start-Ressourcen | 6 | 🟢 Niedrig (kartenspezifisch) |
+
+**Empfohlene Reihenfolge:**
+1. Scharfschützen-Pfad zuerst (direkt relevant für Trainingsziel!)
+2. Gebäude + Technologien (Wirtschafts-Simulation)
+3. Worker-System (Produktions-Effizienz)
+4. Rest (Steuern, Segen, etc.)
+
+---
+
 ## ÄNDERUNGSHISTORIE
 
 | Datum | Änderung |
@@ -1216,3 +1625,6 @@ walk_time = distance / SERF_SPEED  # Gerade Linie!
 | 2026-01-27 | 18 verschiedene Effekt-Typen, keiner wird beim Forschungs-Abschluss aktiviert |
 | 2026-01-27 | game_data.json hat leere Effekte - environment.py Werte sind manuell geschätzt |
 | 2026-01-27 | Relevante Effekte für AI: build_speed, worker_speed, training_speed, payday |
+| 2026-01-27 | **NEU: Abschnitt 12** - ALLE ~400+ hardcoded Werte aus environment.py aufgelistet |
+| 2026-01-27 | Gebäude-Kosten, Soldaten, Technologien, Worker-Simulation, Steuern, Segen, etc. |
+| 2026-01-27 | Prioritäts-Reihenfolge: Scharfschützen-Pfad → Gebäude → Worker → Rest |

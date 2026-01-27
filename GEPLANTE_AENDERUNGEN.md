@@ -24,6 +24,7 @@ Dieses Dokument sammelt alle besprochenen Änderungen bevor sie implementiert we
 | 10 | **Worker-Spawn/Despawn** | Hoch | **Mit Original abgleichen!** |
 | 11 | **Technologie-Effekte nicht angewendet** | Hoch | **Mit Original abgleichen!** |
 | 12 | **ALLE hardcoded Werte (~400+)** | Hoch | **Mit Original abgleichen!** |
+| 13 | **Produktions-Mechanik & Bugs** | Hoch | **Bugs + Abgleichen!** |
 
 ---
 
@@ -1679,6 +1680,241 @@ if self.current_time % INCOME_CYCLE == 0:
 
 ---
 
+## 13. PRODUKTIONS-MECHANIK, VEREDELUNG & UPGRADE-PROBLEME
+
+> **⚠️ KRITISCH: Mehrere Bugs und fehlende Mechaniken in der Produktion!**
+>
+> Die Produktions- und Veredelungsmechanik hat fundamentale Probleme die
+> abgeglichen und gefixt werden müssen.
+
+---
+
+### 13.1 ZAHLTAG - WIE FUNKTIONIERT ER WIRKLICH? (ABGLEICHEN!)
+
+**Aktuell implementiert** (`environment.py` Zeile 3132-3144):
+```python
+# Alle 40 Ticks:
+if self.current_time % INCOME_CYCLE == 0:
+    total_workers = len(self.workforce_manager.workers)
+    tax_income = tax_info["regular_tax"] * total_workers  # z.B. 10 * 50 Worker = 500 Taler
+    self.resources[RESOURCE_TALER] += tax_income
+```
+
+**Offene Fragen - mit Original abgleichen:**
+
+1. **Wann startet der Zahltag?**
+   - [ ] Aktuell: Sofort ab Tick 0 (`current_time % 40 == 0`) - wahrscheinlich FALSCH!
+   - [ ] Im echten Spiel: Wahrscheinlich erst ab dem **ersten Gebäude mit steuerzahlenden Workern**
+   - [ ] Oder erst ab dem ersten Wohnhaus/Dorfzentrum?
+   - [ ] Gibt es eine Initialisierungs-Phase?
+
+2. **Wer zahlt Steuern?**
+   - [ ] Aktuell: ALLE Worker (`len(workforce_manager.workers)`)
+   - [ ] Zahlen **Leibeigene** auch Steuern? → Wahrscheinlich NEIN! Sie brauchen nichts.
+   - [ ] Zahlen nur Worker die in **Gebäuden** arbeiten?
+   - [ ] Was ist mit arbeitslosen Workern?
+   - [ ] Was ist mit Workern die gerade **essen/schlafen**?
+
+3. **Hängt der Zahltag von Gebäuden ab oder von Bewohnern?**
+   - [ ] Ist es "pro Worker" (aktuell)?
+   - [ ] Oder "pro Gebäude-Typ" (z.B. jedes Wohnhaus zahlt X)?
+   - [ ] Oder "pro belegtes Wohnhaus" (nur wenn Bewohner drin)?
+   - [ ] Sind `taler_income` Werte pro Gebäude der eigentliche Zahltag?
+
+4. **Schmälert Militär den Zahltag?**
+   - [ ] Aktuell: Soldaten haben **KEINE laufenden Kosten** - nur Rekrutierung!
+   - [ ] Im echten Spiel: Soldaten kosten wahrscheinlich **Sold pro Zahltag**!
+   - [ ] Wenn ja: **Wie viel pro Einheits-Typ?**
+     - [ ] Schwertkämpfer_1-4: ? Taler/Zahltag
+     - [ ] Bogenschützen_1-4: ? Taler/Zahltag
+     - [ ] Kavallerie: ? Taler/Zahltag
+     - [ ] Scharfschützen: ? Taler/Zahltag (**TRAINING-RELEVANT!**)
+     - [ ] Kanonen: ? Taler/Zahltag
+   - [ ] Werden Sold-Kosten vom Steuer-Einkommen abgezogen?
+   - [ ] Oder ist Sold ein separater Abzug?
+   - [ ] Was passiert wenn man sich den Sold nicht leisten kann? (Desertierung?)
+
+5. **`taler_income` pro Gebäude - Bug oder Feature?**
+   - [ ] Jedes Gebäude hat `taler_income` definiert (z.B. Steinmine_1 = 20T)
+   - [ ] Aber `_get_taler_income()` wird **NUR in der Observation** genutzt!
+   - [ ] Es wird **NICHT** zum Steuer-Einkommen addiert!
+   - [ ] → Ist `taler_income` das **echte Einkommen pro Zahltag**?
+   - [ ] → Und `regular_tax` nur der **Steueranteil** den Worker zahlen?
+   - [ ] → Oder sind es komplett getrennte Systeme?
+
+**Zu prüfen in Spieldateien:**
+- [ ] `extra2/logic.xml` - PaydayUpdate, RegularTax, MilitaryUpkeep
+- [ ] Wie interagieren Gebäude-Einkommen + Steuern + Militär-Kosten?
+- [ ] Gibt es Sold/Unterhalt für Soldaten?
+- [ ] Was ist der Trigger für den ersten Zahltag?
+- [ ] Wer genau zählt als "steuerpflichtiger Worker"?
+
+---
+
+### 13.2 VEREDELUNG (REFINER) - MECHANIK UNKLAR
+
+**Aktuell implementiert** (`production_system.py` Zeile 99-154):
+```python
+class Refiner:
+    input_resource: ResourceType   # z.B. IRON
+    resource_type: ResourceType    # Output: z.B. IRON
+    initial_factor: int = 4        # Umwandlungsrate (4:1?)
+    transport_amount: int = 5      # Pro Trip
+
+    # Output = Workers × TransportAmount × Effizienz / CycleTime
+    # Input  = Output × InitialFactor (z.B. 4x mehr Input als Output)
+```
+
+**Probleme:**
+
+1. **Input = Output Ressource?!**
+   - [ ] Schmiede: Input=IRON → Output=IRON (?!)
+   - [ ] Sägemühle: Input=WOOD → Output=WOOD (?!)
+   - [ ] Lehmhütte: Input=CLAY → Output=CLAY (?!)
+   - [ ] **Das ergibt KEINEN Sinn!** Verbrauch > Produktion (4:1 Faktor)
+   - [ ] **NETTO-VERLUST:** Schmiede verbraucht 4 Eisen um 1 Eisen zu produzieren?!
+   - [ ] → Im echten Spiel: Was ist Input, was ist Output?
+   - [ ] → Gibt es **verschiedene Ressourcen-Stufen**? (Roh-Eisen → Verarbeitetes Eisen?)
+   - [ ] → Oder ist es ein **Multiplikator** (Input-Menge wird vervielfacht)?
+
+2. **InitialFactor - was bedeutet das?**
+   - [ ] Aktuell: Input-Verbrauch = Output × InitialFactor
+   - [ ] Also bei Faktor 4: Verbraucht 4 Einheiten für 1 Einheit Output
+   - [ ] Das würde bedeuten: Veredelung ist ein **Netto-Verlust**!
+   - [ ] → Ist `InitialFactor` stattdessen ein **Multiplikator** für Output?
+   - [ ] → Oder die **Anfangsmenge** die der Worker holt?
+   - [ ] → Im XML: Was bedeutet `InitialFactor` genau?
+
+3. **Transport-Mechanik:**
+   - [ ] Worker holt Rohstoffe von `supplier_position` (aktuell: HQ)
+   - [ ] Transportmenge: 5 Einheiten pro Trip
+   - [ ] Verarbeitungszeit: 5.0s (geschätzt!)
+   - [ ] → Woher holt der Worker die Rohstoffe wirklich?
+   - [ ] → Gibt es Lager-Gebäude?
+   - [ ] → Holt der Worker von der nächsten Mine?
+   - [ ] → Oder aus einem zentralen Lager?
+
+4. **Welche Ressource kommt am Ende raus?**
+   - [ ] Produziert die Sägemühle "verarbeitetes Holz" (= Bretter)?
+   - [ ] Produziert die Schmiede "verarbeitetes Eisen" (= Waffen/Werkzeuge)?
+   - [ ] Gibt es verschiedene Ressourcen-Typen (roh vs. verarbeitet)?
+   - [ ] Im Code gibt es NUR: Wood, Stone, Clay, Iron, Sulfur, Gold
+   - [ ] → Fehlen Ressourcen-Typen wie Bretter, Waffen, Ziegel?
+
+**Zu prüfen in Spieldateien:**
+- [ ] `entities/Buildings/B_Blacksmith/` - Schmiede-Behavior
+- [ ] `CResourceRefinerBehavior` - InitialFactor, TransportAmount genau
+- [ ] Was sind Input/Output der jeweiligen Gebäude?
+- [ ] Gibt es verschiedene Ressourcen-Stufen (roh/verarbeitet)?
+
+---
+
+### 13.3 UPGRADE-PROBLEM - PRODUKTION WIRD NICHT AKTUALISIERT!
+
+**Status:** ❌ **BUG** - Mine/Refiner-Level werden bei Upgrade NICHT aktualisiert!
+
+**Aktuell implementiert** (`environment.py` Zeile 3191-3200):
+```python
+# Upgrade-Queue verarbeiten
+for i, (old_b, new_b, remaining) in enumerate(self.upgrade_queue):
+    remaining -= TIME_STEP
+    if remaining <= 0:
+        self.buildings[old_b] -= 1       # z.B. Eisenmine_1 - 1
+        self.buildings[new_b] += 1       # z.B. Eisenmine_2 + 1
+        # FERTIG! Keine weitere Logik!
+```
+
+**Was FEHLT:**
+- **Mine nicht aktualisiert:** `production_system.mines["Eisenmine_1"]` bleibt Level 1!
+  - Level 1: 5 Worker, 4 Output → Level 2: 6 Worker, 5 Output → wird NICHT geändert!
+- **Refiner nicht aktualisiert:** `production_system.refiners["Schmiede_1"]` bleibt Level 1!
+- **Worker-Anzahl nicht erhöht:** Mehr Worker-Slots nach Upgrade werden NICHT befüllt
+- **Kapazitäten nicht aktualisiert:** Wohnhaus/Bauernhof/DZ Kapazitäten bleiben gleich
+
+**Was bei Upgrade passieren SOLLTE:**
+```python
+# Bei Mine-Upgrade:
+mine = self.production_system.mines[old_key]
+mine.level = new_level
+mine.max_workers = max_workers_by_level[new_level]  # 5→6→7
+mine.amount_to_mine = amount_by_level[new_level]    # 4→5→6
+# Neuen Worker-Slot befüllen?
+
+# Bei Refiner-Upgrade:
+refiner = self.production_system.refiners[old_key]
+refiner.level = new_level
+refiner.max_workers = new_max_workers
+# Neuen Worker-Slot befüllen?
+
+# Bei Kapazitäts-Upgrade:
+# Dorfzentrum: 75→100→150 Worker
+# Wohnhaus: 6→9→12 Schlafplätze
+# Bauernhof: 8→10→12 Essplätze
+```
+
+**Zu prüfen:**
+- [ ] Was passiert im echten Spiel beim Upgrade?
+- [ ] Werden neue Worker-Slots automatisch befüllt?
+- [ ] Oder muss der Spieler neue Worker zuweisen?
+- [ ] Funktioniert das Gebäude während des Upgrades weiter?
+
+---
+
+### 13.4 RESOURCE_OUTPUT - WIRD NICHT IN PRODUKTION GENUTZT!
+
+**Status:** ⚠️ Doppelte/widersprüchliche Definition
+
+**Problem:** Jedes Gebäude hat `resource_output` definiert, aber die Produktion läuft über `ProductionSystem`:
+
+```python
+# In buildings_db (environment.py):
+"Steinmine_1": {"resource_output": {RESOURCE_STEIN: 2}, ...}
+"Steinmine_2": {"resource_output": {RESOURCE_STEIN: 3}, ...}
+"Steinmine_3": {"resource_output": {RESOURCE_STEIN: 4}, ...}
+
+# Aber die echte Produktion kommt aus ProductionSystem:
+Mine(amount_to_mine=4)  # Level 1: 4 (nicht 2!)
+Mine(amount_to_mine=5)  # Level 2: 5 (nicht 3!)
+Mine(amount_to_mine=6)  # Level 3: 6 (nicht 4!)
+```
+
+**Widerspruch:**
+- `resource_output` sagt: Steinmine_1 = 2 Stein
+- `amount_to_mine` sagt: Level 1 = 4 Stein
+- **Welcher Wert stimmt?**
+
+**`resource_output` wird nur für Observation genutzt:**
+```python
+def _get_production_rate(self, resource):
+    for b_name, count in self.buildings.items():
+        output = buildings_db.get(b_name, {}).get("resource_output", {})
+        if resource in output:
+            rate += output[resource] * count  # Nur für Observation!
+```
+
+**Zu prüfen:**
+- [ ] Was ist der echte Output pro Mine-Level?
+- [ ] Sind `resource_output` oder `amount_to_mine` korrekt?
+- [ ] Oder haben beide unterschiedliche Bedeutungen?
+
+---
+
+### 13.5 ZUSAMMENFASSUNG PRODUKTIONS-PROBLEME
+
+| Problem | Schwere | Status |
+|---------|---------|--------|
+| **Zahltag-Start** unklar | 🟡 Mittel | ⬜ Abgleichen |
+| **Militär schmälert Zahltag?** | 🔴 Hoch | ⬜ Abgleichen |
+| **taler_income nicht genutzt** | 🔴 Hoch | ⬜ Bug oder Fehlendes Feature? |
+| **Veredelung: Input=Output** | 🔴 KRITISCH | ⬜ Mechanik komplett unklar! |
+| **InitialFactor** falsch verstanden? | 🔴 KRITISCH | ⬜ Abgleichen |
+| **Upgrade aktualisiert Produktion NICHT** | 🔴 BUG | ⬜ Fixen! |
+| **resource_output vs amount_to_mine** | 🟡 Mittel | ⬜ Welcher Wert stimmt? |
+| **Fehlende Ressourcen-Typen?** | 🟡 Mittel | ⬜ Roh vs. Verarbeitet? |
+| **Transport: Woher kommen Rohstoffe?** | 🟡 Mittel | ⬜ Lager-System? |
+
+---
+
 ## ÄNDERUNGSHISTORIE
 
 | Datum | Änderung |
@@ -1717,3 +1953,9 @@ if self.current_time % INCOME_CYCLE == 0:
 | 2026-01-27 | **Abschnitt 12.3 erweitert** - Zahltag-System detailliert mit offenen Fragen |
 | 2026-01-27 | Zahltag: Wann Start? Wer zahlt? Militär-Kosten? Gebäude-Einkommen Bug? |
 | 2026-01-27 | taler_income pro Gebäude wird NUR in Observation genutzt, nicht im Zahltag! |
+| 2026-01-27 | **NEU: Abschnitt 13** - Produktions-Mechanik, Veredelung & Upgrade-Probleme |
+| 2026-01-27 | Zahltag: Wann Start? Wer zahlt? Militär-Sold? Gebäude vs. Bewohner? |
+| 2026-01-27 | **BUG: Veredelung Input=Output** (Schmiede: Eisen→Eisen = Nettoverlust?!) |
+| 2026-01-27 | **BUG: Upgrade aktualisiert Produktion NICHT** (Mine bleibt Level 1!) |
+| 2026-01-27 | **BUG: resource_output vs amount_to_mine** widersprüchliche Werte |
+| 2026-01-27 | Transport-Mechanik unklar: Woher holen Refiner Rohstoffe? Lager? |

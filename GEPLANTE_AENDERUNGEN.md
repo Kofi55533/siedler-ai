@@ -22,6 +22,7 @@ Dieses Dokument sammelt alle besprochenen Änderungen bevor sie implementiert we
 | 8 | **Camp-System** | Hoch | **Mit Original abgleichen!** |
 | 9 | **Offene Design-Fragen** | Hoch | **Benutzer muss entscheiden!** |
 | 10 | **Worker-Spawn/Despawn** | Hoch | **Mit Original abgleichen!** |
+| 11 | **Technologie-Effekte nicht angewendet** | Hoch | **Mit Original abgleichen!** |
 
 ---
 
@@ -848,7 +849,94 @@ self.faith = min(self.faith + priests * TIME_STEP, ...)
 
 ---
 
-### 10.6 CHECKLISTE: MIT ORIGINAL ABGLEICHEN
+### 10.6 TECHNOLOGIE-EFFEKTE (NICHT ANGEWENDET!)
+
+**Status:** ❌ **KRITISCH** - Effekte sind definiert aber werden NIRGENDS angewendet!
+
+**Problem:**
+Die Technologie-Datenbank in `environment.py` (Zeile 521-652) definiert 55+ Technologien mit `effects`-Dictionaries.
+Aber wenn eine Forschung abgeschlossen wird (Zeile 3209), passiert NUR:
+```python
+self.researched_techs.add(tech)  # Nur in Set gespeichert!
+self.current_research = None
+# KEIN Code der effects anwendet!
+```
+
+**Keine der folgenden Effekte wird jemals angewendet:**
+
+| Effekt-Typ | Technologien | Was es tun SOLLTE |
+|-----------|-------------|-------------------|
+| `armor_bonus` | Kettenpanzer (+5), Lederrüstung (+2), Kettenrüstung (+4), Plattenpanzer (+6) | Rüstung von Nahkämpfern erhöhen |
+| `speed_bonus` | Pferdezucht (+50) | Kavallerie-Geschwindigkeit |
+| `building_armor_bonus` | Mauerbau (+3) | Gebäude-Verteidigung erhöhen |
+| `build_speed_bonus` | Ziegelbrennen (+15) | Schneller bauen |
+| `bow_damage_bonus` | Langbögen (+2), Kompositbögen (+4) | Bogenschaden erhöhen |
+| `cannon_damage_bonus` | Schwarzpulver (+3), Sprengstoff (+5) | Kanonenschaden erhöhen |
+| `melee_damage_bonus` | Schwertschmied (+2), Waffenmeister (+4) | Nahkampfschaden erhöhen |
+| `archer_armor_bonus` | Schützenrüstung (+1/+2/+3) | Schützen-Rüstung erhöhen |
+| `spear_damage_bonus` | Speerträger (+2), Hellebarden (+4) | Speer-Schaden erhöhen |
+| `payday_bonus` | Lohnbuchhaltung (+10), Finanzplanung (+20) | Lohn-Kosten reduzieren? |
+| `trade_bonus` | Handelsrecht (+5), Handelsgilden (+10) | Handelsgewinne erhöhen? |
+| `exploration_bonus` | Kartographie (+5) | Erkundung verbessern? |
+| `worker_armor_bonus` | Bürgerwehr (+1) | Worker-Rüstung |
+| `worker_speed_bonus` | Straßenbau (+20) | Worker laufen schneller |
+| `infantry_training_speed` | Infanterie-Ausbildung (+20) | Schnellere Rekrutierung |
+| `archer_training_speed` | Schützenschule (+20) | Schnellere Rekrutierung |
+| `cavalry_speed_bonus` | Reitkunst (+50) | Kavallerie schneller |
+| `cannon_speed_bonus` | Artillerie-Training (+30) | Kanonen schneller |
+
+**Zusätzlich: `game_data.json` hat LEERE Effekte!**
+- Alle 204 Technologie-Einträge in `game_data.json` haben `"effects": []`
+- Die Effekt-Werte in `environment.py` sind **manuell geschätzt**, NICHT aus Spieldateien!
+
+**Relevanz für AI-Training:**
+- **Militär-Effekte** (armor, damage, speed): Relevant wenn Kampf simuliert wird
+- **`build_speed_bonus`**: DIREKT RELEVANT - schnelleres Bauen beeinflusst Produktionskette!
+- **`worker_speed_bonus`**: DIREKT RELEVANT - Worker laufen schneller = mehr Produktion!
+- **`payday_bonus`**: RELEVANT - Lohnkosten beeinflussen Wirtschaft
+- **`training_speed`**: RELEVANT - schnellere Scharfschützen-Produktion!
+
+**Zu prüfen in Spieldateien:**
+- [ ] Welche Effekte existieren WIRKLICH im Original?
+- [ ] Exakte Werte für jeden Effekt
+- [ ] Wie werden Effekte angewendet? (Multiplikator? Addiert?)
+- [ ] Gibt es Effekte die NICHT in der Datenbank stehen?
+- [ ] `Technologies.xml` oder `logic.xml` - Effekt-Definitionen
+
+**Zu implementieren:**
+```python
+def _apply_tech_effects(self):
+    """Berechne aktive Tech-Effekte aus erforschten Technologien."""
+    self.active_effects = {}
+    for tech in self.researched_techs:
+        tech_info = technologies.get(tech, {})
+        effects = tech_info.get("effects", {})
+        for effect_name, value in effects.items():
+            self.active_effects[effect_name] = (
+                self.active_effects.get(effect_name, 0) + value
+            )
+
+# Dann in relevanten Berechnungen nutzen:
+def _get_build_speed(self):
+    bonus = self.active_effects.get("build_speed_bonus", 0)
+    return BASE_BUILD_SPEED * (1 + bonus / 100)
+
+def _get_worker_speed(self):
+    bonus = self.active_effects.get("worker_speed_bonus", 0)
+    return BASE_WORKER_SPEED * (1 + bonus / 100)
+
+def _get_training_speed(self, unit_type):
+    if "infantry" in unit_type:
+        bonus = self.active_effects.get("infantry_training_speed", 0)
+    elif "archer" in unit_type or "Scharfschütze" in unit_type:
+        bonus = self.active_effects.get("archer_training_speed", 0)
+    # etc.
+    return BASE_TRAIN_TIME * (1 - bonus / 100)
+```
+
+---
+
+### 10.7 CHECKLISTE: MIT ORIGINAL ABGLEICHEN
 
 **Spieldateien zu analysieren:**
 
@@ -1117,3 +1205,7 @@ walk_time = distance / SERF_SPEED  # Gerade Linie!
 | 2026-01-27 | **Leibeigene ENTSCHIEDEN**: Kein Sterben, kein Essen/Motivation, DZ-Kapazität limitiert |
 | 2026-01-27 | **NEU: Abschnitt 9.5** - Worker-Spawn/Despawn muss mit Original abgeglichen werden |
 | 2026-01-27 | Fragen: Woher kommen Worker? Welches DZ? Laufweg simulieren? Despawn bei Abriss? |
+| 2026-01-27 | **NEU: Abschnitt 10.6** - Technologie-Effekte definiert aber NIRGENDS angewendet! |
+| 2026-01-27 | 18 verschiedene Effekt-Typen, keiner wird beim Forschungs-Abschluss aktiviert |
+| 2026-01-27 | game_data.json hat leere Effekte - environment.py Werte sind manuell geschätzt |
+| 2026-01-27 | Relevante Effekte für AI: build_speed, worker_speed, training_speed, payday |

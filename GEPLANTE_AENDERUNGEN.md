@@ -21,6 +21,7 @@ Dieses Dokument sammelt alle besprochenen Änderungen bevor sie implementiert we
 | 7 | **Kartendaten unvollständig** | Hoch | **Mit echten Spieldaten abgleichen!** |
 | 8 | **Camp-System** | Hoch | **Mit Original abgleichen!** |
 | 9 | **Offene Design-Fragen** | Hoch | **Benutzer muss entscheiden!** |
+| 10 | **Worker-Spawn/Despawn** | Hoch | **Mit Original abgleichen!** |
 
 ---
 
@@ -636,6 +637,49 @@ MAIN_ACTIONS = {
 
 ---
 
+### 9.5 Worker-Spawn/Despawn (MIT ORIGINAL ABGLEICHEN!)
+
+> **⚠️ Wichtig für korrekte Simulation!**
+
+**Offene Fragen:**
+
+1. **Woher kommen Worker?**
+   - [ ] Spawnen aus Dorfzentrum?
+   - [ ] Oder aus Wohnhaus?
+   - [ ] Oder einfach "erscheinen" sie am Arbeitsplatz?
+
+2. **Welches Dorfzentrum?**
+   - [ ] Nächstes zum Arbeitsplatz?
+   - [ ] Das mit freier Kapazität?
+   - [ ] Zufällig?
+
+3. **Laufweg beim Spawn?**
+   - [ ] Laufen Worker vom Dorfzentrum zum Arbeitsplatz? (Zeit simulieren!)
+   - [ ] Oder erscheinen sie sofort am Arbeitsplatz?
+   - [ ] Wie lange dauert das?
+
+4. **Despawn bei Abriss:**
+   - [ ] Verschwinden Worker zurück ins Dorfzentrum?
+   - [ ] Laufen sie zurück? (Zeit?)
+   - [ ] Oder werden sie sofort "frei"?
+   - [ ] Können sie einem anderen Gebäude zugewiesen werden?
+
+5. **Gebäude fertig gebaut:**
+   - [ ] Wann spawnen Worker? (Sofort nach Bau? Nach Verzögerung?)
+   - [ ] Laufen sie zum Gebäude?
+
+**Auswirkungen auf Simulation:**
+- Gebäude weit vom Dorfzentrum = längere Zeit bis Worker arbeiten
+- Abriss = Worker müssen erst zurücklaufen bevor sie neu zugewiesen werden können
+- Platzierung wichtig für Effizienz!
+
+**Zu prüfen in Spieldateien:**
+- [ ] `logic.xml` - Worker-Spawn Logik
+- [ ] `entities/Workers/` - Spawn-Verhalten
+- [ ] Wie berechnet das Spiel welches DZ zuständig ist?
+
+---
+
 ### 9.5 Produktions-Ketten
 - [ ] **Lager-System**: Woher holen Refiner ihre Input-Ressourcen?
   - Direkt von Mine?
@@ -1071,3 +1115,5 @@ walk_time = distance / SERF_SPEED  # Gerade Linie!
 | 2026-01-27 | Worker-Verhalten, Produktions-Ketten, Soldaten-Rekrutierung als offene Fragen |
 | 2026-01-27 | **Multi-Step ENTSCHIEDEN**: Erweiterte Obs, Reward nur am Ende, Flow zu Ende führen |
 | 2026-01-27 | **Leibeigene ENTSCHIEDEN**: Kein Sterben, kein Essen/Motivation, DZ-Kapazität limitiert |
+| 2026-01-27 | **NEU: Abschnitt 9.5** - Worker-Spawn/Despawn muss mit Original abgeglichen werden |
+| 2026-01-27 | Fragen: Woher kommen Worker? Welches DZ? Laufweg simulieren? Despawn bei Abriss? |

@@ -12,9 +12,124 @@ NEU: Integriert WorkTime/Pausen-System und 2-Tier Produktion
 import copy
 import json
 import os
+from enum import Enum
 import gymnasium as gym
 import numpy as np
+from gymnasium import spaces
 from typing import Dict, List, Optional, Tuple
+
+
+# ============================================================================
+# MULTI-STEP ACTION SYSTEM (NEU - aus GEPLANTE_AENDERUNGEN.md)
+# ============================================================================
+
+class ActionPhase(Enum):
+    """Phase im Multi-Step Action Flow."""
+    MAIN = "main"           # Haupt-Aktion wählen (12 Optionen)
+    BUILDING = "building"   # Gebäude-Typ wählen
+    POSITION = "position"   # Position wählen (~2200)
+    TECH = "tech"           # Technologie wählen
+    SOLDIER = "soldier"     # Soldaten-Typ wählen
+    QUANTITY = "quantity"    # Menge wählen (1,2,3,5,10,all)
+    SOURCE = "source"       # Quell-Bereich für Leibeigene
+    TARGET = "target"       # Ziel-Bereich für Leibeigene
+    CATEGORY = "category"   # Segen-Kategorie
+    TAX_LEVEL = "tax_level" # Steuerstufe
+    ON_OFF = "on_off"       # Alarm an/aus
+
+
+# Definiert welche Phasen für jede Haupt-Aktion durchlaufen werden
+ACTION_FLOWS = {
+    "wait": [ActionPhase.MAIN],
+    "build": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION],
+    "upgrade": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION],
+    "research": [ActionPhase.MAIN, ActionPhase.TECH],
+    "recruit": [ActionPhase.MAIN, ActionPhase.SOLDIER, ActionPhase.QUANTITY],
+    "buy_serf": [ActionPhase.MAIN, ActionPhase.QUANTITY],
+    "dismiss_serf": [ActionPhase.MAIN, ActionPhase.SOURCE, ActionPhase.QUANTITY],
+    "assign_serf": [ActionPhase.MAIN, ActionPhase.SOURCE, ActionPhase.QUANTITY, ActionPhase.TARGET],
+    "demolish": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION],
+    "bless": [ActionPhase.MAIN, ActionPhase.CATEGORY],
+    "tax": [ActionPhase.MAIN, ActionPhase.TAX_LEVEL],
+    "alarm": [ActionPhase.MAIN, ActionPhase.ON_OFF],
+}
+
+MAIN_ACTIONS = list(ACTION_FLOWS.keys())
+
+
+# ============================================================================
+# SERF AREA SYSTEM (NEU - 26 feste Bereiche + dynamische Baustellen)
+# ============================================================================
+
+class SerfArea(Enum):
+    """Bereiche für Leibeigene-Zuweisung."""
+    FREE = 0            # Frei (nicht zugewiesen)
+    # Holz-Zonen (6)
+    WOOD_HQ = 1         # Holz nahe HQ
+    WOOD_SULFUR = 2     # Holz nahe Schwefel
+    WOOD_CLAY = 3       # Holz nahe Lehm
+    WOOD_STONE = 4      # Holz nahe Stein
+    WOOD_VILLAGE = 5    # Holz nahe Dorf
+    WOOD_IRON = 6       # Holz nahe Eisen
+    # Eisen-Stollen (3)
+    SHAFT_IRON_1 = 7
+    SHAFT_IRON_2 = 8
+    SHAFT_IRON_3 = 9
+    # Stein-Stollen (3)
+    SHAFT_STONE_1 = 10
+    SHAFT_STONE_2 = 11
+    SHAFT_STONE_3 = 12
+    # Lehm-Stollen (3)
+    SHAFT_CLAY_1 = 13
+    SHAFT_CLAY_2 = 14
+    SHAFT_CLAY_3 = 15
+    # Schwefel-Stollen (3)
+    SHAFT_SULFUR_1 = 16
+    SHAFT_SULFUR_2 = 17
+    SHAFT_SULFUR_3 = 18
+    # Vorkommen (6)
+    DEPOSIT_IRON_1 = 19
+    DEPOSIT_IRON_2 = 20
+    DEPOSIT_STONE_1 = 21
+    DEPOSIT_STONE_2 = 22
+    DEPOSIT_CLAY_1 = 23
+    DEPOSIT_SULFUR_1 = 24
+    # Baustellen ab 25 (dynamisch, max 10)
+
+
+# ============================================================================
+# TECHNOLOGY EFFECTS SYSTEM (NEU - Effekte werden jetzt angewendet!)
+# ============================================================================
+
+# Hinweis: Die exakten Effekt-Werte sind im C++ Code des Spiels hardcoded,
+# nicht in den XML-Dateien. Diese Werte basieren auf Gameplay-Analyse.
+TECHNOLOGY_EFFECTS = {
+    # Konstruktion
+    "Konstruktion": {"build_speed_bonus": 0.10},
+    "Kettenblock": {"build_speed_bonus": 0.15},
+    "Zahnrad": {"build_speed_bonus": 0.20},
+    "Architektur": {"build_speed_bonus": 0.25},
+    # Straßenbau
+    "Strassenbau": {"worker_speed_bonus": 0.20},
+    # Militär-Training
+    "Söldner": {"training_speed_bonus": 0.10},
+    "Stehendes Heer": {"training_speed_bonus": 0.15},
+    "Taktiken": {"heavy_cavalry_unlock": True},
+    "Strategien": {"training_speed_bonus": 0.25},
+    # Scharfschützen-Pfad (KRITISCH!)
+    "Mathematik": {"research_speed_bonus": 0.10, "university_unlock": True},
+    "Fernglas": {"rifle_range_bonus": 0.15},
+    "Luntenschloss": {"gunsmith_unlock": True},
+    "Gezogener Lauf": {"rifle_damage_bonus": 0.20, "rifle_range_bonus": 0.10},
+    # Bergbau
+    "Stollenbau": {"mine_output_bonus": 0.15},
+    "Sprengstoff": {"mine_output_bonus": 0.25},
+    "Alchemie": {"sulfur_refine_bonus": 0.20},
+    # Wirtschaft
+    "Buchhaltung": {"tax_bonus": 0.10},
+    "Bankwesen": {"tax_bonus": 0.20},
+    "Handelsrouten": {"trade_bonus": 0.15},
+}
 
 # Importiere Karten-Konfiguration
 from map_config_wintersturm import (
@@ -343,6 +458,16 @@ _raw_buildings_db = {
         "build_time": 200, "cost": {RESOURCE_HOLZ: 600, RESOURCE_STEIN: 600, RESOURCE_LEHM: 200},
         "taler_income": 45, "resource_output": {RESOURCE_TALER: 4}, "tech_required": "Buchdruck",
         "max_workers": 6, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
+    },
+
+    # === KAPELLE (NEU - aus GEPLANTE_AENDERUNGEN.md) ===
+    # Kleines religiöses Gebäude, günstiger als Kloster
+    # Produziert weniger Faith, aber billiger zu bauen
+    "Kapelle_1": {
+        "build_time": 60, "cost": {RESOURCE_HOLZ: 100, RESOURCE_STEIN: 150},
+        "taler_income": 0, "resource_output": {}, "tech_required": None,
+        "max_workers": 3, "motivation_effect": 0.05,
+        "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     # === KLOSTER (Monastery) - aus extra2 ===
@@ -705,10 +830,10 @@ soldiers_db = {
                 "population_cost": 5, "train_time": 60, "upgrade_to": None},
 
     # === SCHARFSCHÜTZEN (2 Level) - HAUPTZIEL! ===
-    # Kosten aus PU_SoldierRifle1.xml: Gold=50, Sulfur=40
-    "Scharfschützen": {"cost": {RESOURCE_TALER: 50, RESOURCE_SCHWEFEL: 40}, "requirements": ["Büchsenmacherei_1"],
+    # Kosten aus PU_LeaderRifle1.xml: Gold=250, Sulfur=70 (KORRIGIERT! War vorher 50/40)
+    "Scharfschützen": {"cost": {RESOURCE_TALER: 250, RESOURCE_SCHWEFEL: 70}, "requirements": ["Büchsenmacherei_1"],
                        "population_cost": 1, "train_time": 20, "upgrade_to": "Scharfschützen_2"},
-    # Kosten aus PU_LeaderRifle1.xml: Gold=300, Sulfur=80
+    # Kosten aus PU_LeaderRifle2.xml: Gold=300, Sulfur=80 (war bereits korrekt)
     "Scharfschützen_2": {"cost": {RESOURCE_TALER: 300, RESOURCE_SCHWEFEL: 80}, "requirements": ["Büchsenmacherei_2", "Gezogener Lauf"],
                          "population_cost": 1, "train_time": 30, "upgrade_to": None},
 
@@ -1118,6 +1243,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Serf-Tracking (vereinfacht - keine IDs mehr nötig)
 
         self.researched_techs = set()
+        self.active_tech_effects = {}  # NEU: Technologie-Effekte (aus GEPLANTE_AENDERUNGEN.md)
         self.soldiers = {s: 0 for s in self.soldier_types}
         self.scharfschuetzen = 0
 
@@ -2917,6 +3043,29 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # MINIMALER REWARD: Agent soll selbst die optimale Strategie finden
         return 0.0
 
+    def _apply_technology_effects(self):
+        """Wendet aktive Technologie-Effekte an (NEU - aus GEPLANTE_AENDERUNGEN.md).
+
+        Wird nach jedem Forschungsabschluss aufgerufen.
+        Akkumuliert alle Effekte der erforschten Technologien.
+        """
+        self.active_tech_effects = {}
+        for tech_name in self.researched_techs:
+            effects = TECHNOLOGY_EFFECTS.get(tech_name, {})
+            for effect_type, value in effects.items():
+                if isinstance(value, bool):
+                    self.active_tech_effects[effect_type] = value
+                else:
+                    self.active_tech_effects[effect_type] = (
+                        self.active_tech_effects.get(effect_type, 0) + value
+                    )
+
+    def _get_effective_build_time(self, building):
+        """Berechnet effektive Bauzeit mit Tech-Boni."""
+        base_time = buildings_db[building]["build_time"]
+        speed_bonus = getattr(self, 'active_tech_effects', {}).get("build_speed_bonus", 0)
+        return base_time / (1 + speed_bonus) if speed_bonus else base_time
+
     def _research_tech(self, tech):
         tech_info = technologies[tech]
 
@@ -3208,6 +3357,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             if remaining <= 0:
                 self.researched_techs.add(tech)
                 self.current_research = None
+                # NEU: Technologie-Effekte anwenden (aus GEPLANTE_AENDERUNGEN.md)
+                self._apply_technology_effects()
             else:
                 self.current_research = (tech, remaining)
 

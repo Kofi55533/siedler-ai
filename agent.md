@@ -1,8 +1,8 @@
 # SIEDLER AI - AGENT STATUS
 
-> **Letzte Aktualisierung**: 2026-01-26
-> **Aktueller Task**: Stollen/Vorkommen/Mine-Mechanik korrigiert + Holz-Zonen implementiert
-> **Status**: 332 Actions, Holz-Zonen, Stollen-Sammeln, korrigierte Serf-Mechanik
+> **Letzte Aktualisierung**: 2026-01-28
+> **Aktueller Task**: PHASE 0.1 FERTIG - Werte-Extraktion abgeschlossen
+> **Status**: 332 Actions, KRITISCHE Werte-Abweichungen gefunden!
 
 ---
 
@@ -29,6 +29,10 @@
 
 | Datum | Änderung |
 |-------|----------|
+| 28.01.2026 | **PHASE 0.1 FERTIG**: Werte-Extraktion aus Original-Spieldateien |
+| 28.01.2026 | **KRITISCHE ABWEICHUNGEN**: Scharfschütze 5x zu billig, Hochschule falsche Ressourcen! |
+| 28.01.2026 | **config/extracted_values.json**: 94 Gebäude, 12 Soldaten, 204 Technologien, Logic-Parameter |
+| 28.01.2026 | **value_diff_report.md**: Detaillierter Vergleich aktuell vs. Original |
 | 26.01.2026 | **HOLZ-ZONEN**: 6 strategische Zonen für Bauplatz-Schaffung (36 Actions) |
 | 26.01.2026 | **STOLLEN-SAMMELN**: Serfs sammeln an Stollen (XD_Iron1), keine Mine baubbar |
 | 26.01.2026 | **MINE-SERF ENTFERNT**: Serfs arbeiten NICHT an gebauten Minen (Worker tun das) |

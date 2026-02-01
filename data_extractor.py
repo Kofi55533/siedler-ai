@@ -32,16 +32,23 @@ class SiedlerDataExtractor:
             "cannons": {},
             "resources": ["Gold", "Wood", "Stone", "Clay", "Iron", "Sulfur"],
             "constants": {},
+            "logic": {},  # NEU: Zahltag, Steuern, Motivation, etc.
+            "scharfschuetzen_path": {},  # NEU: Kritischer Pfad für Training
         }
 
-        # Pfade zu den Config-Ordnern
+        # Pfade zu den Config-Ordnern (inkl. extra2!)
         self.entity_paths = [
             self.game_path / "base/shr/config/entities",
             self.game_path / "extra1/shr/config/entities",
+            self.game_path / "extra2/shr/config/entities",
         ]
         self.tech_paths = [
             self.game_path / "base/shr/config/technologies",
             self.game_path / "extra1/shr/config/technologies",
+            self.game_path / "extra2/shr/config/technologies",
+        ]
+        self.logic_paths = [
+            self.game_path / "extra2/shr/config/logic.xml",
         ]
 
     def extract_all(self) -> Dict[str, Any]:
@@ -54,15 +61,19 @@ class SiedlerDataExtractor:
         self._extract_military_units()
         self._extract_heroes()
         self._extract_cannons()
+        self._extract_logic_params()  # NEU!
+        self._extract_scharfschuetzen_path()  # NEU!
         self._extract_constants()
 
-        print(f"Extraktion abgeschlossen:")
+        print(f"\n=== Extraktion abgeschlossen ===")
         print(f"  - {len(self.data['workers'])} Worker-Typen")
         print(f"  - {len(self.data['buildings'])} Gebäude")
         print(f"  - {len(self.data['technologies'])} Technologien")
         print(f"  - {len(self.data['units'])} Militär-Einheiten")
         print(f"  - {len(self.data['heroes'])} Helden")
         print(f"  - {len(self.data['cannons'])} Kanonen")
+        print(f"  - {len(self.data['logic'])} Logic-Parameter")
+        print(f"  - Scharfschützen-Pfad: {len(self.data['scharfschuetzen_path'])} Einträge")
 
         return self.data
 
@@ -629,6 +640,195 @@ class SiedlerDataExtractor:
                     cannon["damage_class"] = self._get_text(logic_el, "DamageClass", "DC_Strike")
 
         self.data["cannons"][name] = cannon
+
+    # ==================== LOGIC PARAMETERS ====================
+
+    def _extract_logic_params(self):
+        """Extrahiert Spiel-Parameter aus extra2/shr/config/logic.xml."""
+        print("  Extrahiere Logic-Parameter...")
+
+        for logic_path in self.logic_paths:
+            if not logic_path.exists():
+                continue
+
+            root = self._parse_xml(logic_path)
+            if root is None:
+                continue
+
+            # Steuern
+            tax_levels = []
+            for tax_el in root.findall("TaxationLevel"):
+                tax_levels.append({
+                    "regular_tax": self._get_int(tax_el, "RegularTax", 10),
+                    "motivation_change": self._get_float(tax_el, "MotivationChange", 0),
+                })
+
+            # Motivation
+            motivation = {
+                "threshold_happy": self._get_float(root, "MotivationThresholdHappy", 1.5),
+                "threshold_sad": self._get_float(root, "MotivationThresholdSad", 1.0),
+                "threshold_angry": self._get_float(root, "MotivationThresholdAngry", 0.7),
+                "threshold_leave": self._get_float(root, "MotivationThresholdLeave", 0.25),
+                "absolute_max": self._get_float(root, "MotivationAbsoluteMaxMotivation", 3.0),
+                "game_start_max": self._get_float(root, "MotivationGameStartMaxMotivation", 1.0),
+            }
+
+            # WorkTime
+            worktime = {
+                "base": self._get_int(root, "WorkTimeBase", 125),
+                "threshold_work": self._get_int(root, "WorkTimeThresholdWork", 25),
+            }
+
+            # Zahltag
+            payday = {
+                "tax_amount": self._get_int(root, "TaxAmount", 5),
+                "initial_tax_level": self._get_int(root, "InitialTaxLevel", 2),
+            }
+
+            self.data["logic"] = {
+                "tax_levels": tax_levels,
+                "motivation": motivation,
+                "worktime": worktime,
+                "payday": payday,
+            }
+
+            break  # Nur erste logic.xml nutzen
+
+    # ==================== SCHARFSCHÜTZEN-PFAD ====================
+
+    def _extract_scharfschuetzen_path(self):
+        """Extrahiert ALLE Werte für den Scharfschützen-Produktionspfad."""
+        print("  Extrahiere Scharfschützen-Pfad (HÖCHSTE PRIORITÄT)...")
+
+        path_data = {
+            "soldiers": {},
+            "buildings": {},
+            "technologies": {},
+        }
+
+        # Scharfschützen (PU_LeaderRifle1.xml, PU_LeaderRifle2.xml)
+        rifle_files = ["PU_LeaderRifle1.xml", "PU_LeaderRifle2.xml"]
+        for filename in rifle_files:
+            for entity_path in self.entity_paths:
+                filepath = entity_path / filename
+                if filepath.exists():
+                    unit_data = self._parse_military_unit_detailed(filepath)
+                    if unit_data:
+                        path_data["soldiers"][filename.replace(".xml", "")] = unit_data
+                    break
+
+        # Büchsenmacherei (PB_GunsmithWorkshop1.xml, PB_GunsmithWorkshop2.xml)
+        gunsmith_files = ["PB_GunsmithWorkshop1.xml", "PB_GunsmithWorkshop2.xml"]
+        for filename in gunsmith_files:
+            for entity_path in self.entity_paths:
+                filepath = entity_path / filename
+                if filepath.exists():
+                    building_data = self._parse_building_detailed(filepath)
+                    if building_data:
+                        path_data["buildings"][filename.replace(".xml", "")] = building_data
+                    break
+
+        # Hochschule (PB_University1.xml, PB_University2.xml)
+        uni_files = ["PB_University1.xml", "PB_University2.xml"]
+        for filename in uni_files:
+            for entity_path in self.entity_paths:
+                filepath = entity_path / filename
+                if filepath.exists():
+                    building_data = self._parse_building_detailed(filepath)
+                    if building_data:
+                        path_data["buildings"][filename.replace(".xml", "")] = building_data
+                    break
+
+        # Technologien (in Technologies-Ordner als separate XMLs? Oder in Entities?)
+        # HINWEIS: Technologien haben KEINE Effekte in den XMLs - nur Kosten/Zeiten!
+        # Effekte sind wahrscheinlich im Code hardcodiert.
+
+        self.data["scharfschuetzen_path"] = path_data
+
+        # Zusammenfassung
+        print(f"    - {len(path_data['soldiers'])} Scharfschuetzen-Einheiten")
+        print(f"    - {len(path_data['buildings'])} Gebaeude (Buechsenmacherei, Hochschule)")
+        print(f"    - {len(path_data['technologies'])} Technologien (falls vorhanden)")
+
+    def _parse_building_detailed(self, filepath: Path) -> Dict[str, Any]:
+        """Parst ein Gebäude mit ALLEN Details (für Scharfschützen-Pfad)."""
+        root = self._parse_xml(filepath)
+        if root is None:
+            return None
+
+        building = {
+            "name": filepath.stem,
+            "cost": {},
+            "build_time": 0,
+            "max_workers": 0,
+            "max_health": 0,
+            "upgrade": None,
+        }
+
+        logic = root.find("Logic")
+        if logic is not None:
+            building["max_health"] = self._get_int(logic, "MaxHealth", 1000)
+            building["max_workers"] = self._get_int(logic, "MaxWorkers", 0)
+
+            # Baukosten und -zeit
+            constr = logic.find("ConstructionInfo")
+            if constr is not None:
+                building["build_time"] = self._get_int(constr, "Time", 60)
+                building["cost"] = self._extract_cost(constr)
+
+            # Upgrade-Info
+            upgrade = logic.find("Upgrade")
+            if upgrade is not None:
+                building["upgrade"] = {
+                    "to": self._get_text(upgrade, "Type"),
+                    "time": self._get_int(upgrade, "Time", 30),
+                    "cost": self._extract_cost(upgrade),
+                }
+
+        return building
+
+    def _parse_military_unit_detailed(self, filepath: Path) -> Dict[str, Any]:
+        """Parst eine Militär-Einheit mit ALLEN Details (für Scharfschützen-Pfad)."""
+        root = self._parse_xml(filepath)
+        if root is None:
+            return None
+
+        unit = {
+            "name": filepath.stem,
+            "cost": {},
+            "training_time": 0,
+            "max_health": 0,
+            "armor": 0,
+            "damage": 0,
+            "max_range": 0,
+            "speed": 0,
+        }
+
+        logic = root.find("Logic")
+        if logic is not None:
+            unit["max_health"] = self._get_int(logic, "MaxHealth", 100)
+            unit["armor"] = self._get_int(logic, "ArmorAmount", 0)
+            unit["cost"] = self._extract_cost(logic)
+
+            # Trainingszeit (falls in Logic/ConstructionInfo)
+            constr = logic.find("ConstructionInfo")
+            if constr is not None:
+                unit["training_time"] = self._get_int(constr, "Time", 20)
+
+        # Behaviors
+        for behavior in root.findall("Behavior"):
+            logic_el = behavior.find("Logic")
+            if logic_el is not None:
+                classname = logic_el.get("classname", "")
+
+                if "Movement" in classname:
+                    unit["speed"] = self._get_int(logic_el, "Speed", 360)
+
+                if "LeaderBehavior" in classname:
+                    unit["damage"] = self._get_int(logic_el, "DamageAmount", 10)
+                    unit["max_range"] = self._get_float(logic_el, "MaxRange", 250)
+
+        return unit
 
     # ==================== CONSTANTS ====================
 

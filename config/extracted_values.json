@@ -1,0 +1,6448 @@
+{
+  "workers": {
+    "serf": {
+      "name": "serf",
+      "speed": 400,
+      "has_worktime_system": false,
+      "worktime": {},
+      "max_health": 200,
+      "exploration": 24,
+      "extraction": {
+        "search_radius": 4500
+      },
+      "camper_range": 5000
+    },
+    "farmer": {
+      "name": "farmer",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 4000,
+        "eat_wait": 2000,
+        "rest_wait": 3000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.1
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    },
+    "miner": {
+      "name": "miner",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 30000,
+        "eat_wait": 2000,
+        "rest_wait": 3000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.2
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    },
+    "sawmillworker": {
+      "name": "sawmillworker",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 40000,
+        "eat_wait": 2000,
+        "rest_wait": 3000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.2
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    },
+    "stonecutter": {
+      "name": "stonecutter",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 15000,
+        "eat_wait": 2000,
+        "rest_wait": 3000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.2
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    },
+    "smith": {
+      "name": "smith",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 30000,
+        "eat_wait": 2000,
+        "rest_wait": 3000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.2
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    },
+    "alchemist": {
+      "name": "alchemist",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 20000,
+        "eat_wait": 2000,
+        "rest_wait": 3000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.2
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    },
+    "priest": {
+      "name": "priest",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 4000,
+        "eat_wait": 2000,
+        "rest_wait": 3000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.2
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    },
+    "treasurer": {
+      "name": "treasurer",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 15000,
+        "eat_wait": 2000,
+        "rest_wait": 3000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.2
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    },
+    "trader": {
+      "name": "trader",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 18000,
+        "eat_wait": 2000,
+        "rest_wait": 3000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.2
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    },
+    "smelter": {
+      "name": "smelter",
+      "speed": 320,
+      "has_worktime_system": true,
+      "worktime": {
+        "work_wait_until": 4000,
+        "eat_wait": 3000,
+        "rest_wait": 2000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "exhausted_malus": 0.2
+      },
+      "max_health": 100,
+      "exploration": 10,
+      "camper_range": 5000
+    }
+  },
+  "buildings": {
+    "PB_Alchemist1": {
+      "name": "PB_Alchemist1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 200,
+        "stone": 400
+      },
+      "build_time": 80,
+      "max_health": 1200,
+      "armor": 4,
+      "max_workers": 4,
+      "worker_type": "PU_Alchemist",
+      "upgrade": {
+        "to": "PB_Alchemist2",
+        "time": 40,
+        "cost": {
+          "stone": 250,
+          "iron": 100
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Sulfur",
+          "initial_factor": 4,
+          "supplier_category": "SulfurSupplier"
+        }
+      ],
+      "exploration": 20,
+      "defender_capacity": 10
+    },
+    "PB_Alchemist2": {
+      "name": "PB_Alchemist2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1700,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Alchemist",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Sulfur",
+          "initial_factor": 4,
+          "supplier_category": "SulfurSupplier"
+        }
+      ],
+      "exploration": 20,
+      "defender_capacity": 10
+    },
+    "PB_Archery1": {
+      "name": "PB_Archery1",
+      "categories": [
+        "MilitaryBuilding",
+        "SerfConversionBuilding"
+      ],
+      "cost": {
+        "wood": 300,
+        "stone": 350
+      },
+      "build_time": 90,
+      "max_health": 1500,
+      "armor": 4,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Archery2",
+        "time": 40,
+        "cost": {
+          "stone": 200,
+          "clay": 100
+        }
+      },
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_Archery2": {
+      "name": "PB_Archery2",
+      "categories": [
+        "MilitaryBuilding",
+        "SerfConversionBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 2000,
+      "armor": 4,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_Bank1": {
+      "name": "PB_Bank1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 500,
+        "stone": 500
+      },
+      "build_time": 130,
+      "max_health": 1200,
+      "armor": 5,
+      "max_workers": 4,
+      "worker_type": "PU_Treasurer",
+      "upgrade": {
+        "to": "PB_Bank2",
+        "time": 40,
+        "cost": {
+          "gold": 200,
+          "stone": 300
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Gold",
+          "initial_factor": 2,
+          "supplier_category": "GoldSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Bank2": {
+      "name": "PB_Bank2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1700,
+      "armor": 5,
+      "max_workers": 6,
+      "worker_type": "PU_Treasurer",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Gold",
+          "initial_factor": 2,
+          "supplier_category": "GoldSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Barracks1": {
+      "name": "PB_Barracks1",
+      "categories": [
+        "Barracks",
+        "MilitaryBuilding",
+        "SerfConversionBuilding"
+      ],
+      "cost": {
+        "wood": 300,
+        "stone": 350
+      },
+      "build_time": 90,
+      "max_health": 1500,
+      "armor": 4,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Barracks2",
+        "time": 40,
+        "cost": {
+          "stone": 300,
+          "clay": 200
+        }
+      },
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_Barracks2": {
+      "name": "PB_Barracks2",
+      "categories": [
+        "Barracks",
+        "MilitaryBuilding",
+        "SerfConversionBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 2000,
+      "armor": 4,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_Beautification01": {
+      "name": "PB_Beautification01",
+      "categories": [],
+      "cost": {
+        "gold": 200,
+        "stone": 100
+      },
+      "build_time": 20,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.04
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification02": {
+      "name": "PB_Beautification02",
+      "categories": [],
+      "cost": {
+        "gold": 200,
+        "stone": 100
+      },
+      "build_time": 20,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.04
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification03": {
+      "name": "PB_Beautification03",
+      "categories": [],
+      "cost": {
+        "gold": 400,
+        "stone": 200
+      },
+      "build_time": 40,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.06
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification04": {
+      "name": "PB_Beautification04",
+      "categories": [],
+      "cost": {
+        "gold": 100,
+        "clay": 100
+      },
+      "build_time": 10,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.02
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification05": {
+      "name": "PB_Beautification05",
+      "categories": [],
+      "cost": {
+        "gold": 300,
+        "stone": 100
+      },
+      "build_time": 30,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.05
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification06": {
+      "name": "PB_Beautification06",
+      "categories": [],
+      "cost": {
+        "gold": 100,
+        "iron": 100
+      },
+      "build_time": 10,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.02
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification07": {
+      "name": "PB_Beautification07",
+      "categories": [],
+      "cost": {
+        "gold": 300,
+        "wood": 100
+      },
+      "build_time": 30,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.05
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification08": {
+      "name": "PB_Beautification08",
+      "categories": [],
+      "cost": {
+        "gold": 300,
+        "stone": 100
+      },
+      "build_time": 30,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.05
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification09": {
+      "name": "PB_Beautification09",
+      "categories": [],
+      "cost": {
+        "gold": 100,
+        "wood": 100
+      },
+      "build_time": 10,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.02
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification10": {
+      "name": "PB_Beautification10",
+      "categories": [],
+      "cost": {
+        "gold": 400,
+        "iron": 200
+      },
+      "build_time": 40,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.06
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification11": {
+      "name": "PB_Beautification11",
+      "categories": [],
+      "cost": {
+        "gold": 400,
+        "stone": 200
+      },
+      "build_time": 40,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.06
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Beautification12": {
+      "name": "PB_Beautification12",
+      "categories": [],
+      "cost": {
+        "gold": 200,
+        "iron": 100
+      },
+      "build_time": 20,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.04
+        }
+      ],
+      "exploration": 12
+    },
+    "PB_Blacksmith1": {
+      "name": "PB_Blacksmith1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 300,
+        "clay": 400
+      },
+      "build_time": 110,
+      "max_health": 1200,
+      "armor": 3,
+      "max_workers": 2,
+      "worker_type": "PU_Smith",
+      "upgrade": {
+        "to": "PB_Blacksmith2",
+        "time": 40,
+        "cost": {
+          "stone": 200,
+          "clay": 100
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Iron",
+          "initial_factor": 4,
+          "supplier_category": "IronSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Blacksmith2": {
+      "name": "PB_Blacksmith2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1700,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Smith",
+      "upgrade": {
+        "to": "PB_Blacksmith3",
+        "time": 50,
+        "cost": {
+          "stone": 300,
+          "clay": 150
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Iron",
+          "initial_factor": 4,
+          "supplier_category": "IronSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Blacksmith3": {
+      "name": "PB_Blacksmith3",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 2200,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Smith",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Iron",
+          "initial_factor": 4,
+          "supplier_category": "IronSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Brickworks1": {
+      "name": "PB_Brickworks1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 200,
+        "stone": 150
+      },
+      "build_time": 110,
+      "max_health": 1200,
+      "armor": 3,
+      "max_workers": 4,
+      "worker_type": "PU_BrickMaker",
+      "upgrade": {
+        "to": "PB_Brickworks2",
+        "time": 40,
+        "cost": {
+          "wood": 150,
+          "stone": 200
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Clay",
+          "initial_factor": 4,
+          "supplier_category": "ClaySupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Brickworks2": {
+      "name": "PB_Brickworks2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1700,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_BrickMaker",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Clay",
+          "initial_factor": 4,
+          "supplier_category": "ClaySupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_ClayMine1": {
+      "name": "PB_ClayMine1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "ClaySupplier"
+      ],
+      "cost": {},
+      "build_time": 80,
+      "max_health": 800,
+      "armor": 3,
+      "max_workers": 5,
+      "worker_type": "PU_Miner",
+      "upgrade": {
+        "to": "PB_ClayMine2",
+        "time": 40,
+        "cost": {
+          "wood": 200,
+          "stone": 150
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 4,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_ClayMine2": {
+      "name": "PB_ClayMine2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "ClaySupplier"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1000,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Miner",
+      "upgrade": {
+        "to": "PB_ClayMine3",
+        "time": 50,
+        "cost": {
+          "wood": 250,
+          "stone": 300
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 5,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_ClayMine3": {
+      "name": "PB_ClayMine3",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "ClaySupplier"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1400,
+      "armor": 3,
+      "max_workers": 7,
+      "worker_type": "PU_Miner",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 6,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_DarkTower1": {
+      "name": "PB_DarkTower1",
+      "categories": [
+        "MilitaryBuilding"
+      ],
+      "cost": {
+        "wood": 200,
+        "stone": 200
+      },
+      "build_time": 80,
+      "max_health": 1000,
+      "armor": 6,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_DarkTower2",
+        "time": 15,
+        "cost": {
+          "wood": 200,
+          "stone": 300
+        }
+      },
+      "behaviors": [],
+      "exploration": 33
+    },
+    "PB_DarkTower2": {
+      "name": "PB_DarkTower2",
+      "categories": [
+        "MilitaryBuilding",
+        "Military"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1200,
+      "armor": 6,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_DarkTower3",
+        "time": 15,
+        "cost": {
+          "stone": 200,
+          "sulfur": 200
+        }
+      },
+      "behaviors": [],
+      "exploration": 33
+    },
+    "PB_DarkTower2_Ballista": {
+      "name": "PB_DarkTower2_Ballista",
+      "categories": [
+        "MilitaryBuilding",
+        "Military",
+        "Cannon",
+        "SplashDamage"
+      ],
+      "cost": {},
+      "build_time": 0,
+      "max_health": 1000,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_DarkTower3": {
+      "name": "PB_DarkTower3",
+      "categories": [
+        "MilitaryBuilding",
+        "Military"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1400,
+      "armor": 6,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 33
+    },
+    "PB_DarkTower3_Cannon": {
+      "name": "PB_DarkTower3_Cannon",
+      "categories": [
+        "MilitaryBuilding",
+        "Military",
+        "Cannon",
+        "SplashDamage"
+      ],
+      "cost": {},
+      "build_time": 0,
+      "max_health": 1000,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_Farm1": {
+      "name": "PB_Farm1",
+      "categories": [
+        "Farm",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 200,
+        "clay": 150
+      },
+      "build_time": 80,
+      "max_health": 500,
+      "armor": 3,
+      "max_workers": 1,
+      "worker_type": "PU_Farmer",
+      "upgrade": {
+        "to": "PB_Farm2",
+        "time": 40,
+        "cost": {
+          "wood": 50,
+          "stone": 100
+        }
+      },
+      "behaviors": [],
+      "exploration": 30,
+      "eat_capacity": 8,
+      "defender_capacity": 10
+    },
+    "PB_Farm2": {
+      "name": "PB_Farm2",
+      "categories": [
+        "Farm",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 700,
+      "armor": 3,
+      "max_workers": 2,
+      "worker_type": "PU_Farmer",
+      "upgrade": {
+        "to": "PB_Farm3",
+        "time": 50,
+        "cost": {
+          "wood": 150,
+          "stone": 300
+        }
+      },
+      "behaviors": [],
+      "exploration": 30,
+      "eat_capacity": 10,
+      "defender_capacity": 10
+    },
+    "PB_Farm3": {
+      "name": "PB_Farm3",
+      "categories": [
+        "Farm",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1000,
+      "armor": 3,
+      "max_workers": 3,
+      "worker_type": "PU_Farmer",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30,
+      "eat_capacity": 12,
+      "defender_capacity": 10
+    },
+    "PB_Foundry1": {
+      "name": "PB_Foundry1",
+      "categories": [
+        "MilitaryBuilding"
+      ],
+      "cost": {
+        "wood": 300,
+        "clay": 500
+      },
+      "build_time": 110,
+      "max_health": 1200,
+      "armor": 3,
+      "max_workers": 1,
+      "worker_type": "PU_Smelter",
+      "upgrade": {
+        "to": "PB_Foundry2",
+        "time": 40,
+        "cost": {
+          "stone": 200,
+          "clay": 150
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CFoundryBehavior",
+          "cannons": [
+            "PV_Cannon1",
+            "PV_Cannon2"
+          ]
+        }
+      ],
+      "exploration": 30
+    },
+    "PB_Foundry2": {
+      "name": "PB_Foundry2",
+      "categories": [
+        "MilitaryBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 2000,
+      "armor": 3,
+      "max_workers": 1,
+      "worker_type": "PU_Smelter",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CFoundryBehavior",
+          "cannons": [
+            "PV_Cannon1",
+            "PV_Cannon2",
+            "PV_Cannon3",
+            "PV_Cannon4"
+          ]
+        }
+      ],
+      "exploration": 30
+    },
+    "PB_GenericMine": {
+      "name": "PB_GenericMine",
+      "categories": [],
+      "cost": {
+        "wood": 150,
+        "clay": 200
+      },
+      "build_time": 60,
+      "max_health": 1000,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_Headquarters1": {
+      "name": "PB_Headquarters1",
+      "categories": [
+        "Headquarters",
+        "DefendableBuilding",
+        "SerfConversionBuilding",
+        "IronSupplier",
+        "ClaySupplier",
+        "StoneSupplier",
+        "SulfurSupplier",
+        "GoldSupplier",
+        "WoodSupplier",
+        "ThiefRefuge"
+      ],
+      "cost": {
+        "stone": 1000,
+        "clay": 1000
+      },
+      "build_time": 110,
+      "max_health": 2500,
+      "armor": 6,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Headquarters2",
+        "time": 90,
+        "cost": {
+          "gold": 300,
+          "stone": 300,
+          "clay": 250
+        }
+      },
+      "behaviors": [],
+      "exploration": 50,
+      "defender_capacity": 200
+    },
+    "PB_Headquarters2": {
+      "name": "PB_Headquarters2",
+      "categories": [
+        "Headquarters",
+        "DefendableBuilding",
+        "SerfConversionBuilding",
+        "IronSupplier",
+        "ClaySupplier",
+        "StoneSupplier",
+        "SulfurSupplier",
+        "GoldSupplier",
+        "WoodSupplier",
+        "ThiefRefuge"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 3200,
+      "armor": 7,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Headquarters3",
+        "time": 120,
+        "cost": {
+          "gold": 500,
+          "stone": 500,
+          "clay": 400
+        }
+      },
+      "behaviors": [],
+      "exploration": 50,
+      "defender_capacity": 300
+    },
+    "PB_Headquarters3": {
+      "name": "PB_Headquarters3",
+      "categories": [
+        "Headquarters",
+        "DefendableBuilding",
+        "SerfConversionBuilding",
+        "IronSupplier",
+        "ClaySupplier",
+        "StoneSupplier",
+        "SulfurSupplier",
+        "GoldSupplier",
+        "WoodSupplier",
+        "ThiefRefuge"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 4100,
+      "armor": 8,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 50,
+      "defender_capacity": 400
+    },
+    "PB_IronMine1": {
+      "name": "PB_IronMine1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "IronSupplier"
+      ],
+      "cost": {},
+      "build_time": 80,
+      "max_health": 800,
+      "armor": 3,
+      "max_workers": 5,
+      "worker_type": "PU_Miner",
+      "upgrade": {
+        "to": "PB_IronMine2",
+        "time": 40,
+        "cost": {
+          "wood": 200,
+          "clay": 150
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 4,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_IronMine2": {
+      "name": "PB_IronMine2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "IronSupplier"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1000,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Miner",
+      "upgrade": {
+        "to": "PB_IronMine3",
+        "time": 50,
+        "cost": {
+          "wood": 300,
+          "clay": 300
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 5,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_IronMine3": {
+      "name": "PB_IronMine3",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "IronSupplier"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1400,
+      "armor": 3,
+      "max_workers": 7,
+      "worker_type": "PU_Miner",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 6,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Market1": {
+      "name": "PB_Market1",
+      "categories": [
+        "Workplace",
+        "IronSupplier",
+        "ClaySupplier",
+        "StoneSupplier",
+        "SulfurSupplier",
+        "GoldSupplier",
+        "WoodSupplier"
+      ],
+      "cost": {
+        "wood": 200,
+        "stone": 400
+      },
+      "build_time": 80,
+      "max_health": 1200,
+      "armor": 3,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Market2",
+        "time": 40,
+        "cost": {
+          "stone": 200,
+          "clay": 100
+        }
+      },
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_Market2": {
+      "name": "PB_Market2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "IronSupplier",
+        "ClaySupplier",
+        "StoneSupplier",
+        "SulfurSupplier",
+        "GoldSupplier",
+        "WoodSupplier"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1700,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Trader",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Monastery1": {
+      "name": "PB_Monastery1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 500,
+        "stone": 550
+      },
+      "build_time": 140,
+      "max_health": 2000,
+      "armor": 5,
+      "max_workers": 6,
+      "worker_type": "PU_Priest",
+      "upgrade": {
+        "to": "PB_Monastery2",
+        "time": 60,
+        "cost": {
+          "gold": 200,
+          "stone": 500,
+          "clay": 400
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.08
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 20
+    },
+    "PB_Monastery2": {
+      "name": "PB_Monastery2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 3500,
+      "armor": 5,
+      "max_workers": 8,
+      "worker_type": "PU_Priest",
+      "upgrade": {
+        "to": "PB_Monastery3",
+        "time": 90,
+        "cost": {
+          "gold": 300,
+          "wood": 200,
+          "stone": 600
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.1
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 20
+    },
+    "PB_Monastery3": {
+      "name": "PB_Monastery3",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 4500,
+      "armor": 5,
+      "max_workers": 10,
+      "worker_type": "PU_Priest",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CAffectMotivationBehavior",
+          "motivation_effect": 0.15
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 20
+    },
+    "PB_Outpost1": {
+      "name": "PB_Outpost1",
+      "categories": [
+        "Headquarters",
+        "DefendableBuilding",
+        "IronSupplier",
+        "ClaySupplier",
+        "StoneSupplier",
+        "SulfurSupplier",
+        "GoldSupplier",
+        "WoodSupplier"
+      ],
+      "cost": {
+        "wood": 500,
+        "stone": 500,
+        "clay": 500
+      },
+      "build_time": 110,
+      "max_health": 1800,
+      "armor": 5,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Outpost2",
+        "time": 90,
+        "cost": {
+          "gold": 500,
+          "stone": 800,
+          "clay": 300
+        }
+      },
+      "behaviors": [],
+      "exploration": 50,
+      "defender_capacity": 200
+    },
+    "PB_Outpost2": {
+      "name": "PB_Outpost2",
+      "categories": [
+        "Headquarters",
+        "DefendableBuilding",
+        "IronSupplier",
+        "ClaySupplier",
+        "StoneSupplier",
+        "SulfurSupplier",
+        "GoldSupplier",
+        "WoodSupplier"
+      ],
+      "cost": {
+        "stone": 1000,
+        "clay": 1000
+      },
+      "build_time": 100,
+      "max_health": 3200,
+      "armor": 7,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Outpost3",
+        "time": 120,
+        "cost": {
+          "gold": 1000,
+          "stone": 1000,
+          "clay": 300
+        }
+      },
+      "behaviors": [],
+      "exploration": 50,
+      "defender_capacity": 300
+    },
+    "PB_Outpost3": {
+      "name": "PB_Outpost3",
+      "categories": [
+        "Headquarters",
+        "DefendableBuilding",
+        "IronSupplier",
+        "ClaySupplier",
+        "StoneSupplier",
+        "SulfurSupplier",
+        "GoldSupplier",
+        "WoodSupplier"
+      ],
+      "cost": {
+        "stone": 1000,
+        "clay": 1000
+      },
+      "build_time": 10,
+      "max_health": 4100,
+      "armor": 10,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 50,
+      "defender_capacity": 400
+    },
+    "PB_PowerPlant1": {
+      "name": "PB_PowerPlant1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 500,
+        "stone": 300
+      },
+      "build_time": 40,
+      "max_health": 2000,
+      "armor": 7,
+      "max_workers": 4,
+      "worker_type": "PU_Engineer",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Residence1": {
+      "name": "PB_Residence1",
+      "categories": [
+        "Residence",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 150,
+        "clay": 100
+      },
+      "build_time": 80,
+      "max_health": 500,
+      "armor": 3,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Residence2",
+        "time": 40,
+        "cost": {
+          "wood": 50,
+          "stone": 150
+        }
+      },
+      "behaviors": [],
+      "exploration": 20,
+      "live_capacity": 6,
+      "defender_capacity": 10
+    },
+    "PB_Residence2": {
+      "name": "PB_Residence2",
+      "categories": [
+        "Residence",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 700,
+      "armor": 3,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Residence3",
+        "time": 50,
+        "cost": {
+          "wood": 150,
+          "stone": 200
+        }
+      },
+      "behaviors": [],
+      "exploration": 20,
+      "live_capacity": 9,
+      "defender_capacity": 20
+    },
+    "PB_Residence3": {
+      "name": "PB_Residence3",
+      "categories": [
+        "Residence",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1000,
+      "armor": 3,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20,
+      "live_capacity": 12,
+      "defender_capacity": 30
+    },
+    "PB_Sawmill1": {
+      "name": "PB_Sawmill1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "stone": 150,
+        "clay": 200
+      },
+      "build_time": 110,
+      "max_health": 1200,
+      "armor": 3,
+      "max_workers": 4,
+      "worker_type": "PU_Sawmillworker",
+      "upgrade": {
+        "to": "PB_Sawmill2",
+        "time": 40,
+        "cost": {
+          "stone": 100,
+          "clay": 150
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Wood",
+          "initial_factor": 4,
+          "supplier_category": "WoodSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Sawmill2": {
+      "name": "PB_Sawmill2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1700,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Sawmillworker",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Wood",
+          "initial_factor": 4,
+          "supplier_category": "WoodSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Stable1": {
+      "name": "PB_Stable1",
+      "categories": [
+        "MilitaryBuilding",
+        "SerfConversionBuilding"
+      ],
+      "cost": {
+        "wood": 200,
+        "stone": 350
+      },
+      "build_time": 120,
+      "max_health": 1500,
+      "armor": 4,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Stable2",
+        "time": 40,
+        "cost": {
+          "stone": 300,
+          "clay": 150
+        }
+      },
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_Stable2": {
+      "name": "PB_Stable2",
+      "categories": [
+        "MilitaryBuilding",
+        "SerfConversionBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 2000,
+      "armor": 4,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_StoneMason1": {
+      "name": "PB_StoneMason1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 200,
+        "clay": 300
+      },
+      "build_time": 80,
+      "max_health": 1200,
+      "armor": 3,
+      "max_workers": 4,
+      "worker_type": "PU_Stonecutter",
+      "upgrade": {
+        "to": "PB_StoneMason2",
+        "time": 40,
+        "cost": {
+          "stone": 150,
+          "clay": 150
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Stone",
+          "initial_factor": 4,
+          "supplier_category": "StoneSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_StoneMason2": {
+      "name": "PB_StoneMason2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1700,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Stonecutter",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Stone",
+          "initial_factor": 4,
+          "supplier_category": "StoneSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_StoneMine1": {
+      "name": "PB_StoneMine1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "StoneSupplier"
+      ],
+      "cost": {},
+      "build_time": 80,
+      "max_health": 800,
+      "armor": 3,
+      "max_workers": 5,
+      "worker_type": "PU_Miner",
+      "upgrade": {
+        "to": "PB_StoneMine2",
+        "time": 40,
+        "cost": {
+          "wood": 200,
+          "clay": 150
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 4,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 15,
+      "defender_capacity": 10
+    },
+    "PB_StoneMine2": {
+      "name": "PB_StoneMine2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "StoneSupplier"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1000,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Miner",
+      "upgrade": {
+        "to": "PB_StoneMine3",
+        "time": 50,
+        "cost": {
+          "clay": 200,
+          "iron": 200
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 5,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 15,
+      "defender_capacity": 10
+    },
+    "PB_StoneMine3": {
+      "name": "PB_StoneMine3",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "StoneSupplier"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1200,
+      "armor": 3,
+      "max_workers": 7,
+      "worker_type": "PU_Miner",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 6,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 15,
+      "defender_capacity": 10
+    },
+    "PB_SulfurMine1": {
+      "name": "PB_SulfurMine1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "SulfurSupplier"
+      ],
+      "cost": {},
+      "build_time": 110,
+      "max_health": 800,
+      "armor": 3,
+      "max_workers": 5,
+      "worker_type": "PU_Miner",
+      "upgrade": {
+        "to": "PB_SulfurMine2",
+        "time": 40,
+        "cost": {
+          "wood": 150,
+          "stone": 150
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 4,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_SulfurMine2": {
+      "name": "PB_SulfurMine2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "SulfurSupplier"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1000,
+      "armor": 3,
+      "max_workers": 6,
+      "worker_type": "PU_Miner",
+      "upgrade": {
+        "to": "PB_SulfurMine3",
+        "time": 50,
+        "cost": {
+          "stone": 200,
+          "clay": 200
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 5,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_SulfurMine3": {
+      "name": "PB_SulfurMine3",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding",
+        "SulfurSupplier"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1400,
+      "armor": 3,
+      "max_workers": 7,
+      "worker_type": "PU_Miner",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CMineBehavior",
+          "amount_to_mine": 6,
+          "resource_type": ""
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_Tower1": {
+      "name": "PB_Tower1",
+      "categories": [
+        "MilitaryBuilding"
+      ],
+      "cost": {
+        "wood": 200,
+        "stone": 200
+      },
+      "build_time": 80,
+      "max_health": 1000,
+      "armor": 6,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Tower2",
+        "time": 15,
+        "cost": {
+          "wood": 200,
+          "stone": 300
+        }
+      },
+      "behaviors": [],
+      "exploration": 33
+    },
+    "PB_Tower2": {
+      "name": "PB_Tower2",
+      "categories": [
+        "MilitaryBuilding",
+        "Military"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1200,
+      "armor": 6,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_Tower3",
+        "time": 15,
+        "cost": {
+          "stone": 200,
+          "sulfur": 200
+        }
+      },
+      "behaviors": [],
+      "exploration": 33
+    },
+    "PB_Tower2_Ballista": {
+      "name": "PB_Tower2_Ballista",
+      "categories": [
+        "MilitaryBuilding",
+        "Military",
+        "Cannon",
+        "SplashDamage"
+      ],
+      "cost": {},
+      "build_time": 0,
+      "max_health": 1000,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_Tower3": {
+      "name": "PB_Tower3",
+      "categories": [
+        "MilitaryBuilding",
+        "Military"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1400,
+      "armor": 6,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 33
+    },
+    "PB_Tower3_Cannon": {
+      "name": "PB_Tower3_Cannon",
+      "categories": [
+        "MilitaryBuilding",
+        "Military",
+        "Cannon",
+        "SplashDamage"
+      ],
+      "cost": {},
+      "build_time": 0,
+      "max_health": 1000,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_University1": {
+      "name": "PB_University1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 200,
+        "clay": 300
+      },
+      "build_time": 90,
+      "max_health": 2000,
+      "armor": 4,
+      "max_workers": 6,
+      "worker_type": "PU_Scholar",
+      "upgrade": {
+        "to": "PB_University2",
+        "time": 50,
+        "cost": {
+          "gold": 150,
+          "stone": 100,
+          "clay": 100
+        }
+      },
+      "behaviors": [],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_University2": {
+      "name": "PB_University2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 3500,
+      "armor": 4,
+      "max_workers": 8,
+      "worker_type": "PU_Scholar",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_VillageCenter1": {
+      "name": "PB_VillageCenter1",
+      "categories": [
+        "VillageCenter",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "wood": 300,
+        "stone": 200
+      },
+      "build_time": 110,
+      "max_health": 1000,
+      "armor": 4,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_VillageCenter2",
+        "time": 40,
+        "cost": {
+          "gold": 150,
+          "stone": 300,
+          "clay": 100
+        }
+      },
+      "behaviors": [],
+      "exploration": 40,
+      "defender_capacity": 10
+    },
+    "PB_VillageCenter2": {
+      "name": "PB_VillageCenter2",
+      "categories": [
+        "VillageCenter",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1200,
+      "armor": 4,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": {
+        "to": "PB_VillageCenter3",
+        "time": 40,
+        "cost": {
+          "gold": 200,
+          "stone": 400,
+          "clay": 150
+        }
+      },
+      "behaviors": [],
+      "exploration": 40,
+      "defender_capacity": 10
+    },
+    "PB_VillageCenter3": {
+      "name": "PB_VillageCenter3",
+      "categories": [
+        "VillageCenter",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1400,
+      "armor": 4,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 40,
+      "defender_capacity": 10
+    },
+    "PB_Weathermachine": {
+      "name": "PB_Weathermachine",
+      "categories": [],
+      "cost": {
+        "wood": 500,
+        "sulfur": 500
+      },
+      "build_time": 60,
+      "max_health": 1200,
+      "armor": 5,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_Weathermachine_Activated": {
+      "name": "PB_Weathermachine_Activated",
+      "categories": [],
+      "cost": {
+        "wood": 500,
+        "sulfur": 500
+      },
+      "build_time": 60,
+      "max_health": 1200,
+      "armor": 5,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_WeatherTower1": {
+      "name": "PB_WeatherTower1",
+      "categories": [],
+      "cost": {
+        "wood": 500,
+        "sulfur": 500
+      },
+      "build_time": 40,
+      "max_health": 1200,
+      "armor": 5,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_Bridge1": {
+      "name": "PB_Bridge1",
+      "categories": [
+        "Bridge"
+      ],
+      "cost": {
+        "wood": 5,
+        "stone": 5,
+        "clay": 5
+      },
+      "build_time": 80,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_Bridge2": {
+      "name": "PB_Bridge2",
+      "categories": [
+        "Bridge"
+      ],
+      "cost": {},
+      "build_time": 80,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_Bridge3": {
+      "name": "PB_Bridge3",
+      "categories": [
+        "Bridge"
+      ],
+      "cost": {
+        "wood": 500,
+        "stone": 800,
+        "clay": 200
+      },
+      "build_time": 80,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_Bridge4": {
+      "name": "PB_Bridge4",
+      "categories": [
+        "Bridge"
+      ],
+      "cost": {
+        "wood": 500,
+        "stone": 800,
+        "clay": 200
+      },
+      "build_time": 80,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_DrawBridgeClosed1": {
+      "name": "PB_DrawBridgeClosed1",
+      "categories": [
+        "Bridge"
+      ],
+      "cost": {
+        "wood": 5,
+        "stone": 5,
+        "clay": 5
+      },
+      "build_time": 80,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_DrawBridgeClosed2": {
+      "name": "PB_DrawBridgeClosed2",
+      "categories": [
+        "Bridge"
+      ],
+      "cost": {
+        "wood": 5,
+        "stone": 5,
+        "clay": 5
+      },
+      "build_time": 80,
+      "max_health": 300,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_GenericBridge": {
+      "name": "PB_GenericBridge",
+      "categories": [],
+      "cost": {
+        "wood": 500,
+        "stone": 1000,
+        "clay": 300
+      },
+      "build_time": 60,
+      "max_health": 1000,
+      "armor": 0,
+      "max_workers": 0,
+      "worker_type": "",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 20
+    },
+    "PB_GunsmithWorkshop1": {
+      "name": "PB_GunsmithWorkshop1",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "stone": 400,
+        "sulfur": 300
+      },
+      "build_time": 110,
+      "max_health": 1200,
+      "armor": 3,
+      "max_workers": 2,
+      "worker_type": "PU_Gunsmith",
+      "upgrade": {
+        "to": "PB_GunsmithWorkshop2",
+        "time": 40,
+        "cost": {
+          "stone": 300,
+          "sulfur": 200
+        }
+      },
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Sulfur",
+          "initial_factor": 4,
+          "supplier_category": "SulfurSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_GunsmithWorkshop2": {
+      "name": "PB_GunsmithWorkshop2",
+      "categories": [
+        "Workplace",
+        "DefendableBuilding"
+      ],
+      "cost": {},
+      "build_time": 60,
+      "max_health": 1700,
+      "armor": 3,
+      "max_workers": 4,
+      "worker_type": "PU_Gunsmith",
+      "upgrade": null,
+      "behaviors": [
+        {
+          "class": "GGL::CResourceRefinerBehavior",
+          "resource_type": "Sulfur",
+          "initial_factor": 4,
+          "supplier_category": "SulfurSupplier"
+        }
+      ],
+      "exploration": 30,
+      "defender_capacity": 10
+    },
+    "PB_MasterBuilderWorkshop": {
+      "name": "PB_MasterBuilderWorkshop",
+      "categories": [
+        "Workplace"
+      ],
+      "cost": {
+        "wood": 200,
+        "stone": 400
+      },
+      "build_time": 80,
+      "max_health": 1200,
+      "armor": 3,
+      "max_workers": 2,
+      "worker_type": "PU_MasterBuilder",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30
+    },
+    "PB_Tavern1": {
+      "name": "PB_Tavern1",
+      "categories": [
+        "Barracks",
+        "Farm",
+        "MilitaryBuilding",
+        "ThiefRefuge",
+        "DefendableBuilding"
+      ],
+      "cost": {
+        "gold": 400,
+        "wood": 300
+      },
+      "build_time": 90,
+      "max_health": 1500,
+      "armor": 2,
+      "max_workers": 1,
+      "worker_type": "PU_TavernBarkeeper",
+      "upgrade": {
+        "to": "PB_Tavern2",
+        "time": 60,
+        "cost": {
+          "gold": 500,
+          "stone": 300
+        }
+      },
+      "behaviors": [],
+      "exploration": 30,
+      "eat_capacity": 4,
+      "defender_capacity": 10
+    },
+    "PB_Tavern2": {
+      "name": "PB_Tavern2",
+      "categories": [
+        "Barracks",
+        "Farm",
+        "MilitaryBuilding",
+        "DefendableBuilding",
+        "ThiefRefuge"
+      ],
+      "cost": {
+        "gold": 400,
+        "wood": 300
+      },
+      "build_time": 90,
+      "max_health": 1500,
+      "armor": 2,
+      "max_workers": 1,
+      "worker_type": "PU_TavernBarkeeper",
+      "upgrade": null,
+      "behaviors": [],
+      "exploration": 30,
+      "eat_capacity": 6,
+      "defender_capacity": 10
+    }
+  },
+  "technologies": {
+    "B_Alchemist": {
+      "name": "B_Alchemist",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Alchemy"
+        }
+      ],
+      "effects": []
+    },
+    "B_Archery": {
+      "name": "B_Archery",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_StandingArmy"
+        }
+      ],
+      "effects": []
+    },
+    "B_Bank": {
+      "name": "B_Bank",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Printing"
+        }
+      ],
+      "effects": []
+    },
+    "B_Barracks": {
+      "name": "B_Barracks",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Mercenaries"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification01": {
+      "name": "B_Beautification01",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_StandingArmy"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification02": {
+      "name": "B_Beautification02",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Trading"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification03": {
+      "name": "B_Beautification03",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Strategies"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification04": {
+      "name": "B_Beautification04",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Mercenaries"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification05": {
+      "name": "B_Beautification05",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Tactics"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification06": {
+      "name": "B_Beautification06",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Literacy"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification07": {
+      "name": "B_Beautification07",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Printing"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification08": {
+      "name": "B_Beautification08",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_ChainBlock"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification09": {
+      "name": "B_Beautification09",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Construction"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification10": {
+      "name": "B_Beautification10",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Library"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification11": {
+      "name": "B_Beautification11",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Architecture"
+        }
+      ],
+      "effects": []
+    },
+    "B_Beautification12": {
+      "name": "B_Beautification12",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "B_Blacksmith": {
+      "name": "B_Blacksmith",
+      "category": "TC_Building",
+      "time": 30,
+      "cost": {},
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Alchemy"
+        }
+      ],
+      "effects": []
+    },
+    "B_Brickworks": {
+      "name": "B_Brickworks",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Construction"
+        }
+      ],
+      "effects": []
+    },
+    "B_Claymine": {
+      "name": "B_Claymine",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "B_Farm": {
+      "name": "B_Farm",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "B_Foundry": {
+      "name": "B_Foundry",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Metallurgy"
+        }
+      ],
+      "effects": []
+    },
+    "B_Headquarter": {
+      "name": "B_Headquarter",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "B_Ironmine": {
+      "name": "B_Ironmine",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "B_Market": {
+      "name": "B_Market",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Literacy"
+        }
+      ],
+      "effects": []
+    },
+    "B_Monastery": {
+      "name": "B_Monastery",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Literacy"
+        }
+      ],
+      "effects": []
+    },
+    "B_Outpost": {
+      "name": "B_Outpost",
+      "category": "TC_Building",
+      "time": 30,
+      "cost": {},
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Trading"
+        }
+      ],
+      "effects": []
+    },
+    "B_PowerPlant": {
+      "name": "B_PowerPlant",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_ChangeWeather"
+        }
+      ],
+      "effects": []
+    },
+    "B_Residence": {
+      "name": "B_Residence",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "B_Sawmill": {
+      "name": "B_Sawmill",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Construction"
+        }
+      ],
+      "effects": []
+    },
+    "B_Stables": {
+      "name": "B_Stables",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Tactics"
+        }
+      ],
+      "effects": []
+    },
+    "B_StoneMason": {
+      "name": "B_StoneMason",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "B_Stonemine": {
+      "name": "B_Stonemine",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "B_Sulfurmine": {
+      "name": "B_Sulfurmine",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "B_Tower": {
+      "name": "B_Tower",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Construction"
+        }
+      ],
+      "effects": []
+    },
+    "B_University": {
+      "name": "B_University",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "B_Village": {
+      "name": "B_Village",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "B_Weathermachine": {
+      "name": "B_Weathermachine",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_WeatherForecast"
+        }
+      ],
+      "effects": []
+    },
+    "GT_Alchemy": {
+      "name": "GT_Alchemy",
+      "category": "TC_Resources",
+      "time": 20,
+      "cost": {
+        "wood": 50,
+        "sulfur": 150
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "GT_Alloying": {
+      "name": "GT_Alloying",
+      "category": "TC_Resources",
+      "time": 40,
+      "cost": {
+        "iron": 200,
+        "sulfur": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Alchemy"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Architecture": {
+      "name": "GT_Architecture",
+      "category": "TC_Construction",
+      "time": 80,
+      "cost": {
+        "stone": 600,
+        "iron": 500
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_ChainBlock"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Banking": {
+      "name": "GT_Banking",
+      "category": "TC_Trading",
+      "time": 60,
+      "cost": {
+        "gold": 500
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Trading"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Beautification": {
+      "name": "GT_Beautification",
+      "category": "TC_Building",
+      "time": 90,
+      "cost": {
+        "gold": 1000
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "GT_ChainBlock": {
+      "name": "GT_ChainBlock",
+      "category": "TC_Construction",
+      "time": 40,
+      "cost": {
+        "wood": 200,
+        "stone": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Chemistry": {
+      "name": "GT_Chemistry",
+      "category": "TC_Resources",
+      "time": 80,
+      "cost": {
+        "iron": 500,
+        "sulfur": 600
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Metallurgy"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Construction": {
+      "name": "GT_Construction",
+      "category": "TC_Construction",
+      "time": 20,
+      "cost": {
+        "wood": 200,
+        "clay": 150
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "GT_GearWheel": {
+      "name": "GT_GearWheel",
+      "category": "TC_Construction",
+      "time": 40,
+      "cost": {
+        "stone": 400,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Construction"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Gilds": {
+      "name": "GT_Gilds",
+      "category": "TC_Trading",
+      "time": 80,
+      "cost": {
+        "gold": 700
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Banking"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Laws": {
+      "name": "GT_Laws",
+      "category": "TC_Administration",
+      "time": 60,
+      "cost": {
+        "gold": 300,
+        "sulfur": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Literacy"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Library": {
+      "name": "GT_Library",
+      "category": "TC_Administration",
+      "time": 80,
+      "cost": {
+        "gold": 500,
+        "wood": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Printing"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Literacy": {
+      "name": "GT_Literacy",
+      "category": "TC_Administration",
+      "time": 20,
+      "cost": {
+        "gold": 50,
+        "wood": 150
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "GT_Mercenaries": {
+      "name": "GT_Mercenaries",
+      "category": "TC_Military",
+      "time": 20,
+      "cost": {
+        "gold": 50,
+        "wood": 150
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "GT_Metallurgy": {
+      "name": "GT_Metallurgy",
+      "category": "TC_Resources",
+      "time": 60,
+      "cost": {
+        "iron": 400,
+        "sulfur": 400
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Alloying"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Printing": {
+      "name": "GT_Printing",
+      "category": "TC_Administration",
+      "time": 40,
+      "cost": {
+        "gold": 200,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Trading"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_StandingArmy": {
+      "name": "GT_StandingArmy",
+      "category": "TC_Military",
+      "time": 40,
+      "cost": {
+        "gold": 200,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Mercenaries"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Strategies": {
+      "name": "GT_Strategies",
+      "category": "TC_Military",
+      "time": 80,
+      "cost": {
+        "gold": 600,
+        "iron": 600
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Tactics"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Tactics": {
+      "name": "GT_Tactics",
+      "category": "TC_Military",
+      "time": 60,
+      "cost": {
+        "gold": 400,
+        "iron": 400
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_StandingArmy"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Taxation": {
+      "name": "GT_Taxation",
+      "category": "TC_Trading",
+      "time": 20,
+      "cost": {
+        "gold": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "GT_Trading": {
+      "name": "GT_Trading",
+      "category": "TC_Trading",
+      "time": 40,
+      "cost": {
+        "gold": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Literacy"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "MU_Cannon1": {
+      "name": "MU_Cannon1",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_Cannon2": {
+      "name": "MU_Cannon2",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_Cannon3": {
+      "name": "MU_Cannon3",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Foundry2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "MU_Cannon4": {
+      "name": "MU_Cannon4",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Foundry2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "MU_LeaderBow": {
+      "name": "MU_LeaderBow",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderBow2": {
+      "name": "MU_LeaderBow2",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderBow3": {
+      "name": "MU_LeaderBow3",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderBow4": {
+      "name": "MU_LeaderBow4",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderHeavyCavalry": {
+      "name": "MU_LeaderHeavyCavalry",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderLightCavalry": {
+      "name": "MU_LeaderLightCavalry",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderSpear": {
+      "name": "MU_LeaderSpear",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderSpear2": {
+      "name": "MU_LeaderSpear2",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderSpear3": {
+      "name": "MU_LeaderSpear3",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderSpear4": {
+      "name": "MU_LeaderSpear4",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderSword": {
+      "name": "MU_LeaderSword",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderSword2": {
+      "name": "MU_LeaderSword2",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderSword3": {
+      "name": "MU_LeaderSword3",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_LeaderSword4": {
+      "name": "MU_LeaderSword4",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_Serf": {
+      "name": "MU_Serf",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "TEST_T_Tracking": {
+      "name": "TEST_T_Tracking",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_AdjustTaxes": {
+      "name": "T_AdjustTaxes",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Literacy"
+        }
+      ],
+      "effects": []
+    },
+    "T_BetterChassis": {
+      "name": "T_BetterChassis",
+      "category": "TC_Technologies",
+      "time": 50,
+      "cost": {
+        "wood": 200,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Foundry2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_BetterTrainingArchery": {
+      "name": "T_BetterTrainingArchery",
+      "category": "TC_Technologies",
+      "time": 50,
+      "cost": {
+        "gold": 200,
+        "wood": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Archery2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_BetterTrainingBarracks": {
+      "name": "T_BetterTrainingBarracks",
+      "category": "TC_Technologies",
+      "time": 50,
+      "cost": {
+        "gold": 200,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Barracks2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_BlessSettlers1": {
+      "name": "T_BlessSettlers1",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_BlessSettlers2": {
+      "name": "T_BlessSettlers2",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_BlessSettlers3": {
+      "name": "T_BlessSettlers3",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Monastery2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Monastery3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_BlessSettlers4": {
+      "name": "T_BlessSettlers4",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Monastery2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Monastery3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_BlessSettlers5": {
+      "name": "T_BlessSettlers5",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Monastery3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_BlisteringCannonballs": {
+      "name": "T_BlisteringCannonballs",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 200,
+        "sulfur": 400
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_EnhancedGunPowder"
+        },
+        {
+          "type": "building",
+          "value": "PB_Alchemist2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_BodkinArrow": {
+      "name": "T_BodkinArrow",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {
+        "gold": 200,
+        "wood": 200
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_Fletching"
+        },
+        {
+          "type": "building",
+          "value": "PB_Sawmill2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_BookKeeping": {
+      "name": "T_BookKeeping",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {
+        "gold": 400
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_Debenture"
+        },
+        {
+          "type": "building",
+          "value": "PB_Bank2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_ChainBardingArmor": {
+      "name": "T_ChainBardingArmor",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_ChainMailArmor": {
+      "name": "T_ChainMailArmor",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 200,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_LeatherMailArmor"
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_ChangeWeather": {
+      "name": "T_ChangeWeather",
+      "category": "TC_Technologies",
+      "time": 40,
+      "cost": {
+        "gold": 400,
+        "sulfur": 400
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_WeatherForecast"
+        },
+        {
+          "type": "building",
+          "value": "PB_Alchemist2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_CityGuard": {
+      "name": "T_CityGuard",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_Coinage": {
+      "name": "T_Coinage",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {
+        "gold": 300,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_Debenture"
+        },
+        {
+          "type": "building",
+          "value": "PB_Bank2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_CropCycle": {
+      "name": "T_CropCycle",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_Debenture": {
+      "name": "T_Debenture",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 300
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Bank1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Bank2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_EnableMilitia": {
+      "name": "T_EnableMilitia",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Mercenaries"
+        }
+      ],
+      "effects": []
+    },
+    "T_EnhancedGunPowder": {
+      "name": "T_EnhancedGunPowder",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 200,
+        "sulfur": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Alchemist2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_Fletching": {
+      "name": "T_Fletching",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 100,
+        "wood": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Sawmill2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_IronCasting": {
+      "name": "T_IronCasting",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {
+        "gold": 500,
+        "iron": 400
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_MasterOfSmithery"
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_LeatherArcherArmor": {
+      "name": "T_LeatherArcherArmor",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {
+        "gold": 300,
+        "iron": 150
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_PaddedArcherArmor"
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_LeatherBaringArmor": {
+      "name": "T_LeatherBaringArmor",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_LeatherMailArmor": {
+      "name": "T_LeatherMailArmor",
+      "category": "TC_Technologies",
+      "time": 15,
+      "cost": {
+        "gold": 100,
+        "iron": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Blacksmith1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_LightBricks": {
+      "name": "T_LightBricks",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 200,
+        "wood": 100,
+        "clay": 400
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Brickworks2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_Loom": {
+      "name": "T_Loom",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 200,
+        "wood": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_VillageCenter2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_VillageCenter3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_MakeRain": {
+      "name": "T_MakeRain",
+      "category": "TC_Technologies",
+      "time": 30,
+      "cost": {},
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_PowerPlant1",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_MakeSnow": {
+      "name": "T_MakeSnow",
+      "category": "TC_Technologies",
+      "time": 30,
+      "cost": {},
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_PowerPlant1",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_MakeSummer": {
+      "name": "T_MakeSummer",
+      "category": "TC_Technologies",
+      "time": 30,
+      "cost": {},
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_PowerPlant1",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_MarketClay": {
+      "name": "T_MarketClay",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {},
+      "conditions": [],
+      "effects": []
+    },
+    "T_MarketGold": {
+      "name": "T_MarketGold",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {},
+      "conditions": [],
+      "effects": []
+    },
+    "T_MarketIron": {
+      "name": "T_MarketIron",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {},
+      "conditions": [],
+      "effects": []
+    },
+    "T_MarketStone": {
+      "name": "T_MarketStone",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {},
+      "conditions": [],
+      "effects": []
+    },
+    "T_MarketSulfur": {
+      "name": "T_MarketSulfur",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {},
+      "conditions": [],
+      "effects": []
+    },
+    "T_MarketWood": {
+      "name": "T_MarketWood",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {},
+      "conditions": [],
+      "effects": []
+    },
+    "T_Masonry": {
+      "name": "T_Masonry",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "wood": 200,
+        "stone": 400
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_StoneMason2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_MasterOfSmithery": {
+      "name": "T_MasterOfSmithery",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 300,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Blacksmith2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_MinimapNormalView": {
+      "name": "T_MinimapNormalView",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {},
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Alchemy"
+        },
+        {
+          "type": "technology",
+          "value": "GT_Tactics"
+        }
+      ],
+      "effects": []
+    },
+    "T_MinimapResouceView": {
+      "name": "T_MinimapResouceView",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {},
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Alchemy"
+        }
+      ],
+      "effects": []
+    },
+    "T_MinimapTacticView": {
+      "name": "T_MinimapTacticView",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {},
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Tactics"
+        }
+      ],
+      "effects": []
+    },
+    "T_OnlineHelp": {
+      "name": "T_OnlineHelp",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_PaddedArcherArmor": {
+      "name": "T_PaddedArcherArmor",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 200,
+        "iron": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_SoftArcherArmor"
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_PaddedBardingArmor": {
+      "name": "T_PaddedBardingArmor",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_PickAxe": {
+      "name": "T_PickAxe",
+      "category": "TC_Technologies",
+      "time": 30,
+      "cost": {
+        "clay": 800
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_PlateBardingArmor": {
+      "name": "T_PlateBardingArmor",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_PlateMailArmor": {
+      "name": "T_PlateMailArmor",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {
+        "gold": 300,
+        "iron": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_ChainMailArmor"
+        }
+      ],
+      "effects": []
+    },
+    "T_Scale": {
+      "name": "T_Scale",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 200,
+        "wood": 50
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Bank1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Bank2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_Shoeing": {
+      "name": "T_Shoeing",
+      "category": "TC_Technologies",
+      "time": 50,
+      "cost": {
+        "gold": 200,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Stable2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_Shoes": {
+      "name": "T_Shoes",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {
+        "gold": 300
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_VillageCenter3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_SoftArcherArmor": {
+      "name": "T_SoftArcherArmor",
+      "category": "TC_Technologies",
+      "time": 15,
+      "cost": {
+        "gold": 100,
+        "iron": 50
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Blacksmith1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_SpinningWheel": {
+      "name": "T_SpinningWheel",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_SuperTechnology": {
+      "name": "T_SuperTechnology",
+      "category": "TC_Technologies",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_TEST": {
+      "name": "T_TEST",
+      "category": "TC_TEST",
+      "time": 5,
+      "cost": {
+        "clay": 10
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PU_Serf",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_TEST2": {
+      "name": "T_TEST2",
+      "category": "TC_TEST",
+      "time": 50,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Residence1",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_TownGuard": {
+      "name": "T_TownGuard",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 400
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_VillageCenter1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_VillageCenter2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_VillageCenter3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_Tracking": {
+      "name": "T_Tracking",
+      "category": "TC_Technologies",
+      "time": 30,
+      "cost": {
+        "gold": 500
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_Turnery": {
+      "name": "T_Turnery",
+      "category": "TC_Technologies",
+      "time": 25,
+      "cost": {
+        "gold": 100,
+        "wood": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_WoodAging"
+        },
+        {
+          "type": "building",
+          "value": "PB_Sawmill2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeBow1": {
+      "name": "T_UpgradeBow1",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 400,
+        "wood": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Sawmill1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Sawmill2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeBow2": {
+      "name": "T_UpgradeBow2",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 500,
+        "iron": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_UpgradeBow1"
+        },
+        {
+          "type": "building",
+          "value": "PB_Archery2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeBow3": {
+      "name": "T_UpgradeBow3",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 600,
+        "iron": 400
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_UpgradeBow2"
+        },
+        {
+          "type": "building",
+          "value": "PB_Archery2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeHeavyCavalry1": {
+      "name": "T_UpgradeHeavyCavalry1",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 500,
+        "iron": 400
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Stable2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeLightCavalry1": {
+      "name": "T_UpgradeLightCavalry1",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 500,
+        "wood": 400
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Stable2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeSpear1": {
+      "name": "T_UpgradeSpear1",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 300,
+        "wood": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Sawmill1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Sawmill2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeSpear2": {
+      "name": "T_UpgradeSpear2",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 400,
+        "wood": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_UpgradeSpear1"
+        },
+        {
+          "type": "building",
+          "value": "PB_Barracks2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeSpear3": {
+      "name": "T_UpgradeSpear3",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 600,
+        "iron": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_UpgradeSpear2"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Barracks2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeSword1": {
+      "name": "T_UpgradeSword1",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 300,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Blacksmith1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeSword2": {
+      "name": "T_UpgradeSword2",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 500,
+        "iron": 500
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_UpgradeSword1"
+        },
+        {
+          "type": "building",
+          "value": "PB_Barracks2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeSword3": {
+      "name": "T_UpgradeSword3",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 600,
+        "iron": 500
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_UpgradeSword2"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Barracks2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_WeatherForecast": {
+      "name": "T_WeatherForecast",
+      "category": "TC_Technologies",
+      "time": 30,
+      "cost": {
+        "gold": 400,
+        "sulfur": 400
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Alchemist2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_WoodAging": {
+      "name": "T_WoodAging",
+      "category": "TC_Technologies",
+      "time": 20,
+      "cost": {
+        "gold": 50,
+        "wood": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Sawmill2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Alchemist": {
+      "name": "UP1_Alchemist",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Metallurgy"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Archery": {
+      "name": "UP1_Archery",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Bank": {
+      "name": "UP1_Bank",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Library"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Barracks": {
+      "name": "UP1_Barracks",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Blacksmith": {
+      "name": "UP1_Blacksmith",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Alloying"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Brickworks": {
+      "name": "UP1_Brickworks",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Alloying"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Claymine": {
+      "name": "UP1_Claymine",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Farm": {
+      "name": "UP1_Farm",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Foundry": {
+      "name": "UP1_Foundry",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Chemistry"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Headquarter": {
+      "name": "UP1_Headquarter",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "UP1_Ironmine": {
+      "name": "UP1_Ironmine",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Market": {
+      "name": "UP1_Market",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Trading"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Monastery": {
+      "name": "UP1_Monastery",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Printing"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Residence": {
+      "name": "UP1_Residence",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Construction"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Sawmill": {
+      "name": "UP1_Sawmill",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_ChainBlock"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Stables": {
+      "name": "UP1_Stables",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Strategies"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_StoneMason": {
+      "name": "UP1_StoneMason",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_ChainBlock"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Stonemine": {
+      "name": "UP1_Stonemine",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Sulfurmine": {
+      "name": "UP1_Sulfurmine",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Tower": {
+      "name": "UP1_Tower",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_University": {
+      "name": "UP1_University",
+      "category": "TC_BuildingUpgrades",
+      "time": 15,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Mercenaries"
+        },
+        {
+          "type": "technology",
+          "value": "GT_StandingArmy"
+        },
+        {
+          "type": "technology",
+          "value": "GT_Construction"
+        },
+        {
+          "type": "technology",
+          "value": "GT_GearWheel"
+        },
+        {
+          "type": "technology",
+          "value": "GT_Alchemy"
+        },
+        {
+          "type": "technology",
+          "value": "GT_Alloying"
+        },
+        {
+          "type": "technology",
+          "value": "GT_Trading"
+        },
+        {
+          "type": "technology",
+          "value": "GT_Literacy"
+        },
+        {
+          "type": "technology",
+          "value": "GT_Mathematics"
+        },
+        {
+          "type": "technology",
+          "value": "GT_Binocular"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Village": {
+      "name": "UP1_Village",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Literacy"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Blacksmith": {
+      "name": "UP2_Blacksmith",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Metallurgy"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Claymine": {
+      "name": "UP2_Claymine",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Chemistry"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Farm": {
+      "name": "UP2_Farm",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Architecture"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Headquarter": {
+      "name": "UP2_Headquarter",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Blacksmith1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Blacksmith3",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Sawmill1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Sawmill2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Alchemist1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Alchemist2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_StoneMason1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_StoneMason2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Brickworks1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Brickworks2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_GunsmithWorkshop1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_GunsmithWorkshop2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Ironmine": {
+      "name": "UP2_Ironmine",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Chemistry"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Monastery": {
+      "name": "UP2_Monastery",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Library"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Residence": {
+      "name": "UP2_Residence",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Architecture"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Stonemine": {
+      "name": "UP2_Stonemine",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Chemistry"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Sulfurmine": {
+      "name": "UP2_Sulfurmine",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Chemistry"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Tower": {
+      "name": "UP2_Tower",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Metallurgy"
+        }
+      ],
+      "effects": []
+    },
+    "UP2_Village": {
+      "name": "UP2_Village",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Trading"
+        }
+      ],
+      "effects": []
+    },
+    "B_Bridge": {
+      "name": "B_Bridge",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Mathematics"
+        },
+        {
+          "type": "building",
+          "value": "PB_MasterBuilderWorkshop",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "B_GunsmithWorkshop": {
+      "name": "B_GunsmithWorkshop",
+      "category": "TC_Building",
+      "time": 30,
+      "cost": {},
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Matchlock"
+        }
+      ],
+      "effects": []
+    },
+    "B_MasterBuilderWorkshop": {
+      "name": "B_MasterBuilderWorkshop",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Mathematics"
+        }
+      ],
+      "effects": []
+    },
+    "B_Tavern": {
+      "name": "B_Tavern",
+      "category": "TC_Building",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Binocular"
+        }
+      ],
+      "effects": []
+    },
+    "GT_Binocular": {
+      "name": "GT_Binocular",
+      "category": "TC_Inventions",
+      "time": 30,
+      "cost": {
+        "gold": 300,
+        "iron": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Mathematics"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Matchlock": {
+      "name": "GT_Matchlock",
+      "category": "TC_Inventions",
+      "time": 50,
+      "cost": {
+        "iron": 300,
+        "sulfur": 300
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Binocular"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "GT_Mathematics": {
+      "name": "GT_Mathematics",
+      "category": "TC_Inventions",
+      "time": 20,
+      "cost": {
+        "gold": 100,
+        "wood": 200
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "GT_PulledBarrel": {
+      "name": "GT_PulledBarrel",
+      "category": "TC_Inventions",
+      "time": 70,
+      "cost": {
+        "iron": 500,
+        "sulfur": 400
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Matchlock"
+        },
+        {
+          "type": "building",
+          "value": "PB_Headquarters3",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "MU_LeaderRifle": {
+      "name": "MU_LeaderRifle",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_GunsmithWorkshop1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_GunsmithWorkshop2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "MU_Scout": {
+      "name": "MU_Scout",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "MU_Thief": {
+      "name": "MU_Thief",
+      "category": "TC_MilitaryUnits",
+      "time": 1,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Tavern2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_FleeceArmor": {
+      "name": "T_FleeceArmor",
+      "category": "TC_Technologies",
+      "time": 15,
+      "cost": {
+        "gold": 100,
+        "iron": 50
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_GunsmithWorkshop1",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_GunsmithWorkshop2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_FleeceLinedLeatherArmor": {
+      "name": "T_FleeceLinedLeatherArmor",
+      "category": "TC_Technologies",
+      "time": 30,
+      "cost": {
+        "gold": 200,
+        "sulfur": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_FleeceArmor"
+        },
+        {
+          "type": "building",
+          "value": "PB_GunsmithWorkshop2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_LeadShot": {
+      "name": "T_LeadShot",
+      "category": "TC_Technologies",
+      "time": 15,
+      "cost": {
+        "gold": 100,
+        "sulfur": 50
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_ScoutFindResources": {
+      "name": "T_ScoutFindResources",
+      "category": "TC_Technologies",
+      "time": 30,
+      "cost": {
+        "gold": 20,
+        "stone": 20,
+        "clay": 20,
+        "iron": 20,
+        "sulfur": 10
+      },
+      "conditions": [],
+      "effects": []
+    },
+    "T_ScoutTorches": {
+      "name": "T_ScoutTorches",
+      "category": "TC_Technologies",
+      "time": 40,
+      "cost": {
+        "gold": 100,
+        "sulfur": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_ScoutFindResources"
+        },
+        {
+          "type": "building",
+          "value": "PB_Tavern2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_Sights": {
+      "name": "T_Sights",
+      "category": "TC_Technologies",
+      "time": 30,
+      "cost": {
+        "gold": 200,
+        "iron": 200
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "T_LeadShot"
+        },
+        {
+          "type": "building",
+          "value": "PB_GunsmithWorkshop2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_ThiefSabotage": {
+      "name": "T_ThiefSabotage",
+      "category": "TC_Technologies",
+      "time": 60,
+      "cost": {
+        "gold": 200,
+        "iron": 100,
+        "sulfur": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Tavern2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "T_UpgradeRifle1": {
+      "name": "T_UpgradeRifle1",
+      "category": "TC_Technologies",
+      "time": 100,
+      "cost": {
+        "gold": 300,
+        "iron": 100,
+        "sulfur": 200
+      },
+      "conditions": [
+        {
+          "type": "building",
+          "value": "PB_Archery2",
+          "amount": 1
+        },
+        {
+          "type": "building",
+          "value": "PB_GunsmithWorkshop2",
+          "amount": 1
+        }
+      ],
+      "effects": []
+    },
+    "UP1_GunsmithWorkshop": {
+      "name": "UP1_GunsmithWorkshop",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_PulledBarrel"
+        }
+      ],
+      "effects": []
+    },
+    "UP1_Tavern": {
+      "name": "UP1_Tavern",
+      "category": "TC_BuildingUpgrades",
+      "time": 3,
+      "cost": {
+        "clay": 100
+      },
+      "conditions": [
+        {
+          "type": "technology",
+          "value": "GT_Matchlock"
+        }
+      ],
+      "effects": []
+    }
+  },
+  "units": {
+    "PU_LeaderBow1": {
+      "name": "PU_LeaderBow1",
+      "cost": {
+        "gold": 150,
+        "wood": 60
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 8,
+      "max_range": 2300.0,
+      "speed": 320,
+      "soldier_type": "PU_SoldierBow1",
+      "attachment_limit": 4,
+      "max_random_damage": 0,
+      "min_range": 500.0,
+      "miss_chance": 9
+    },
+    "PU_LeaderBow2": {
+      "name": "PU_LeaderBow2",
+      "cost": {
+        "gold": 200,
+        "wood": 70
+      },
+      "max_health": 150,
+      "armor": 1,
+      "damage": 10,
+      "max_range": 2500.0,
+      "speed": 320,
+      "soldier_type": "PU_SoldierBow2",
+      "attachment_limit": 4,
+      "max_random_damage": 0,
+      "min_range": 500.0,
+      "miss_chance": 9
+    },
+    "PU_LeaderBow3": {
+      "name": "PU_LeaderBow3",
+      "cost": {
+        "gold": 250,
+        "iron": 70
+      },
+      "max_health": 150,
+      "armor": 2,
+      "damage": 12,
+      "max_range": 2700.0,
+      "speed": 320,
+      "soldier_type": "PU_SoldierBow3",
+      "attachment_limit": 8,
+      "max_random_damage": 0,
+      "min_range": 500.0,
+      "miss_chance": 6
+    },
+    "PU_LeaderBow4": {
+      "name": "PU_LeaderBow4",
+      "cost": {
+        "gold": 300,
+        "iron": 80
+      },
+      "max_health": 150,
+      "armor": 3,
+      "damage": 14,
+      "max_range": 2900.0,
+      "speed": 320,
+      "soldier_type": "PU_SoldierBow4",
+      "attachment_limit": 8,
+      "max_random_damage": 0,
+      "min_range": 500.0,
+      "miss_chance": 6
+    },
+    "PU_LeaderSword1": {
+      "name": "PU_LeaderSword1",
+      "cost": {
+        "gold": 100,
+        "iron": 50
+      },
+      "max_health": 200,
+      "armor": 2,
+      "damage": 12,
+      "max_range": 200.0,
+      "speed": 360,
+      "soldier_type": "PU_SoldierSword1",
+      "attachment_limit": 4,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "PU_LeaderSword2": {
+      "name": "PU_LeaderSword2",
+      "cost": {
+        "gold": 150,
+        "iron": 60
+      },
+      "max_health": 200,
+      "armor": 3,
+      "damage": 14,
+      "max_range": 200.0,
+      "speed": 360,
+      "soldier_type": "PU_SoldierSword2",
+      "attachment_limit": 4,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "PU_LeaderSword3": {
+      "name": "PU_LeaderSword3",
+      "cost": {
+        "gold": 200,
+        "iron": 70
+      },
+      "max_health": 200,
+      "armor": 4,
+      "damage": 16,
+      "max_range": 200.0,
+      "speed": 360,
+      "soldier_type": "PU_SoldierSword3",
+      "attachment_limit": 8,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "PU_LeaderSword4": {
+      "name": "PU_LeaderSword4",
+      "cost": {
+        "gold": 250,
+        "iron": 80
+      },
+      "max_health": 200,
+      "armor": 5,
+      "damage": 18,
+      "max_range": 200.0,
+      "speed": 360,
+      "soldier_type": "PU_SoldierSword4",
+      "attachment_limit": 8,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "PU_LeaderHeavyCavalry1": {
+      "name": "PU_LeaderHeavyCavalry1",
+      "cost": {
+        "gold": 250,
+        "iron": 80
+      },
+      "max_health": 300,
+      "armor": 4,
+      "damage": 26,
+      "max_range": 200.0,
+      "speed": 500,
+      "soldier_type": "PU_SoldierHeavyCavalry1",
+      "attachment_limit": 3,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "PU_LeaderHeavyCavalry2": {
+      "name": "PU_LeaderHeavyCavalry2",
+      "cost": {
+        "gold": 350,
+        "iron": 90
+      },
+      "max_health": 300,
+      "armor": 6,
+      "damage": 32,
+      "max_range": 200.0,
+      "speed": 500,
+      "soldier_type": "PU_SoldierHeavyCavalry2",
+      "attachment_limit": 3,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "PU_LeaderRifle1": {
+      "name": "PU_LeaderRifle1",
+      "cost": {
+        "gold": 250,
+        "sulfur": 70
+      },
+      "max_health": 150,
+      "armor": 1,
+      "damage": 16,
+      "max_range": 2800.0,
+      "speed": 320,
+      "soldier_type": "PU_SoldierRifle1",
+      "attachment_limit": 4,
+      "max_random_damage": 0,
+      "min_range": 500.0,
+      "miss_chance": 6
+    },
+    "PU_LeaderRifle2": {
+      "name": "PU_LeaderRifle2",
+      "cost": {
+        "gold": 300,
+        "sulfur": 80
+      },
+      "max_health": 150,
+      "armor": 2,
+      "damage": 19,
+      "max_range": 3000.0,
+      "speed": 320,
+      "soldier_type": "PU_SoldierRifle2",
+      "attachment_limit": 8,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 2
+    }
+  },
+  "heroes": {
+    "pu_hero1": {
+      "name": "pu_hero1",
+      "max_health": 600,
+      "armor": 3,
+      "damage": 16,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "hawk",
+          "cooldown": 60
+        }
+      ],
+      "exploration": 22,
+      "max_random_damage": 4,
+      "max_range": 250.0
+    },
+    "pu_hero2": {
+      "name": "pu_hero2",
+      "max_health": 600,
+      "armor": 4,
+      "damage": 22,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "bomb_placer",
+          "cooldown": 60
+        },
+        {
+          "type": "cannon_builder",
+          "cooldown": 180
+        }
+      ],
+      "exploration": 22,
+      "max_random_damage": 4,
+      "max_range": 250.0
+    },
+    "pu_hero3": {
+      "name": "pu_hero3",
+      "max_health": 600,
+      "armor": 3,
+      "damage": 16,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "cannon_builder",
+          "cooldown": 180
+        },
+        {
+          "type": "ranged_effect",
+          "cooldown": 120,
+          "range": 1000.0,
+          "duration": 60,
+          "damage_factor": 1.0,
+          "armor_factor": 1.0,
+          "health_recovery": 0.3
+        }
+      ],
+      "exploration": 22,
+      "max_random_damage": 4,
+      "max_range": 250.0
+    },
+    "pu_hero4": {
+      "name": "pu_hero4",
+      "max_health": 600,
+      "armor": 4,
+      "damage": 16,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "ranged_effect",
+          "cooldown": 120,
+          "range": 1000.0,
+          "duration": 60,
+          "damage_factor": 2.0,
+          "armor_factor": 1.0,
+          "health_recovery": 0
+        },
+        {
+          "type": "circular_attack",
+          "cooldown": 120,
+          "damage": 80,
+          "range": 400.0
+        }
+      ],
+      "exploration": 22,
+      "max_random_damage": 4,
+      "max_range": 250.0
+    },
+    "pu_hero5": {
+      "name": "pu_hero5",
+      "max_health": 600,
+      "armor": 2,
+      "damage": 16,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "camouflage",
+          "cooldown": 180,
+          "duration": 90
+        },
+        {
+          "type": "summon",
+          "cooldown": 180,
+          "count": 3
+        }
+      ],
+      "exploration": 27,
+      "max_random_damage": 4,
+      "max_range": 2700.0
+    },
+    "pu_hero6": {
+      "name": "pu_hero6",
+      "max_health": 600,
+      "armor": 2,
+      "damage": 16,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "convert_settler",
+          "cooldown": 60,
+          "start_range": 1400.0,
+          "max_range": 2800.0
+        },
+        {
+          "type": "ranged_effect",
+          "cooldown": 120,
+          "range": 1000.0,
+          "duration": 60,
+          "damage_factor": 1.0,
+          "armor_factor": 1.4,
+          "health_recovery": 0
+        }
+      ],
+      "exploration": 28,
+      "max_random_damage": 4,
+      "max_range": 250.0
+    }
+  },
+  "cannons": {
+    "pv_cannon1": {
+      "name": "pv_cannon1",
+      "cost": {
+        "gold": 150,
+        "iron": 50,
+        "sulfur": 100
+      },
+      "max_health": 190,
+      "damage": 30,
+      "damage_range": 150,
+      "max_range": 2400.0,
+      "min_range": 1000.0,
+      "speed": 240,
+      "upkeep": 20,
+      "armor": 2,
+      "attraction_slots": 5,
+      "max_random_damage": 8,
+      "battle_wait": 3500,
+      "damage_class": "DC_Strike"
+    },
+    "pv_cannon2": {
+      "name": "pv_cannon2",
+      "cost": {
+        "gold": 200,
+        "iron": 50,
+        "sulfur": 120
+      },
+      "max_health": 190,
+      "damage": 40,
+      "damage_range": 200,
+      "max_range": 2800.0,
+      "min_range": 1000.0,
+      "speed": 260,
+      "upkeep": 20,
+      "armor": 2,
+      "attraction_slots": 5,
+      "max_random_damage": 8,
+      "battle_wait": 3500,
+      "damage_class": "DC_Strike"
+    },
+    "pv_cannon3": {
+      "name": "pv_cannon3",
+      "cost": {
+        "gold": 300,
+        "iron": 100,
+        "sulfur": 150
+      },
+      "max_health": 230,
+      "damage": 65,
+      "damage_range": 300,
+      "max_range": 2700.0,
+      "min_range": 1500.0,
+      "speed": 220,
+      "upkeep": 20,
+      "armor": 2,
+      "attraction_slots": 5,
+      "max_random_damage": 8,
+      "battle_wait": 500,
+      "damage_class": "DC_Siege"
+    },
+    "pv_cannon4": {
+      "name": "pv_cannon4",
+      "cost": {
+        "gold": 300,
+        "iron": 200,
+        "sulfur": 200
+      },
+      "max_health": 230,
+      "damage": 75,
+      "damage_range": 400,
+      "max_range": 3300.0,
+      "min_range": 1500.0,
+      "speed": 180,
+      "upkeep": 20,
+      "armor": 2,
+      "attraction_slots": 5,
+      "max_random_damage": 8,
+      "battle_wait": 5000,
+      "damage_class": "DC_Siege"
+    }
+  },
+  "resources": [
+    "Gold",
+    "Wood",
+    "Stone",
+    "Clay",
+    "Iron",
+    "Sulfur"
+  ],
+  "constants": {
+    "camper_range": 5000,
+    "resource_search_radius": 4500,
+    "home_radius": 1500,
+    "work_time_default": 100,
+    "work_time_max_residence": 400,
+    "exhausted_efficiency": 0.1,
+    "serf_extraction": {
+      "iron": {
+        "delay": 3,
+        "amount": 1
+      },
+      "stone": {
+        "delay": 4,
+        "amount": 1
+      },
+      "clay": {
+        "delay": 4,
+        "amount": 1
+      },
+      "sulfur": {
+        "delay": 3,
+        "amount": 1
+      },
+      "wood": {
+        "delay": 4,
+        "amount": 2
+      }
+    },
+    "serf_build_cycle": 8.4,
+    "repair_factor": 0.3,
+    "residence_capacity": {
+      "1": 6,
+      "2": 9,
+      "3": 12
+    },
+    "farm_eat_capacity": {
+      "1": 8,
+      "2": 10,
+      "3": 12
+    }
+  },
+  "logic": {
+    "tax_levels": [
+      {
+        "regular_tax": 0,
+        "motivation_change": 0.2
+      },
+      {
+        "regular_tax": 5,
+        "motivation_change": 0.08
+      },
+      {
+        "regular_tax": 10,
+        "motivation_change": 0.0
+      },
+      {
+        "regular_tax": 15,
+        "motivation_change": -0.08
+      },
+      {
+        "regular_tax": 20,
+        "motivation_change": -0.12
+      }
+    ],
+    "motivation": {
+      "threshold_happy": 1.5,
+      "threshold_sad": 1.0,
+      "threshold_angry": 0.7,
+      "threshold_leave": 0.25,
+      "absolute_max": 3.0,
+      "game_start_max": 1.0
+    },
+    "worktime": {
+      "base": 125,
+      "threshold_work": 25
+    },
+    "payday": {
+      "tax_amount": 5,
+      "initial_tax_level": 2
+    }
+  },
+  "scharfschuetzen_path": {
+    "soldiers": {
+      "PU_LeaderRifle1": {
+        "name": "PU_LeaderRifle1",
+        "cost": {
+          "gold": 250,
+          "sulfur": 70
+        },
+        "training_time": 0,
+        "max_health": 150,
+        "armor": 1,
+        "damage": 16,
+        "max_range": 2800.0,
+        "speed": 320
+      },
+      "PU_LeaderRifle2": {
+        "name": "PU_LeaderRifle2",
+        "cost": {
+          "gold": 300,
+          "sulfur": 80
+        },
+        "training_time": 0,
+        "max_health": 150,
+        "armor": 2,
+        "damage": 19,
+        "max_range": 3000.0,
+        "speed": 320
+      }
+    },
+    "buildings": {
+      "PB_GunsmithWorkshop1": {
+        "name": "PB_GunsmithWorkshop1",
+        "cost": {
+          "stone": 400,
+          "sulfur": 300
+        },
+        "build_time": 110,
+        "max_workers": 2,
+        "max_health": 1200,
+        "upgrade": {
+          "to": "PB_GunsmithWorkshop2",
+          "time": 40,
+          "cost": {
+            "stone": 300,
+            "sulfur": 200
+          }
+        }
+      },
+      "PB_GunsmithWorkshop2": {
+        "name": "PB_GunsmithWorkshop2",
+        "cost": {},
+        "build_time": 60,
+        "max_workers": 4,
+        "max_health": 1700,
+        "upgrade": {
+          "to": "",
+          "time": 30,
+          "cost": {}
+        }
+      },
+      "PB_University1": {
+        "name": "PB_University1",
+        "cost": {
+          "wood": 200,
+          "clay": 300
+        },
+        "build_time": 90,
+        "max_workers": 6,
+        "max_health": 2000,
+        "upgrade": {
+          "to": "PB_University2",
+          "time": 50,
+          "cost": {
+            "gold": 150,
+            "stone": 100,
+            "clay": 100
+          }
+        }
+      },
+      "PB_University2": {
+        "name": "PB_University2",
+        "cost": {},
+        "build_time": 60,
+        "max_workers": 8,
+        "max_health": 3500,
+        "upgrade": {
+          "to": "",
+          "time": 30,
+          "cost": {}
+        }
+      }
+    },
+    "technologies": {}
+  }
+}

@@ -203,15 +203,15 @@ _raw_buildings_db = {
         "upgrade_time": 90
     },
     "Hauptquartier_2": {
-        "build_time": 180, "cost": {RESOURCE_HOLZ: 800, RESOURCE_STEIN: 800, RESOURCE_LEHM: 800},
+        "build_time": 100, "cost": {RESOURCE_STEIN: 1000, RESOURCE_LEHM: 1000},
         "taler_income": 0, "resource_output": {}, "tech_required": None,
         "max_workers": 0, "worker_capacity": 150,
         "upgrade_to": "Hauptquartier_3",
-        "upgrade_cost": {RESOURCE_STEIN: 1200, RESOURCE_LEHM: 500, RESOURCE_TALER: 1000},
+        "upgrade_cost": {RESOURCE_TALER: 1000, RESOURCE_STEIN: 1000, RESOURCE_LEHM: 300},
         "upgrade_time": 120
     },
     "Hauptquartier_3": {
-        "build_time": 300, "cost": {RESOURCE_HOLZ: 1200, RESOURCE_STEIN: 1200, RESOURCE_LEHM: 1200},
+        "build_time": 10, "cost": {RESOURCE_STEIN: 1000, RESOURCE_LEHM: 1000},
         "taler_income": 0, "resource_output": {}, "tech_required": None,
         "max_workers": 0, "worker_capacity": 200,
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
@@ -219,64 +219,64 @@ _raw_buildings_db = {
 
     # === DORFZENTRUM (3 Level) ===
     "Dorfzentrum_1": {
-        "build_time": 100, "cost": {RESOURCE_HOLZ: 250, RESOURCE_STEIN: 200, RESOURCE_LEHM: 200},
+        "build_time": 110, "cost": {RESOURCE_HOLZ: 300, RESOURCE_STEIN: 200},
         "taler_income": 0, "resource_output": {}, "tech_required": None,
-        "max_workers": 3, "worker_capacity": 75,
+        "max_workers": 0, "worker_capacity": 75,
         "upgrade_to": "Dorfzentrum_2",
-        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 150}, "upgrade_time": 40
+        "upgrade_cost": {RESOURCE_TALER: 150, RESOURCE_STEIN: 300, RESOURCE_LEHM: 100}, "upgrade_time": 40
     },
     "Dorfzentrum_2": {
-        "build_time": 150, "cost": {RESOURCE_HOLZ: 450, RESOURCE_STEIN: 400, RESOURCE_LEHM: 400},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": None,
-        "max_workers": 5, "worker_capacity": 100,
+        "max_workers": 0, "worker_capacity": 100,
         "upgrade_to": "Dorfzentrum_3",
-        "upgrade_cost": {RESOURCE_STEIN: 350, RESOURCE_LEHM: 250}, "upgrade_time": 50
+        "upgrade_cost": {RESOURCE_TALER: 200, RESOURCE_STEIN: 400, RESOURCE_LEHM: 150}, "upgrade_time": 40
     },
     "Dorfzentrum_3": {
-        "build_time": 220, "cost": {RESOURCE_HOLZ: 700, RESOURCE_STEIN: 600, RESOURCE_LEHM: 600},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": None,
-        "max_workers": 6, "worker_capacity": 150,
+        "max_workers": 0, "worker_capacity": 150,
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
-    # === WOHNHAUS (3 Level) ===
+    # === WOHNHAUS (3 Level) - Residence hat KEINE Worker, nur live_capacity ===
     "Wohnhaus_1": {
-        "build_time": 60, "cost": {RESOURCE_HOLZ: 150, RESOURCE_STEIN: 100, RESOURCE_LEHM: 100},
+        "build_time": 80, "cost": {RESOURCE_HOLZ: 150, RESOURCE_LEHM: 100},
         "taler_income": 0, "resource_output": {}, "tech_required": None,
-        "max_workers": 2, "worker_capacity": 10,
+        "max_workers": 0, "worker_capacity": 6,  # live_capacity=6 aus PB_Residence1.xml
         "upgrade_to": "Wohnhaus_2",
-        "upgrade_cost": {RESOURCE_STEIN: 100, RESOURCE_LEHM: 50}, "upgrade_time": 30
+        "upgrade_cost": {RESOURCE_HOLZ: 50, RESOURCE_STEIN: 150}, "upgrade_time": 40
     },
     "Wohnhaus_2": {
-        "build_time": 100, "cost": {RESOURCE_HOLZ: 250, RESOURCE_STEIN: 200, RESOURCE_LEHM: 200},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": None,
-        "max_workers": 4, "worker_capacity": 20,
+        "max_workers": 0, "worker_capacity": 9,  # live_capacity=9 aus PB_Residence2.xml
         "upgrade_to": "Wohnhaus_3",
-        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 100}, "upgrade_time": 40
+        "upgrade_cost": {RESOURCE_HOLZ: 150, RESOURCE_STEIN: 200}, "upgrade_time": 50
     },
     "Wohnhaus_3": {
-        "build_time": 150, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 400, RESOURCE_LEHM: 400},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": None,
-        "max_workers": 8, "worker_capacity": 30,
+        "max_workers": 0, "worker_capacity": 12,  # live_capacity=12 aus PB_Residence3.xml
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     # === BAUERNHOF (3 Level) ===
     "Bauernhof_1": {
-        "build_time": 80, "cost": {RESOURCE_HOLZ: 200, RESOURCE_STEIN: 100, RESOURCE_LEHM: 150},
-        "taler_income": 0, "resource_output": {}, "tech_required": None, "max_workers": 2,
+        "build_time": 80, "cost": {RESOURCE_HOLZ: 200, RESOURCE_LEHM: 150},
+        "taler_income": 0, "resource_output": {}, "tech_required": None, "max_workers": 1,
         "upgrade_to": "Bauernhof_2",
-        "upgrade_cost": {RESOURCE_STEIN: 150, RESOURCE_LEHM: 100}, "upgrade_time": 35
+        "upgrade_cost": {RESOURCE_HOLZ: 50, RESOURCE_STEIN: 100}, "upgrade_time": 40
     },
     "Bauernhof_2": {
-        "build_time": 120, "cost": {RESOURCE_HOLZ: 350, RESOURCE_STEIN: 200, RESOURCE_LEHM: 300},
-        "taler_income": 0, "resource_output": {}, "tech_required": None, "max_workers": 4,
+        "build_time": 60, "cost": {},
+        "taler_income": 0, "resource_output": {}, "tech_required": None, "max_workers": 2,
         "upgrade_to": "Bauernhof_3",
-        "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 200}, "upgrade_time": 45
+        "upgrade_cost": {RESOURCE_HOLZ: 150, RESOURCE_STEIN: 300}, "upgrade_time": 50
     },
     "Bauernhof_3": {
-        "build_time": 180, "cost": {RESOURCE_HOLZ: 550, RESOURCE_STEIN: 400, RESOURCE_LEHM: 500},
-        "taler_income": 0, "resource_output": {}, "tech_required": None, "max_workers": 6,
+        "build_time": 60, "cost": {},
+        "taler_income": 0, "resource_output": {}, "tech_required": None, "max_workers": 3,
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
@@ -295,154 +295,154 @@ _raw_buildings_db = {
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
-    # === MINEN (3 Level jede) ===
+    # === MINEN (3 Level jede) - Minen haben cost:{} da auf Mine-Slots gebaut ===
     "Steinmine_1": {
-        "build_time": 120, "cost": {RESOURCE_HOLZ: 300, RESOURCE_LEHM: 200},
+        "build_time": 80, "cost": {},
         "taler_income": 20, "resource_output": {RESOURCE_STEIN: 2}, "tech_required": None,
-        "max_workers": 4, "mine_type": "Steinmine",
+        "max_workers": 5, "mine_type": "Steinmine",
         "upgrade_to": "Steinmine_2",
-        "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 250}, "upgrade_time": 40
+        "upgrade_cost": {RESOURCE_HOLZ: 200, RESOURCE_LEHM: 150}, "upgrade_time": 40
     },
     "Steinmine_2": {
-        "build_time": 180, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 200, RESOURCE_LEHM: 300},
+        "build_time": 60, "cost": {},
         "taler_income": 30, "resource_output": {RESOURCE_STEIN: 3}, "tech_required": None,
         "max_workers": 6, "mine_type": "Steinmine",
         "upgrade_to": "Steinmine_3",
-        "upgrade_cost": {RESOURCE_STEIN: 400, RESOURCE_LEHM: 350}, "upgrade_time": 50
+        "upgrade_cost": {RESOURCE_LEHM: 200, RESOURCE_EISEN: 200}, "upgrade_time": 50
     },
     "Steinmine_3": {
-        "build_time": 240, "cost": {RESOURCE_HOLZ: 500, RESOURCE_STEIN: 300, RESOURCE_LEHM: 500},
+        "build_time": 60, "cost": {},
         "taler_income": 40, "resource_output": {RESOURCE_STEIN: 4}, "tech_required": None,
-        "max_workers": 8, "mine_type": "Steinmine",
+        "max_workers": 7, "mine_type": "Steinmine",
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Lehmmine_1": {
-        "build_time": 120, "cost": {RESOURCE_HOLZ: 350, RESOURCE_STEIN: 250},
+        "build_time": 80, "cost": {},
         "taler_income": 10, "resource_output": {RESOURCE_LEHM: 2}, "tech_required": None,
-        "max_workers": 4, "mine_type": "Lehmmine",
+        "max_workers": 5, "mine_type": "Lehmmine",
         "upgrade_to": "Lehmmine_2",
-        "upgrade_cost": {RESOURCE_STEIN: 250, RESOURCE_LEHM: 200}, "upgrade_time": 40
+        "upgrade_cost": {RESOURCE_HOLZ: 200, RESOURCE_STEIN: 150}, "upgrade_time": 40
     },
     "Lehmmine_2": {
-        "build_time": 180, "cost": {RESOURCE_HOLZ: 450, RESOURCE_STEIN: 350, RESOURCE_LEHM: 100},
+        "build_time": 60, "cost": {},
         "taler_income": 15, "resource_output": {RESOURCE_LEHM: 3}, "tech_required": None,
         "max_workers": 6, "mine_type": "Lehmmine",
         "upgrade_to": "Lehmmine_3",
-        "upgrade_cost": {RESOURCE_STEIN: 350, RESOURCE_LEHM: 300}, "upgrade_time": 50
+        "upgrade_cost": {RESOURCE_HOLZ: 250, RESOURCE_STEIN: 300}, "upgrade_time": 50
     },
     "Lehmmine_3": {
-        "build_time": 240, "cost": {RESOURCE_HOLZ: 550, RESOURCE_STEIN: 450, RESOURCE_LEHM: 200},
+        "build_time": 60, "cost": {},
         "taler_income": 20, "resource_output": {RESOURCE_LEHM: 4}, "tech_required": None,
-        "max_workers": 8, "mine_type": "Lehmmine",
+        "max_workers": 7, "mine_type": "Lehmmine",
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Eisenmine_1": {
-        "build_time": 120, "cost": {RESOURCE_HOLZ: 300, RESOURCE_STEIN: 300},
+        "build_time": 80, "cost": {},
         "taler_income": 25, "resource_output": {RESOURCE_EISEN: 2}, "tech_required": None,
-        "max_workers": 4, "mine_type": "Eisenmine",
+        "max_workers": 5, "mine_type": "Eisenmine",
         "upgrade_to": "Eisenmine_2",
-        "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 200}, "upgrade_time": 40
+        "upgrade_cost": {RESOURCE_HOLZ: 200, RESOURCE_LEHM: 150}, "upgrade_time": 40
     },
     "Eisenmine_2": {
-        "build_time": 180, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 450, RESOURCE_LEHM: 200},
+        "build_time": 60, "cost": {},
         "taler_income": 35, "resource_output": {RESOURCE_EISEN: 3}, "tech_required": None,
         "max_workers": 6, "mine_type": "Eisenmine",
         "upgrade_to": "Eisenmine_3",
-        "upgrade_cost": {RESOURCE_STEIN: 400, RESOURCE_LEHM: 300}, "upgrade_time": 50
+        "upgrade_cost": {RESOURCE_HOLZ: 300, RESOURCE_LEHM: 300}, "upgrade_time": 50
     },
     "Eisenmine_3": {
-        "build_time": 240, "cost": {RESOURCE_HOLZ: 500, RESOURCE_STEIN: 600, RESOURCE_LEHM: 400},
+        "build_time": 60, "cost": {},
         "taler_income": 45, "resource_output": {RESOURCE_EISEN: 4}, "tech_required": None,
-        "max_workers": 8, "mine_type": "Eisenmine",
+        "max_workers": 7, "mine_type": "Eisenmine",
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Schwefelmine_1": {
-        "build_time": 120, "cost": {RESOURCE_HOLZ: 300, RESOURCE_STEIN: 200, RESOURCE_LEHM: 300},
+        "build_time": 110, "cost": {},
         "taler_income": 25, "resource_output": {RESOURCE_SCHWEFEL: 2}, "tech_required": None,
-        "max_workers": 4, "mine_type": "Schwefelmine",
+        "max_workers": 5, "mine_type": "Schwefelmine",
         "upgrade_to": "Schwefelmine_2",
-        "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 250}, "upgrade_time": 40
+        "upgrade_cost": {RESOURCE_HOLZ: 150, RESOURCE_STEIN: 150}, "upgrade_time": 40
     },
     "Schwefelmine_2": {
-        "build_time": 180, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 300, RESOURCE_LEHM: 400},
+        "build_time": 60, "cost": {},
         "taler_income": 35, "resource_output": {RESOURCE_SCHWEFEL: 3}, "tech_required": None,
         "max_workers": 6, "mine_type": "Schwefelmine",
         "upgrade_to": "Schwefelmine_3",
-        "upgrade_cost": {RESOURCE_STEIN: 400, RESOURCE_LEHM: 350}, "upgrade_time": 50
+        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 200}, "upgrade_time": 50
     },
     "Schwefelmine_3": {
-        "build_time": 240, "cost": {RESOURCE_HOLZ: 500, RESOURCE_STEIN: 400, RESOURCE_LEHM: 600},
+        "build_time": 60, "cost": {},
         "taler_income": 45, "resource_output": {RESOURCE_SCHWEFEL: 4}, "tech_required": None,
-        "max_workers": 8, "mine_type": "Schwefelmine",
+        "max_workers": 7, "mine_type": "Schwefelmine",
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
-    # === PRODUKTIONSGEBÄUDE ===
+    # === PRODUKTIONSGEBÄUDE (Refiner-Gebäude) ===
     "Sägemühle_1": {
-        "build_time": 100, "cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 150},
+        "build_time": 110, "cost": {RESOURCE_STEIN: 150, RESOURCE_LEHM: 200},
         "taler_income": 12, "resource_output": {RESOURCE_HOLZ: 3}, "tech_required": "Konstruktion",
-        "max_workers": 6, "upgrade_to": "Sägemühle_2",
-        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 100}, "upgrade_time": 40
+        "max_workers": 4, "upgrade_to": "Sägemühle_2",
+        "upgrade_cost": {RESOURCE_STEIN: 100, RESOURCE_LEHM: 150}, "upgrade_time": 40
     },
     "Sägemühle_2": {
-        "build_time": 160, "cost": {RESOURCE_HOLZ: 200, RESOURCE_STEIN: 400, RESOURCE_LEHM: 300},
+        "build_time": 60, "cost": {},
         "taler_income": 18, "resource_output": {RESOURCE_HOLZ: 5}, "tech_required": "Konstruktion",
         "max_workers": 6, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Lehmhütte_1": {
-        "build_time": 110, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 300},
+        "build_time": 110, "cost": {RESOURCE_HOLZ: 200, RESOURCE_STEIN: 150},
         "taler_income": 12, "resource_output": {RESOURCE_LEHM: 3}, "tech_required": "Konstruktion",
-        "max_workers": 6, "upgrade_to": "Lehmhütte_2",
-        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 150}, "upgrade_time": 40
+        "max_workers": 4, "upgrade_to": "Lehmhütte_2",
+        "upgrade_cost": {RESOURCE_HOLZ: 150, RESOURCE_STEIN: 200}, "upgrade_time": 40
     },
     "Lehmhütte_2": {
-        "build_time": 170, "cost": {RESOURCE_HOLZ: 500, RESOURCE_STEIN: 400, RESOURCE_LEHM: 200},
+        "build_time": 60, "cost": {},
         "taler_income": 18, "resource_output": {RESOURCE_LEHM: 5}, "tech_required": "Konstruktion",
         "max_workers": 6, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Schmiede_1": {
-        "build_time": 110, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 300},
+        "build_time": 110, "cost": {RESOURCE_HOLZ: 300, RESOURCE_LEHM: 400},
         "taler_income": 12, "resource_output": {RESOURCE_EISEN: 1}, "tech_required": "Alchimie",
-        "max_workers": 4, "upgrade_to": "Schmiede_2",
-        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 150}, "upgrade_time": 40
+        "max_workers": 2, "upgrade_to": "Schmiede_2",
+        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 100}, "upgrade_time": 40
     },
     "Schmiede_2": {
-        "build_time": 160, "cost": {RESOURCE_HOLZ: 500, RESOURCE_STEIN: 400, RESOURCE_LEHM: 200},
+        "build_time": 60, "cost": {},
         "taler_income": 18, "resource_output": {RESOURCE_EISEN: 2}, "tech_required": "Alchimie",
-        "max_workers": 5, "upgrade_to": "Schmiede_3",
-        "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 250}, "upgrade_time": 50
+        "max_workers": 6, "upgrade_to": "Schmiede_3",
+        "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 150}, "upgrade_time": 50
     },
     "Schmiede_3": {
-        "build_time": 220, "cost": {RESOURCE_HOLZ: 600, RESOURCE_STEIN: 500, RESOURCE_LEHM: 400},
+        "build_time": 60, "cost": {},
         "taler_income": 24, "resource_output": {RESOURCE_EISEN: 3}, "tech_required": "Alchimie",
         "max_workers": 6, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Alchimistenhütte_1": {
-        "build_time": 120, "cost": {RESOURCE_HOLZ: 300, RESOURCE_STEIN: 400, RESOURCE_LEHM: 100},
+        "build_time": 80, "cost": {RESOURCE_HOLZ: 200, RESOURCE_STEIN: 400},
         "taler_income": 12, "resource_output": {RESOURCE_SCHWEFEL: 3}, "tech_required": "Alchimie",
         "max_workers": 4, "upgrade_to": "Alchimistenhütte_2",
-        "upgrade_cost": {RESOURCE_STEIN: 250, RESOURCE_LEHM: 150}, "upgrade_time": 45
+        "upgrade_cost": {RESOURCE_STEIN: 250, RESOURCE_EISEN: 100}, "upgrade_time": 40
     },
     "Alchimistenhütte_2": {
-        "build_time": 180, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 500, RESOURCE_LEHM: 300},
+        "build_time": 60, "cost": {},
         "taler_income": 18, "resource_output": {RESOURCE_SCHWEFEL: 5}, "tech_required": "Alchimie",
         "max_workers": 6, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Steinmetzhütte_1": {
-        "build_time": 110, "cost": {RESOURCE_HOLZ: 300, RESOURCE_LEHM: 200},
+        "build_time": 80, "cost": {RESOURCE_HOLZ: 200, RESOURCE_LEHM: 300},
         "taler_income": 12, "resource_output": {RESOURCE_STEIN: 3}, "tech_required": "Zahnräder",
-        "max_workers": 6, "upgrade_to": "Steinmetzhütte_2",
-        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 100}, "upgrade_time": 40
+        "max_workers": 4, "upgrade_to": "Steinmetzhütte_2",
+        "upgrade_cost": {RESOURCE_STEIN: 150, RESOURCE_LEHM: 150}, "upgrade_time": 40
     },
     "Steinmetzhütte_2": {
-        "build_time": 170, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 200, RESOURCE_LEHM: 400},
+        "build_time": 60, "cost": {},
         "taler_income": 18, "resource_output": {RESOURCE_STEIN: 5}, "tech_required": "Zahnräder",
         "max_workers": 6, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
@@ -455,7 +455,7 @@ _raw_buildings_db = {
         "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_TALER: 200}, "upgrade_time": 40
     },
     "Bank_2": {
-        "build_time": 200, "cost": {RESOURCE_HOLZ: 600, RESOURCE_STEIN: 600, RESOURCE_LEHM: 200},
+        "build_time": 60, "cost": {},
         "taler_income": 45, "resource_output": {RESOURCE_TALER: 4}, "tech_required": "Buchdruck",
         "max_workers": 6, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
@@ -481,14 +481,14 @@ _raw_buildings_db = {
         "upgrade_cost": {RESOURCE_LEHM: 400, RESOURCE_STEIN: 500, RESOURCE_TALER: 200}, "upgrade_time": 60
     },
     "Kloster_2": {
-        "build_time": 210, "cost": {RESOURCE_HOLZ: 650, RESOURCE_STEIN: 700, RESOURCE_LEHM: 300},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": "Bildung",
         "max_workers": 8, "motivation_effect": 0.10,
         "upgrade_to": "Kloster_3",
         "upgrade_cost": {RESOURCE_HOLZ: 200, RESOURCE_STEIN: 600, RESOURCE_TALER: 300}, "upgrade_time": 90
     },
     "Kloster_3": {
-        "build_time": 300, "cost": {RESOURCE_HOLZ: 800, RESOURCE_STEIN: 900, RESOURCE_LEHM: 500},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": "Bildung",
         "max_workers": 10, "motivation_effect": 0.15,
         "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
@@ -507,7 +507,7 @@ _raw_buildings_db = {
         "upgrade_cost": {RESOURCE_LEHM: 100, RESOURCE_STEIN: 200}, "upgrade_time": 40
     },
     "Markt_2": {
-        "build_time": 120, "cost": {RESOURCE_HOLZ: 350, RESOURCE_STEIN: 550, RESOURCE_LEHM: 150},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": "Handelswesen",
         "max_workers": 6, "is_supplier": True,
         "supplier_resources": ["Holz", "Stein", "Lehm", "Eisen", "Schwefel", "Taler"],
@@ -522,19 +522,19 @@ _raw_buildings_db = {
         "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 200}, "upgrade_time": 40
     },
     "Kaserne_2": {
-        "build_time": 150, "cost": {RESOURCE_HOLZ: 450, RESOURCE_STEIN: 500, RESOURCE_LEHM: 300},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": "Wehrpflicht",
         "max_workers": 0, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Schießplatz_1": {
-        "build_time": 90, "cost": {RESOURCE_HOLZ: 300, RESOURCE_STEIN: 350, RESOURCE_LEHM: 100},
+        "build_time": 90, "cost": {RESOURCE_HOLZ: 300, RESOURCE_STEIN: 350},
         "taler_income": 0, "resource_output": {}, "tech_required": "Stehendes Heer",
         "max_workers": 0, "upgrade_to": "Schießplatz_2",
-        "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 200}, "upgrade_time": 40
+        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 100}, "upgrade_time": 40
     },
     "Schießplatz_2": {
-        "build_time": 150, "cost": {RESOURCE_HOLZ: 450, RESOURCE_STEIN: 500, RESOURCE_LEHM: 300},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": "Stehendes Heer",
         "max_workers": 0, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
@@ -546,7 +546,7 @@ _raw_buildings_db = {
         "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 150}, "upgrade_time": 40
     },
     "Stall_2": {
-        "build_time": 180, "cost": {RESOURCE_HOLZ: 350, RESOURCE_STEIN: 450, RESOURCE_LEHM: 200},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": "Taktiken",
         "max_workers": 0, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
@@ -558,7 +558,7 @@ _raw_buildings_db = {
         "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_LEHM: 150}, "upgrade_time": 40
     },
     "Kanongießerei_2": {
-        "build_time": 150, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 100, RESOURCE_LEHM: 600},
+        "build_time": 60, "cost": {},
         "taler_income": 10, "resource_output": {}, "tech_required": "Metallurgie",
         "max_workers": 1, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
@@ -571,13 +571,13 @@ _raw_buildings_db = {
         "upgrade_cost": {RESOURCE_HOLZ: 200, RESOURCE_STEIN: 300}, "upgrade_time": 15
     },
     "Turm_2": {
-        "build_time": 120, "cost": {RESOURCE_HOLZ: 300, RESOURCE_STEIN: 300, RESOURCE_LEHM: 100},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": "Konstruktion",
         "max_workers": 0, "upgrade_to": "Turm_3",
-        "upgrade_cost": {RESOURCE_HOLZ: 250, RESOURCE_STEIN: 400, RESOURCE_LEHM: 50}, "upgrade_time": 25
+        "upgrade_cost": {RESOURCE_STEIN: 200, RESOURCE_SCHWEFEL: 200}, "upgrade_time": 15
     },
     "Turm_3": {
-        "build_time": 180, "cost": {RESOURCE_HOLZ: 400, RESOURCE_STEIN: 450, RESOURCE_LEHM: 200},
+        "build_time": 60, "cost": {},
         "taler_income": 0, "resource_output": {}, "tech_required": "Konstruktion",
         "max_workers": 0, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
@@ -599,15 +599,15 @@ _raw_buildings_db = {
 
     # === ADDON-GEBÄUDE ===
     "Taverne_1": {
-        "build_time": 100, "cost": {RESOURCE_STEIN: 400, RESOURCE_HOLZ: 300, RESOURCE_LEHM: 100},
+        "build_time": 90, "cost": {RESOURCE_TALER: 400, RESOURCE_HOLZ: 300},
         "taler_income": 25, "resource_output": {}, "tech_required": "Fernglas",
-        "max_workers": 3, "upgrade_to": "Taverne_2",
-        "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_LEHM: 200}, "upgrade_time": 50
+        "max_workers": 1, "upgrade_to": "Taverne_2",
+        "upgrade_cost": {RESOURCE_TALER: 500, RESOURCE_STEIN: 300}, "upgrade_time": 60
     },
     "Taverne_2": {
-        "build_time": 150, "cost": {RESOURCE_STEIN: 600, RESOURCE_HOLZ: 400, RESOURCE_LEHM: 300},
+        "build_time": 90, "cost": {RESOURCE_TALER: 400, RESOURCE_HOLZ: 300},
         "taler_income": 40, "resource_output": {}, "tech_required": "Fernglas",
-        "max_workers": 5, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
+        "max_workers": 1, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Büchsenmacherei_1": {
@@ -617,19 +617,19 @@ _raw_buildings_db = {
         "upgrade_cost": {RESOURCE_STEIN: 300, RESOURCE_SCHWEFEL: 200}, "upgrade_time": 40  # UpgradeTime=40 (aus XML)
     },
     "Büchsenmacherei_2": {
-        "build_time": 180, "cost": {RESOURCE_STEIN: 600, RESOURCE_SCHWEFEL: 500, RESOURCE_EISEN: 300},
+        "build_time": 60, "cost": {},  # Upgrade-only
         "taler_income": 25, "resource_output": {}, "tech_required": "Luntenschloss",
         "max_workers": 4, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None  # MaxWorkers=4 aus XML
     },
 
     "Architektenstube": {
-        "build_time": 100, "cost": {RESOURCE_HOLZ: 200, RESOURCE_STEIN: 400},
+        "build_time": 80, "cost": {RESOURCE_HOLZ: 200, RESOURCE_STEIN: 400},
         "taler_income": 10, "resource_output": {}, "tech_required": "Mathematik",
-        "max_workers": 3, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
+        "max_workers": 2, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
 
     "Brücke": {
-        "build_time": 60, "cost": {RESOURCE_HOLZ: 300, RESOURCE_STEIN: 200},
+        "build_time": 60, "cost": {RESOURCE_HOLZ: 500, RESOURCE_STEIN: 1000, RESOURCE_LEHM: 300},
         "taler_income": 0, "resource_output": {}, "tech_required": "Mathematik",
         "max_workers": 0, "upgrade_to": None, "upgrade_cost": None, "upgrade_time": None
     },
@@ -1116,7 +1116,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                              self.n_bless_actions + self.n_tax_actions + self.n_alarm_actions +
                              self.n_build_serf_actions)
 
-        self.action_space = gym.spaces.Discrete(self.total_actions)
+        # Legacy action space (wird durch Multi-Step action_space property ueberschrieben)
+        self._legacy_action_space = gym.spaces.Discrete(self.total_actions)
 
         # Action Offsets (mit Batch-Build)
         self.offset_build_batch = 1  # Gebäude-Batch-Bau
@@ -1136,6 +1137,39 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Legacy-Kompatibilität (für alten Code der offset_build verwendet)
         self.offset_build = self.offset_build_batch
         self.offset_resource_pos = self.offset_resource_batch
+
+        # =================================================================
+        # MULTI-STEP ACTION SYSTEM (Phase 4.2-4.4)
+        # =================================================================
+        self.current_phase = ActionPhase.MAIN
+        self.current_flow = None
+        self.flow_step = 0
+        self.pending_selections = {}
+
+        # Action Spaces pro Phase
+        self.action_spaces = {
+            ActionPhase.MAIN: spaces.Discrete(12),
+            ActionPhase.BUILDING: spaces.Discrete(len(self.buildable_buildings)),
+            ActionPhase.POSITION: spaces.Discrete(2200),
+            ActionPhase.TECH: spaces.Discrete(len(self.tech_list)),
+            ActionPhase.SOLDIER: spaces.Discrete(len(self.soldier_types)),
+            ActionPhase.QUANTITY: spaces.Discrete(6),
+            ActionPhase.SOURCE: spaces.Discrete(35),
+            ActionPhase.TARGET: spaces.Discrete(35),
+            ActionPhase.CATEGORY: spaces.Discrete(len(BLESS_CATEGORIES)),
+            ActionPhase.TAX_LEVEL: spaces.Discrete(len(TAX_LEVELS)),
+            ActionPhase.ON_OFF: spaces.Discrete(2),
+        }
+
+        # Gymnasium-kompatible action_space Property (dynamisch je nach Phase)
+        self.action_space = self.action_spaces[ActionPhase.MAIN]
+
+        # Serf Areas tracking
+        self.serf_areas = {area: {"count": 0} for area in SerfArea}
+        self.serf_areas[SerfArea.FREE]["count"] = 30  # Start-Leibeigene
+
+        # Tech Effects (wird in reset() zurueckgesetzt)
+        self.active_tech_effects = {}
 
         # Observation Space (ERWEITERT mit WorkTime-System)
         n_resource_obs = 6
@@ -1219,6 +1253,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Worker-Kapazität wird durch Wohnhäuser bestimmt, nicht HQ
         self.free_leibeigene = self.total_leibeigene
         self.resource_workers = {r: 0 for r in RESOURCE_MAP}
+
+        # Multi-Step System zuruecksetzen
+        self.current_phase = ActionPhase.MAIN
+        self.action_space = self.action_spaces[ActionPhase.MAIN]
+        self.current_flow = None
+        self.flow_step = 0
+        self.pending_selections = {}
+        self.serf_areas = {area: {"count": 0} for area in SerfArea}
+        self.serf_areas[SerfArea.FREE]["count"] = self.total_leibeigene
+
 
         self.buildings = {b: 0 for b in buildings_db.keys()}
         self.buildings["Hauptquartier_1"] = 1
@@ -2760,236 +2804,357 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return len(self.construction_sites)
 
     def step(self, action):
-        reward = 0.0
-        action_name = "wait"
-        info = {}
-
-        if action == 0:
-            action_name = "wait"
-
+        """Multi-Step Action Flow."""
         # =================================================================
-        # GEBÄUDE-BATCH-BAU (1x, 3x, 5x)
+        # MULTI-STEP FLOW MANAGEMENT
         # =================================================================
-        elif action < self.offset_upgrade:
-            batch_action = action - self.offset_build_batch
-            building_idx = batch_action // len(self.build_batch_sizes)
-            batch_idx = batch_action % len(self.build_batch_sizes)
-            building = self.buildable_buildings[building_idx]
-            batch_size = self.build_batch_sizes[batch_idx]
-
-            if self._can_build_batch(building, batch_size):
-                for _ in range(batch_size):
-                    reward += self._build_building(building)
-                action_name = f"build_{building}_x{batch_size}"
-
-        elif action < self.offset_tech:
-            building = self.upgradeable_buildings[action - self.offset_upgrade]
-            if self._can_upgrade(building):
-                reward += self._upgrade_building(building)
-                action_name = f"upgrade_{building}"
-
-        elif action < self.offset_recruit:
-            tech = self.tech_list[action - self.offset_tech]
-            if self._can_research(tech):
-                reward += self._research_tech(tech)
-                action_name = f"research_{tech}"
-
-        elif action < self.offset_resource_batch:
-            soldier = self.soldier_types[action - self.offset_recruit]
-            if self._can_recruit(soldier):
-                reward += self._recruit_soldier(soldier)
-                action_name = f"recruit_{soldier}"
-
-        # =================================================================
-        # RESSOURCEN-BATCH-ACTIONS (1x, 3x, 5x)
-        # Holz-Zonen: 6 Kategorien mit Batch
-        # Vorkommen: 4 Kategorien mit Batch
-        # Stollen: 4 Kategorien mit Batch
-        # =================================================================
-        elif action < self.offset_serf:
-            res_action = action - self.offset_resource_batch
-            n_batch = len(self.resource_batch_sizes)
-            n_zones = len(self.wood_zone_names)
-
-            # Action-Layout (NEU mit Holz-Zonen):
-            # [0..17]  = Holz-Zonen zuweisen (6 Zonen × 3 Batch)
-            # [18..35] = Holz-Zonen entfernen (6 Zonen × 3 Batch)
-            # [36..47] = Vorkommen zuweisen (4 Kategorien × 3 Batch)
-            # [48..59] = Vorkommen entfernen (4 Kategorien × 3 Batch)
-            # [60..71] = Stollen zuweisen (4 Kategorien × 3 Batch)
-            # [72..83] = Stollen entfernen (4 Kategorien × 3 Batch)
-
-            if res_action < n_zones * n_batch:
-                # Holz-Zone zuweisen
-                zone_action = res_action
-                zone_idx = zone_action // n_batch
-                batch_idx = zone_action % n_batch
-                zone_name = self.wood_zone_names[zone_idx]
-                batch_size = self.resource_batch_sizes[batch_idx]
-                if self._can_assign_wood_zone_batch(zone_name, batch_size):
-                    self._assign_wood_zone_batch(zone_name, batch_size)
-                    action_name = f"assign_wood_{zone_name}_x{batch_size}"
-
-            elif res_action < n_zones * n_batch * 2:
-                # Holz-Zone entfernen
-                zone_action = res_action - n_zones * n_batch
-                zone_idx = zone_action // n_batch
-                batch_idx = zone_action % n_batch
-                zone_name = self.wood_zone_names[zone_idx]
-                batch_size = self.resource_batch_sizes[batch_idx]
-                if self._can_recall_wood_zone_batch(zone_name, batch_size):
-                    self._recall_wood_zone_batch(zone_name, batch_size)
-                    action_name = f"recall_wood_{zone_name}_x{batch_size}"
-
-            elif res_action < n_zones * n_batch * 2 + len(self.deposit_category_names) * n_batch:
-                # Vorkommen zuweisen
-                dep_action = res_action - n_zones * n_batch * 2
-                cat_idx = dep_action // n_batch
-                batch_idx = dep_action % n_batch
-                category = self.deposit_category_names[cat_idx]
-                batch_size = self.resource_batch_sizes[batch_idx]
-                if self._can_assign_deposit_batch(category, batch_size):
-                    self._assign_deposit_batch(category, batch_size)
-                    action_name = f"assign_deposit_{category}_x{batch_size}"
-
-            elif res_action < n_zones * n_batch * 2 + len(self.deposit_category_names) * n_batch * 2:
-                # Vorkommen entfernen
-                dep_action = res_action - n_zones * n_batch * 2 - len(self.deposit_category_names) * n_batch
-                cat_idx = dep_action // n_batch
-                batch_idx = dep_action % n_batch
-                category = self.deposit_category_names[cat_idx]
-                batch_size = self.resource_batch_sizes[batch_idx]
-                if self._can_recall_deposit_batch(category, batch_size):
-                    self._recall_deposit_batch(category, batch_size)
-                    action_name = f"recall_deposit_{category}_x{batch_size}"
-
-            elif res_action < n_zones * n_batch * 2 + len(self.deposit_category_names) * n_batch * 2 + len(self.shaft_category_names) * n_batch:
-                # Stollen zuweisen (ersetzt alte Mine-Serf-Zuweisung)
-                shaft_action = res_action - n_zones * n_batch * 2 - len(self.deposit_category_names) * n_batch * 2
-                shaft_idx = shaft_action // n_batch
-                batch_idx = shaft_action % n_batch
-                shaft_type = self.shaft_category_names[shaft_idx]
-                batch_size = self.resource_batch_sizes[batch_idx]
-                if self._can_assign_shaft_batch(shaft_type, batch_size):
-                    self._assign_shaft_batch(shaft_type, batch_size)
-                    action_name = f"assign_shaft_{shaft_type}_x{batch_size}"
-
+        if self.current_phase == ActionPhase.MAIN:
+            if action >= len(MAIN_ACTIONS):
+                action = 0
+            action_name = MAIN_ACTIONS[action]
+            self.current_flow = action_name
+            self.flow_step = 0
+            self.pending_selections = {ActionPhase.MAIN: action}
+            flow_phases = ACTION_FLOWS[action_name]
+            if len(flow_phases) == 1:
+                reward = self._execute_action(action_name, self.pending_selections)
+                self.current_phase = ActionPhase.MAIN
+                self.current_flow = None
+                self.pending_selections = {}
             else:
-                # Stollen entfernen
-                shaft_action = res_action - n_zones * n_batch * 2 - len(self.deposit_category_names) * n_batch * 2 - len(self.shaft_category_names) * n_batch
-                shaft_idx = shaft_action // n_batch
-                batch_idx = shaft_action % n_batch
-                shaft_type = self.shaft_category_names[shaft_idx]
-                batch_size = self.resource_batch_sizes[batch_idx]
-                if self._can_recall_shaft_batch(shaft_type, batch_size):
-                    self._recall_shaft_batch(shaft_type, batch_size)
-                    action_name = f"recall_shaft_{shaft_type}_x{batch_size}"
+                self.flow_step = 1
+                self.current_phase = flow_phases[1]
+                self.action_space = self.action_spaces[self.current_phase]
+                obs = self._get_observation()
+                return obs, 0.0, False, False, {"multi_step": True, "phase": self.current_phase.value}
+        else:
+            action_name = self.current_flow
+            self.pending_selections[self.current_phase] = action
+            self.flow_step += 1
+            flow_phases = ACTION_FLOWS[self.current_flow]
+            if self.flow_step >= len(flow_phases):
+                reward = self._execute_action(self.current_flow, self.pending_selections)
+                self.current_phase = ActionPhase.MAIN
+                self.current_flow = None
+                self.pending_selections = {}
+            else:
+                self.current_phase = flow_phases[self.flow_step]
+                self.action_space = self.action_spaces[self.current_phase]
+                obs = self._get_observation()
+                return obs, 0.0, False, False, {"multi_step": True, "phase": self.current_phase.value}
 
-        # Leibeigene kaufen/entlassen (Batch-Actions: 1x, 3x, 5x)
-        elif action < self.offset_batch_recruit:
-            serf_action = action - self.offset_serf
-            n_batches = len(self.serf_batch_sizes)
+        # Zurueck zu MAIN Phase
+        self.action_space = self.action_spaces[ActionPhase.MAIN]
 
-            if serf_action < n_batches:  # Kaufen (0, 1, 2 = 1x, 3x, 5x)
-                batch_size = self.serf_batch_sizes[serf_action]
-                if self._can_buy_serf_batch(batch_size):
-                    for _ in range(batch_size):
-                        reward += self._buy_serf()
-                    action_name = f"buy_serf_x{batch_size}"
-            else:  # Entlassen (3, 4, 5 = 1x, 3x, 5x)
-                batch_idx = serf_action - n_batches
-                batch_size = self.serf_batch_sizes[batch_idx]
-                if self._can_dismiss_serf_batch(batch_size):
-                    for _ in range(batch_size):
-                        reward += self._dismiss_serf()
-                    action_name = f"dismiss_serf_x{batch_size}"
+        # Zeitsimulation (nur wenn Aktion komplett)
+        info = {}
+        self._tick_time()
+        efficiency = self.workforce_manager.get_average_efficiency()
+        exhausted_ratio = self.workforce_manager.get_exhausted_ratio()
+        completed_action = action_name
+        self.action_history.append({"time": self.current_time, "action": completed_action})
+        info["action_name"] = completed_action
+        info["efficiency"] = efficiency
+        info["exhausted_ratio"] = exhausted_ratio
+        terminated = self.current_time >= self.max_time
+        if terminated:
+            reward += self.scharfschuetzen * 20.0
+        return self._get_observation(), reward, terminated, False, info
 
-        # NEU: Batch-Rekrutierung für Scharfschützen (3x, 5x)
-        elif action < self.offset_demolish:
-            batch_action = action - self.offset_batch_recruit
-            # Action layout: [Scharfschützen_x3, Scharfschützen_x5, Scharfschützen_2_x3, Scharfschützen_2_x5]
-            soldier_idx = batch_action // len(self.scharfschuetzen_batch_sizes)
-            batch_idx = batch_action % len(self.scharfschuetzen_batch_sizes)
-            soldier_type = self.scharfschuetzen_types[soldier_idx]
-            batch_size = self.scharfschuetzen_batch_sizes[batch_idx]
-
-            if self._can_recruit_batch(soldier_type, batch_size):
-                for _ in range(batch_size):
-                    reward += self._recruit_soldier(soldier_type)
-                action_name = f"recruit_{soldier_type}_x{batch_size}"
-
-        # NEU: Gebäude abreißen
-        elif action < self.offset_bless:
-            building_idx = action - self.offset_demolish
-            building = self.buildable_buildings[building_idx]
-            if self._can_demolish(building):
-                reward += self._demolish_building(building)
-                action_name = f"demolish_{building}"
-
-        # NEU: Segnen (5 Kategorien)
-        elif action < self.offset_tax:
-            bless_category = action - self.offset_bless
-            if bless_category in BLESS_CATEGORIES and self._can_bless(bless_category):
-                reward += self._bless(bless_category)
-                action_name = f"bless_{BLESS_CATEGORIES[bless_category]['name']}"
-
-        # NEU: Steuern einstellen
-        elif action < self.offset_alarm:
-            tax_level = action - self.offset_tax
+    def _execute_action(self, action_name, selections):
+        """Fuehrt die komplette Aktion aus basierend auf Selections."""
+        if action_name == "wait":
+            return 0.0
+        elif action_name == "build":
+            building_idx = selections.get(ActionPhase.BUILDING, 0)
+            if building_idx < len(self.buildable_buildings):
+                building = self.buildable_buildings[building_idx]
+                if self._can_build(building):
+                    return self._build_building(building)
+            return 0.0
+        elif action_name == "upgrade":
+            building_idx = selections.get(ActionPhase.BUILDING, 0)
+            if building_idx < len(self.upgradeable_buildings):
+                building = self.upgradeable_buildings[building_idx]
+                if self._can_upgrade(building):
+                    return self._upgrade_building(building)
+            return 0.0
+        elif action_name == "research":
+            tech_idx = selections.get(ActionPhase.TECH, 0)
+            if tech_idx < len(self.tech_list):
+                tech = self.tech_list[tech_idx]
+                if self._can_research(tech):
+                    return self._research_tech(tech)
+            return 0.0
+        elif action_name == "recruit":
+            soldier_idx = selections.get(ActionPhase.SOLDIER, 0)
+            quantity_idx = selections.get(ActionPhase.QUANTITY, 0)
+            quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
+            if soldier_idx < len(self.soldier_types):
+                soldier = self.soldier_types[soldier_idx]
+                reward = 0.0
+                for _ in range(quantity):
+                    if self._can_recruit(soldier):
+                        reward += self._recruit_soldier(soldier)
+                return reward
+            return 0.0
+        elif action_name == "buy_serf":
+            quantity_idx = selections.get(ActionPhase.QUANTITY, 0)
+            quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
+            reward = 0.0
+            for _ in range(quantity):
+                if self._can_buy_serf():
+                    reward += self._buy_serf()
+            return reward
+        elif action_name == "dismiss_serf":
+            source_idx = selections.get(ActionPhase.SOURCE, 0)
+            quantity_idx = selections.get(ActionPhase.QUANTITY, 0)
+            quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
+            reward = 0.0
+            for _ in range(quantity):
+                if self._can_dismiss_serf():
+                    reward += self._dismiss_serf()
+            return reward
+        elif action_name == "assign_serf":
+            source_idx = selections.get(ActionPhase.SOURCE, 0)
+            quantity_idx = selections.get(ActionPhase.QUANTITY, 0)
+            target_idx = selections.get(ActionPhase.TARGET, 0)
+            quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
+            return self._do_assign_serf(source_idx, quantity, target_idx)
+        elif action_name == "demolish":
+            building_idx = selections.get(ActionPhase.BUILDING, 0)
+            if building_idx < len(self.buildable_buildings):
+                building = self.buildable_buildings[building_idx]
+                if self._can_demolish(building):
+                    return self._demolish_building(building)
+            return 0.0
+        elif action_name == "bless":
+            category_idx = selections.get(ActionPhase.CATEGORY, 0)
+            if category_idx in BLESS_CATEGORIES and self._can_bless(category_idx):
+                return self._bless(category_idx)
+            return 0.0
+        elif action_name == "tax":
+            tax_level = selections.get(ActionPhase.TAX_LEVEL, 0)
             if tax_level != self.current_tax_level and tax_level in TAX_LEVELS:
-                reward += self._set_tax_level(tax_level)
-                action_name = f"set_tax_{tax_level}"
-
-        # NEU: Alarm-Modus
-        elif action < self.offset_build_serf:
-            alarm_action = action - self.offset_alarm
-            if alarm_action == 0:  # Alarm AN
+                return self._set_tax_level(tax_level)
+            return 0.0
+        elif action_name == "alarm":
+            on_off = selections.get(ActionPhase.ON_OFF, 0)
+            if on_off == 0:
                 if not self.alarm_active and self.alarm_cooldown <= 0:
                     self.alarm_active = True
-                    action_name = "alarm_on"
-            else:  # Alarm AUS
+            else:
                 if self.alarm_active:
                     self.alarm_active = False
                     self.alarm_cooldown = ALARM_RECHARGE_TIME
-                    action_name = "alarm_off"
+            return 0.0
+        return 0.0
 
-        # NEU: Bau-Serfs zuweisen/zurückrufen
-        else:
-            build_serf_action = action - self.offset_build_serf
-            n_batches = len(self.build_serf_batch_sizes)
-            if build_serf_action < n_batches:
-                # Zuweisen
-                batch_size = self.build_serf_batch_sizes[build_serf_action]
-                if self._can_assign_build_batch(batch_size):
-                    self._assign_build_batch(batch_size)
-                    action_name = f"assign_build_x{batch_size}"
-            else:
-                # Zurückrufen
-                batch_idx = build_serf_action - n_batches
-                batch_size = self.build_serf_batch_sizes[batch_idx]
-                if self._can_recall_build_batch(batch_size):
-                    self._recall_build_batch(batch_size)
-                    action_name = f"recall_build_x{batch_size}"
+    def _do_assign_serf(self, source_idx, quantity, target_idx):
+        """Leibeigene von source_area nach target_area verschieben."""
+        reward = 0.0
+        source_area = None
+        for area in SerfArea:
+            if area.value == source_idx:
+                source_area = area
+                break
+        if source_area is None:
+            return 0.0
+        target_area = None
+        for area in SerfArea:
+            if area.value == target_idx:
+                target_area = area
+                break
+        if target_area is None:
+            return 0.0
+        available = self.serf_areas.get(source_area, {}).get("count", 0)
+        actual_quantity = min(quantity, available)
+        if actual_quantity <= 0:
+            return 0.0
+        self.serf_areas[source_area]["count"] -= actual_quantity
+        if target_area not in self.serf_areas:
+            self.serf_areas[target_area] = {"count": 0}
+        self.serf_areas[target_area]["count"] += actual_quantity
+        if target_area in [SerfArea.WOOD_HQ, SerfArea.WOOD_SULFUR, SerfArea.WOOD_CLAY,
+                           SerfArea.WOOD_STONE, SerfArea.WOOD_VILLAGE, SerfArea.WOOD_IRON]:
+            zone_map = {
+                SerfArea.WOOD_HQ: 0, SerfArea.WOOD_SULFUR: 1, SerfArea.WOOD_CLAY: 2,
+                SerfArea.WOOD_STONE: 3, SerfArea.WOOD_VILLAGE: 4, SerfArea.WOOD_IRON: 5,
+            }
+            zone_idx = zone_map.get(target_area, 0)
+            if zone_idx < len(self.wood_zone_names):
+                zone_name = self.wood_zone_names[zone_idx]
+                if self._can_assign_wood_zone_batch(zone_name, actual_quantity):
+                    self._assign_wood_zone_batch(zone_name, actual_quantity)
+        if source_area == SerfArea.FREE:
+            self.free_leibeigene = max(0, self.free_leibeigene - actual_quantity)
+        if target_area == SerfArea.FREE:
+            self.free_leibeigene += actual_quantity
+        return reward
 
-        self._tick_time()
+    def action_masks(self):
+        """Dynamische Maske basierend auf aktueller Phase."""
+        if self.current_phase == ActionPhase.MAIN:
+            return self._mask_main_actions()
+        elif self.current_phase == ActionPhase.BUILDING:
+            return self._mask_buildings()
+        elif self.current_phase == ActionPhase.POSITION:
+            return self._mask_positions()
+        elif self.current_phase == ActionPhase.TECH:
+            return self._mask_technologies()
+        elif self.current_phase == ActionPhase.SOLDIER:
+            return self._mask_soldiers()
+        elif self.current_phase == ActionPhase.QUANTITY:
+            return self._mask_quantity()
+        elif self.current_phase == ActionPhase.SOURCE:
+            return self._mask_source_areas()
+        elif self.current_phase == ActionPhase.TARGET:
+            return self._mask_target_areas()
+        elif self.current_phase == ActionPhase.CATEGORY:
+            return self._mask_bless_categories()
+        elif self.current_phase == ActionPhase.TAX_LEVEL:
+            return self._mask_tax_levels()
+        elif self.current_phase == ActionPhase.ON_OFF:
+            return np.ones(2, dtype=bool)
+        # Fallback
+        size = self.action_spaces[self.current_phase].n
+        return np.ones(size, dtype=bool)
 
-        # Info für Debugging (keine Rewards mehr!)
-        efficiency = self.workforce_manager.get_average_efficiency()
-        exhausted_ratio = self.workforce_manager.get_exhausted_ratio()
+    def _mask_main_actions(self):
+        """Maske fuer die 12 Hauptaktionen."""
+        mask = np.ones(12, dtype=bool)
+        # 0=wait immer erlaubt
+        # 1=build: nur wenn Ressourcen und Positionen vorhanden
+        can_build_any = any(self._can_build(b) for b in self.buildable_buildings)
+        mask[1] = can_build_any
+        # 2=upgrade: nur wenn upgradeable Gebaeude vorhanden
+        can_upgrade_any = any(self._can_upgrade(b) for b in self.upgradeable_buildings)
+        mask[2] = can_upgrade_any
+        # 3=research: nur wenn Hochschule vorhanden und Tech verfuegbar
+        has_university = (self.buildings.get("Hochschule_1", 0) > 0 or
+                         self.buildings.get("Hochschule_2", 0) > 0)
+        can_research_any = has_university and any(self._can_research(t) for t in self.tech_list)
+        mask[3] = can_research_any
+        # 4=recruit: nur wenn Kaserne/Schmiede vorhanden
+        can_recruit_any = any(self._can_recruit(s) for s in self.soldier_types)
+        mask[4] = can_recruit_any
+        # 5=buy_serf
+        mask[5] = self._can_buy_serf()
+        # 6=dismiss_serf
+        mask[6] = self._can_dismiss_serf()
+        # 7=assign_serf: nur wenn freie Leibeigene vorhanden
+        has_assignable = any(self.serf_areas.get(a, {}).get("count", 0) > 0 for a in SerfArea)
+        mask[7] = has_assignable
+        # 8=demolish: nur wenn Gebaeude vorhanden
+        can_demolish_any = any(self._can_demolish(b) for b in self.buildable_buildings)
+        mask[8] = can_demolish_any
+        # 9=bless
+        mask[9] = self._can_bless()
+        # 10=tax: immer erlaubt
+        mask[10] = True
+        # 11=alarm: immer erlaubt
+        mask[11] = True
+        return mask
 
-        self.action_history.append({"time": self.current_time, "action": action_name})
-        info["action_name"] = action_name
-        info["efficiency"] = efficiency
-        info["exhausted_ratio"] = exhausted_ratio
+    def _mask_buildings(self):
+        """Maske fuer Gebaeude-Auswahl."""
+        if self.current_flow == "build":
+            mask = np.zeros(len(self.buildable_buildings), dtype=bool)
+            for i, b in enumerate(self.buildable_buildings):
+                mask[i] = self._can_build(b)
+            return mask
+        elif self.current_flow == "upgrade":
+            mask = np.zeros(len(self.buildable_buildings), dtype=bool)
+            for i, b in enumerate(self.upgradeable_buildings):
+                if i < len(mask):
+                    mask[i] = self._can_upgrade(b)
+            return mask
+        elif self.current_flow == "demolish":
+            mask = np.zeros(len(self.buildable_buildings), dtype=bool)
+            for i, b in enumerate(self.buildable_buildings):
+                mask[i] = self._can_demolish(b)
+            return mask
+        size = self.action_spaces[ActionPhase.BUILDING].n
+        return np.ones(size, dtype=bool)
 
-        # MINIMALER REWARD: Nur Scharfschützen am Ende zählen!
-        # Agent muss selbst herausfinden welche Strategie optimal ist
-        terminated = self.current_time >= self.max_time
-        if terminated:
-            # EINZIGER REWARD: Anzahl Scharfschützen × 20
-            reward += self.scharfschuetzen * 20.0
+    def _mask_positions(self):
+        """Maske fuer Positions-Auswahl."""
+        mask = np.zeros(2200, dtype=bool)
+        # Vereinfacht: erste N Positionen erlaubt basierend auf verfuegbaren Plaetzen
+        n_available = len(self.available_positions)
+        for i in range(min(n_available, 2200)):
+            mask[i] = True
+        if not mask.any():
+            mask[0] = True  # Mindestens eine Position
+        return mask
 
-        return self._get_observation(), reward, terminated, False, info
+    def _mask_technologies(self):
+        """Maske fuer Technologie-Auswahl."""
+        mask = np.zeros(len(self.tech_list), dtype=bool)
+        for i, tech in enumerate(self.tech_list):
+            if i < mask.shape[0]:
+                mask[i] = self._can_research(tech)
+        if not mask.any():
+            mask[0] = True
+        return mask
+
+    def _mask_soldiers(self):
+        """Maske fuer Soldaten-Auswahl."""
+        mask = np.zeros(len(self.soldier_types), dtype=bool)
+        for i, soldier in enumerate(self.soldier_types):
+            if i < mask.shape[0]:
+                mask[i] = self._can_recruit(soldier)
+        if not mask.any():
+            mask[0] = True
+        return mask
+
+    def _mask_quantity(self):
+        """Maske fuer Mengen-Auswahl (1,2,3,5,10,20)."""
+        mask = np.ones(6, dtype=bool)
+        return mask
+
+    def _mask_source_areas(self):
+        """Von wo Leibeigene nehmen?"""
+        mask = np.zeros(35, dtype=bool)
+        for area in SerfArea:
+            if area.value < 35 and self.serf_areas.get(area, {}).get("count", 0) > 0:
+                mask[area.value] = True
+        if not mask.any():
+            mask[SerfArea.FREE.value] = True
+        return mask
+
+    def _mask_target_areas(self):
+        """Wohin Leibeigene schicken?"""
+        mask = np.zeros(35, dtype=bool)
+        mask[SerfArea.FREE.value] = True  # Frei immer moeglich
+        # Holz-Zonen
+        for area in [SerfArea.WOOD_HQ, SerfArea.WOOD_SULFUR, SerfArea.WOOD_CLAY,
+                     SerfArea.WOOD_STONE, SerfArea.WOOD_VILLAGE, SerfArea.WOOD_IRON]:
+            mask[area.value] = True
+        # Stollen
+        for i in range(SerfArea.SHAFT_IRON_1.value, SerfArea.SHAFT_SULFUR_3.value + 1):
+            if i < 35:
+                mask[i] = True
+        # Vorkommen
+        for i in range(SerfArea.DEPOSIT_IRON_1.value, SerfArea.DEPOSIT_SULFUR_1.value + 1):
+            if i < 35:
+                mask[i] = True
+        return mask
+
+    def _mask_bless_categories(self):
+        """Maske fuer Segen-Kategorien."""
+        mask = np.zeros(len(BLESS_CATEGORIES), dtype=bool)
+        for i in range(len(BLESS_CATEGORIES)):
+            if i in BLESS_CATEGORIES:
+                mask[i] = self._can_bless(i)
+        if not mask.any():
+            mask[0] = True
+        return mask
+
+    def _mask_tax_levels(self):
+        """Maske fuer Steuerstufen."""
+        mask = np.ones(len(TAX_LEVELS), dtype=bool)
+        return mask
 
     def _build_building(self, building):
         """
@@ -3286,7 +3451,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             total_workers = len(self.workforce_manager.workers)
             # Steuer-Einkommen = RegularTax pro Worker
             tax_income = tax_info["regular_tax"] * total_workers
-            self.resources[RESOURCE_TALER] += tax_income
+            # Gebäude-Einkommen (taler_income aus buildings_db)
+            building_income = self._get_taler_income()
+            self.resources[RESOURCE_TALER] += tax_income + building_income
 
             # Motivation-Änderung anwenden
             motivation_change = tax_info["motivation_change"]
@@ -3342,6 +3509,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             if remaining <= 0:
                 self.buildings[old_b] = max(0, self.buildings.get(old_b, 0) - 1)
                 self.buildings[new_b] = self.buildings.get(new_b, 0) + 1
+                # Upgrade in ProductionSystem propagieren
+                self._on_upgrade_completed(old_b, new_b)
                 completed.append(i)
             else:
                 self.upgrade_queue[i] = (old_b, new_b, remaining)
@@ -3504,6 +3673,51 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # NEU: Gunsmith für Büchsenmacherei erstellen
         elif base_name == "Büchsenmacherei":
             self.workforce_manager.add_worker("gunsmith", pos_obj, pos_obj)
+
+    def _on_upgrade_completed(self, old_building: str, new_building: str):
+        """Propagiert Upgrade-Effekte in ProductionSystem und Kapazitäten."""
+        old_base = get_base_building_name(old_building)
+        new_base = get_base_building_name(new_building)
+        new_level = get_building_level(new_building)
+
+        # --- Minen upgraden ---
+        if old_base in ["Steinmine", "Lehmmine", "Eisenmine", "Schwefelmine"]:
+            old_key = f"{old_base}_{get_building_level(old_building)}"
+            new_key = f"{new_base}_{new_level}"
+            if old_key in self.production_system.mines:
+                mine = self.production_system.mines.pop(old_key)
+                mine.level = new_level
+                max_workers_by_level = {1: 5, 2: 6, 3: 7}
+                mine.max_workers = max_workers_by_level.get(new_level, 5)
+                mine.amount_to_mine = mine.amount_by_level  # Nutzt property
+                mine.name = new_key
+                self.production_system.mines[new_key] = mine
+
+        # --- Refiner upgraden ---
+        elif old_base in ["Sägemühle", "Schmiede", "Alchimistenhütte", "Steinmetzhütte", "Lehmhütte"]:
+            old_key = f"{old_base}_{get_building_level(old_building)}"
+            new_key = f"{new_base}_{new_level}"
+            if old_key in self.production_system.refiners:
+                refiner = self.production_system.refiners.pop(old_key)
+                refiner.level = new_level
+                # Max workers steigt mit Level (4, 6, 8)
+                max_workers_by_level = {1: 4, 2: 6, 3: 8}
+                refiner.max_workers = max_workers_by_level.get(new_level, 4)
+                refiner.name = new_key
+                self.production_system.refiners[new_key] = refiner
+
+        # --- Hochschule upgraden: zusätzlichen Scholar erstellen ---
+        elif old_base == "Hochschule":
+            from worker_simulation import Position as WPosition
+            # Level 2 bekommt einen zusätzlichen Scholar
+            if new_level == 2:
+                # Versuche Position zu finden
+                pos = self.hq_position
+                if isinstance(pos, tuple):
+                    pos_obj = WPosition(x=pos[0], y=pos[1])
+                else:
+                    pos_obj = pos
+                self.workforce_manager.add_worker("scholar", pos_obj, pos_obj)
 
     def get_action_history(self):
         return self.action_history

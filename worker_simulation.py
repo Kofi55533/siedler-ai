@@ -112,9 +112,11 @@ WORKER_PARAMS: Dict[str, WorkTimeParams] = {
         work_wait_until=15000,
         exhausted_malus=0.2,
     ),
-    # SMELTER
+    # SMELTER - KORRIGIERT aus extracted_values.json! (war work_wait_until=30000)
     "smelter": WorkTimeParams(
-        work_wait_until=30000,
+        work_wait_until=4000,  # Korrigiert! (war 30000)
+        eat_wait=3000,  # Länger als Standard (2000)!
+        rest_wait=2000,  # Kürzer als Standard (3000)!
         exhausted_malus=0.2,
     ),
     # SCHOLAR - Gelehrte (Hochschule)

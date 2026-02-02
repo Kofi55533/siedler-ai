@@ -505,31 +505,55 @@ class ProductionSystem:
         production = {}
 
         for refiner in self.refiners.values():
-            # Prüfen ob genug Input-Ressource vorhanden
-            input_rate = refiner.get_input_consumption_rate(efficiency)
-            input_needed = input_rate * dt
+            # Wenn Input == Output (z.B. Eisen -> Eisen): Kein Input-Verbrauch!
+            # Im echten Spiel holen Refiner Rohstoffe von der Mine (lokaler Speicher),
+            # aber da unsere Minen direkt in den globalen Pool produzieren,
+            # wuerde Input-Verbrauch bei gleicher Ressource einen Netto-Verlust erzeugen.
+            # Refiner agieren hier als Zusatz-Produzenten, aber NUR wenn eine
+            # zugehoerige Mine aktiv ist (mit Workern). Ohne aktive Mine produziert
+            # der Refiner nichts - er "veredelt" ja das Minen-Output.
+            if refiner.input_resource == refiner.resource_type:
+                # Pruefe ob eine Mine fuer diese Ressource aktiv ist
+                has_active_mine = any(
+                    m.resource_type == refiner.resource_type and m.current_workers > 0
+                    for m in self.mines.values()
+                )
+                if not has_active_mine:
+                    continue  # Ohne aktive Mine kein Refiner-Output
 
-            available = self.resources.get(refiner.input_resource, 0)
-            if available < input_needed:
-                # Nicht genug Input - proportional reduzieren
-                if input_needed > 0:
-                    ratio = available / input_needed
-                else:
-                    ratio = 0
-                input_needed = available
+                # Zusatz-Produzent - kein Input-Verbrauch, aber nur mit aktiver Mine
+                output_rate = refiner.get_production_rate(efficiency)
+                amount = output_rate * dt
+
+                if refiner.resource_type not in production:
+                    production[refiner.resource_type] = 0.0
+                production[refiner.resource_type] += amount
             else:
-                ratio = 1.0
+                # Verschiedene Input/Output Ressourcen - normaler Verbrauch
+                input_rate = refiner.get_input_consumption_rate(efficiency)
+                input_needed = input_rate * dt
 
-            # Input verbrauchen
-            self.resources[refiner.input_resource] -= input_needed
+                available = self.resources.get(refiner.input_resource, 0)
+                if available < input_needed:
+                    # Nicht genug Input - proportional reduzieren
+                    if input_needed > 0:
+                        ratio = available / input_needed
+                    else:
+                        ratio = 0
+                    input_needed = available
+                else:
+                    ratio = 1.0
 
-            # Output produzieren
-            output_rate = refiner.get_production_rate(efficiency)
-            amount = output_rate * dt * ratio
+                # Input verbrauchen
+                self.resources[refiner.input_resource] -= input_needed
 
-            if refiner.resource_type not in production:
-                production[refiner.resource_type] = 0.0
-            production[refiner.resource_type] += amount
+                # Output produzieren
+                output_rate = refiner.get_production_rate(efficiency)
+                amount = output_rate * dt * ratio
+
+                if refiner.resource_type not in production:
+                    production[refiner.resource_type] = 0.0
+                production[refiner.resource_type] += amount
 
         return production
 
@@ -618,6 +642,14 @@ class ProductionSystem:
             rates[mine.resource_type] += rate
 
         for refiner in self.refiners.values():
+            # Bei Input==Output: Nur zaehlen wenn aktive Mine vorhanden
+            if refiner.input_resource == refiner.resource_type:
+                has_active_mine = any(
+                    m.resource_type == refiner.resource_type and m.current_workers > 0
+                    for m in self.mines.values()
+                )
+                if not has_active_mine:
+                    continue
             rate = refiner.get_production_rate(efficiency)
             rates[refiner.resource_type] += rate
 
@@ -637,6 +669,9 @@ class ProductionSystem:
         rates = {r: 0.0 for r in ResourceType}
 
         for refiner in self.refiners.values():
+            # Kein Verbrauch wenn Input == Output (siehe _tick_refiners)
+            if refiner.input_resource == refiner.resource_type:
+                continue
             rate = refiner.get_input_consumption_rate(efficiency)
             rates[refiner.input_resource] += rate
 

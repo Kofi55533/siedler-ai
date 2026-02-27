@@ -8,7 +8,6 @@ import os
 import shutil
 import subprocess
 import sys
-import runpy
 import zipfile
 
 
@@ -197,6 +196,12 @@ print(f"Code source mode: {SOURCE_MODE}")
 
 
 # 8) START TRAINING
-# Run in-process so Colab shows the real traceback directly.
-print(f"$ {sys.executable} colab_training.py")
-runpy.run_path("colab_training.py", run_name="__main__")
+# Run as separate process (safer with multiprocessing/SubprocVecEnv in Colab).
+try:
+    run([sys.executable, "colab_training.py"])
+except subprocess.CalledProcessError:
+    if os.environ.get("SIEDLER_NUM_ENVS"):
+        raise
+    print("Training start failed with multiprocessing settings. Retrying with SIEDLER_NUM_ENVS=1 ...")
+    os.environ["SIEDLER_NUM_ENVS"] = "1"
+    run([sys.executable, "colab_training.py"])

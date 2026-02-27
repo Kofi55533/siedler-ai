@@ -5,15 +5,141 @@
 
 from pathlib import Path
 import os
+import re
 import shutil
 import subprocess
 import sys
 import zipfile
 
 
-def run(cmd, cwd=None):
+def run(cmd, cwd=None, env=None):
     print("$", " ".join(cmd))
-    subprocess.check_call(cmd, cwd=cwd)
+    subprocess.check_call(cmd, cwd=cwd, env=env)
+
+
+def run_capture(cmd, cwd=None, env=None, timeout_sec=240):
+    print("$", " ".join(cmd))
+    return subprocess.run(
+        cmd,
+        cwd=cwd,
+        env=env,
+        text=True,
+        capture_output=True,
+        timeout=timeout_sec,
+    )
+
+
+def infer_target_n_envs():
+    cpu_cap = max(1, (os.cpu_count() or 1) - 1)
+    target = min(cpu_cap, 4)
+    gpu_name = "CPU"
+    try:
+        import torch as th
+
+        if th.cuda.is_available():
+            gpu_name = th.cuda.get_device_name(0).upper()
+            if "H100" in gpu_name:
+                target = 10
+            elif "A100" in gpu_name:
+                target = 8
+            elif "L4" in gpu_name or "V100" in gpu_name:
+                target = 6
+            elif "T4" in gpu_name or "P100" in gpu_name:
+                target = 4
+            else:
+                target = 4
+        else:
+            target = 2
+    except Exception:
+        target = 2
+
+    return max(1, min(cpu_cap, target)), gpu_name, cpu_cap
+
+
+def build_n_env_candidates():
+    target, gpu_name, cpu_cap = infer_target_n_envs()
+    raw = [min(cpu_cap, target + 2), target, target - 1, target - 2, 8, 6, 4, 3, 2, 1]
+    seen = set()
+    ordered = []
+    for n in raw:
+        if 1 <= n <= cpu_cap and n not in seen:
+            seen.add(n)
+            ordered.append(n)
+    ordered.sort(reverse=True)
+    if 1 not in ordered:
+        ordered.append(1)
+    return ordered, target, gpu_name
+
+
+def parse_probe_sps(stdout_text: str):
+    match = re.search(r"ENV_PROBE_RESULT\s+n_envs=(\d+)\s+throughput_sps=([0-9.]+)", stdout_text or "")
+    if not match:
+        return None, None
+    return int(match.group(1)), float(match.group(2))
+
+
+def auto_select_fastest_n_envs():
+    if os.environ.get("SIEDLER_NUM_ENVS"):
+        manual = max(1, int(os.environ["SIEDLER_NUM_ENVS"]))
+        print(f"Using manual SIEDLER_NUM_ENVS={manual}")
+        return manual, True
+
+    candidates, target, gpu_name = build_n_env_candidates()
+    print("Auto benchmark for n_envs started")
+    print(f"GPU: {gpu_name}")
+    print(f"Probe candidates: {candidates} (target={target})")
+
+    successful = []
+    for n_envs in candidates:
+        probe_env = os.environ.copy()
+        probe_env["SIEDLER_NUM_ENVS"] = str(n_envs)
+        probe_env["SIEDLER_PROBE_ENV_ONLY"] = "1"
+        probe_env["SIEDLER_PROBE_STEPS"] = "96"
+
+        try:
+            result = run_capture(
+                [sys.executable, "colab_training.py"],
+                cwd=PROJECT_DIR,
+                env=probe_env,
+                timeout_sec=300,
+            )
+        except subprocess.TimeoutExpired:
+            print(f"Probe timeout for n_envs={n_envs}")
+            continue
+        if result.stdout:
+            print(result.stdout)
+        if result.stderr:
+            print(result.stderr)
+
+        if result.returncode != 0:
+            print(f"Probe failed for n_envs={n_envs}")
+            continue
+
+        parsed_n, sps = parse_probe_sps(result.stdout or "")
+        eff_n = parsed_n if parsed_n is not None else n_envs
+        eff_sps = sps if sps is not None else 0.0
+        successful.append((eff_n, eff_sps))
+        print(f"Probe success: n_envs={eff_n}, throughput_sps={eff_sps:.2f}")
+
+    if not successful:
+        raise RuntimeError("No stable n_envs found during auto benchmark.")
+
+    best_n, best_sps = max(successful, key=lambda item: (item[1], item[0]))
+    os.environ["SIEDLER_NUM_ENVS"] = str(best_n)
+    print(f"Selected fastest stable n_envs={best_n} (throughput_sps={best_sps:.2f})")
+    return best_n, False
+
+
+def build_fallback_n_envs(start_n: int):
+    raw = [start_n, start_n - 1, start_n - 2, max(1, start_n // 2), 1]
+    ordered = []
+    seen = set()
+    for n in raw:
+        n = max(1, int(n))
+        if n not in seen:
+            seen.add(n)
+            ordered.append(n)
+    return ordered
 
 
 # 1) CONFIG
@@ -194,14 +320,25 @@ os.environ["SIEDLER_REQUIRE_DRIVE"] = "1"
 print(f"Model checkpoints/final model will be saved to: {SAVE_DIR}")
 print(f"Code source mode: {SOURCE_MODE}")
 
+# 8) AUTO-SELECT FASTEST STABLE N_ENVS
+selected_n_envs, manual_override = auto_select_fastest_n_envs()
+print(f"Effective SIEDLER_NUM_ENVS={selected_n_envs}")
 
-# 8) START TRAINING
-# Run as separate process (safer with multiprocessing/SubprocVecEnv in Colab).
-try:
-    run([sys.executable, "colab_training.py"])
-except subprocess.CalledProcessError:
-    if os.environ.get("SIEDLER_NUM_ENVS"):
-        raise
-    print("Training start failed with multiprocessing settings. Retrying with SIEDLER_NUM_ENVS=1 ...")
-    os.environ["SIEDLER_NUM_ENVS"] = "1"
-    run([sys.executable, "colab_training.py"])
+# 9) START TRAINING (with guarded fallback)
+fallback_chain = [selected_n_envs] if manual_override else build_fallback_n_envs(selected_n_envs)
+last_error = None
+for idx, n_envs in enumerate(fallback_chain):
+    os.environ["SIEDLER_NUM_ENVS"] = str(n_envs)
+    print(f"Training attempt {idx + 1}/{len(fallback_chain)} with SIEDLER_NUM_ENVS={n_envs}")
+    try:
+        run([sys.executable, "colab_training.py"])
+        last_error = None
+        break
+    except subprocess.CalledProcessError as exc:
+        last_error = exc
+        if idx == len(fallback_chain) - 1:
+            raise
+        print(f"Training crashed for n_envs={n_envs}; retrying with fewer envs...")
+
+if last_error is None:
+    print("Training finished successfully.")

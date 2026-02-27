@@ -23,11 +23,11 @@ Verwendung in Colab:
 """
 
 # =============================================================================
-# INSTALLATION (nur in Colab nÃ¶tig)
+# INSTALLATION (nur in Colab nÃƒÂ¶tig)
 # =============================================================================
 
 def install_dependencies():
-    """Installiert benÃ¶tigte Pakete in Colab"""
+    """Installiert benÃƒÂ¶tigte Pakete in Colab"""
     import subprocess
     import sys
 
@@ -41,7 +41,7 @@ def install_dependencies():
     for package in packages:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", package])
 
-    print("Alle AbhÃ¤ngigkeiten installiert!")
+    print("Alle AbhÃƒÂ¤ngigkeiten installiert!")
 
 
 # =============================================================================
@@ -51,6 +51,7 @@ def install_dependencies():
 import os
 import json
 import numpy as np
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
@@ -63,7 +64,7 @@ try:
     from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
     from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 except ImportError:
-    print("Installiere AbhÃ¤ngigkeiten...")
+    print("Installiere AbhÃƒÂ¤ngigkeiten...")
     install_dependencies()
     import gymnasium as gym
     from sb3_contrib import MaskablePPO
@@ -406,18 +407,18 @@ class ScharfschuetzenCallback(BaseCallback):
 # =============================================================================
 
 TRAINING_CONFIG = {
-    # Timesteps - ERHÃ–HT fÃ¼r sparse rewards (nur ScharfschÃ¼tzen am Ende)
-    "total_timesteps": 5_000_000,  # 5M Steps fÃ¼r sparse rewards
+    # Timesteps - ERHÃƒâ€“HT fÃƒÂ¼r sparse rewards (nur ScharfschÃƒÂ¼tzen am Ende)
+    "total_timesteps": 5_000_000,  # 5M Steps fÃƒÂ¼r sparse rewards
 
     # Modell-Hyperparameter
     "learning_rate": 0.0003,
     "n_steps": 2048,
     "batch_size": 64,
     "n_epochs": 10,
-    "gamma": 0.995,  # HÃ¶her fÃ¼r langfristige Planung (30 Min Episode)
+    "gamma": 0.995,  # HÃƒÂ¶her fÃƒÂ¼r langfristige Planung (30 Min Episode)
     "gae_lambda": 0.95,
     "clip_range": 0.2,
-    "ent_coef": 0.02,  # Exploration fÃ¼r 188 Actions
+    "ent_coef": 0.02,  # Exploration fÃƒÂ¼r 188 Actions
 
     # Netzwerk
     "policy_kwargs": {
@@ -531,6 +532,58 @@ def create_env(use_spatial_obs: bool = True, spatial_size: int = 128, reward_pro
     ])
 
 
+def probe_env_throughput(profile_name: str = None, probe_steps: int = 96):
+    """
+    Kurzer Stabilitaets-/Throughput-Test fuer die aktuelle n_envs-Einstellung.
+
+    Wird ueber SIEDLER_PROBE_ENV_ONLY=1 im __main__ aktiviert.
+    """
+    custom_config = {}
+    config, profile = build_training_config(
+        TRAINING_CONFIG,
+        custom_config=custom_config,
+        profile_name=profile_name,
+    )
+    _auto_tune_for_colab(config, explicit_config=custom_config)
+    _validate_runtime_files()
+
+    reward_profile = profile["reward_profile"]
+    spatial_size = _get_spatial_size()
+    env = create_env(
+        use_spatial_obs=True,
+        spatial_size=spatial_size,
+        reward_profile=reward_profile,
+    )
+
+    n_envs = int(getattr(env, "num_envs", 1))
+    steps = max(8, int(probe_steps))
+    total_env_steps = 0
+    start = time.perf_counter()
+
+    try:
+        env.reset()
+        for _ in range(steps):
+            actions = np.asarray([env.action_space.sample() for _ in range(n_envs)])
+            env.step(actions)
+            total_env_steps += n_envs
+    finally:
+        env.close()
+
+    elapsed = max(1e-6, time.perf_counter() - start)
+    throughput_sps = float(total_env_steps) / elapsed
+
+    print(
+        f"ENV_PROBE_RESULT n_envs={n_envs} "
+        f"throughput_sps={throughput_sps:.2f} spatial={spatial_size}"
+    )
+    return {
+        "n_envs": n_envs,
+        "throughput_sps": throughput_sps,
+        "spatial_size": spatial_size,
+        "steps": steps,
+    }
+
+
 def train(config: dict = None, save_path: str = "./siedler_model", profile_name: str = None):
     """
     Trainiert das Modell
@@ -555,7 +608,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     _validate_runtime_files()
 
     print("=" * 60)
-    print("Siedler 5 - ScharfschÃ¼tzen Training")
+    print("Siedler 5 - ScharfschÃƒÂ¼tzen Training")
     print("=" * 60)
     print(f"Timesteps: {config['total_timesteps']:,}")
     print(f"Learning Rate: {config['learning_rate']}")
@@ -671,7 +724,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     print(f"\nModell gespeichert: {final_path}")
 
     # Beste Ergebnisse
-    print(f"\nBeste erreichte ScharfschÃ¼tzen: {scharfschuetzen_callback.best_scharfschuetzen}")
+    print(f"\nBeste erreichte ScharfschÃƒÂ¼tzen: {scharfschuetzen_callback.best_scharfschuetzen}")
 
     return model
 
@@ -736,21 +789,21 @@ def evaluate(
         results["times"].append(env.current_time)
         results["action_histories"].append(env.get_action_history())
 
-        print(f"Episode {episode + 1}: Reward={total_reward:.2f}, ScharfschÃ¼tzen={env.scharfschuetzen}")
+        print(f"Episode {episode + 1}: Reward={total_reward:.2f}, ScharfschÃƒÂ¼tzen={env.scharfschuetzen}")
 
     # Zusammenfassung
     print("\n" + "=" * 60)
     print("EVALUATION ZUSAMMENFASSUNG")
     print("=" * 60)
-    print(f"Durchschnittliche ScharfschÃ¼tzen: {np.mean(results['scharfschuetzen']):.2f}")
-    print(f"Maximum ScharfschÃ¼tzen: {np.max(results['scharfschuetzen'])}")
+    print(f"Durchschnittliche ScharfschÃƒÂ¼tzen: {np.mean(results['scharfschuetzen']):.2f}")
+    print(f"Maximum ScharfschÃƒÂ¼tzen: {np.max(results['scharfschuetzen'])}")
     print(f"Durchschnittlicher Reward: {np.mean(results['rewards']):.2f}")
 
     return results
 
 
 # =============================================================================
-# EXPORT FÃœR ECHTES SPIEL
+# EXPORT FÃƒÅ“R ECHTES SPIEL
 # =============================================================================
 
 def export_strategy(
@@ -762,11 +815,11 @@ def export_strategy(
     profile_name: str = None,
 ):
     """
-    Exportiert die beste Strategie fÃ¼r das echte Spiel
+    Exportiert die beste Strategie fÃƒÂ¼r das echte Spiel
 
     Args:
         model: Trainiertes Modell
-        save_path: Pfad fÃ¼r den Export
+        save_path: Pfad fÃƒÂ¼r den Export
     """
     if reward_profile is None:
         reward_profile = get_train_profile(profile_name)["reward_profile"]
@@ -782,7 +835,7 @@ def export_strategy(
     strategy = {
         "map": "EMS Wintersturm",
         "player": 1,
-        "goal": "Maximale ScharfschÃ¼tzen in 30 Minuten",
+        "goal": "Maximale ScharfschÃƒÂ¼tzen in 30 Minuten",
         "actions": [],
         "building_positions": [],
     }
@@ -811,7 +864,7 @@ def export_strategy(
         json.dump(strategy, f, indent=2, ensure_ascii=False)
 
     print(f"Strategie exportiert: {save_path}")
-    print(f"ScharfschÃ¼tzen erreicht: {strategy['final_scharfschuetzen']}")
+    print(f"ScharfschÃƒÂ¼tzen erreicht: {strategy['final_scharfschuetzen']}")
     print(f"Anzahl Aktionen: {len(strategy['actions'])}")
 
     return strategy
@@ -822,7 +875,14 @@ def export_strategy(
 # =============================================================================
 
 if __name__ == "__main__":
-    # Pfad fÃ¼r Modelle
+    probe_only = str(os.environ.get("SIEDLER_PROBE_ENV_ONLY", "")).strip().lower()
+    if probe_only in {"1", "true", "yes", "on"}:
+        profile_name = get_train_profile()["name"]
+        probe_steps = int(os.environ.get("SIEDLER_PROBE_STEPS", "96"))
+        probe_env_throughput(profile_name=profile_name, probe_steps=probe_steps)
+        raise SystemExit(0)
+
+    # Pfad fÃƒÂ¼r Modelle
     SAVE_PATH = _resolve_training_save_path("./siedler_training")
     active_profile = get_train_profile()
 
@@ -875,10 +935,10 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"\nModell gespeichert in: {SAVE_PATH}")
     print(f"Strategie exportiert in: {SAVE_PATH}/strategy.json")
-    print("\nNÃ¤chste Schritte:")
+    print("\nNÃƒÂ¤chste Schritte:")
     print("1. Modell herunterladen")
-    print("2. strategy.json fÃ¼r das echte Spiel nutzen")
-    print("3. Game-Bridge ausfÃ¼hren")
+    print("2. strategy.json fÃƒÂ¼r das echte Spiel nutzen")
+    print("3. Game-Bridge ausfÃƒÂ¼hren")
 
 
 

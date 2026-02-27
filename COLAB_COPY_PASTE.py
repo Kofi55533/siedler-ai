@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import runpy
+import zipfile
 
 
 def run(cmd, cwd=None):
@@ -76,12 +77,83 @@ os.environ["SIEDLER_DATA_DIR"] = DATA_DIR
 print(f"Data dir: {DATA_DIR}")
 
 
+def copy_file_to_data_dir(src_path: Path, dst_name: str):
+    dst = Path(DATA_DIR) / dst_name
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src_path, dst)
+    print(f"Synced to DATA_DIR: {dst_name}")
+
+
+def extract_file_from_zip_to_data_dir(zip_path: Path, dst_name: str) -> bool:
+    if not zip_path.exists():
+        return False
+    dst = Path(DATA_DIR) / dst_name
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        members = [m for m in zf.namelist() if m.endswith("/" + dst_name) or m == dst_name]
+        if not members:
+            return False
+        member = sorted(members, key=len)[0]
+        with zf.open(member, "r") as src, open(dst, "wb") as dst_file:
+            shutil.copyfileobj(src, dst_file)
+    print(f"Extracted from ZIP to DATA_DIR: {dst_name}")
+    return True
+
+
+def ensure_data_file(dst_name: str, project_candidates):
+    dst = Path(DATA_DIR) / dst_name
+    if dst.exists():
+        return True
+
+    for candidate in project_candidates:
+        src = Path(candidate)
+        if src.exists():
+            copy_file_to_data_dir(src, dst_name)
+            return True
+
+    if extract_file_from_zip_to_data_dir(Path(DRIVE_ZIP), dst_name):
+        return True
+
+    return False
+
+
 # 4) INSTALL DEPENDENCIES
 for package in ("gymnasium", "stable-baselines3", "sb3-contrib", "tensorboard"):
     run([sys.executable, "-m", "pip", "install", "-q", package])
 
 
-# 5) PREFLIGHT CHECK (clear message before long training start)
+# 5) AUTO-SYNC REQUIRED DATA TO GOOGLE DRIVE
+if not ensure_data_file("player1_resources.json", ["player1_resources.json"]):
+    raise FileNotFoundError(
+        "Missing player1_resources.json. "
+        "Expected in project root, DATA_DIR, or inside DRIVE_ZIP."
+    )
+
+walkable_candidates = ["player1_walkable_515.npy", "player1_walkable.npy"]
+if not any((Path(DATA_DIR) / name).exists() for name in walkable_candidates):
+    copied_walkable = False
+    for name in walkable_candidates:
+        if ensure_data_file(name, [name]):
+            copied_walkable = True
+            break
+    if not copied_walkable:
+        raise FileNotFoundError(
+            "Missing walkable file. Expected player1_walkable_515.npy or "
+            "player1_walkable.npy in project root, DATA_DIR, or inside DRIVE_ZIP."
+        )
+
+# Optional file for maximum engine parity
+truth_src = Path("config/worker_truth_model.json")
+truth_dst = Path(DATA_DIR) / "config" / "worker_truth_model.json"
+if truth_src.exists() and not truth_dst.exists():
+    truth_dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(truth_src, truth_dst)
+    print("Synced optional file to DATA_DIR: config/worker_truth_model.json")
+elif not truth_dst.exists():
+    extract_file_from_zip_to_data_dir(Path(DRIVE_ZIP), "config/worker_truth_model.json")
+
+
+# 6) PREFLIGHT CHECK (clear message before long training start)
 required_files = [
     "colab_training.py",
     "environment.py",
@@ -93,18 +165,13 @@ required_files = [
     "worker_simulation.py",
     "pathfinding.py",
 ]
-walkable_candidates = ["player1_walkable_515.npy", "player1_walkable.npy"]
 missing = [name for name in required_files if not Path(name).exists()]
 
-resources_in_project = Path("player1_resources.json").exists()
-resources_in_data = (Path(DATA_DIR) / "player1_resources.json").exists()
-if not (resources_in_project or resources_in_data):
-    missing.append("player1_resources.json (project root or DATA_DIR)")
-
-walkable_in_project = any(Path(name).exists() for name in walkable_candidates)
 walkable_in_data = any((Path(DATA_DIR) / name).exists() for name in walkable_candidates)
-if not (walkable_in_project or walkable_in_data):
-    missing.append("player1_walkable_515.npy or player1_walkable.npy (project root or DATA_DIR)")
+if not (Path(DATA_DIR) / "player1_resources.json").exists():
+    missing.append("player1_resources.json (DATA_DIR)")
+if not walkable_in_data:
+    missing.append("player1_walkable_515.npy or player1_walkable.npy (DATA_DIR)")
 
 if missing:
     raise FileNotFoundError(
@@ -115,7 +182,7 @@ if missing:
     )
 
 
-# 6) FORCE SAVE TO DRIVE
+# 7) FORCE SAVE TO DRIVE
 Path(SAVE_DIR).mkdir(parents=True, exist_ok=True)
 os.environ["SIEDLER_SAVE_DIR"] = SAVE_DIR
 os.environ["SIEDLER_REQUIRE_DRIVE"] = "1"
@@ -129,7 +196,7 @@ print(f"Model checkpoints/final model will be saved to: {SAVE_DIR}")
 print(f"Code source mode: {SOURCE_MODE}")
 
 
-# 7) START TRAINING
+# 8) START TRAINING
 # Run in-process so Colab shows the real traceback directly.
 print(f"$ {sys.executable} colab_training.py")
 runpy.run_path("colab_training.py", run_name="__main__")

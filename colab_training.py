@@ -1,21 +1,33 @@
 # -*- coding: utf-8 -*-
 """
-Siedler 5 - Scharfschützen Training Script für Google Colab
+Siedler 5 - Scharfschuetzen Training Script fuer Google Colab.
 
-Dieses Script kann in Google Colab ausgeführt werden.
-Kopiere map_config_wintersturm.py und environment.py ebenfalls in Colab.
+Dieses Script kann in Google Colab ausgefuehrt werden.
+Die Umgebung braucht mehrere Projektdateien, nicht nur 4 Dateien.
 
 Verwendung in Colab:
-1. Lade alle 3 Dateien hoch (map_config_wintersturm.py, environment.py, colab_training.py)
-2. Führe dieses Script aus
+1. Lade mindestens diese Dateien hoch:
+   - colab_training.py
+   - environment.py
+   - multihead_policy.py
+   - map_config_wintersturm.py
+   - wood_zones_config.py
+   - production_system.py
+   - worker_simulation.py
+   - pathfinding.py
+   - player1_walkable.npy (oder player1_walkable_515.npy)
+   - player1_resources.json
+2. Optional fuer maximale Engine-Naehe:
+   - config/worker_truth_model.json
+3. Fuehre dieses Script aus.
 """
 
 # =============================================================================
-# INSTALLATION (nur in Colab nötig)
+# INSTALLATION (nur in Colab nÃ¶tig)
 # =============================================================================
 
 def install_dependencies():
-    """Installiert benötigte Pakete in Colab"""
+    """Installiert benÃ¶tigte Pakete in Colab"""
     import subprocess
     import sys
 
@@ -29,7 +41,7 @@ def install_dependencies():
     for package in packages:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", package])
 
-    print("Alle Abhängigkeiten installiert!")
+    print("Alle AbhÃ¤ngigkeiten installiert!")
 
 
 # =============================================================================
@@ -40,31 +52,316 @@ import os
 import json
 import numpy as np
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, Optional
+import torch as th
 
 try:
     import gymnasium as gym
     from sb3_contrib import MaskablePPO
-    from sb3_contrib.common.wrappers import ActionMasker
     from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
     from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
-    from stable_baselines3.common.vec_env import DummyVecEnv
+    from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 except ImportError:
-    print("Installiere Abhängigkeiten...")
+    print("Installiere AbhÃ¤ngigkeiten...")
     install_dependencies()
     import gymnasium as gym
     from sb3_contrib import MaskablePPO
-    from sb3_contrib.common.wrappers import ActionMasker
     from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
     from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
-    from stable_baselines3.common.vec_env import DummyVecEnv
+    from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
 # Importiere unser Environment
 from environment import SiedlerScharfschuetzenEnv
+from multihead_policy import MultiHeadMaskablePolicy, SpatialVectorExtractor
+from training_profiles import build_training_config, get_train_profile
 
 
 # =============================================================================
 # CALLBACKS
 # =============================================================================
+
+th.backends.cudnn.benchmark = True
+try:
+    th.set_float32_matmul_precision("high")
+except Exception:
+    pass
+th.backends.cuda.matmul.allow_tf32 = True
+
+
+def _select_net_arch(obs_dim: int):
+    if obs_dim >= 400:
+        return [1024, 512, 512]
+    if obs_dim >= 250:
+        return [768, 512, 256]
+    return [512, 256, 256]
+
+
+def _detect_runtime_info() -> Dict[str, object]:
+    is_colab = bool(
+        os.environ.get("COLAB_RELEASE_TAG")
+        or os.environ.get("COLAB_GPU")
+        or os.environ.get("GCE_METADATA_TIMEOUT")
+    )
+    tpu_addr = os.environ.get("COLAB_TPU_ADDR") or os.environ.get("TPU_NAME")
+    has_cuda = th.cuda.is_available()
+    gpu_name = None
+    gpu_mem_gb = 0.0
+    if has_cuda:
+        gpu_name = th.cuda.get_device_name(0)
+        gpu_mem_gb = float(th.cuda.get_device_properties(0).total_memory) / (1024 ** 3)
+    cpu_count = os.cpu_count() or 1
+    return {
+        "is_colab": is_colab,
+        "has_tpu": bool(tpu_addr),
+        "tpu_addr": tpu_addr,
+        "has_cuda": has_cuda,
+        "gpu_name": gpu_name,
+        "gpu_mem_gb": gpu_mem_gb,
+        "cpu_count": cpu_count,
+    }
+
+
+def _try_mount_google_drive() -> Optional[Path]:
+    """
+    Versucht in Colab Google Drive einzubinden.
+
+    Rueckgabe:
+        Path auf /content/drive/MyDrive bei Erfolg, sonst None.
+    """
+    mydrive = Path("/content/drive/MyDrive")
+    if mydrive.exists():
+        return mydrive
+
+    runtime = _detect_runtime_info()
+    if not runtime.get("is_colab"):
+        return None
+
+    auto_mount = str(os.environ.get("SIEDLER_AUTO_MOUNT_DRIVE", "1")).strip().lower()
+    if auto_mount not in {"1", "true", "yes", "on"}:
+        return None
+
+    try:
+        from google.colab import drive as colab_drive  # type: ignore
+
+        print("Google Drive wird gemountet...")
+        colab_drive.mount("/content/drive", force_remount=False)
+    except Exception as exc:
+        print(f"Warnung: Google Drive konnte nicht gemountet werden ({exc})")
+        return None
+
+    return mydrive if mydrive.exists() else None
+
+
+def _resolve_training_save_path(requested_path: str = "./siedler_training") -> str:
+    """
+    Ermittelt den finalen Save-Pfad.
+
+    Prioritaet:
+      1) SIEDLER_SAVE_DIR (falls gesetzt)
+      2) In Colab mit gemountetem Drive: /content/drive/MyDrive/<ordnername>
+      3) Sonst lokaler Pfad (aktuelles Arbeitsverzeichnis)
+    """
+    env_save_dir = os.environ.get("SIEDLER_SAVE_DIR")
+    if env_save_dir:
+        requested_path = env_save_dir
+
+    path = Path(requested_path).expanduser()
+    runtime = _detect_runtime_info()
+    drive_root = _try_mount_google_drive()
+    require_drive_default = "1" if runtime.get("is_colab") else "0"
+    require_drive = str(
+        os.environ.get("SIEDLER_REQUIRE_DRIVE", require_drive_default)
+    ).strip().lower() in {"1", "true", "yes", "on"}
+
+    if runtime.get("is_colab") and require_drive and drive_root is None:
+        raise RuntimeError(
+            "Google Drive ist nicht verfuegbar. "
+            "Bitte in Colab Drive mounten oder SIEDLER_REQUIRE_DRIVE=0 setzen."
+        )
+
+    if drive_root is not None:
+        if path.is_absolute():
+            final_path = path
+        else:
+            folder_name = path.name if path.name not in {"", "."} else "siedler_training"
+            final_path = drive_root / folder_name
+        final_path.mkdir(parents=True, exist_ok=True)
+        return str(final_path)
+
+    if path.is_absolute():
+        final_path = path
+    elif runtime.get("is_colab"):
+        final_path = Path("/content") / path
+    else:
+        final_path = Path.cwd() / path
+    final_path.mkdir(parents=True, exist_ok=True)
+    return str(final_path)
+
+
+def _infer_colab_preset(runtime: Dict[str, object]) -> Dict[str, object]:
+    gpu_name = str(runtime.get("gpu_name") or "").upper()
+    cpu_count = int(runtime.get("cpu_count") or 1)
+    cpu_cap_envs = max(1, cpu_count - 1)
+
+    if "H100" in gpu_name:
+        preset = {
+            "name": "h100",
+            "n_envs": 10,
+            "spatial_size": 192,
+            "n_steps": 4096,
+            "batch_size": 1024,
+            "n_epochs": 6,
+            "learning_rate": 0.0002,
+            "ent_coef": 0.012,
+        }
+    elif "A100" in gpu_name:
+        preset = {
+            "name": "a100",
+            "n_envs": 8,
+            "spatial_size": 160,
+            "n_steps": 3072,
+            "batch_size": 512,
+            "n_epochs": 6,
+            "learning_rate": 0.00025,
+            "ent_coef": 0.015,
+        }
+    elif "L4" in gpu_name or "V100" in gpu_name:
+        preset = {
+            "name": "l4_v100",
+            "n_envs": 6,
+            "spatial_size": 128,
+            "n_steps": 3072,
+            "batch_size": 384,
+            "n_epochs": 6,
+            "learning_rate": 0.00025,
+            "ent_coef": 0.015,
+        }
+    elif "T4" in gpu_name or "P100" in gpu_name:
+        preset = {
+            "name": "t4_p100",
+            "n_envs": 4,
+            "spatial_size": 128,
+            "n_steps": 2048,
+            "batch_size": 256,
+            "n_epochs": 6,
+            "learning_rate": 0.00025,
+            "ent_coef": 0.02,
+        }
+    elif bool(runtime.get("has_cuda")):
+        preset = {
+            "name": "generic_cuda",
+            "n_envs": 4,
+            "spatial_size": 128,
+            "n_steps": 2048,
+            "batch_size": 256,
+            "n_epochs": 6,
+            "learning_rate": 0.00025,
+            "ent_coef": 0.02,
+        }
+    else:
+        preset = {
+            "name": "cpu_only",
+            "n_envs": 2,
+            "spatial_size": 96,
+            "n_steps": 1024,
+            "batch_size": 128,
+            "n_epochs": 4,
+            "learning_rate": 0.0003,
+            "ent_coef": 0.02,
+        }
+
+    preset["n_envs"] = int(max(1, min(int(preset["n_envs"]), cpu_cap_envs)))
+    return preset
+
+
+def _auto_tune_for_colab(
+    config: Dict[str, object],
+    explicit_config: Optional[Dict[str, object]] = None,
+) -> Dict[str, object]:
+    """
+    Auto-Tuning fuer Colab Pro/Pro+.
+
+    - TPU wird nicht empfohlen (SB3/MaskablePPO ist auf CUDA ausgelegt).
+    - GPU-Preset steuert n_envs/spatial_size und zentrale PPO-Parameter.
+    - Explizit gesetzte Werte in explicit_config bleiben unberuehrt.
+    """
+    disable_auto = str(os.environ.get("SIEDLER_DISABLE_AUTO_TUNE", "")).strip().lower()
+    if disable_auto in {"1", "true", "yes", "on"}:
+        return {"enabled": False, "reason": "disabled_by_env"}
+
+    runtime = _detect_runtime_info()
+    preset = _infer_colab_preset(runtime)
+    explicit_keys = set((explicit_config or {}).keys())
+
+    # Setze Runtime-Defaults nur wenn User/Notebook nicht bereits gesetzt hat.
+    if not os.environ.get("SIEDLER_NUM_ENVS"):
+        os.environ["SIEDLER_NUM_ENVS"] = str(preset["n_envs"])
+    if not os.environ.get("SIEDLER_SPATIAL_SIZE"):
+        os.environ["SIEDLER_SPATIAL_SIZE"] = str(preset["spatial_size"])
+
+    for key in ("n_steps", "batch_size", "n_epochs", "learning_rate", "ent_coef"):
+        if key in explicit_keys:
+            continue
+        config[key] = preset[key]
+
+    # Sicherheitscheck: Batch-Size darf Rollout-Batch nicht uebersteigen.
+    n_envs = int(os.environ.get("SIEDLER_NUM_ENVS", preset["n_envs"]))
+    n_steps = int(config.get("n_steps", preset["n_steps"]))
+    rollout = max(1, n_envs * n_steps)
+    batch_size = int(config.get("batch_size", preset["batch_size"]))
+    if batch_size > rollout:
+        # Naechste sinnvolle Potenz-von-2 unterhalb des Rollouts.
+        new_batch = 1
+        while new_batch * 2 <= rollout:
+            new_batch *= 2
+        config["batch_size"] = max(32, new_batch)
+
+    return {
+        "enabled": True,
+        "runtime": runtime,
+        "preset": preset,
+        "effective_n_envs": int(os.environ.get("SIEDLER_NUM_ENVS", preset["n_envs"])),
+        "effective_spatial_size": int(os.environ.get("SIEDLER_SPATIAL_SIZE", preset["spatial_size"])),
+    }
+
+
+def _select_extractor_dims() -> Dict[str, int]:
+    if not th.cuda.is_available():
+        return {"cnn_out_dim": 128, "vector_out_dim": 256}
+    mem_gb = float(th.cuda.get_device_properties(0).total_memory) / (1024 ** 3)
+    if mem_gb >= 60:
+        return {"cnn_out_dim": 224, "vector_out_dim": 384}
+    if mem_gb >= 30:
+        return {"cnn_out_dim": 192, "vector_out_dim": 320}
+    if mem_gb >= 20:
+        return {"cnn_out_dim": 160, "vector_out_dim": 288}
+    return {"cnn_out_dim": 128, "vector_out_dim": 256}
+
+
+def print_runtime_recommendation():
+    runtime = _detect_runtime_info()
+    preset = _infer_colab_preset(runtime)
+    drive_available = Path("/content/drive/MyDrive").exists()
+
+    print("=" * 60)
+    print("COLAB RUNTIME EMPFEHLUNG")
+    print("=" * 60)
+    print("Hardware-Accelerator: GPU (nicht TPU)")
+    if runtime.get("has_cuda"):
+        print(f"Erkannte GPU: {runtime.get('gpu_name')} ({float(runtime.get('gpu_mem_gb') or 0.0):.1f} GB)")
+    else:
+        print("Erkannte GPU: keine (CPU-Only Runtime)")
+    if runtime.get("has_tpu"):
+        print("TPU erkannt, aber SB3/MaskablePPO in diesem Projekt ist fuer CUDA optimiert.")
+    print(f"Empfohlenes Preset: {preset.get('name')}")
+    print(f"Empfohlenes n_envs: {preset.get('n_envs')}")
+    print(f"Empfohlene Spatial-Size: {preset.get('spatial_size')}")
+    if runtime.get("is_colab"):
+        print(f"Google Drive gemountet: {'ja' if drive_available else 'nein'}")
+        if not drive_available:
+            print("Hinweis: Drive wird beim Trainingsstart automatisch gemountet.")
+    print("=" * 60)
 
 class ScharfschuetzenCallback(BaseCallback):
     """Custom Callback zum Tracken des Trainingsfortschritts"""
@@ -76,24 +373,30 @@ class ScharfschuetzenCallback(BaseCallback):
         self.episode_rewards = []
         self.episode_scharfschuetzen = []
 
+    def _get_env_attr(self, name, default=None):
+        if hasattr(self.training_env, "get_attr"):
+            try:
+                return self.training_env.get_attr(name)[0]
+            except Exception:
+                pass
+        if hasattr(self.training_env, "envs"):
+            env = self.training_env.envs[0]
+            if hasattr(env, "unwrapped"):
+                env = env.unwrapped
+            return getattr(env, name, default)
+        return default
+
     def _on_step(self) -> bool:
         if self.n_calls % self.check_freq == 0:
-            # Hole Infos aus dem Environment
-            if hasattr(self.training_env, 'envs'):
-                env = self.training_env.envs[0]
-                if hasattr(env, 'unwrapped'):
-                    env = env.unwrapped
+            scharfschuetzen = self._get_env_attr("scharfschuetzen", 0)
 
-                scharfschuetzen = getattr(env, 'scharfschuetzen', 0)
+            if scharfschuetzen > self.best_scharfschuetzen:
+                self.best_scharfschuetzen = scharfschuetzen
+                if self.verbose > 0:
+                    print(f"Neuer Rekord: {scharfschuetzen} Scharfschuetzen!")
 
-                if scharfschuetzen > self.best_scharfschuetzen:
-                    self.best_scharfschuetzen = scharfschuetzen
-                    if self.verbose > 0:
-                        print(f"Neuer Rekord: {scharfschuetzen} Scharfschützen!")
-
-            # Log zum TensorBoard
             if self.verbose > 0 and self.n_calls % (self.check_freq * 10) == 0:
-                print(f"Step {self.n_calls}: Best Scharfschützen = {self.best_scharfschuetzen}")
+                print(f"Step {self.n_calls}: Best Scharfschuetzen = {self.best_scharfschuetzen}")
 
         return True
 
@@ -103,23 +406,24 @@ class ScharfschuetzenCallback(BaseCallback):
 # =============================================================================
 
 TRAINING_CONFIG = {
-    # Timesteps - ERHÖHT für sparse rewards (nur Scharfschützen am Ende)
-    "total_timesteps": 5_000_000,  # 5M Steps für sparse rewards
+    # Timesteps - ERHÃ–HT fÃ¼r sparse rewards (nur ScharfschÃ¼tzen am Ende)
+    "total_timesteps": 5_000_000,  # 5M Steps fÃ¼r sparse rewards
 
     # Modell-Hyperparameter
     "learning_rate": 0.0003,
     "n_steps": 2048,
     "batch_size": 64,
     "n_epochs": 10,
-    "gamma": 0.995,  # Höher für langfristige Planung (30 Min Episode)
+    "gamma": 0.995,  # HÃ¶her fÃ¼r langfristige Planung (30 Min Episode)
     "gae_lambda": 0.95,
     "clip_range": 0.2,
-    "ent_coef": 0.02,  # Exploration für 188 Actions
+    "ent_coef": 0.02,  # Exploration fÃ¼r 188 Actions
 
     # Netzwerk
     "policy_kwargs": {
-        "net_arch": [512, 256, 256],
+        "net_arch": [1024, 512, 512],
     },
+    "auto_scale_arch": True,
 
     # Checkpoints
     "checkpoint_freq": 250_000,
@@ -127,18 +431,107 @@ TRAINING_CONFIG = {
 }
 
 
+
+def _validate_runtime_files():
+    """Prueft, ob alle benoetigten Projektdateien verfuegbar sind."""
+    root_dir = Path(__file__).resolve().parent
+    data_dir = Path(os.environ.get("SIEDLER_DATA_DIR", str(root_dir)))
+
+    required_python = [
+        "environment.py",
+        "multihead_policy.py",
+        "map_config_wintersturm.py",
+        "wood_zones_config.py",
+        "production_system.py",
+        "worker_simulation.py",
+        "pathfinding.py",
+    ]
+    missing = [name for name in required_python if not (root_dir / name).exists()]
+
+    walkable_candidates = [
+        data_dir / "player1_walkable_515.npy",
+        data_dir / "player1_walkable.npy",
+    ]
+    if not any(path.exists() for path in walkable_candidates):
+        missing.append(
+            f"player1_walkable_515.npy oder player1_walkable.npy (im Datenordner: {data_dir})"
+        )
+
+    resources_file = data_dir / "player1_resources.json"
+    if not resources_file.exists():
+        missing.append(f"player1_resources.json (im Datenordner: {data_dir})")
+
+    if missing:
+        formatted = "\n".join(f"  - {item}" for item in missing)
+        raise FileNotFoundError(
+            "Fehlende Pflichtdateien fuer Training:\n"
+            f"{formatted}\n\n"
+            "Hinweis: Setze optional SIEDLER_DATA_DIR auf den Ordner mit den Kartendaten."
+        )
+
+
 # =============================================================================
 # TRAINING FUNKTION
 # =============================================================================
 
-def create_env():
-    """Erstellt das Environment mit Action Masking"""
-    env = SiedlerScharfschuetzenEnv(player_id=1)
-    env = ActionMasker(env, lambda e: e.unwrapped.get_action_mask())
-    return env
+def _get_n_envs():
+    env_val = os.environ.get("SIEDLER_NUM_ENVS")
+    if env_val:
+        return max(1, int(env_val))
+    cpu = os.cpu_count() or 1
+    return max(1, min(8, cpu // 2))
 
 
-def train(config: dict = None, save_path: str = "./siedler_model"):
+def _get_spatial_size():
+    size_val = os.environ.get("SIEDLER_SPATIAL_SIZE")
+    if size_val:
+        return max(16, int(size_val))
+    return 128
+
+
+def make_env(
+    rank: int,
+    seed: int = 0,
+    use_spatial_obs: bool = True,
+    spatial_size: int = 128,
+    reward_profile: dict = None,
+):
+    def _init():
+        env = SiedlerScharfschuetzenEnv(
+            player_id=1,
+            use_spatial_obs=use_spatial_obs,
+            spatial_size=spatial_size,
+            reward_profile=reward_profile,
+        )
+        env.reset(seed=seed + rank)
+        return env
+    return _init
+
+
+def create_env(use_spatial_obs: bool = True, spatial_size: int = 128, reward_profile: dict = None):
+    """Erstellt (ggf.) vektorisierte Environments."""
+    n_envs = _get_n_envs()
+    if n_envs > 1:
+        return SubprocVecEnv([
+            make_env(
+                i,
+                use_spatial_obs=use_spatial_obs,
+                spatial_size=spatial_size,
+                reward_profile=reward_profile,
+            )
+            for i in range(n_envs)
+        ])
+    return DummyVecEnv([
+        make_env(
+            0,
+            use_spatial_obs=use_spatial_obs,
+            spatial_size=spatial_size,
+            reward_profile=reward_profile,
+        )
+    ])
+
+
+def train(config: dict = None, save_path: str = "./siedler_model", profile_name: str = None):
     """
     Trainiert das Modell
 
@@ -149,23 +542,90 @@ def train(config: dict = None, save_path: str = "./siedler_model"):
     Returns:
         Trainiertes Modell
     """
-    if config is None:
-        config = TRAINING_CONFIG
+    custom_config = dict(config or {})
+    config, profile = build_training_config(
+        TRAINING_CONFIG,
+        custom_config=custom_config,
+        profile_name=profile_name,
+    )
+    tuning_info = _auto_tune_for_colab(config, explicit_config=custom_config)
+    reward_profile = profile["reward_profile"]
+    save_path = _resolve_training_save_path(save_path)
+
+    _validate_runtime_files()
 
     print("=" * 60)
-    print("Siedler 5 - Scharfschützen Training")
+    print("Siedler 5 - ScharfschÃ¼tzen Training")
     print("=" * 60)
     print(f"Timesteps: {config['total_timesteps']:,}")
     print(f"Learning Rate: {config['learning_rate']}")
     print(f"Batch Size: {config['batch_size']}")
+    print(f"n_steps: {config['n_steps']}")
+    print(f"Save Path: {save_path}")
+    print(f"Profil: {profile['name']} ({profile['description']})")
+    print(
+        "Reward-Profil: terminal_scharfschuetzen_bonus="
+        f"{reward_profile['terminal_scharfschuetzen_bonus']}, "
+        "recruit_scharfschuetzen_bonus="
+        f"{reward_profile['recruit_scharfschuetzen_bonus']}"
+    )
+    device = "cuda" if th.cuda.is_available() else "cpu"
+    print(f"Device: {device}")
+    if tuning_info.get("enabled"):
+        runtime = tuning_info.get("runtime", {})
+        preset = tuning_info.get("preset", {})
+        print(
+            "Auto-Tuning: "
+            f"preset={preset.get('name')} "
+            f"gpu={runtime.get('gpu_name')} "
+            f"vram={float(runtime.get('gpu_mem_gb') or 0.0):.1f}GB "
+            f"n_envs={tuning_info.get('effective_n_envs')} "
+            f"spatial={tuning_info.get('effective_spatial_size')}"
+        )
+        if runtime.get("has_tpu"):
+            print("Hinweis: TPU erkannt, aber dieses Projekt ist fuer CUDA/GPU optimiert.")
     print("=" * 60)
 
     # Environment erstellen
-    env = create_env()
-    eval_env = create_env()
+    use_spatial_obs = True
+    spatial_size = _get_spatial_size()
+    env = create_env(
+        use_spatial_obs=use_spatial_obs,
+        spatial_size=spatial_size,
+        reward_profile=reward_profile,
+    )
+    n_envs = getattr(env, "num_envs", 1)
 
-    print(f"\nAction Space: {env.action_space}")
-    print(f"Observation Space: {env.observation_space}")
+    print(f"\nEnvs: {n_envs}")
+    print(f"Action Space: {env.action_space}")
+    if isinstance(env.observation_space, gym.spaces.Dict):
+        print(f"Observation Space: vector={env.observation_space['vector'].shape}, "
+              f"spatial={env.observation_space['spatial'].shape}")
+    else:
+        print(f"Observation Space: {env.observation_space}")
+
+    head_sizes = env.env_method("get_action_head_sizes")[0]
+    phase_dim = env.get_attr("phase_dim")[0]
+    policy_kwargs = dict(config.get("policy_kwargs") or {})
+    if config.get("auto_scale_arch", False):
+        if isinstance(env.observation_space, gym.spaces.Dict):
+            obs_dim = env.observation_space["vector"].shape[0]
+        else:
+            obs_dim = env.observation_space.shape[0]
+        policy_kwargs["net_arch"] = _select_net_arch(obs_dim)
+    policy_kwargs.update({
+        "action_head_sizes": head_sizes,
+        "phase_dim": phase_dim,
+    })
+    if isinstance(env.observation_space, gym.spaces.Dict):
+        extractor_dims = _select_extractor_dims()
+        policy_kwargs.update({
+            "features_extractor_class": SpatialVectorExtractor,
+            "features_extractor_kwargs": {
+                "cnn_out_dim": extractor_dims["cnn_out_dim"],
+                "vector_out_dim": extractor_dims["vector_out_dim"],
+            },
+        })
 
     # Callbacks
     checkpoint_callback = CheckpointCallback(
@@ -178,7 +638,7 @@ def train(config: dict = None, save_path: str = "./siedler_model"):
 
     # Modell erstellen
     model = MaskablePPO(
-        "MlpPolicy",
+        MultiHeadMaskablePolicy,
         env,
         learning_rate=config["learning_rate"],
         n_steps=config["n_steps"],
@@ -188,7 +648,8 @@ def train(config: dict = None, save_path: str = "./siedler_model"):
         gae_lambda=config["gae_lambda"],
         clip_range=config["clip_range"],
         ent_coef=config["ent_coef"],
-        policy_kwargs=config.get("policy_kwargs"),
+        policy_kwargs=policy_kwargs,
+        device=device,
         verbose=1,
         tensorboard_log=f"{save_path}/tensorboard/",
     )
@@ -210,7 +671,7 @@ def train(config: dict = None, save_path: str = "./siedler_model"):
     print(f"\nModell gespeichert: {final_path}")
 
     # Beste Ergebnisse
-    print(f"\nBeste erreichte Scharfschützen: {scharfschuetzen_callback.best_scharfschuetzen}")
+    print(f"\nBeste erreichte ScharfschÃ¼tzen: {scharfschuetzen_callback.best_scharfschuetzen}")
 
     return model
 
@@ -219,7 +680,15 @@ def train(config: dict = None, save_path: str = "./siedler_model"):
 # EVALUATION FUNKTION
 # =============================================================================
 
-def evaluate(model, n_episodes: int = 10, render: bool = False):
+def evaluate(
+    model,
+    n_episodes: int = 10,
+    render: bool = False,
+    use_spatial_obs: bool = True,
+    spatial_size: int = 128,
+    reward_profile: dict = None,
+    profile_name: str = None,
+):
     """
     Evaluiert das trainierte Modell
 
@@ -231,7 +700,14 @@ def evaluate(model, n_episodes: int = 10, render: bool = False):
     Returns:
         Dictionary mit Evaluations-Ergebnissen
     """
-    env = create_env()
+    if reward_profile is None:
+        reward_profile = get_train_profile(profile_name)["reward_profile"]
+    env = SiedlerScharfschuetzenEnv(
+        player_id=1,
+        use_spatial_obs=use_spatial_obs,
+        spatial_size=spatial_size,
+        reward_profile=reward_profile,
+    )
     results = {
         "rewards": [],
         "scharfschuetzen": [],
@@ -245,60 +721,74 @@ def evaluate(model, n_episodes: int = 10, render: bool = False):
         done = False
 
         while not done:
-            action_mask = env.unwrapped.get_action_mask()
+            action_mask = env.get_action_mask()
             action, _ = model.predict(obs, deterministic=True, action_masks=action_mask)
             obs, reward, terminated, truncated, info = env.step(action)
             total_reward += reward
             done = terminated or truncated
 
             if render and episode == 0:
-                env.unwrapped.render()
+                env.render()
 
         # Ergebnisse speichern
         results["rewards"].append(total_reward)
-        results["scharfschuetzen"].append(env.unwrapped.scharfschuetzen)
-        results["times"].append(env.unwrapped.current_time)
-        results["action_histories"].append(env.unwrapped.get_action_history())
+        results["scharfschuetzen"].append(env.scharfschuetzen)
+        results["times"].append(env.current_time)
+        results["action_histories"].append(env.get_action_history())
 
-        print(f"Episode {episode + 1}: Reward={total_reward:.2f}, Scharfschützen={env.unwrapped.scharfschuetzen}")
+        print(f"Episode {episode + 1}: Reward={total_reward:.2f}, ScharfschÃ¼tzen={env.scharfschuetzen}")
 
     # Zusammenfassung
     print("\n" + "=" * 60)
     print("EVALUATION ZUSAMMENFASSUNG")
     print("=" * 60)
-    print(f"Durchschnittliche Scharfschützen: {np.mean(results['scharfschuetzen']):.2f}")
-    print(f"Maximum Scharfschützen: {np.max(results['scharfschuetzen'])}")
+    print(f"Durchschnittliche ScharfschÃ¼tzen: {np.mean(results['scharfschuetzen']):.2f}")
+    print(f"Maximum ScharfschÃ¼tzen: {np.max(results['scharfschuetzen'])}")
     print(f"Durchschnittlicher Reward: {np.mean(results['rewards']):.2f}")
 
     return results
 
 
 # =============================================================================
-# EXPORT FÜR ECHTES SPIEL
+# EXPORT FÃœR ECHTES SPIEL
 # =============================================================================
 
-def export_strategy(model, save_path: str = "./strategy_export.json"):
+def export_strategy(
+    model,
+    save_path: str = "./strategy_export.json",
+    use_spatial_obs: bool = True,
+    spatial_size: int = 128,
+    reward_profile: dict = None,
+    profile_name: str = None,
+):
     """
-    Exportiert die beste Strategie für das echte Spiel
+    Exportiert die beste Strategie fÃ¼r das echte Spiel
 
     Args:
         model: Trainiertes Modell
-        save_path: Pfad für den Export
+        save_path: Pfad fÃ¼r den Export
     """
-    env = create_env()
+    if reward_profile is None:
+        reward_profile = get_train_profile(profile_name)["reward_profile"]
+    env = SiedlerScharfschuetzenEnv(
+        player_id=1,
+        use_spatial_obs=use_spatial_obs,
+        spatial_size=spatial_size,
+        reward_profile=reward_profile,
+    )
     obs, _ = env.reset()
     done = False
 
     strategy = {
         "map": "EMS Wintersturm",
         "player": 1,
-        "goal": "Maximale Scharfschützen in 30 Minuten",
+        "goal": "Maximale ScharfschÃ¼tzen in 30 Minuten",
         "actions": [],
         "building_positions": [],
     }
 
     while not done:
-        action_mask = env.unwrapped.get_action_mask()
+        action_mask = env.get_action_mask()
         action, _ = model.predict(obs, deterministic=True, action_masks=action_mask)
         obs, reward, terminated, truncated, info = env.step(action)
         done = terminated or truncated
@@ -306,22 +796,22 @@ def export_strategy(model, save_path: str = "./strategy_export.json"):
         # Nur relevante Aktionen speichern (keine "wait" Aktionen)
         if info.get("action_name") != "wait":
             strategy["actions"].append({
-                "time_seconds": env.unwrapped.current_time,
-                "time_formatted": f"{env.unwrapped.current_time // 60}:{env.unwrapped.current_time % 60:02d}",
+                "time_seconds": env.current_time,
+                "time_formatted": f"{env.current_time // 60}:{env.current_time % 60:02d}",
                 "action": info.get("action_name"),
             })
 
-    strategy["building_positions"] = env.unwrapped.get_building_positions()
-    strategy["final_scharfschuetzen"] = env.unwrapped.scharfschuetzen
-    strategy["final_resources"] = dict(env.unwrapped.resources)
-    strategy["final_buildings"] = {k: v for k, v in env.unwrapped.buildings.items() if v > 0}
+    strategy["building_positions"] = env.get_building_positions()
+    strategy["final_scharfschuetzen"] = env.scharfschuetzen
+    strategy["final_resources"] = dict(env.resources)
+    strategy["final_buildings"] = {k: v for k, v in env.buildings.items() if v > 0}
 
     # Speichern
     with open(save_path, 'w', encoding='utf-8') as f:
         json.dump(strategy, f, indent=2, ensure_ascii=False)
 
     print(f"Strategie exportiert: {save_path}")
-    print(f"Scharfschützen erreicht: {strategy['final_scharfschuetzen']}")
+    print(f"ScharfschÃ¼tzen erreicht: {strategy['final_scharfschuetzen']}")
     print(f"Anzahl Aktionen: {len(strategy['actions'])}")
 
     return strategy
@@ -332,8 +822,12 @@ def export_strategy(model, save_path: str = "./strategy_export.json"):
 # =============================================================================
 
 if __name__ == "__main__":
-    # Pfad für Modelle
-    SAVE_PATH = "./siedler_training"
+    # Pfad fÃ¼r Modelle
+    SAVE_PATH = _resolve_training_save_path("./siedler_training")
+    active_profile = get_train_profile()
+
+    print_runtime_recommendation()
+    print(f"Aktiver Save-Pfad: {SAVE_PATH}")
 
     # Erstelle Ordner falls nicht vorhanden
     os.makedirs(SAVE_PATH, exist_ok=True)
@@ -345,7 +839,8 @@ if __name__ == "__main__":
 
     model = train(
         config=TRAINING_CONFIG,
-        save_path=SAVE_PATH
+        save_path=SAVE_PATH,
+        profile_name=active_profile["name"],
     )
 
     # Evaluation
@@ -353,21 +848,39 @@ if __name__ == "__main__":
     print("PHASE 2: EVALUATION")
     print("=" * 60 + "\n")
 
-    results = evaluate(model, n_episodes=5, render=True)
+    results = evaluate(
+        model,
+        n_episodes=5,
+        render=True,
+        use_spatial_obs=True,
+        spatial_size=_get_spatial_size(),
+        reward_profile=active_profile["reward_profile"],
+    )
 
     # Export
     print("\n" + "=" * 60)
     print("PHASE 3: STRATEGIE EXPORT")
     print("=" * 60 + "\n")
 
-    strategy = export_strategy(model, save_path=f"{SAVE_PATH}/strategy.json")
+    strategy = export_strategy(
+        model,
+        save_path=f"{SAVE_PATH}/strategy.json",
+        use_spatial_obs=True,
+        spatial_size=_get_spatial_size(),
+        reward_profile=active_profile["reward_profile"],
+    )
 
     print("\n" + "=" * 60)
     print("TRAINING ABGESCHLOSSEN!")
     print("=" * 60)
     print(f"\nModell gespeichert in: {SAVE_PATH}")
     print(f"Strategie exportiert in: {SAVE_PATH}/strategy.json")
-    print("\nNächste Schritte:")
+    print("\nNÃ¤chste Schritte:")
     print("1. Modell herunterladen")
-    print("2. strategy.json für das echte Spiel nutzen")
-    print("3. Game-Bridge ausführen")
+    print("2. strategy.json fÃ¼r das echte Spiel nutzen")
+    print("3. Game-Bridge ausfÃ¼hren")
+
+
+
+
+

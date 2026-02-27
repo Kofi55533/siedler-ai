@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+import runpy
 
 
 def run(cmd, cwd=None):
@@ -27,6 +28,7 @@ REPO_BRANCH = "main"
 DRIVE_ZIP = "/content/drive/MyDrive/siedler_ai_colab_bundle.zip"
 PROJECT_DIR = "/content/siedler_ai"
 SAVE_DIR = "/content/drive/MyDrive/siedler_training"
+DATA_DIR = "/content/drive/MyDrive/siedler_data"
 
 
 # 2) MOUNT GOOGLE DRIVE
@@ -69,6 +71,9 @@ if len(entries) == 1 and entries[0].is_dir() and SOURCE_MODE == "zip":
 
 os.chdir(PROJECT_DIR)
 print(f"Project dir: {PROJECT_DIR}")
+Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
+os.environ["SIEDLER_DATA_DIR"] = DATA_DIR
+print(f"Data dir: {DATA_DIR}")
 
 
 # 4) INSTALL DEPENDENCIES
@@ -76,7 +81,41 @@ for package in ("gymnasium", "stable-baselines3", "sb3-contrib", "tensorboard"):
     run([sys.executable, "-m", "pip", "install", "-q", package])
 
 
-# 5) FORCE SAVE TO DRIVE
+# 5) PREFLIGHT CHECK (clear message before long training start)
+required_files = [
+    "colab_training.py",
+    "environment.py",
+    "multihead_policy.py",
+    "training_profiles.py",
+    "map_config_wintersturm.py",
+    "wood_zones_config.py",
+    "production_system.py",
+    "worker_simulation.py",
+    "pathfinding.py",
+]
+walkable_candidates = ["player1_walkable_515.npy", "player1_walkable.npy"]
+missing = [name for name in required_files if not Path(name).exists()]
+
+resources_in_project = Path("player1_resources.json").exists()
+resources_in_data = (Path(DATA_DIR) / "player1_resources.json").exists()
+if not (resources_in_project or resources_in_data):
+    missing.append("player1_resources.json (project root or DATA_DIR)")
+
+walkable_in_project = any(Path(name).exists() for name in walkable_candidates)
+walkable_in_data = any((Path(DATA_DIR) / name).exists() for name in walkable_candidates)
+if not (walkable_in_project or walkable_in_data):
+    missing.append("player1_walkable_515.npy or player1_walkable.npy (project root or DATA_DIR)")
+
+if missing:
+    raise FileNotFoundError(
+        "Missing required files in project:\n- "
+        + "\n- ".join(missing)
+        + "\n\nIf SOURCE_MODE='git': commit/push missing files first.\n"
+          "For large data files, upload once to DATA_DIR and keep SOURCE_MODE='git'."
+    )
+
+
+# 6) FORCE SAVE TO DRIVE
 Path(SAVE_DIR).mkdir(parents=True, exist_ok=True)
 os.environ["SIEDLER_SAVE_DIR"] = SAVE_DIR
 os.environ["SIEDLER_REQUIRE_DRIVE"] = "1"
@@ -90,6 +129,7 @@ print(f"Model checkpoints/final model will be saved to: {SAVE_DIR}")
 print(f"Code source mode: {SOURCE_MODE}")
 
 
-# 6) START TRAINING
-run([sys.executable, "colab_training.py"])
-
+# 7) START TRAINING
+# Run in-process so Colab shows the real traceback directly.
+print(f"$ {sys.executable} colab_training.py")
+runpy.run_path("colab_training.py", run_name="__main__")

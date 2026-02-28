@@ -53,6 +53,8 @@ import json
 import inspect
 import numpy as np
 import time
+import math
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
@@ -370,12 +372,29 @@ def print_runtime_recommendation():
 class ScharfschuetzenCallback(BaseCallback):
     """Custom Callback zum Tracken des Trainingsfortschritts"""
 
-    def __init__(self, check_freq: int = 1000, verbose: int = 1):
+    def __init__(
+        self,
+        check_freq: int = 1000,
+        status_every_sec: int = 5,
+        compact_status: bool = True,
+        status_bar_width: int = 24,
+        verbose: int = 1,
+    ):
         super().__init__(verbose)
         self.check_freq = check_freq
+        self.status_every_sec = max(1, int(status_every_sec))
+        self._requested_compact_status = bool(compact_status)
+        self._tty_capable = bool(hasattr(sys.stdout, "isatty") and sys.stdout.isatty())
+        # In Colab/Subprocess ist carriage-return oft unzuverlaessig -> automatisch Zeilenmodus.
+        self.compact_status = bool(self._requested_compact_status and self._tty_capable)
+        self.status_bar_width = max(10, int(status_bar_width))
         self.best_scharfschuetzen = 0
         self.episode_rewards = []
         self.episode_scharfschuetzen = []
+        self._train_start_time = None
+        self._last_status_time = None
+        self._last_status_steps = 0
+        self._last_status_line_len = 0
 
     def _get_env_attr(self, name, default=None):
         if hasattr(self.training_env, "get_attr"):
@@ -390,7 +409,103 @@ class ScharfschuetzenCallback(BaseCallback):
             return getattr(env, name, default)
         return default
 
+    def _on_training_start(self) -> None:
+        now = time.perf_counter()
+        self._train_start_time = now
+        self._last_status_time = now
+        self._last_status_steps = int(self.num_timesteps)
+        if self.verbose > 0 and self._requested_compact_status and not self._tty_capable:
+            print("Status-Ausgabe: Zeilenmodus (Colab/Subprocess-kompatibel).")
+
+    @staticmethod
+    def _format_seconds(total_seconds: float) -> str:
+        sec = max(0, int(total_seconds))
+        h = sec // 3600
+        m = (sec % 3600) // 60
+        s = sec % 60
+        return f"{h:02d}:{m:02d}:{s:02d}"
+
+    def _render_status_line(
+        self,
+        total_steps: int,
+        target_steps: int,
+        inst_fps: float,
+        avg_fps: float,
+        eta_sec: float,
+        remaining_steps: int,
+    ) -> str:
+        bar_width = self.status_bar_width
+        if target_steps > 0:
+            pct_ratio = max(0.0, min(1.0, float(total_steps) / float(target_steps)))
+            pct = 100.0 * pct_ratio
+            filled = int(round(bar_width * pct_ratio))
+            bar = "-" * filled + " " * max(0, bar_width - filled)
+            progress = f"{total_steps:,}/{target_steps:,}"
+        else:
+            pct = 0.0
+            bar = "-" * bar_width
+            progress = f"{total_steps:,}"
+        eta_text = self._format_seconds(eta_sec) if math.isfinite(eta_sec) else "--:--:--"
+        return (
+            "[TRAIN] "
+            f"[{bar}] "
+            f"{pct:5.1f}% | "
+            f"fps={inst_fps:6.1f} | "
+            f"avg={avg_fps:6.1f} | "
+            f"left={remaining_steps:,} | "
+            f"eta={eta_text} | "
+            f"steps={progress}"
+        )
+
+    def _maybe_print_runtime_status(self) -> None:
+        if self.verbose <= 0:
+            return
+        now = time.perf_counter()
+        if self._last_status_time is None or self._train_start_time is None:
+            self._on_training_start()
+            return
+
+        elapsed_since_last = now - self._last_status_time
+        if elapsed_since_last < self.status_every_sec:
+            return
+
+        total_steps = int(self.num_timesteps)
+        step_delta = max(0, total_steps - self._last_status_steps)
+        inst_fps = step_delta / max(1e-6, elapsed_since_last)
+
+        elapsed_total = max(1e-6, now - self._train_start_time)
+        avg_fps = total_steps / elapsed_total
+
+        target_steps = int(getattr(self.model, "_total_timesteps", 0) or 0)
+        if target_steps > 0:
+            remaining_steps = max(0, target_steps - total_steps)
+            eta_sec = remaining_steps / max(1e-6, avg_fps)
+        else:
+            remaining_steps = 0
+            eta_sec = float("inf")
+
+        line = self._render_status_line(
+            total_steps=total_steps,
+            target_steps=target_steps,
+            inst_fps=inst_fps,
+            avg_fps=avg_fps,
+            eta_sec=eta_sec,
+            remaining_steps=remaining_steps,
+        )
+
+        if self.compact_status:
+            clear_pad = " " * max(0, self._last_status_line_len - len(line))
+            print(f"\r{line}{clear_pad}", end="", flush=True)
+            self._last_status_line_len = len(line)
+        else:
+            print(line)
+
+        self._last_status_time = now
+        self._last_status_steps = total_steps
+
     def _on_step(self) -> bool:
+        self._maybe_print_runtime_status()
+
         if self.n_calls % self.check_freq == 0:
             scharfschuetzen = self._get_env_attr("scharfschuetzen", 0)
 
@@ -403,6 +518,10 @@ class ScharfschuetzenCallback(BaseCallback):
                 print(f"Step {self.n_calls}: Best Scharfschuetzen = {self.best_scharfschuetzen}")
 
         return True
+
+    def _on_training_end(self) -> None:
+        if self.compact_status and self.verbose > 0:
+            print("")
 
 
 # =============================================================================
@@ -682,11 +801,16 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     print(f"n_steps: {config['n_steps']}")
     print(f"Save Path: {save_path}")
     print(f"Profil: {profile['name']} ({profile['description']})")
+    terminal_dependency_bonus = float(reward_profile.get("terminal_dependency_bonus", 0.0))
+    terminal_bonus = float(reward_profile.get("terminal_recruitable_bonus", 0.0))
+    terminal_potential_bonus = float(reward_profile.get("terminal_potential_bonus_per_unit", 0.0))
     print(
-        "Reward-Profil: terminal_scharfschuetzen_bonus="
-        f"{reward_profile['terminal_scharfschuetzen_bonus']}, "
-        "recruit_scharfschuetzen_bonus="
-        f"{reward_profile['recruit_scharfschuetzen_bonus']}"
+        "Reward-Profil: terminal_dependency_bonus="
+        f"{terminal_dependency_bonus}, "
+        "terminal_recruitable_bonus="
+        f"{terminal_bonus}, "
+        "terminal_potential_bonus_per_unit="
+        f"{terminal_potential_bonus}"
     )
     device = "cuda" if th.cuda.is_available() else "cpu"
     print(f"Device: {device}")
@@ -771,7 +895,17 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         name_prefix="siedler_checkpoint"
     )
 
-    scharfschuetzen_callback = ScharfschuetzenCallback(check_freq=1000)
+    status_every_sec = max(1, int(os.environ.get("SIEDLER_STATUS_EVERY_SEC", "5")))
+    status_bar_width = max(10, int(os.environ.get("SIEDLER_STATUS_BAR_WIDTH", "24")))
+    compact_status = str(os.environ.get("SIEDLER_COMPACT_STATUS", "0")).strip().lower() not in {
+        "0", "false", "no", "off"
+    }
+    scharfschuetzen_callback = ScharfschuetzenCallback(
+        check_freq=1000,
+        status_every_sec=status_every_sec,
+        compact_status=compact_status,
+        status_bar_width=status_bar_width,
+    )
 
     # Modell erstellen
     model = model_cls(

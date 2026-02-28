@@ -15,8 +15,9 @@ TRAIN_PROFILES = {
         "description": "Historisches Verhalten (alte Reward-Gewichte).",
         "config_overrides": {},
         "reward_profile": {
-            "terminal_scharfschuetzen_bonus": 20.0,
-            "recruit_scharfschuetzen_bonus": 10.0,
+            "terminal_dependency_bonus": 22.0,
+            "terminal_recruitable_bonus": 120.0,
+            "terminal_potential_bonus_per_unit": 70.0,
         },
     },
     "balanced": {
@@ -28,8 +29,9 @@ TRAIN_PROFILES = {
             "batch_size": 128,
         },
         "reward_profile": {
-            "terminal_scharfschuetzen_bonus": 30.0,
-            "recruit_scharfschuetzen_bonus": 3.0,
+            "terminal_dependency_bonus": 20.0,
+            "terminal_recruitable_bonus": 150.0,
+            "terminal_potential_bonus_per_unit": 80.0,
         },
     },
     "aggressive": {
@@ -40,12 +42,13 @@ TRAIN_PROFILES = {
             "ent_coef": 0.02,
         },
         "reward_profile": {
-            "terminal_scharfschuetzen_bonus": 22.0,
-            "recruit_scharfschuetzen_bonus": 8.0,
+            "terminal_dependency_bonus": 26.0,
+            "terminal_recruitable_bonus": 100.0,
+            "terminal_potential_bonus_per_unit": 60.0,
         },
     },
     "sparse": {
-        "description": "Nahe am Endziel: fast nur terminale Bewertung.",
+        "description": "Nahe am Endziel: starker Terminal-Bonus, wenig dichte Shaping-Rewards.",
         "config_overrides": {
             "learning_rate": 0.0002,
             "gamma": 0.999,
@@ -53,8 +56,9 @@ TRAIN_PROFILES = {
             "batch_size": 128,
         },
         "reward_profile": {
-            "terminal_scharfschuetzen_bonus": 35.0,
-            "recruit_scharfschuetzen_bonus": 0.0,
+            "terminal_dependency_bonus": 10.0,
+            "terminal_recruitable_bonus": 320.0,
+            "terminal_potential_bonus_per_unit": 120.0,
         },
     },
 }

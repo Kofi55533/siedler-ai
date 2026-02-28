@@ -585,6 +585,8 @@ if TRAIN_MODE == "fast_train":
     os.environ.setdefault("SIEDLER_TURBO_FPS", "1")
     os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "1")
     os.environ.setdefault("SIEDLER_USE_SPATIAL", "0")
+    os.environ.setdefault("SIEDLER_RUNTIME_STATUS", "0")
+    os.environ.setdefault("SIEDLER_SB3_VERBOSE", "0")
     # Max-FPS-Default: n_envs automatisch auf dieser Runtime benchmarken.
     os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "1")
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "0")
@@ -595,6 +597,8 @@ else:
     os.environ.setdefault("SIEDLER_TURBO_FPS", "0")
     os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "0")
     os.environ.setdefault("SIEDLER_USE_SPATIAL", "1")
+    os.environ.setdefault("SIEDLER_RUNTIME_STATUS", "1")
+    os.environ.setdefault("SIEDLER_SB3_VERBOSE", "1")
     os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "1")
     os.environ.setdefault("SIEDLER_TENSORBOARD", "1")
@@ -630,7 +634,7 @@ apply_auto_gpu_overrides()
 # os.environ["SIEDLER_STATUS_BAR_WIDTH"] = "24"  # Breite des Fortschritt-Balkens
 # os.environ["SIEDLER_TRAIN_PROFILE"] = "sparse"
 
-os.environ.setdefault("SIEDLER_STATUS_EVERY_SEC", "5")
+os.environ.setdefault("SIEDLER_STATUS_EVERY_SEC", "30")
 os.environ.setdefault("SIEDLER_COMPACT_STATUS", "0")
 os.environ.setdefault("SIEDLER_STATUS_BAR_WIDTH", "24")
 

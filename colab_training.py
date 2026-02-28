@@ -153,6 +153,23 @@ def _progress_bar_enabled() -> bool:
     return _env_truthy(os.environ.get("SIEDLER_PROGRESS_BAR", "1"))
 
 
+def _runtime_status_enabled() -> bool:
+    raw = os.environ.get("SIEDLER_RUNTIME_STATUS")
+    if raw is not None:
+        return _env_truthy(raw)
+    return _resolve_sim_mode() != "fast_train"
+
+
+def _sb3_verbose_level() -> int:
+    raw = os.environ.get("SIEDLER_SB3_VERBOSE")
+    if raw is not None:
+        try:
+            return max(0, int(raw))
+        except Exception:
+            return 0
+    return 0 if _resolve_sim_mode() == "fast_train" else 1
+
+
 def _prefer_speed_mode() -> bool:
     """
     Turbo-FPS Modus:
@@ -168,9 +185,9 @@ def _prefer_speed_mode() -> bool:
 def _select_net_arch(obs_dim: int):
     if _prefer_speed_mode():
         if obs_dim >= 400:
-            return [768, 384, 256]
-        if obs_dim >= 250:
             return [512, 256, 256]
+        if obs_dim >= 250:
+            return [384, 256, 192]
         return [384, 192, 192]
     if obs_dim >= 400:
         return [1024, 512, 512]
@@ -397,8 +414,8 @@ def _infer_colab_preset(runtime: Dict[str, object]) -> Dict[str, object]:
     if _prefer_speed_mode() and preset["name"] in {"l4_v100", "t4_p100", "generic_cuda"}:
         # Reduziert PPO-Update-Overhead deutlich fuer hoehere effective FPS.
         preset["n_steps"] = 2048
-        preset["batch_size"] = 1024
-        preset["n_epochs"] = 4
+        preset["batch_size"] = 2048
+        preset["n_epochs"] = 2
         preset["learning_rate"] = 0.0003
 
     return preset
@@ -501,11 +518,13 @@ class ScharfschuetzenCallback(BaseCallback):
         status_every_sec: int = 5,
         compact_status: bool = True,
         status_bar_width: int = 24,
+        runtime_status_enabled: bool = True,
         verbose: int = 1,
     ):
         super().__init__(verbose)
         self.check_freq = check_freq
         self.status_every_sec = max(1, int(status_every_sec))
+        self.runtime_status_enabled = bool(runtime_status_enabled)
         self._requested_compact_status = bool(compact_status)
         self._tty_capable = bool(hasattr(sys.stdout, "isatty") and sys.stdout.isatty())
         # In Colab/Subprocess ist carriage-return oft unzuverlaessig -> automatisch Zeilenmodus.
@@ -581,6 +600,8 @@ class ScharfschuetzenCallback(BaseCallback):
         )
 
     def _maybe_print_runtime_status(self) -> None:
+        if not self.runtime_status_enabled:
+            return
         if self.verbose <= 0:
             return
         now = time.perf_counter()
@@ -1058,11 +1079,14 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     compact_status = str(os.environ.get("SIEDLER_COMPACT_STATUS", "0")).strip().lower() not in {
         "0", "false", "no", "off"
     }
+    runtime_status_enabled = _runtime_status_enabled()
     scharfschuetzen_callback = ScharfschuetzenCallback(
         check_freq=1000,
         status_every_sec=status_every_sec,
         compact_status=compact_status,
         status_bar_width=status_bar_width,
+        runtime_status_enabled=runtime_status_enabled,
+        verbose=1 if runtime_status_enabled else 0,
     )
 
     # Modell erstellen oder Resume von Checkpoint
@@ -1107,7 +1131,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
             ent_coef=config["ent_coef"],
             policy_kwargs=policy_kwargs,
             device=device,
-            verbose=1,
+            verbose=_sb3_verbose_level(),
             tensorboard_log=(f"{save_path}/tensorboard/" if tensorboard_enabled else None),
         )
 

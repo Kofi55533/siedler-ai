@@ -16,6 +16,8 @@ New-Item -ItemType Directory -Path $tmpDir | Out-Null
 try {
     $required = @(
         "colab_training.py",
+        "requirements-colab.txt",
+        "smoke_check.py",
         "environment.py",
         "multihead_policy.py",
         "training_profiles.py",
@@ -67,4 +69,3 @@ finally {
         Remove-Item -Path $tmpDir -Recurse -Force
     }
 }
-

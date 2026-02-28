@@ -12,6 +12,40 @@ import sys
 import time
 import zipfile
 
+# Reduce TensorFlow/CUDA log spam in spawned training subprocesses.
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+os.environ.setdefault("PYTHONWARNINGS", "ignore")
+
+
+NOISY_LOG_PATTERNS = (
+    "computation_placer.cc:177",
+    "Unable to register cuDNN factory",
+    "Unable to register cuBLAS factory",
+    "Unable to register cuFFT factory",
+    "WARNING: All log messages before absl::InitializeLog() is called are written to STDERR",
+    "Gym has been unmaintained since 2022",
+    "Please upgrade to Gymnasium",
+    "See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/",
+    "tensorflow/core/platform/cpu_feature_guard.cc",
+    "tensorflow/core/util/port.cc",
+)
+
+
+def _is_noisy_runtime_line(line: str) -> bool:
+    text = str(line or "").strip()
+    if not text:
+        return False
+    return any(pattern in text for pattern in NOISY_LOG_PATTERNS)
+
+
+def _print_filtered_text(text: str):
+    if not text:
+        return
+    for raw_line in str(text).splitlines():
+        if _is_noisy_runtime_line(raw_line):
+            continue
+        print(raw_line)
+
 
 def _env_truthy(value):
     return str(value).strip().lower() in {"1", "true", "yes", "on"}
@@ -53,7 +87,8 @@ def run(cmd, cwd=None, env=None):
     while True:
         line = proc.stdout.readline()
         if line:
-            print(line, end="")
+            if not _is_noisy_runtime_line(line):
+                print(line, end="")
             last_line_ts = time.time()
             continue
 
@@ -145,9 +180,9 @@ def smoke_check_training_imports():
         timeout_sec=180,
     )
     if result.stdout:
-        print(result.stdout)
+        _print_filtered_text(result.stdout)
     if result.stderr:
-        print(result.stderr)
+        _print_filtered_text(result.stderr)
     if result.returncode != 0:
         raise RuntimeError(
             "Preflight import smoke-check failed. "
@@ -299,9 +334,9 @@ def auto_select_fastest_n_envs():
             print(f"Probe timeout for n_envs={n_envs}")
             continue
         if result.stdout:
-            print(result.stdout)
+            _print_filtered_text(result.stdout)
         if result.stderr:
-            print(result.stderr)
+            _print_filtered_text(result.stderr)
 
         if result.returncode != 0:
             print(f"Probe failed for n_envs={n_envs}")
@@ -342,7 +377,7 @@ SOURCE_MODE = "git"
 # Training mode:
 #   "fast_train" -> maximale FPS (weniger Simulations-Treue)
 #   "full_sim"   -> volle Simulations-Treue (langsamer)
-TRAIN_MODE = "full_sim"
+TRAIN_MODE = "fast_train"
 
 REPO_URL = "https://github.com/Kofi55533/siedler-ai.git"
 REPO_BRANCH = "main"
@@ -549,8 +584,8 @@ if TRAIN_MODE == "fast_train":
     os.environ.setdefault("SIEDLER_FAST_TRAIN", "1")
     os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "1")
     os.environ.setdefault("SIEDLER_USE_SPATIAL", "0")
-    # Fuer reproduzierbare Runs standardmaessig aus; bei Bedarf manuell auf 1 setzen.
-    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")
+    # Max-FPS-Default: n_envs automatisch auf dieser Runtime benchmarken.
+    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "1")
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "0")
     os.environ.setdefault("SIEDLER_TENSORBOARD", "0")
     os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "sparse")
@@ -562,8 +597,24 @@ else:
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "1")
     os.environ.setdefault("SIEDLER_TENSORBOARD", "1")
     os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "balanced")
+
+# Robustheit fuer Colab-Disconnects + weniger Overhead nach dem Training.
+os.environ.setdefault("SIEDLER_RESUME", "1")
+os.environ.setdefault("SIEDLER_RUN_EVAL", "0")
+os.environ.setdefault("SIEDLER_RUN_EXPORT", "0")
+os.environ.setdefault("SIEDLER_EVAL_RENDER", "0")
+
+# Fester schneller Startwert (L4): kein erneuter n_envs-Benchmark, direkt mit 6 Envs.
+os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "0"
+os.environ["SIEDLER_NUM_ENVS"] = "6"
 print(f"Simulation mode: {TRAIN_MODE}")
 print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")
+print(f"Resume enabled: {os.environ.get('SIEDLER_RESUME')}")
+print(
+    "Post-train phases: "
+    f"eval={os.environ.get('SIEDLER_RUN_EVAL')} "
+    f"export={os.environ.get('SIEDLER_RUN_EXPORT')}"
+)
 
 # 7b) AUTO GPU PRESET (setzt n_envs/spatial_size passend zur Runtime)
 # Wenn SIEDLER_NUM_ENVS/SIEDLER_SPATIAL_SIZE bereits gesetzt sind, bleiben diese Werte erhalten.

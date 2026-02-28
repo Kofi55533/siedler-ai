@@ -82,13 +82,14 @@ def install_dependencies_robust():
 import os
 import json
 import inspect
+import re
 import numpy as np
 import time
 import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 import torch as th
 
 try:
@@ -260,6 +261,45 @@ def _resolve_training_save_path(requested_path: str = "./siedler_training") -> s
         final_path = Path.cwd() / path
     final_path.mkdir(parents=True, exist_ok=True)
     return str(final_path)
+
+
+def _extract_steps_from_checkpoint_path(path: Path) -> int:
+    """
+    Extrahiert Timesteps aus Dateinamen wie:
+      siedler_checkpoint_250000_steps.zip
+    """
+    match = re.search(r"_(\d+)_steps$", path.stem)
+    if not match:
+        return 0
+    try:
+        return int(match.group(1))
+    except ValueError:
+        return 0
+
+
+def _find_latest_checkpoint(save_path: str) -> Tuple[Optional[str], int]:
+    """
+    Findet den neuesten Checkpoint im Save-Ordner.
+    Rueckgabe: (pfad_oder_none, timesteps_aus_dateiname)
+    """
+    root = Path(save_path)
+    if not root.exists():
+        return None, 0
+
+    candidates = []
+    for ckpt in root.glob("siedler_checkpoint_*_steps.zip"):
+        steps = _extract_steps_from_checkpoint_path(ckpt)
+        try:
+            mtime = ckpt.stat().st_mtime
+        except OSError:
+            mtime = 0.0
+        candidates.append((steps, mtime, ckpt))
+
+    if not candidates:
+        return None, 0
+
+    best_steps, _, best_path = max(candidates, key=lambda item: (item[0], item[1]))
+    return str(best_path), int(best_steps)
 
 
 def _infer_colab_preset(runtime: Dict[str, object]) -> Dict[str, object]:
@@ -864,6 +904,9 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         Trainiertes Modell
     """
     custom_config = dict(config or {})
+    # Guard: Das Basis-Config-Dict soll Profile/Auto-Tuning nicht als "expliziter Override" blockieren.
+    if custom_config == TRAINING_CONFIG:
+        custom_config = {}
     config, profile = build_training_config(
         TRAINING_CONFIG,
         custom_config=custom_config,
@@ -971,10 +1014,17 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         })
 
     # Callbacks
+    checkpoint_freq_steps = max(1, int(config["checkpoint_freq"]))
+    checkpoint_freq_calls = max(1, checkpoint_freq_steps // max(1, int(n_envs)))
     checkpoint_callback = CheckpointCallback(
-        save_freq=config["checkpoint_freq"],
+        save_freq=checkpoint_freq_calls,
         save_path=save_path,
         name_prefix="siedler_checkpoint"
+    )
+    print(
+        "Checkpoint cadence: "
+        f"~{checkpoint_freq_calls * max(1, int(n_envs))} env-steps "
+        f"(callback every {checkpoint_freq_calls} calls)"
     )
 
     status_every_sec = max(1, int(os.environ.get("SIEDLER_STATUS_EVERY_SEC", "5")))
@@ -989,35 +1039,75 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         status_bar_width=status_bar_width,
     )
 
-    # Modell erstellen
-    model = model_cls(
-        policy_cls,
-        env,
-        learning_rate=config["learning_rate"],
-        n_steps=config["n_steps"],
-        batch_size=config["batch_size"],
-        n_epochs=config["n_epochs"],
-        gamma=config["gamma"],
-        gae_lambda=config["gae_lambda"],
-        clip_range=config["clip_range"],
-        ent_coef=config["ent_coef"],
-        policy_kwargs=policy_kwargs,
-        device=device,
-        verbose=1,
-        tensorboard_log=(f"{save_path}/tensorboard/" if tensorboard_enabled else None),
-    )
+    # Modell erstellen oder Resume von Checkpoint
+    resume_enabled = _env_truthy(os.environ.get("SIEDLER_RESUME", "1"))
+    resume_path_raw = str(os.environ.get("SIEDLER_RESUME_PATH", "")).strip()
+    resume_path = None
+    resume_steps = 0
+    if resume_enabled:
+        if resume_path_raw:
+            candidate = Path(resume_path_raw).expanduser()
+            if candidate.exists():
+                resume_path = str(candidate)
+                resume_steps = _extract_steps_from_checkpoint_path(candidate)
+        if resume_path is None:
+            resume_path, resume_steps = _find_latest_checkpoint(save_path)
+
+    model = None
+    if resume_path:
+        try:
+            print(f"Resume: lade Checkpoint {resume_path}")
+            model = model_cls.load(resume_path, env=env, device=device)
+            loaded_steps = int(getattr(model, "num_timesteps", 0) or 0)
+            if loaded_steps > 0:
+                resume_steps = max(resume_steps, loaded_steps)
+            print(f"Resume: checkpoint_steps={resume_steps}")
+        except Exception as exc:
+            print(f"Resume fehlgeschlagen ({exc}); starte neues Modell.")
+            model = None
+            resume_steps = 0
+
+    if model is None:
+        model = model_cls(
+            policy_cls,
+            env,
+            learning_rate=config["learning_rate"],
+            n_steps=config["n_steps"],
+            batch_size=config["batch_size"],
+            n_epochs=config["n_epochs"],
+            gamma=config["gamma"],
+            gae_lambda=config["gae_lambda"],
+            clip_range=config["clip_range"],
+            ent_coef=config["ent_coef"],
+            policy_kwargs=policy_kwargs,
+            device=device,
+            verbose=1,
+            tensorboard_log=(f"{save_path}/tensorboard/" if tensorboard_enabled else None),
+        )
 
     print("\nTraining startet...")
     print("(Checkpoints werden automatisch gespeichert)")
     print("-" * 60)
 
+    configured_total = int(config["total_timesteps"])
+    remaining_timesteps = configured_total
+    if resume_steps > 0:
+        remaining_timesteps = max(0, configured_total - resume_steps)
+        if remaining_timesteps <= 0:
+            print(
+                "Resume-Hinweis: Checkpoint hat bereits >= total_timesteps. "
+                "Ueberspringe weitere Learn-Phase."
+            )
+
     # Training
     learn_kwargs = {
-        "total_timesteps": config["total_timesteps"],
+        "total_timesteps": remaining_timesteps,
         "callback": [checkpoint_callback, scharfschuetzen_callback],
         "progress_bar": progress_bar_enabled,
+        "reset_num_timesteps": False if resume_steps > 0 else True,
     }
-    model.learn(**learn_kwargs)
+    if remaining_timesteps > 0:
+        model.learn(**learn_kwargs)
 
     # Finales Modell speichern
     final_path = f"{save_path}/siedler_final"
@@ -1204,43 +1294,51 @@ if __name__ == "__main__":
     print("=" * 60 + "\n")
 
     model = train(
-        config=TRAINING_CONFIG,
+        config=None,
         save_path=SAVE_PATH,
         profile_name=active_profile["name"],
     )
 
-    # Evaluation
-    print("\n" + "=" * 60)
-    print("PHASE 2: EVALUATION")
-    print("=" * 60 + "\n")
+    run_eval = _env_truthy(os.environ.get("SIEDLER_RUN_EVAL", "0"))
+    run_export = _env_truthy(os.environ.get("SIEDLER_RUN_EXPORT", "0"))
+    eval_render = _env_truthy(os.environ.get("SIEDLER_EVAL_RENDER", "0"))
+    eval_episodes = max(1, int(os.environ.get("SIEDLER_EVAL_EPISODES", "3")))
 
-    results = evaluate(
-        model,
-        n_episodes=5,
-        render=True,
-        use_spatial_obs=use_spatial_obs,
-        spatial_size=spatial_size,
-        reward_profile=active_profile["reward_profile"],
-    )
+    if run_eval:
+        print("\n" + "=" * 60)
+        print("PHASE 2: EVALUATION")
+        print("=" * 60 + "\n")
+        evaluate(
+            model,
+            n_episodes=eval_episodes,
+            render=eval_render,
+            use_spatial_obs=use_spatial_obs,
+            spatial_size=spatial_size,
+            reward_profile=active_profile["reward_profile"],
+        )
+    else:
+        print("\nPHASE 2: EVALUATION (uebersprungen, SIEDLER_RUN_EVAL=0)")
 
-    # Export
-    print("\n" + "=" * 60)
-    print("PHASE 3: STRATEGIE EXPORT")
-    print("=" * 60 + "\n")
-
-    strategy = export_strategy(
-        model,
-        save_path=f"{SAVE_PATH}/strategy.json",
-        use_spatial_obs=use_spatial_obs,
-        spatial_size=spatial_size,
-        reward_profile=active_profile["reward_profile"],
-    )
+    if run_export:
+        print("\n" + "=" * 60)
+        print("PHASE 3: STRATEGIE EXPORT")
+        print("=" * 60 + "\n")
+        export_strategy(
+            model,
+            save_path=f"{SAVE_PATH}/strategy.json",
+            use_spatial_obs=use_spatial_obs,
+            spatial_size=spatial_size,
+            reward_profile=active_profile["reward_profile"],
+        )
+    else:
+        print("PHASE 3: STRATEGIE EXPORT (uebersprungen, SIEDLER_RUN_EXPORT=0)")
 
     print("\n" + "=" * 60)
     print("TRAINING ABGESCHLOSSEN!")
     print("=" * 60)
     print(f"\nModell gespeichert in: {SAVE_PATH}")
-    print(f"Strategie exportiert in: {SAVE_PATH}/strategy.json")
+    if run_export:
+        print(f"Strategie exportiert in: {SAVE_PATH}/strategy.json")
     print("\nNÃƒÂ¤chste Schritte:")
     print("1. Modell herunterladen")
     print("2. strategy.json fÃƒÂ¼r das echte Spiel nutzen")

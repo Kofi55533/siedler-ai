@@ -62,6 +62,7 @@ try:
     import gymnasium as gym
     from sb3_contrib import MaskablePPO
     from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
+    from stable_baselines3 import PPO
     from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
     from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 except ImportError:
@@ -70,6 +71,7 @@ except ImportError:
     import gymnasium as gym
     from sb3_contrib import MaskablePPO
     from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
+    from stable_baselines3 import PPO
     from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
     from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
@@ -636,6 +638,18 @@ def probe_env_throughput(profile_name: str = None, probe_steps: int = 96):
     }
 
 
+def _predict_with_optional_mask(model, obs, action_mask=None):
+    """
+    Kompatibel mit MaskablePPO und PPO.
+    """
+    try:
+        if action_mask is not None:
+            return model.predict(obs, deterministic=True, action_masks=action_mask)
+    except TypeError:
+        pass
+    return model.predict(obs, deterministic=True)
+
+
 def train(config: dict = None, save_path: str = "./siedler_model", profile_name: str = None):
     """
     Trainiert das Modell
@@ -732,11 +746,13 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
             "phase_dim": phase_dim,
         })
         policy_cls = MultiHeadMaskablePolicy
+        model_cls = MaskablePPO
     else:
         policy_kwargs.pop("action_head_sizes", None)
         policy_kwargs.pop("phase_dim", None)
         policy_cls = "MultiInputPolicy" if isinstance(env.observation_space, gym.spaces.Dict) else "MlpPolicy"
-        print("Hinweis: Fallback auf Standard-Policy (kein MultiHead-API im Environment erkannt).")
+        model_cls = PPO
+        print("Hinweis: Legacy-Env erkannt, Fallback auf PPO ohne Action-Masking.")
 
     if isinstance(env.observation_space, gym.spaces.Dict) and supports_multihead:
         extractor_dims = _select_extractor_dims()
@@ -758,7 +774,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     scharfschuetzen_callback = ScharfschuetzenCallback(check_freq=1000)
 
     # Modell erstellen
-    model = MaskablePPO(
+    model = model_cls(
         policy_cls,
         env,
         learning_rate=config["learning_rate"],
@@ -780,11 +796,12 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     print("-" * 60)
 
     # Training
-    model.learn(
-        total_timesteps=config["total_timesteps"],
-        callback=[checkpoint_callback, scharfschuetzen_callback],
-        progress_bar=True,
-    )
+    learn_kwargs = {
+        "total_timesteps": config["total_timesteps"],
+        "callback": [checkpoint_callback, scharfschuetzen_callback],
+        "progress_bar": True,
+    }
+    model.learn(**learn_kwargs)
 
     # Finales Modell speichern
     final_path = f"{save_path}/siedler_final"
@@ -843,7 +860,7 @@ def evaluate(
 
         while not done:
             action_mask = env.get_action_mask()
-            action, _ = model.predict(obs, deterministic=True, action_masks=action_mask)
+            action, _ = _predict_with_optional_mask(model, obs, action_mask)
             obs, reward, terminated, truncated, info = env.step(action)
             total_reward += reward
             done = terminated or truncated
@@ -910,7 +927,7 @@ def export_strategy(
 
     while not done:
         action_mask = env.get_action_mask()
-        action, _ = model.predict(obs, deterministic=True, action_masks=action_mask)
+        action, _ = _predict_with_optional_mask(model, obs, action_mask)
         obs, reward, terminated, truncated, info = env.step(action)
         done = terminated or truncated
 

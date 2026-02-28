@@ -1,0 +1,111 @@
+
+==============================================
+ACTION SPACE ANALYSIS - Siedler AI
+==============================================
+
+ENVIRONMENT STRUCTURE:
+- Gymnasium-based multi-phase environment
+- Action space: Discrete(12) for MAIN_ACTIONS
+- Total underlying actions: 334 (mapped to 12 main categories)
+
+==============================================
+MAIN ACTIONS (Phase 1) - 12 Categories
+==============================================
+ 0. wait                
+ 1. build               
+ 2. upgrade             
+ 3. research            
+ 4. recruit             
+ 5. buy_serf            
+ 6. dismiss_serf        
+ 7. assign_serf         
+ 8. demolish            
+ 9. bless               
+10. tax                 
+11. alarm               
+
+==============================================
+UNDERLYING ACTION BREAKDOWN - 334 Total Actions
+==============================================
+
+Action Category                    Count    Description
+n_build_actions                    28    Build Level 1 buildings at fixed positions
+n_upgrade_actions                  35    Upgrade buildings to next level
+n_tech_actions                     50    Research technologies
+n_recruit_actions                  24    Train soldiers (basic recruitment)
+n_batch_recruit_actions             4    Batch recruit soldiers
+n_build_serf_actions                6    Build serf houses
+n_serf_actions                      6    Assign/manage serfs
+n_demolish_actions                 28    Demolish buildings
+n_bless_actions                     5    Bless buildings (shrine action)
+n_tax_actions                       5    Adjust tax rates
+n_alarm_actions                     2    Trigger alarm/alert
+n_build_batch_actions              84    Batch build actions
+n_deposit_batch_actions            24    Deposit resource batch
+n_mine_batch_actions               24    Mine resource batch
+n_shaft_batch_actions              24    Shaft resource batch
+n_tree_batch_actions               36    Harvest tree batch
+n_wood_zone_batch_actions          36    Wood zone batch actions
+n_resource_position_actions        84    Place resources at positions
+
+TOTAL                             505
+
+==============================================
+ACTION PHASE FLOW
+==============================================
+
+Multi-Step Action System:
+1. MAIN PHASE: Select one of 12 main actions
+   - wait:         Immediate (1 step)
+   - build:        Multi-phase (select location)
+   - upgrade:      Multi-phase (select building)
+   - research:     Multi-phase (select technology)
+   - recruit:      Multi-phase (select soldier type)
+   - buy_serf:     Multi-phase (select house)
+   - dismiss_serf: Immediate (1 step)
+   - assign_serf:  Multi-phase (select assignment)
+   - demolish:     Multi-phase (select building)
+   - bless:        Multi-phase (select target)
+   - tax:          Multi-phase (select rate)
+   - alarm:        Multi-phase (select trigger type)
+
+2. SELECTION PHASE: Choose specific target
+   - Number of choices varies by action type
+   - Examples:
+     * 28 possible buildings to build
+     * 35 possible buildings to upgrade
+     * 50 possible technologies to research
+
+3. EXECUTION: Perform the selected action
+
+==============================================
+KEY INSIGHTS
+==============================================
+
+1. Two-Layer Action Space:
+   - Layer 1: 12 main action categories (discrete choice)
+   - Layer 2: Sub-action selections (variable count per category)
+
+2. Action Masking:
+   - Initial state: 8 valid main actions
+   - Invalid: upgrade (3), research (3), demolish (8) - require resources/buildings
+
+3. Resource-Driven Actions:
+   - Tech (50): Research available technologies
+   - Build (28): Construct buildings at player base
+   - Upgrade (35): Level up existing buildings
+   - Recruit (24): Train different soldier types
+
+4. Batch Operations:
+   - Tree harvesting: 36 actions
+   - Wood zones: 36 actions
+   - Building placement: 84 actions
+   - Mine/deposit/shaft: 24 actions each
+
+5. Game Mechanics:
+   - Serf system: 6 serf houses + 6 management actions
+   - Blessings: 5 shrine blessing options
+   - Taxation: 5 tax rate levels
+   - Alarms: 2 alert states
+
+==============================================

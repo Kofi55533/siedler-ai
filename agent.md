@@ -1,8 +1,8 @@
 # SIEDLER AI - AGENT STATUS
 
-> **Letzte Aktualisierung**: 2026-02-01
-> **Aktueller Task**: PHASE 2.4 FERTIG - Soldaten & Worker validiert
-> **Status**: 332 Actions, Smelter WorkTime korrigiert
+> **Letzte Aktualisierung**: 2026-02-03
+> **Aktueller Task**: ALLE GEPLANTEN AENDERUNGEN IMPLEMENTIERT
+> **Status**: Multi-Step System mit 11 MAIN Actions, hierarchischer Serf-Zuweisung, Kollisionspruefung, Zone A/B, Worker-Spawn-Delay
 
 ---
 
@@ -29,6 +29,28 @@
 
 | Datum | Änderung |
 |-------|----------|
+| 03.02.2026 | **ALLE OFFENEN PUNKTE ERLEDIGT**: Kollisionspruefung, Zone A/B, Worker-Spawn-Delay, Produktionsmechanik geprueft |
+| 03.02.2026 | **KOLLISIONSPRUEFUNG**: _is_position_free() mit AABB-Test gegen BUILDING_FOOTPRINTS (26 Gebaeude) |
+| 03.02.2026 | **ZONE A/B**: zone_b_positions separat, _check_zone_b_unlock() bei Baumfaellung |
+| 03.02.2026 | **DZ-SLOTS**: Dorfzentrum nur an festen Positionen (PLAYER_1_VILLAGE_CENTER_SLOTS) |
+| 03.02.2026 | **WORKER-SPAWN-DELAY**: Worker laufen vom naechsten DZ/HQ zum Arbeitsplatz (spawn_delay) |
+| 03.02.2026 | **PRODUKTIONSMECHANIK**: Alle Werte gegen Original-XMLs verifiziert - KORREKT |
+| 02.02.2026 | **ACTION SPACE UMSTRUKTURIERT**: Build in assign_serf integriert, hierarchisches SOURCE/TARGET System |
+| 02.02.2026 | **MULTI-STEP**: 11 MAIN Actions (build entfernt), SOURCE_CATEGORY→SOURCE_SPECIFIC→QUANTITY→TARGET_CATEGORY→TARGET_SPECIFIC |
+| 02.02.2026 | **NEUBAU-TARGET**: TARGET_CATEGORY=7 erstellt Baustelle + weist Serfs direkt zu |
+| 02.02.2026 | **VERIFIKATION KOMPLETT**: Alle environment.py Werte gegen Original-Spieldateien abgeglichen |
+| 02.02.2026 | **GEBÄUDE-KOSTEN KORRIGIERT**: HQ, DZ, Wohnhaus, Bauernhof, Hochschule, Kloster, Militär, alle Upgrade-Kosten/Zeiten |
+| 02.02.2026 | **MINEN-OUTPUT KORRIGIERT**: 4/5/6 pro Zyklus (war 2/3/4) |
+| 02.02.2026 | **WORKER-ANZAHLEN KORRIGIERT**: Sägemühle_1=4, Lehmhütte_1=4, Steinmetzhütte_1=4, Schmiede_1=2 |
+| 02.02.2026 | **DORFZENTRUM_3 KAPAZITÄT**: 125 (war 150) |
+| 02.02.2026 | **SOLDATEN KOMPLETT NEU**: Alle Kosten aus Original-XMLs (Gold/Iron/Wood statt Taler/Eisen) |
+| 02.02.2026 | **KANONEN 4 LEVEL**: Cannon1-4 mit korrekten Kosten (Gold+Iron+Sulfur) |
+| 02.02.2026 | **BOGENSCHÜTZEN NUR 3 LEVEL**: Level 4 entfernt (existiert nicht im Spiel) |
+| 02.02.2026 | **RESEARCH HIERARCHISCH**: research jetzt TECH_BUILDING→TECH (13 Gebäude, max 17 Techs) |
+| 02.02.2026 | **TECHNOLOGIE-EFFEKTE KORRIGIERT**: 20+ Technologien mit falschen Werten gefixt |
+| 02.02.2026 | **KAPELLE ENTFERNT**: Existiert nicht im Spiel (nur Kloster) |
+| 02.02.2026 | **BLESSINGCOST=0**: Faith wird NICHT verbraucht beim Segnen (nur Schwellwert) |
+| 02.02.2026 | **TAXPENALTY=0.1**: Extra Motivationsstrafe beim Steuereintreiben implementiert |
 | 01.02.2026 | **PHASE 2.4 FERTIG**: Soldaten & Worker validiert, Smelter WorkTime korrigiert (3 Werte) |
 | 28.01.2026 | **PHASE 0.1 FERTIG**: Werte-Extraktion aus Original-Spieldateien |
 | 28.01.2026 | **KRITISCHE ABWEICHUNGEN**: Scharfschütze 5x zu billig, Hochschule falsche Ressourcen! |
@@ -216,12 +238,15 @@ START_RESOURCES = {
 - Militär-Zweig
 - **Scharfschützen-Pfad**: Mathematik → Fernglas → Luntenschloss
 
-### Soldaten (40+ in soldiers_db)
-- Schwertkämpfer (4 Level)
-- Speerträger (4 Level)
-- Bogenschützen (4 Level)
-- Kavallerie
-- **Scharfschützen** (2 Level) - HAUPTZIEL!
+### Soldaten (soldiers_db)
+- Schwertkämpfer (4 Level) - Gold + Eisen
+- Speerträger (4 Level) - Gold + Holz
+- Bogenschützen (3 Level) - Gold + Holz/Eisen
+- Leichte Kavallerie (2 Level) - Gold + Holz
+- Schwere Kavallerie (2 Level) - Gold + Eisen
+- Kanonen (4 Level) - Gold + Eisen + Schwefel
+- **Scharfschützen** (2 Level) - Gold + Schwefel - HAUPTZIEL!
+- Dieb, Späher, Leibeigene
 
 ---
 
@@ -382,72 +407,93 @@ Dorfzentrum: (39400, 24300)
 
 ---
 
-## ACTION SPACE (332 Actions) ✅
+## ACTION SPACE - Multi-Step System (11 MAIN Actions)
 
-| Offset | Kategorie | Anzahl | Beschreibung |
-|--------|-----------|--------|--------------|
-| 0 | Wait | 1 | Nichts tun |
-| 1 | Build Batch | 84 | Gebäude bauen (28 × 3 Batches) |
-| 85 | Upgrade | 35 | Gebäude upgraden |
-| 120 | Research | 50 | Technologien erforschen |
-| 170 | Recruit | 22 | Soldaten rekrutieren |
-| 192 | Resource Batch | 84 | Ressourcen-Zuweisung (Holz-Zonen/Vorkommen/Stollen) |
-| 276 | Serf | 6 | Leibeigene kaufen/entlassen (1x,3x,5x) |
-| 282 | Batch Recruit | 4 | Scharfschützen batch (3x,5x × 2 Level) |
-| 286 | Demolish | 28 | Gebäude abreißen |
-| 314 | Bless | 5 | Segnen (5 Kategorien) |
-| 319 | Tax | 5 | Steuerstufe setzen (0-4) |
-| 324 | Alarm | 2 | Alarm AN/AUS |
-| 326 | Build Serf | 6 | Leibeigene zu Baustellen zuweisen |
+### Haupt-Aktionen (MAIN Phase)
 
-### NEU: Bau-Serfs zuweisen (6 Actions)
+| ID | Aktion | Flow (Phasen) |
+|----|--------|---------------|
+| 0 | wait | fertig (1 Step) |
+| 1 | upgrade | BUILDING → POSITION (3 Steps) |
+| 2 | research | TECH_BUILDING → TECH (3 Steps) |
+| 3 | recruit | SOLDIER → QUANTITY (3 Steps) |
+| 4 | buy_serf | QUANTITY (2 Steps) |
+| 5 | dismiss_serf | SOURCE_CAT → [SOURCE_SPEC] → QUANTITY (3-4 Steps) |
+| 6 | assign_serf | SOURCE_CAT → [SOURCE_SPEC] → QUANTITY → TARGET_CAT → [TARGET_SPEC] (4-6 Steps) |
+| 7 | demolish | BUILDING → POSITION (3 Steps) |
+| 8 | bless | CATEGORY (2 Steps) |
+| 9 | tax | TAX_LEVEL (2 Steps) |
+| 10 | alarm | ON_OFF (2 Steps) |
 
-| Offset | Action | Beschreibung |
-|--------|--------|--------------|
-| 296 | assign_build_x1 | 1 Leibeigenen zur Baustelle schicken |
-| 297 | assign_build_x3 | 3 Leibeigene zur Baustelle schicken |
-| 298 | assign_build_x5 | 5 Leibeigene zur Baustelle schicken |
-| 299 | recall_build_x1 | 1 Leibeigenen von Baustelle zurückrufen |
-| 300 | recall_build_x3 | 3 Leibeigene von Baustelle zurückrufen |
-| 301 | recall_build_x5 | 5 Leibeigene von Baustelle zurückrufen |
+**WICHTIG: `build` ist in `assign_serf` integriert (TARGET_CATEGORY=Neubau)**
 
-**WICHTIG - Neues Bau-System:**
-- Gebäude werden NICHT mehr automatisch gebaut!
-- Agent muss Leibeigene zur Baustelle schicken (assign_build_xN)
+### Hierarchisches Serf-System (assign_serf)
+
+```
+MAIN(assign_serf) → SOURCE_CATEGORY → [SOURCE_SPECIFIC] → QUANTITY → TARGET_CATEGORY → [TARGET_SPECIFIC]
+```
+
+**SOURCE_CATEGORY (7 Optionen):**
+| ID | Kategorie | SOURCE_SPECIFIC Optionen |
+|----|-----------|--------------------------|
+| 0 | Frei | (übersprungen) |
+| 1 | Holz | 6 Zonen: HQ, Schwefel, Lehm, Stein, Dorf, Eisen |
+| 2 | Eisen | 3 Stollen + 2 Vorkommen = 5 |
+| 3 | Stein | 3 Stollen + 2 Vorkommen = 5 |
+| 4 | Lehm | 3 Stollen + 1 Vorkommen = 4 |
+| 5 | Schwefel | 3 Stollen + 1 Vorkommen = 4 |
+| 6 | Baustelle | bis zu 10 aktive Baustellen |
+
+**TARGET_CATEGORY (8 Optionen):**
+| ID | Kategorie | TARGET_SPECIFIC Optionen |
+|----|-----------|--------------------------|
+| 0 | Frei | (übersprungen) |
+| 1-5 | Holz/Eisen/Stein/Lehm/Schwefel | gleich wie SOURCE |
+| 6 | Baustelle | aktive Baustellen |
+| 7 | **Neubau** | **28 Gebäude-Typen (ersetzt alte build-Action!)** |
+
+**Bei Kategorie "Frei" wird SOURCE_SPECIFIC/TARGET_SPECIFIC übersprungen.**
+
+### Bau-System (über assign_serf TARGET=Neubau)
+- Agent wählt: SOURCE → Menge → TARGET=Neubau → Gebäude-Typ
+- System: Ressourcen abziehen + Baustelle erstellen + Leibeigene zuweisen
 - Mehr Leibeigene = schnellerer Bau: 1 + 0.5 × (n-1) effektive Arbeiter
-- 1 Serf = 1× Baugeschwindigkeit, 3 Serfs = 2× Geschwindigkeit, 5 Serfs = 3× Geschwindigkeit
 
-### Ressourcen-Batch-Actions (84 Actions) - NEU!
-
-**Holz-Zonen (36 Actions) - STRATEGISCH FÜR BAUPLÄTZE:**
-| Zone | Raffinerie | Bäume | Actions |
-|------|------------|-------|---------|
-| HQ_Bereich | Wohnhäuser/Bauernhöfe | 69 | assign/recall × 1/3/5 |
-| Schwefelmine | Alchimistenhütte | 14 | assign/recall × 1/3/5 |
-| Lehmmine | Lehmhütte | 66 | assign/recall × 1/3/5 |
-| Steinmine | Steinmetzhütte | 32 | assign/recall × 1/3/5 |
-| Dorfzentrum | Expansion | 25 | assign/recall × 1/3/5 |
-| Eisenmine | Schmiede | 72 | assign/recall × 1/3/5 |
-
-**Vorkommen (24 Actions):**
-- assign/recall für Eisen/Stein/Lehm/Schwefel × 1/3/5
-- **WICHTIG**: Serfs können NUR sammeln wenn KEINE Mine dort gebaut wurde!
-- Sobald Mine gebaut → Serf-Sammeln blockiert, Worker übernehmen
-
-**Stollen (24 Actions) - IMMER VERFÜGBAR:**
-- assign/recall für Eisen/Stein/Lehm/Schwefel × 1/3/5
-- Stollen (XD_Iron1 etc.) haben 400 Ressourcen
-- Keine Mine kann auf Stollen gebaut werden!
-- Serfs können hier IMMER sammeln
-
-**ENTFERNT - Mine-Serf-Zuweisung:**
-- Serfs arbeiten NICHT an gebauten Minen!
-- Gebaute Minen werden von Workern (PU_Miner) betrieben
+### Ressource-Zuweisung (über assign_serf)
+- Holz-Zonen: 6 strategische Zonen für Bauplatz-Schaffung
+- Vorkommen: Serfs nur wenn KEINE Mine gebaut
+- Stollen: Serfs können IMMER sammeln (400 Ressourcen)
 
 **Auto-Weitersammeln:**
 - Nach Baum-Fällung: Serf sucht automatisch nächsten Baum im 4500er Radius
 - Nach Deposit-Erschöpfung: Serf sucht automatisch nächstes Deposit
 - Nur wenn NICHTS im Radius → Serf wird frei
+
+### Hierarchisches Forschungs-System (research)
+
+```
+MAIN(research) → TECH_BUILDING → TECH
+```
+
+**TECH_BUILDING (13 Gebäude):**
+| ID | Gebäude | Anzahl Techs |
+|----|---------|-------------|
+| 0 | Hochschule | 17 |
+| 1 | Schmiede | 8 |
+| 2 | Alchimistenhütte | 4 |
+| 3 | Bank | 4 |
+| 4 | Sägemühle | 4 |
+| 5 | Dorfzentrum | 3 |
+| 6 | Hauptquartier | 4 |
+| 7 | Kaserne | 1 |
+| 8 | Schießplatz | 1 |
+| 9 | Stall | 1 |
+| 10 | Kanongießerei | 1 |
+| 11 | Steinmetzhütte | 1 |
+| 12 | Lehmhütte | 1 |
+
+**TECH (max 17 pro Gebäude):** Spezifische Technologie innerhalb des gewählten Gebäudes.
+Maske zeigt nur erforschbare Techs (Vorbedingungen + Ressourcen erfüllt).
 
 ### SEGEN-KATEGORIEN (aus extra2/logic.xml)
 | ID | Name | Betroffene Worker |
@@ -541,6 +587,8 @@ GAME_RULES = {
 
 ### Offen
 - [ ] **Motivation Leave**: Threshold <0.25 -> Worker verlassen Settlement (optional)
+- [ ] **Segen Worker-Filter**: Segen wirkt nur auf spezifische Worker-Typen (aktuell global)
+- [ ] **WorkTimeBase/ForceToWorkPenalty**: Logic.xml Werte (125/0.2) nicht im Code
 
 ### Erledigt - MECHANIKEN WIE IM ORIGINAL
 - [x] Segen-Cooldown 180s (statt 60s)
@@ -578,6 +626,7 @@ TAX_LEVELS = {
     4: {"tax": 20, "motivation": -0.12},  # Sehr hoch
 }
 TaxAmount = 5  # Pro Worker pro Tick
+TaxPenalty = 0.1  # Extra Motivationsstrafe beim Steuereintreiben
 InitialTaxLevel = 2
 ```
 

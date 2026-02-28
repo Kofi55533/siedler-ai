@@ -1,0 +1,77 @@
+{
+  "s5x": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\extra2\\shr\\maps\\User\\(4) EMS Wintersturm.s5x",
+  "extracted_at": "2026-02-06T15:35:00",
+  "baf_length": 847045,
+  "streams": [
+    {
+      "offset": 204458,
+      "length": 3451,
+      "head": "47465853657448616e646c6572203d20",
+      "type": "text",
+      "role": "lua_or_script"
+    },
+    {
+      "offset": 205215,
+      "length": 2414,
+      "head": "2d2d20476c6f62616c207461626c6520",
+      "type": "text",
+      "role": "lua_or_script"
+    },
+    {
+      "offset": 206127,
+      "length": 758,
+      "head": "3c3f786d6c2076657273696f6e3d2231",
+      "type": "xml",
+      "role": "small_xml"
+    },
+    {
+      "offset": 206597,
+      "length": 12080,
+      "head": "4368756e6b46696c746572203d207b7d",
+      "type": "bin",
+      "role": "unknown_bin"
+    },
+    {
+      "offset": 209454,
+      "length": 14639,
+      "head": "42616e64697441726d79203d207b7d0d",
+      "type": "bin",
+      "role": "unknown_bin"
+    },
+    {
+      "offset": 212264,
+      "length": 7862105,
+      "head": "3c3f786d6c2076657273696f6e3d2231",
+      "type": "xml",
+      "role": "mapdata.xml"
+    },
+    {
+      "offset": 577452,
+      "length": 2728,
+      "head": "2d2d2023232323232323232323232323",
+      "type": "bin",
+      "role": "bin_2728"
+    },
+    {
+      "offset": 578100,
+      "length": 1060932,
+      "head": "0d371a193c301000ad41f60b34301000",
+      "type": "bin",
+      "role": "unknown_bin"
+    },
+    {
+      "offset": 579209,
+      "length": 7081,
+      "head": "2d2d2323232323232323232323232323",
+      "type": "text",
+      "role": "lua_or_script"
+    },
+    {
+      "offset": 581386,
+      "length": 599182,
+      "head": "0d371a1986240900e6b2f3f77e240900",
+      "type": "bin",
+      "role": "unknown_bin"
+    }
+  ]
+}

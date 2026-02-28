@@ -4,7 +4,13 @@ Test-Skript für Siedler AI Mechaniken
 Verifiziert: Segen, Forschung, Motivation, WorkTime, Scholar
 """
 
-from environment import SiedlerScharfschuetzenEnv, BLESS_COOLDOWN, BLESS_DURATION
+from environment import (
+    SiedlerScharfschuetzenEnv,
+    BLESS_COOLDOWN,
+    BLESS_DURATION,
+    MAIN_ACTIONS,
+    buildings_db,
+)
 
 
 def test_bless_cooldown():
@@ -13,6 +19,7 @@ def test_bless_cooldown():
 
     env = SiedlerScharfschuetzenEnv()
     env.reset()
+    env.workforce_manager.set_village_capacity(100)
 
     # Simuliere Kloster und Faith
     env.buildings["Kloster_1"] = 1
@@ -65,6 +72,7 @@ def test_motivation_modifier():
 
     env = SiedlerScharfschuetzenEnv()
     env.reset()
+    wait_action = MAIN_ACTIONS.index("wait")
 
     # Initial sollte Modifier 1.0 sein
     initial_mod = env.workforce_manager.motivation_modifier
@@ -76,7 +84,7 @@ def test_motivation_modifier():
     env._bless(0)
 
     # Ein Step ausführen damit Modifier aktualisiert wird
-    env.step(0)
+    env.step(wait_action)
 
     new_mod = env.workforce_manager.motivation_modifier
     print(f"  Nach Segen: {new_mod}")
@@ -103,15 +111,18 @@ def test_scholar_creation():
     # Simuliere Hochschule-Fertigstellung
     from worker_simulation import Position
     pos = Position(x=40000, y=23000)
-    env._on_building_completed("Hochschule_1", pos)
+    env._on_building_completed("Hochschule_1", pos, pos_key="Hochschule_1_test")
 
     # Zähle neue Scholars
     new_scholars = len([w for w in env.workforce_manager.workers
                        if w.worker_type == "scholar"])
     print(f"  Nach Hochschule_1: {new_scholars}")
 
-    assert new_scholars == initial_scholars + 1, f"Sollte 1 Scholar mehr sein"
-    print("  [OK] Scholar wird bei Hochschule-Bau erstellt")
+    expected_new = int(buildings_db.get("Hochschule_1", {}).get("max_workers", 1) or 1)
+    assert new_scholars == initial_scholars + expected_new, (
+        f"Sollte {expected_new} Scholar mehr sein"
+    )
+    print(f"  [OK] Scholar wird bei Hochschule-Bau erstellt (+{expected_new})")
 
 
 def test_scholar_efficiency():
@@ -120,16 +131,20 @@ def test_scholar_efficiency():
 
     env = SiedlerScharfschuetzenEnv()
     env.reset()
+    env.workforce_manager.set_village_capacity(100)
 
-    # Ohne Scholars sollte Effizienz 1.0 sein (Fallback)
+    # Ohne Scholars: keine Forschung -> Effizienz 0.0
     eff_no_scholars = env._get_scholar_efficiency()
     print(f"  Effizienz ohne Scholars: {eff_no_scholars}")
-    assert eff_no_scholars == 1.0, "Ohne Scholars sollte Effizienz 1.0 sein"
+    assert eff_no_scholars == 0.0, "Ohne Scholars sollte Effizienz 0.0 sein"
 
     # Scholar hinzufügen
     from worker_simulation import Position
     pos = Position(x=40000, y=23000)
-    env.workforce_manager.add_worker("scholar", pos, pos)
+    worker = env.workforce_manager.add_worker("scholar", pos, pos)
+    if worker is not None:
+        from worker_simulation import WorkerState
+        worker.state = WorkerState.WORKING
 
     # Effizienz mit Scholar
     eff_with_scholar = env._get_scholar_efficiency()
@@ -146,6 +161,7 @@ def test_tax_motivation():
 
     env = SiedlerScharfschuetzenEnv()
     env.reset()
+    wait_action = MAIN_ACTIONS.index("wait")
 
     start_motivation = env.base_motivation
     print(f"  Start-Motivation: {start_motivation}")
@@ -155,7 +171,7 @@ def test_tax_motivation():
 
     # Simuliere mehrere Income-Cycles (INCOME_CYCLE = 60)
     for _ in range(1200):  # 2 Minuten
-        env.step(0)
+        env.step(wait_action)
 
     end_motivation = env.base_motivation
     print(f"  Nach hohen Steuern: {end_motivation}")

@@ -1,0 +1,1805 @@
+{
+  "meta": {
+    "generated_at_utc": "2026-02-11T15:17:08.601564+00:00",
+    "source_worker_truth_model": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_truth_model.json",
+    "source_config_roots": [
+      "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\extra2\\shr\\config",
+      "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\extra1\\shr\\config",
+      "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config"
+    ],
+    "notes": [
+      "This is XML/tasklist-derived evidence.",
+      "Exact low-level branch handling inside tasks (e.g. success/fail internals) may be implemented in engine code."
+    ]
+  },
+  "global_camp_parameters": {
+    "logic_worktime": {
+      "base": 125,
+      "threshold_work": 25,
+      "force_to_work_penalty": 0.2
+    },
+    "camp_internal": {
+      "slot_count": 8,
+      "slots": [
+        {
+          "x": -198,
+          "y": -185
+        },
+        {
+          "x": -6,
+          "y": -230
+        },
+        {
+          "x": 151,
+          "y": -114
+        },
+        {
+          "x": 174,
+          "y": 31
+        },
+        {
+          "x": 119,
+          "y": 127
+        },
+        {
+          "x": -61,
+          "y": 156
+        },
+        {
+          "x": -188,
+          "y": 111
+        },
+        {
+          "x": -288,
+          "y": -70
+        }
+      ],
+      "remove_delay_seconds": 10.0
+    },
+    "camp_large_fire": {
+      "num_blocked_points": 2,
+      "snap_tolerance": 30.0
+    }
+  },
+  "worker_camp_conditions": {
+    "alchemist": {
+      "env_name": "alchemist",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "brickmaker": {
+      "env_name": "brickmaker",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "coiner": {
+      "env_name": "coiner",
+      "has_worktime": true,
+      "camper_range": 2000,
+      "work_time_change_camp": 0.2,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "engineer": {
+      "env_name": "engineer",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "farmer": {
+      "env_name": "farmer",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_FARMER_IDLE.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 6,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": []
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": false,
+        "has_rest_building_success_check": true
+      }
+    },
+    "gunsmith": {
+      "env_name": "gunsmith",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "masterbuilder": {
+      "env_name": "master_builder",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "miner": {
+      "env_name": "miner",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "priest": {
+      "env_name": "priest",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "sawmillworker": {
+      "env_name": "sawmill_worker",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "scholar": {
+      "env_name": "scholar",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "serf": {
+      "env_name": "serf",
+      "has_worktime": false,
+      "camper_range": 5000,
+      "work_time_change_camp": null,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "no worker worktime cycle (serf/non-worker behavior)"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {},
+        "idle_followups": {},
+        "has_go_to_camp_in_idle_start": false,
+        "has_change_work_time_camp_in_idle_chain": false,
+        "has_eat_building_success_check": false,
+        "has_rest_building_success_check": false
+      }
+    },
+    "smelter": {
+      "env_name": "smelter",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "smith": {
+      "env_name": "smith",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "stonecutter": {
+      "env_name": "stonecutter",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "tavernbarkeeper": {
+      "env_name": "barkeeper",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_FARMER_IDLE.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 6,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": []
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": false,
+        "has_rest_building_success_check": true
+      }
+    },
+    "trader": {
+      "env_name": "trader",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    },
+    "treasurer": {
+      "env_name": "treasurer",
+      "has_worktime": true,
+      "camper_range": 5000,
+      "work_time_change_camp": 0.1,
+      "work_time_threshold_global": 25,
+      "work_time_base_global": 125,
+      "decision_dependencies": [
+        "worker has worktime and falls into eat/rest/idle cycle",
+        "farm/residence availability and reachability checks in tasklists",
+        "camper range limit from CCamperBehaviorProperties.Range",
+        "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+      ],
+      "camp_task_evidence": {
+        "idle_tasklists": {
+          "WorkIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "EatIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          },
+          "RestIdleTaskList": {
+            "file": "TL_WORKER_IDLE_START.xml",
+            "section": "overlay_tasklists",
+            "task_counts": {
+              "TASK_GO_TO_CAMP": 1,
+              "TASK_LEAVE_BUILDING": 1,
+              "TASK_LEFT_BUILDING": 1,
+              "TASK_SET_ANIM": 1,
+              "TASK_SET_TASK_LIST": 1,
+              "TASK_TURN_TO_TARGET_ORIENTATION": 1
+            },
+            "task_set_task_list_targets": [
+              "TL_WORKER_IDLE"
+            ]
+          }
+        },
+        "idle_followups": {
+          "TL_WORKER_IDLE": {
+            "file": "TL_WORKER_IDLE.xml",
+            "principal_task": "Idle",
+            "task_counts": {
+              "TASK_ADVANCE_IN_CYCLE": 1,
+              "TASK_CHANGE_WORK_TIME_CAMP": 1,
+              "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+              "TASK_SET_ANIM": 5
+            },
+            "task_sequence_head": [
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_SET_ANIM",
+              "TASK_RANDOM_WAIT_FOR_ANIM",
+              "TASK_CHANGE_WORK_TIME_CAMP",
+              "TASK_ADVANCE_IN_CYCLE"
+            ],
+            "task_set_task_list_targets": [],
+            "total_animation_wait_ms": 0,
+            "total_wait_ms": 0
+          }
+        },
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "has_eat_building_success_check": true,
+        "has_rest_building_success_check": true
+      }
+    }
+  },
+  "map_camp_entities": {
+    "mapdata_found": true,
+    "mapdata_path": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\map_extract\\wintersturm_extracted\\mapdata.xml",
+    "camp_entity_count": 10,
+    "camp_type_counts": {
+      "CB_Camp": 0,
+      "CB_MinerCamp": 0,
+      "XD_Camp": 0,
+      "XD_Camp_Internal": 0,
+      "XD_LargeCampFire": 4,
+      "other_camp_named": 6
+    },
+    "camp_entities": [
+      {
+        "type": "XD_ScriptEntity",
+        "name": "camp1_spawn",
+        "x": 25637.3,
+        "y": 49465.43,
+        "player_id": 5
+      },
+      {
+        "type": "XD_ScriptEntity",
+        "name": "camp1_spawn2",
+        "x": 25600.0,
+        "y": 48900.0,
+        "player_id": 5
+      },
+      {
+        "type": "CB_RobberyTower1",
+        "name": "camp1",
+        "x": 25600.0,
+        "y": 50200.0,
+        "player_id": 5
+      },
+      {
+        "type": "CB_RobberyTower1",
+        "name": "camp2",
+        "x": 25700.0,
+        "y": 1100.0,
+        "player_id": 5
+      },
+      {
+        "type": "XD_LargeCampFire",
+        "name": "",
+        "x": 25675.08,
+        "y": 2145.104,
+        "player_id": 0
+      },
+      {
+        "type": "XD_LargeCampFire",
+        "name": "",
+        "x": 25624.92,
+        "y": 2145.104,
+        "player_id": 0
+      },
+      {
+        "type": "XD_LargeCampFire",
+        "name": "",
+        "x": 25675.08,
+        "y": 49154.89,
+        "player_id": 0
+      },
+      {
+        "type": "XD_LargeCampFire",
+        "name": "",
+        "x": 25624.92,
+        "y": 49154.89,
+        "player_id": 0
+      },
+      {
+        "type": "XD_ScriptEntity",
+        "name": "camp2_spawn",
+        "x": 25662.7,
+        "y": 1834.57,
+        "player_id": 5
+      },
+      {
+        "type": "XD_ScriptEntity",
+        "name": "camp2_spawn2",
+        "x": 25700.0,
+        "y": 2400.0,
+        "player_id": 5
+      }
+    ]
+  },
+  "summary": {
+    "workers_with_worktime": 17,
+    "workers_with_go_to_camp_in_idle_start": 17,
+    "workers_with_change_work_time_camp_in_idle_chain": 17
+  }
+}

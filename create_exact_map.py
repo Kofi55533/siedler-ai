@@ -10,13 +10,14 @@ import re
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional
 
+from map_extract_config import EXTRACTED_DIR
+
 # =============================================================================
 # KONFIGURATION
 # =============================================================================
 
-EXTRACTED_DIR = r"C:\Users\marku\OneDrive\Desktop\wintersturm_extracted"
-TERRAIN_FILE = os.path.join(EXTRACTED_DIR, "file_0.bin")
-MAPDATA_FILE = os.path.join(EXTRACTED_DIR, "mapdata.xml")
+TERRAIN_FILE = os.path.join(str(EXTRACTED_DIR), "file_0.bin")
+MAPDATA_FILE = os.path.join(str(EXTRACTED_DIR), "mapdata.xml")
 OUTPUT_DIR = r"c:\Users\marku\OneDrive\Desktop\siedler_ai"
 
 # Karten-Dimensionen (aus mapdata.xml)

@@ -1,0 +1,22 @@
+{
+  "map_name": "TestMap",
+  "terrain": {
+    "x_min": 25000,
+    "x_max": 25100,
+    "y_min": 0,
+    "y_max": 100,
+    "step": 100
+  },
+  "terrain_grid_shape": [
+    2,
+    2
+  ],
+  "tree_count": 1,
+  "shaft_count": 1,
+  "deposit_count": 1,
+  "building_count": 1,
+  "settler_count": 0,
+  "players": [
+    1
+  ]
+}

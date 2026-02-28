@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+ <NameKey></NameKey>
+ <DescKey></DescKey>
+ <Name>(4) @color:135,205,255 EMS @color:255,255,255 Wintersturm</Name>
+ <Desc>@color:24,143,0 Winterturnierkarte 2023 @cr @cr @color:255,255,255 In einem kühlen winterlichen Fleckchen nahe der eisigen Fjorde bestreiten zwei konkurrierende Teams den Wettkampf um die Vorherrschaft. @cr @cr Made by @color:57,255,20 Novator12</Desc>
+ <SizeX>0</SizeX>
+ <SizeY>0</SizeY>
+ <MPFlag>true</MPFlag>
+ <MPPlayerCount>4</MPPlayerCount>
+ <MPGameOptionFlagSet>3</MPGameOptionFlagSet>
+ <MiniMapTextureName>data\graphics\Textures\GUI\MapPics\externalmap</MiniMapTextureName>
+ <Key>2</Key>
+ <GUID>
+  <Data>bed5f248-8a8f-4365-a35e-d3ad6f47eb67</Data>
+ </GUID>
+</root>

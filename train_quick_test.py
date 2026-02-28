@@ -7,11 +7,15 @@ Testet ob das Training-Setup funktioniert (10k Steps)
 import os
 from datetime import datetime
 
+import gymnasium as gym
+import torch as th
 from sb3_contrib import MaskablePPO
-from sb3_contrib.common.wrappers import ActionMasker
 from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
 from environment import SiedlerScharfschuetzenEnv
+from multihead_policy import MultiHeadMaskablePolicy, SpatialVectorExtractor
+from training_profiles import get_train_profile
 
 
 class ProgressCallback(BaseCallback):
@@ -22,31 +26,97 @@ class ProgressCallback(BaseCallback):
         self.check_freq = check_freq
         self.best_scharfschuetzen = 0
 
+    def _get_env_attr(self, name, default=None):
+        if hasattr(self.training_env, "get_attr"):
+            try:
+                return self.training_env.get_attr(name)[0]
+            except Exception:
+                pass
+        if hasattr(self.training_env, "envs"):
+            env = self.training_env.envs[0]
+            if hasattr(env, "unwrapped"):
+                env = env.unwrapped
+            return getattr(env, name, default)
+        return default
+
     def _on_step(self) -> bool:
         if self.n_calls % self.check_freq == 0:
-            if hasattr(self.training_env, 'envs'):
-                env = self.training_env.envs[0]
-                if hasattr(env, 'unwrapped'):
-                    env = env.unwrapped
+            scharfschuetzen = self._get_env_attr("scharfschuetzen", 0)
+            current_time = self._get_env_attr("current_time", 0)
+            researched = len(self._get_env_attr("researched_techs", set()))
 
-                scharfschuetzen = getattr(env, 'scharfschuetzen', 0)
-                current_time = getattr(env, 'current_time', 0)
-                researched = len(getattr(env, 'researched_techs', set()))
+            if scharfschuetzen > self.best_scharfschuetzen:
+                self.best_scharfschuetzen = scharfschuetzen
 
-                if scharfschuetzen > self.best_scharfschuetzen:
-                    self.best_scharfschuetzen = scharfschuetzen
-
-                print(f"Step {self.n_calls}: Zeit={current_time}s, "
-                      f"Techs={researched}, Scharfschuetzen={scharfschuetzen} "
-                      f"(Best: {self.best_scharfschuetzen})")
+            print(f"Step {self.n_calls}: Zeit={current_time}s, "
+                  f"Techs={researched}, Scharfschuetzen={scharfschuetzen} "
+                  f"(Best: {self.best_scharfschuetzen})")
         return True
 
 
-def create_env():
-    """Erstellt Environment mit Action Masking."""
-    env = SiedlerScharfschuetzenEnv(player_id=1)
-    env = ActionMasker(env, lambda e: e.unwrapped.get_action_mask())
-    return env
+def _get_n_envs():
+    env_val = os.environ.get("SIEDLER_NUM_ENVS")
+    if env_val:
+        return max(1, int(env_val))
+    cpu = os.cpu_count() or 1
+    return max(1, min(8, cpu // 2))
+
+
+def _get_spatial_size():
+    size_val = os.environ.get("SIEDLER_SPATIAL_SIZE")
+    if size_val:
+        return max(16, int(size_val))
+    return 128
+
+
+def make_env(
+    rank: int,
+    seed: int = 0,
+    use_spatial_obs: bool = True,
+    spatial_size: int = 128,
+    reward_profile: dict = None,
+):
+    def _init():
+        env = SiedlerScharfschuetzenEnv(
+            player_id=1,
+            use_spatial_obs=use_spatial_obs,
+            spatial_size=spatial_size,
+            reward_profile=reward_profile,
+        )
+        env.reset(seed=seed + rank)
+        return env
+    return _init
+
+
+def create_env(use_spatial_obs: bool = True, spatial_size: int = 128, reward_profile: dict = None):
+    """Erstellt (ggf.) vektorisierte Environments."""
+    n_envs = _get_n_envs()
+    if n_envs > 1:
+        return SubprocVecEnv([
+            make_env(
+                i,
+                use_spatial_obs=use_spatial_obs,
+                spatial_size=spatial_size,
+                reward_profile=reward_profile,
+            )
+            for i in range(n_envs)
+        ])
+    return DummyVecEnv([
+        make_env(
+            0,
+            use_spatial_obs=use_spatial_obs,
+            spatial_size=spatial_size,
+            reward_profile=reward_profile,
+        )
+    ])
+
+
+def _select_net_arch(obs_dim: int):
+    if obs_dim >= 400:
+        return [1024, 512, 512]
+    if obs_dim >= 250:
+        return [768, 512, 256]
+    return [512, 256, 256]
 
 
 def quick_test():
@@ -54,14 +124,51 @@ def quick_test():
     print("=" * 60)
     print("SIEDLER AI - SCHNELLER TRAININGS-TEST")
     print("=" * 60)
+    profile = get_train_profile()
+    reward_profile = profile["reward_profile"]
+    print(f"Train-Profil: {profile['name']} ({profile['description']})")
 
-    env = create_env()
+    use_spatial_obs = True
+    spatial_size = _get_spatial_size()
+    env = create_env(
+        use_spatial_obs=use_spatial_obs,
+        spatial_size=spatial_size,
+        reward_profile=reward_profile,
+    )
+    n_envs = getattr(env, "num_envs", 1)
+    print(f"Envs: {n_envs}")
     print(f"Action Space: {env.action_space.n}")
-    print(f"Observation Space: {env.observation_space.shape}")
+    if isinstance(env.observation_space, gym.spaces.Dict):
+        print(f"Observation Space: vector={env.observation_space['vector'].shape}, "
+              f"spatial={env.observation_space['spatial'].shape}")
+    else:
+        print(f"Observation Space: {env.observation_space.shape}")
+    device = "cuda" if th.cuda.is_available() else "cpu"
+    print(f"Device: {device}")
 
     # Modell erstellen
+    head_sizes = env.env_method("get_action_head_sizes")[0]
+    phase_dim = env.get_attr("phase_dim")[0]
+    if isinstance(env.observation_space, gym.spaces.Dict):
+        obs_dim = env.observation_space["vector"].shape[0]
+    else:
+        obs_dim = env.observation_space.shape[0]
+    net_arch = _select_net_arch(obs_dim)
+    policy_kwargs = {
+        "net_arch": net_arch,
+        "action_head_sizes": head_sizes,
+        "phase_dim": phase_dim,
+    }
+    if isinstance(env.observation_space, gym.spaces.Dict):
+        policy_kwargs.update({
+            "features_extractor_class": SpatialVectorExtractor,
+            "features_extractor_kwargs": {
+                "cnn_out_dim": 128,
+                "vector_out_dim": 256,
+            },
+        })
     model = MaskablePPO(
-        "MlpPolicy",
+        MultiHeadMaskablePolicy,
         env,
         learning_rate=0.0003,
         n_steps=512,
@@ -69,6 +176,8 @@ def quick_test():
         n_epochs=5,
         gamma=0.99,
         ent_coef=0.01,
+        policy_kwargs=policy_kwargs,
+        device=device,
         verbose=0,
     )
 
@@ -92,30 +201,35 @@ def quick_test():
     print("EVALUATION (1 Episode)")
     print("=" * 60)
 
-    obs, _ = env.reset()
+    eval_env = SiedlerScharfschuetzenEnv(
+        player_id=1,
+        use_spatial_obs=use_spatial_obs,
+        spatial_size=spatial_size,
+        reward_profile=reward_profile,
+    )
+    obs, _ = eval_env.reset()
     done = False
     total_reward = 0
     steps = 0
 
     while not done:
-        action_mask = env.unwrapped.get_action_mask()
+        action_mask = eval_env.get_action_mask()
         action, _ = model.predict(obs, deterministic=True, action_masks=action_mask)
-        obs, reward, terminated, truncated, info = env.step(action)
+        obs, reward, terminated, truncated, info = eval_env.step(action)
         total_reward += reward
         done = terminated or truncated
         steps += 1
 
-    final_env = env.unwrapped
     print(f"Steps: {steps}")
-    print(f"Zeit: {final_env.current_time}s / {final_env.max_time}s")
+    print(f"Zeit: {eval_env.current_time}s / {eval_env.max_time}s")
     print(f"Reward: {total_reward:.2f}")
-    print(f"Scharfschuetzen: {final_env.scharfschuetzen}")
-    print(f"Erforschte Techs: {len(final_env.researched_techs)}")
-    print(f"Techs: {final_env.researched_techs}")
+    print(f"Scharfschuetzen: {eval_env.scharfschuetzen}")
+    print(f"Erforschte Techs: {len(eval_env.researched_techs)}")
+    print(f"Techs: {eval_env.researched_techs}")
 
-    # Gebäude-Übersicht
-    built = {k: v for k, v in final_env.buildings.items() if v > 0}
-    print(f"Gebäude: {built}")
+    # Gebaeude-Uebersicht
+    built = {k: v for k, v in eval_env.buildings.items() if v > 0}
+    print(f"Gebaeude: {built}")
 
     return model
 

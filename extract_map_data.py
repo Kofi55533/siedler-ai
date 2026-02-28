@@ -7,7 +7,9 @@ import re
 import json
 from pathlib import Path
 
-MAP_DATA_PATH = Path(r"C:\Users\marku\OneDrive\Desktop\wintersturm_extracted\mapdata.xml")
+from map_extract_config import EXTRACTED_DIR
+
+MAP_DATA_PATH = EXTRACTED_DIR / "mapdata.xml"
 OUTPUT_PATH = Path(r"c:\Users\marku\OneDrive\Desktop\siedler_ai\config\wintersturm_map_data.json")
 
 def parse_entities():

@@ -10,6 +10,8 @@ import os
 import json
 import math
 
+from map_extract_config import EXTRACTED_DIR
+
 try:
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
@@ -20,8 +22,7 @@ except ImportError:
     exit(1)
 
 # Pfade
-EXTRACTED_DIR = r"C:\Users\marku\OneDrive\Desktop\wintersturm_extracted"
-TERRAIN_FILE = os.path.join(EXTRACTED_DIR, "file_0.bin")
+TERRAIN_FILE = os.path.join(str(EXTRACTED_DIR), "file_0.bin")
 MAP_DATA_FILE = r"c:\Users\marku\OneDrive\Desktop\siedler_ai\config\wintersturm_map_data.json"
 
 # Karten-Dimensionen

@@ -36,6 +36,28 @@ class SiedlerDataExtractor:
             "scharfschuetzen_path": {},  # NEU: Kritischer Pfad für Training
         }
 
+        # Worker-Dateien (werden separat extrahiert)
+        self.worker_files = [
+            ("serf", "pu_serf.xml"),
+            ("farmer", "pu_farmer.xml"),
+            ("miner", "pu_miner.xml"),
+            ("sawmillworker", "pu_sawmillworker.xml"),
+            ("stonecutter", "pu_stonecutter.xml"),
+            ("smith", "pu_smith.xml"),
+            ("alchemist", "pu_alchemist.xml"),
+            ("priest", "pu_priest.xml"),
+            ("treasurer", "pu_treasurer.xml"),
+            ("trader", "pu_trader.xml"),
+            ("smelter", "pu_smelter.xml"),
+        ]
+
+        # Config-Pfade (base/extra1/extra2)
+        self.config_paths = [
+            self.game_path / "base/shr/config",
+            self.game_path / "extra1/shr/config",
+            self.game_path / "extra2/shr/config",
+        ]
+
         # Pfade zu den Config-Ordnern (inkl. extra2!)
         self.entity_paths = [
             self.game_path / "base/shr/config/entities",
@@ -51,6 +73,9 @@ class SiedlerDataExtractor:
             self.game_path / "extra2/shr/config/logic.xml",
         ]
 
+        # Erlaubte Entities aus Entities.xml (nur Original-Entitaeten)
+        self.allowed_entities = self._load_allowed_entities()
+
     def extract_all(self) -> Dict[str, Any]:
         """Extrahiert alle Daten."""
         print("Starte Daten-Extraktion...")
@@ -61,6 +86,7 @@ class SiedlerDataExtractor:
         self._extract_military_units()
         self._extract_heroes()
         self._extract_cannons()
+        self._extract_other_units()
         self._extract_logic_params()  # NEU!
         self._extract_scharfschuetzen_path()  # NEU!
         self._extract_constants()
@@ -69,7 +95,7 @@ class SiedlerDataExtractor:
         print(f"  - {len(self.data['workers'])} Worker-Typen")
         print(f"  - {len(self.data['buildings'])} Gebäude")
         print(f"  - {len(self.data['technologies'])} Technologien")
-        print(f"  - {len(self.data['units'])} Militär-Einheiten")
+        print(f"  - {len(self.data['units'])} Einheiten")
         print(f"  - {len(self.data['heroes'])} Helden")
         print(f"  - {len(self.data['cannons'])} Kanonen")
         print(f"  - {len(self.data['logic'])} Logic-Parameter")
@@ -90,6 +116,21 @@ class SiedlerDataExtractor:
                 return ET.fromstring(content)
             except:
                 return None
+
+    def _load_allowed_entities(self) -> set:
+        """Lädt erlaubte Entity-IDs aus Entities.xml (base+extra1+extra2)."""
+        allowed = set()
+        for cfg in self.config_paths:
+            entities_xml = cfg / "Entities.xml"
+            if not entities_xml.exists():
+                continue
+            root = self._parse_xml(entities_xml)
+            if root is None:
+                continue
+            for ent in root.findall(".//Entity"):
+                if ent.text:
+                    allowed.add(ent.text.strip().upper())
+        return allowed
 
     def _get_text(self, element: ET.Element, path: str, default: str = "") -> str:
         """Holt Text aus einem XML-Element."""
@@ -131,21 +172,7 @@ class SiedlerDataExtractor:
         """Extrahiert alle Worker-Daten."""
         print("  Extrahiere Worker...")
 
-        worker_files = [
-            ("serf", "pu_serf.xml"),
-            ("farmer", "pu_farmer.xml"),
-            ("miner", "pu_miner.xml"),
-            ("sawmillworker", "pu_sawmillworker.xml"),
-            ("stonecutter", "pu_stonecutter.xml"),
-            ("smith", "pu_smith.xml"),
-            ("alchemist", "pu_alchemist.xml"),
-            ("priest", "pu_priest.xml"),
-            ("treasurer", "pu_treasurer.xml"),
-            ("trader", "pu_trader.xml"),
-            ("smelter", "pu_smelter.xml"),
-        ]
-
-        for worker_name, filename in worker_files:
+        for worker_name, filename in self.worker_files:
             for entity_path in self.entity_paths:
                 filepath = entity_path / filename
                 if filepath.exists():
@@ -154,6 +181,8 @@ class SiedlerDataExtractor:
 
     def _parse_worker(self, name: str, filepath: Path):
         """Parst eine Worker-XML-Datei."""
+        if filepath.stem.upper() not in self.allowed_entities:
+            return
         root = self._parse_xml(filepath)
         if root is None:
             return
@@ -224,6 +253,8 @@ class SiedlerDataExtractor:
 
     def _parse_building(self, filepath: Path):
         """Parst eine Gebäude-XML-Datei."""
+        if filepath.stem.upper() not in self.allowed_entities:
+            return
         root = self._parse_xml(filepath)
         if root is None:
             return
@@ -328,11 +359,30 @@ class SiedlerDataExtractor:
         """Extrahiert alle Technologie-Daten."""
         print("  Extrahiere Technologien...")
 
+        # Nur Technologien, die in Technologies.xml gelistet sind (base+extra1+extra2)
+        allowed = set()
+        tech_lists = [
+            self.game_path / "base/shr/config/Technologies.xml",
+            self.game_path / "extra1/shr/config/Technologies.xml",
+            self.game_path / "extra2/shr/config/Technologies.xml",
+        ]
+        for tech_list in tech_lists:
+            if not tech_list.exists():
+                continue
+            root = self._parse_xml(tech_list)
+            if root is None:
+                continue
+            for tech in root.findall(".//Technology"):
+                if tech.text:
+                    allowed.add(tech.text.strip().lower())
+
         for tech_path in self.tech_paths:
             if not tech_path.exists():
                 continue
 
             for filepath in tech_path.glob("*.xml"):
+                if filepath.stem.lower() not in allowed:
+                    continue
                 self._parse_technology(filepath)
 
     def _parse_technology(self, filepath: Path):
@@ -403,13 +453,17 @@ class SiedlerDataExtractor:
 
             for pattern in unit_patterns:
                 for filepath in entity_path.glob(pattern):
-                    self._parse_military_unit(filepath)
+                    unit = self._parse_unit(filepath)
+                    if unit:
+                        self.data["units"][unit["name"]] = unit
 
-    def _parse_military_unit(self, filepath: Path):
-        """Parst eine Militär-Einheit-XML-Datei."""
+    def _parse_unit(self, filepath: Path) -> Optional[Dict[str, Any]]:
+        """Parst eine Einheiten-XML-Datei (Leader/Soldier/sonstige)."""
+        if filepath.stem.upper() not in self.allowed_entities:
+            return None
         root = self._parse_xml(filepath)
         if root is None:
-            return
+            return None
 
         name = filepath.stem
 
@@ -421,8 +475,11 @@ class SiedlerDataExtractor:
             "damage": 0,
             "max_range": 0,
             "speed": 0,
-            "soldier_type": None,
+            "soldier_type": "",
             "attachment_limit": 0,
+            "max_random_damage": 0,
+            "min_range": 0.0,
+            "miss_chance": 0,
         }
 
         # Logic-Daten
@@ -442,14 +499,16 @@ class SiedlerDataExtractor:
                 if "Movement" in classname:
                     unit["speed"] = self._get_int(logic_el, "Speed", 360)
 
-                # Leader-Behavior
-                if "LeaderBehavior" in classname:
+                # Leader- oder Soldier-Behavior
+                if "LeaderBehavior" in classname or "SoldierBehavior" in classname:
                     unit["damage"] = self._get_int(logic_el, "DamageAmount", 10)
-                    unit["max_random_damage"] = self._get_int(logic_el, "MaxRandomDamageBonus", 0)
+                    unit["max_random_damage"] = self._get_int(logic_el, "MaxRandomDamageBonus", unit["max_random_damage"])
                     unit["max_range"] = self._get_float(logic_el, "MaxRange", 250)
-                    unit["min_range"] = self._get_float(logic_el, "MinRange", 0)
-                    unit["soldier_type"] = self._get_text(logic_el, "SoldierType")
-                    unit["miss_chance"] = self._get_int(logic_el, "MissChance", 0)
+                    unit["min_range"] = self._get_float(logic_el, "MinRange", unit["min_range"])
+                    unit["miss_chance"] = self._get_int(logic_el, "MissChance", unit["miss_chance"])
+                    soldier_type = self._get_text(logic_el, "SoldierType")
+                    if soldier_type:
+                        unit["soldier_type"] = soldier_type
 
                 # Attachment-Limit
                 if "LimitedAttachment" in classname:
@@ -457,7 +516,7 @@ class SiedlerDataExtractor:
                         if "SOLDIER" in self._get_text(attach, "Type").upper():
                             unit["attachment_limit"] = self._get_int(attach, "Limit", 4)
 
-        self.data["units"][name] = unit
+        return unit
 
     # ==================== HEROES ====================
 
@@ -465,22 +524,17 @@ class SiedlerDataExtractor:
         """Extrahiert alle Helden-Daten."""
         print("  Extrahiere Helden...")
 
-        hero_files = [
-            "pu_hero1.xml", "pu_hero2.xml", "pu_hero3.xml",
-            "pu_hero4.xml", "pu_hero5.xml", "pu_hero6.xml",
-        ]
-
         for entity_path in self.entity_paths:
             if not entity_path.exists():
                 continue
 
-            for filename in hero_files:
-                filepath = entity_path / filename
-                if filepath.exists():
-                    self._parse_hero(filepath)
+            for filepath in entity_path.glob("pu_hero*.xml"):
+                self._parse_hero(filepath)
 
     def _parse_hero(self, filepath: Path):
         """Parst eine Helden-XML-Datei."""
+        if filepath.stem.upper() not in self.allowed_entities:
+            return
         root = self._parse_xml(filepath)
         if root is None:
             return
@@ -581,19 +635,17 @@ class SiedlerDataExtractor:
         """Extrahiert alle Kanonen-Daten."""
         print("  Extrahiere Kanonen...")
 
-        cannon_files = ["pv_cannon1.xml", "pv_cannon2.xml", "pv_cannon3.xml", "pv_cannon4.xml"]
-
         for entity_path in self.entity_paths:
             if not entity_path.exists():
                 continue
 
-            for filename in cannon_files:
-                filepath = entity_path / filename
-                if filepath.exists():
-                    self._parse_cannon(filepath)
+            for filepath in entity_path.glob("pv_cannon*.xml"):
+                self._parse_cannon(filepath)
 
     def _parse_cannon(self, filepath: Path):
         """Parst eine Kanonen-XML-Datei."""
+        if filepath.stem.upper() not in self.allowed_entities:
+            return
         root = self._parse_xml(filepath)
         if root is None:
             return
@@ -640,6 +692,42 @@ class SiedlerDataExtractor:
                     cannon["damage_class"] = self._get_text(logic_el, "DamageClass", "DC_Strike")
 
         self.data["cannons"][name] = cannon
+
+    # ==================== SONSTIGE EINHEITEN ====================
+
+    def _extract_other_units(self):
+        """Extrahiert alle weiteren Einheiten (PU_*/PV_*), die nicht Worker/Held/Kanone sind."""
+        print("  Extrahiere weitere Einheiten...")
+
+        existing_units = {k.lower() for k in self.data["units"].keys()}
+        existing_heroes = {k.lower() for k in self.data["heroes"].keys()}
+        existing_cannons = {k.lower() for k in self.data["cannons"].keys()}
+
+        worker_xml = {fname.replace(".xml", "").lower() for _, fname in self.worker_files}
+
+        for entity_path in self.entity_paths:
+            if not entity_path.exists():
+                continue
+
+            # PU_*
+            for filepath in entity_path.glob("pu_*.xml"):
+                name = filepath.stem.lower()
+                if name in existing_units or name in existing_heroes or name in worker_xml:
+                    continue
+                unit = self._parse_unit(filepath)
+                if unit:
+                    self.data["units"][unit["name"]] = unit
+                    existing_units.add(name)
+
+            # PV_* (außer Kanonen)
+            for filepath in entity_path.glob("pv_*.xml"):
+                name = filepath.stem.lower()
+                if name in existing_cannons or name in existing_units:
+                    continue
+                unit = self._parse_unit(filepath)
+                if unit:
+                    self.data["units"][unit["name"]] = unit
+                    existing_units.add(name)
 
     # ==================== LOGIC PARAMETERS ====================
 

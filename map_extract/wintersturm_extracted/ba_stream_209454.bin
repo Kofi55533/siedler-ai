@@ -1,0 +1,386 @@
+BanditArmy = {}
+
+function OnGameStart()
+    --Simis Waypointarmy Init
+
+    StartSimpleJob("WaypointsFunc")
+    
+    --Holzstapel
+    for i=1,8 do
+        CreateWoodPile( "wood"..i, 15000 )
+    end
+
+    --Fixes
+    FixStadtwache()
+    HealSerfAndCannonFix()
+    CalvaryFormationSelection()
+
+    --HandelBalancing
+	Trigger.RequestTrigger(Events.LOGIC_EVENT_GOODS_TRADED,nil,"TransactionDetails",1,nil,nil) 
+
+    StartSimpleJob("VictoryJob")
+
+    for i = 1,4 do
+        ForbidTechnology(Technologies.T_MakeSnow,i)
+    end
+end
+
+function OnPeacetimeOver()
+    for i = 1,4 do
+        SetHostile(i,5)
+    end
+    BanditArmy.CreateBanditCampArmies()
+    for n = 1,24 do
+        DestroyEntity("p"..n)
+    end
+    for m = 1,8 do
+        ReplaceEntity("gate"..m,Entities.XD_PalisadeGate2)
+    end
+    AddPeriodicWinter(120*60)
+    for i = 1,4 do
+        AllowTechnology(Technologies.T_MakeSnow,i)
+    end
+end
+
+function BanditArmy.CreateBanditCampArmies()
+    for i = 1,2 do 
+        BanditArmy["Army"..i] = {}
+        BanditArmy["Army"..i] = DefensiveArmy.new(5, GetPosition("camp"..i.."_spawn").X, GetPosition("camp"..i.."_spawn").Y, 5000, PlayerChunk_GetPlayerEnemyChunk(5), 600, true,"Army"..i);
+		DefensiveArmy.AddTroopSpawn(BanditArmy["Army"..i], 180, Entities.CU_BanditLeaderSword1, 8, GetPosition("camp"..i.."_spawn2").X, GetPosition("camp"..i.."_spawn2").Y, 0, math.random(1, 4));
+		DefensiveArmy.AddTroopSpawn(BanditArmy["Army"..i], 180, Entities.CU_BanditLeaderSword1, 8, GetPosition("camp"..i.."_spawn2").X, GetPosition("camp"..i.."_spawn2").Y, 0, math.random(1, 4));
+		DefensiveArmy.AddTroopSpawn(BanditArmy["Army"..i], 180, Entities.CU_BanditLeaderSword1, 8, GetPosition("camp"..i.."_spawn2").X, GetPosition("camp"..i.."_spawn2").Y, 0, math.random(1, 4));
+		DefensiveArmy.AddTroopSpawn(BanditArmy["Army"..i], 180, Entities.CU_BanditLeaderBow1, 4, GetPosition("camp"..i.."_spawn2").X, GetPosition("camp"..i.."_spawn2").Y, 0, math.random(1, 4));
+		DefensiveArmy.AddTroopSpawn(BanditArmy["Army"..i], 180, Entities.CU_BanditLeaderBow1, 4, GetPosition("camp"..i.."_spawn2").X, GetPosition("camp"..i.."_spawn2").Y, 0, math.random(1, 4));
+		DefensiveArmy.AddTroopSpawn(BanditArmy["Army"..i], 180, Entities.CU_BanditLeaderBow1, 4, GetPosition("camp"..i.."_spawn2").X, GetPosition("camp"..i.."_spawn2").Y, 0, math.random(1, 4));
+    end
+    StartSimpleJob("StopBandit1")
+    StartSimpleJob("StopBandit2")
+end
+
+function StopBandit1()
+    if IsDestroyed("camp1") then
+        DefensiveArmy.StopRespawn(BanditArmy["Army1"])
+        return true;
+    end
+end
+
+function StopBandit2()
+    if IsDestroyed("camp2") then
+        DefensiveArmy.StopRespawn(BanditArmy["Army2"])
+        return true;
+    end
+end
+
+--Aufrufe nach Ablauf des EMS-Timers
+
+EMSGameStartAdditional = EMSGameStartAdditional or EMS.StartGame
+function EMS.StartGame()
+    EMSGameStartAdditional()
+    Camera_ZoomSetFactorMaxBackup(2)
+end
+----------------------------------------------------Utilities--------------------------------------------------------------------
+
+
+function VictoryJob()
+    if IsDestroyed("hq1") and IsDestroyed("hq2") then
+        Logic.PlayerSetGameStateToWon(3)
+        Logic.PlayerSetGameStateToWon(4)
+        Logic.PlayerSetGameStateToLost(1)
+        Logic.PlayerSetGameStateToLost(2)
+        Message("@color:229,190,1 Team 2 @color:255,255,255 gewinnt die Partie! Herzlichen Glückwunsch!")
+        return true
+    elseif IsDestroyed("hq3") and IsDestroyed("hq4") then
+        Logic.PlayerSetGameStateToWon(1)
+        Logic.PlayerSetGameStateToWon(2)
+        Logic.PlayerSetGameStateToLost(3)
+        Logic.PlayerSetGameStateToLost(4)
+        Message("@color:229,190,1 Team 1 @color:255,255,255 gewinnt die Partie! Herzlichen Glückwunsch!")
+        return true
+    end
+end
+
+function FixStadtwache()
+    GameCallback_OnTechnologyResearchedOriginal = GameCallback_OnTechnologyResearchedOriginal or GameCallback_OnTechnologyResearched
+    function GameCallback_OnTechnologyResearched( _PlayerID, _TechnologyType )
+        GameCallback_OnTechnologyResearchedOriginal( _PlayerID,_TechnologyType)
+        if _TechnologyType == Technologies.T_TownGuard then
+        Logic.SetTechnologyState(_PlayerID,Technologies.T_CityGuard, 3)
+        end
+    end
+ end
+--------------------------------------WoodPiles--------------------------------------------------
+
+function CreateWoodPile( _posEntity, _resources )
+    assert( type( _posEntity ) == "string" )
+    assert( type( _resources ) == "number" )
+    gvWoodPiles = gvWoodPiles or {
+        JobID = Trigger.RequestTrigger(Events.LOGIC_EVENT_EVERY_SECOND,nil,"ControlWoodPiles",0,nil,nil),
+    }
+    local pos = GetPosition( _posEntity )
+    local pile_id = Logic.CreateEntity( Entities.XD_Rock3, pos.X, pos.Y, 0, 0 )
+
+    SetEntityName( pile_id, _posEntity.."_WoodPile" )
+
+    local newE = ReplaceEntity( _posEntity, Entities.XD_ResourceTree )
+    Logic.SetModelAndAnimSet(newE, Models.XD_SignalFire1)
+    Logic.SetResourceDoodadGoodAmount( GetEntityId( _posEntity ), _resources*10 )
+    Logic.SetModelAndAnimSet(pile_id, Models.Effects_XF_ChopTree)
+    table.insert( gvWoodPiles, { ResourceEntity = _posEntity, PileEntity = _posEntity.."_WoodPile", ResourceLimit = _resources*9 } )
+end
+
+function ControlWoodPiles()
+    for i = table.getn( gvWoodPiles ),1,-1 do
+        if Logic.GetResourceDoodadGoodAmount( GetEntityId( gvWoodPiles[i].ResourceEntity ) ) <= gvWoodPiles[i].ResourceLimit then
+            DestroyWoodPile( gvWoodPiles[i], i )
+        end
+    end
+end
+
+function DestroyWoodPile( _piletable, _index )
+    local pos = GetPosition( _piletable.ResourceEntity )
+    DestroyEntity( _piletable.ResourceEntity )
+    DestroyEntity( _piletable.PileEntity )
+    Logic.CreateEffect( GGL_Effects.FXCrushBuilding, pos.X, pos.Y, 0 )
+    table.remove( gvWoodPiles, _index )
+end
+---------------------------------------------------------------------------------------------------------------------------------------
+
+function CreateMilitaryGroup(_player,_entity,_soldiers,_position,_name,_lookAt)
+
+	local id = Tools.CreateGroup(_player, _entity, _soldiers, _position.X, _position.Y,0)
+	
+	if _name ~= nil then
+		SetEntityName(id,_name)
+	end
+	
+	if _lookAt ~= nil then
+		LookAt(id,_lookAt)
+	end
+
+    return id
+end
+
+--##################################################################--
+--################ Cannon / Serf Heal by P4F #######################--
+--##################################################################--
+
+function HealSerfAndCannonFix()
+    SerfTablePlayer1={}
+    CannonTablePlayer1={}
+    Trigger.RequestTrigger(Events.LOGIC_EVENT_ENTITY_CREATED,"","EV_ON_ENTITY_CREATED",1)
+    StartSimpleJob("SJ_Refresh_Hp_Of_Serfs_And_Cannons_Player1")
+    --
+    if XNetwork.GameInformation_IsHumanPlayerAttachedToPlayerID(2) == 1 then
+    SerfTablePlayer2={}
+    CannonTablePlayer2={}
+    StartSimpleJob("SJ_Refresh_Hp_Of_Serfs_And_Cannons_Player2")
+    end
+    --
+    if XNetwork.GameInformation_IsHumanPlayerAttachedToPlayerID(3) == 1 then
+        SerfTablePlayer3={}
+        CannonTablePlayer3={}
+        StartSimpleJob("SJ_Refresh_Hp_Of_Serfs_And_Cannons_Player3")
+    end
+    --
+    if XNetwork.GameInformation_IsHumanPlayerAttachedToPlayerID(4) == 1 then
+        SerfTablePlayer4={}
+        CannonTablePlayer4={}
+        StartSimpleJob("SJ_Refresh_Hp_Of_Serfs_And_Cannons_Player4")
+    end
+    --
+ end
+ 
+ -- Player 1
+ function SJ_Refresh_Hp_Of_Serfs_And_Cannons_Player1()
+    for i = table.getn(SerfTablePlayer1), 1, -1 do
+        if IsAlive(SerfTablePlayer1[i]) then
+            if GetHealth(SerfTablePlayer1[i]) < 100 then
+                SetHealth(SerfTablePlayer1[i], GetHealth(SerfTablePlayer1[i]) + 1 )
+            end
+        else
+            table.remove(SerfTablePlayer1, i)
+        end
+    end
+ 
+    for i = table.getn(CannonTablePlayer1), 1, -1 do
+        if IsAlive(CannonTablePlayer1[i]) then
+            if GetHealth(CannonTablePlayer1[i]) < 100 then
+                SetHealth(CannonTablePlayer1[i], GetHealth(CannonTablePlayer1[i]) + 1 )
+            end
+        else
+            table.remove(CannonTablePlayer1, i)
+        end
+    end
+ end
+ -- Player 2
+ function SJ_Refresh_Hp_Of_Serfs_And_Cannons_Player2()
+    for i = table.getn(SerfTablePlayer2), 1, -1 do
+        if IsAlive(SerfTablePlayer2[i]) then
+            if GetHealth(SerfTablePlayer2[i]) < 100 then
+                SetHealth(SerfTablePlayer2[i], GetHealth(SerfTablePlayer2[i]) + 1 )
+            end
+        else
+            table.remove(SerfTablePlayer2, i)
+        end
+    end
+ 
+    for i = table.getn(CannonTablePlayer2), 1, -1 do
+        if IsAlive(CannonTablePlayer2[i]) then
+            if GetHealth(CannonTablePlayer2[i]) < 100 then
+                SetHealth(CannonTablePlayer2[i], GetHealth(CannonTablePlayer2[i]) + 1 )
+            end
+        else
+            table.remove(CannonTablePlayer2, i)
+        end
+    end
+ end
+
+  -- Player 3
+  function SJ_Refresh_Hp_Of_Serfs_And_Cannons_Player3()
+    for i = table.getn(SerfTablePlayer3), 1, -1 do
+        if IsAlive(SerfTablePlayer3[i]) then
+            if GetHealth(SerfTablePlayer3[i]) < 100 then
+                SetHealth(SerfTablePlayer3[i], GetHealth(SerfTablePlayer3[i]) + 1 )
+            end
+        else
+            table.remove(SerfTablePlayer3, i)
+        end
+    end
+ 
+    for i = table.getn(CannonTablePlayer3), 1, -1 do
+        if IsAlive(CannonTablePlayer3[i]) then
+            if GetHealth(CannonTablePlayer3[i]) < 100 then
+                SetHealth(CannonTablePlayer3[i], GetHealth(CannonTablePlayer3[i]) + 1 )
+            end
+        else
+            table.remove(CannonTablePlayer3, i)
+        end
+    end
+ end
+
+  -- Player 4
+  function SJ_Refresh_Hp_Of_Serfs_And_Cannons_Player4()
+    for i = table.getn(SerfTablePlayer4), 1, -1 do
+        if IsAlive(SerfTablePlayer4[i]) then
+            if GetHealth(SerfTablePlayer4[i]) < 100 then
+                SetHealth(SerfTablePlayer4[i], GetHealth(SerfTablePlayer4[i]) + 1 )
+            end
+        else
+            table.remove(SerfTablePlayer4, i)
+        end
+    end
+ 
+    for i = table.getn(CannonTablePlayer4), 1, -1 do
+        if IsAlive(CannonTablePlayer4[i]) then
+            if GetHealth(CannonTablePlayer4[i]) < 100 then
+                SetHealth(CannonTablePlayer4[i], GetHealth(CannonTablePlayer4[i]) + 1 )
+            end
+        else
+            table.remove(CannonTablePlayer4, i)
+        end
+    end
+ end
+ 
+ 
+ function EV_ON_ENTITY_CREATED()
+    local ent_ID = Event.GetEntityID()
+    local ent_typ = Logic.GetEntityTypeName(Logic.GetEntityType(ent_ID))
+    local ent_P = GetPlayer(ent_ID)
+        
+    if ent_P == 1 then
+        if ent_typ == "PU_Serf" then
+        table.insert(SerfTablePlayer1,ent_ID)
+        elseif ent_typ == "PV_Cannon1" or ent_typ == "PV_Cannon2" or ent_typ == "PV_Cannon3" or ent_typ == "PV_Cannon4" then
+        table.insert(CannonTablePlayer1,ent_ID)
+        end
+    end
+ 
+    if XNetwork.GameInformation_IsHumanPlayerAttachedToPlayerID(2) == 1 then
+        if ent_P == 2 then
+            if ent_typ == "PU_Serf" then
+            table.insert(SerfTablePlayer2,ent_ID)
+            elseif ent_typ == "PV_Cannon1" or ent_typ == "PV_Cannon2" or ent_typ == "PV_Cannon3" or ent_typ == "PV_Cannon4" then
+            table.insert(CannonTablePlayer2,ent_ID)
+            end
+        end
+    end
+
+    if XNetwork.GameInformation_IsHumanPlayerAttachedToPlayerID(3) == 1 then
+        if ent_P == 3 then
+            if ent_typ == "PU_Serf" then
+            table.insert(SerfTablePlayer3,ent_ID)
+            elseif ent_typ == "PV_Cannon1" or ent_typ == "PV_Cannon2" or ent_typ == "PV_Cannon3" or ent_typ == "PV_Cannon4" then
+            table.insert(CannonTablePlayer3,ent_ID)
+            end
+        end
+    end
+
+    if XNetwork.GameInformation_IsHumanPlayerAttachedToPlayerID(4) == 1 then
+        if ent_P == 4 then
+            if ent_typ == "PU_Serf" then
+            table.insert(SerfTablePlayer4,ent_ID)
+            elseif ent_typ == "PV_Cannon1" or ent_typ == "PV_Cannon2" or ent_typ == "PV_Cannon3" or ent_typ == "PV_Cannon4" then
+            table.insert(CannonTablePlayer4,ent_ID)
+            end
+        end
+    end
+ end
+ 
+ --##################################################################--
+ --##################################################################--
+ 
+ function GetHealth( _entity )
+    local entityID = GetEntityId( _entity )
+    if not Tools.IsEntityAlive( entityID ) then
+        return 0
+    end
+    local MaxHealth = Logic.GetEntityMaxHealth( entityID )
+    local Health = Logic.GetEntityHealth( entityID )
+    return ( Health / MaxHealth ) * 100
+ end
+
+
+ function TransactionDetails()
+
+    local eID = Event.GetEntityID()    
+    local TSellTyp = Event.GetSellResource()     
+    local TTyp = Event.GetBuyResource()     
+    local PID = Logic.EntityGetPlayer(eID)    
+
+    if Logic.GetCurrentPrice(PID,TSellTyp) > 1.3 then    
+        Logic.SetCurrentPrice(PID, TSellTyp, 1.3 )        
+    end
+    
+    if Logic.GetCurrentPrice(PID,TSellTyp) < 0.8 then    
+        Logic.SetCurrentPrice(PID, TSellTyp, 0.8 )        
+    end
+    
+    if Logic.GetCurrentPrice(PID,TTyp) > 1.3 then    
+        Logic.SetCurrentPrice(PID, TTyp, 1.3 )        
+    end
+    
+    if Logic.GetCurrentPrice(PID,TTyp) < 0.8 then    
+        Logic.SetCurrentPrice(PID, TTyp, 0.8 )    
+    end
+    
+end
+
+
+--CalvarySelection Fix
+
+function CalvaryFormationSelection()
+    GameCallback_GUI_SelectionChangedCalvary = GameCallback_GUI_SelectionChangedCalvary or GameCallback_GUI_SelectionChanged 
+    function GameCallback_GUI_SelectionChanged()
+        GameCallback_GUI_SelectionChangedCalvary()
+        local EntityId = GUI.GetSelectedEntity()
+        if Logic.GetEntityTypeName(Logic.GetEntityType(EntityId)) == "PU_LeaderCavalry1" or
+            Logic.GetEntityTypeName(Logic.GetEntityType(EntityId)) == "PU_LeaderCavalry2" or
+            Logic.GetEntityTypeName(Logic.GetEntityType(EntityId)) == "PU_LeaderHeavyCavalry1" or
+            Logic.GetEntityTypeName(Logic.GetEntityType(EntityId)) == "PU_LeaderHeavyCavalry2" then
+            XGUIEng.ShowWidget(gvGUI_WidgetID.SelectionLeader, 1)
+        end
+        if Logic.GetEntityTypeName(Logic.GetEntityType(EntityId)) == "PU_BattleSerf" then
+            XGUIEng.ShowWidget("Commands_Leader",1) -- battleserf formation fix
+        end
+    end
+end

@@ -25107,5 +25107,42 @@
       },
       "type": "XD_VillageCenter"
     }
-  ]
+  ],
+  "walkable_export": {
+    "source_log": "SettlersHoK_2026-02-04_04-21-22.log",
+    "export": {
+      "x_min": 25500,
+      "x_max": 28200,
+      "y_min": 4500,
+      "y_max": 11800,
+      "step": 100,
+      "rows": 74,
+      "cols": 28,
+      "walkable_count": 704,
+      "blocked_count": 1368
+    },
+    "patch": {
+      "patch_file": "config/wintersturm_map_data_from_log.json/walkable_patch_515_255_45.npy",
+      "applied_to": "map_extract/wintersturm_extracted/walkable_map_515.npy"
+    }
+  },
+  "walkable_export_full_p1": {
+    "source_log": "SettlersHoK_2026-02-04_15-21-42.log",
+    "export": {
+      "x_min": 25000,
+      "x_max": 51000,
+      "y_min": 0,
+      "y_max": 25500,
+      "step": 100,
+      "rows": 256,
+      "cols": 261,
+      "tree_count": 791,
+      "shaft_count": 48,
+      "deposit_count": 24
+    },
+    "patch": {
+      "patch_file": "map_extract/game_export_2026-02-04_15-21-42/walkable_patch_515_250_0.npy",
+      "applied_to": "map_extract/wintersturm_extracted/walkable_map_515.npy"
+    }
+  }
 }

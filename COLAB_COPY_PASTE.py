@@ -9,20 +9,76 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import zipfile
 
 
+def _prepare_cmd_env(cmd, env=None):
+    cmd = list(cmd)
+    exe_name = Path(cmd[0]).name.lower() if cmd else ""
+    if cmd and (cmd[0] == sys.executable or exe_name.startswith("python")) and "-u" not in cmd[1:]:
+        cmd.insert(1, "-u")
+
+    merged_env = os.environ.copy()
+    if env:
+        merged_env.update(env)
+    merged_env.setdefault("PYTHONUNBUFFERED", "1")
+    return cmd, merged_env
+
+
 def run(cmd, cwd=None, env=None):
+    cmd, merged_env = _prepare_cmd_env(cmd, env=env)
     print("$", " ".join(cmd))
-    subprocess.check_call(cmd, cwd=cwd, env=env)
+    proc = subprocess.Popen(
+        cmd,
+        cwd=cwd,
+        env=merged_env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+
+    if proc.stdout is None:
+        raise RuntimeError("Failed to capture subprocess output stream.")
+
+    start_ts = time.time()
+    last_line_ts = start_ts
+    last_heartbeat_ts = start_ts
+
+    while True:
+        line = proc.stdout.readline()
+        if line:
+            print(line, end="")
+            last_line_ts = time.time()
+            continue
+
+        if proc.poll() is not None:
+            break
+
+        now = time.time()
+        if now - last_heartbeat_ts >= 30:
+            silent_for = int(now - last_line_ts)
+            running_for = int(now - start_ts)
+            print(
+                f"[runner] command still running ({running_for}s), "
+                f"no new output for {silent_for}s..."
+            )
+            last_heartbeat_ts = now
+        time.sleep(0.2)
+
+    returncode = proc.wait()
+    if returncode != 0:
+        raise subprocess.CalledProcessError(returncode, cmd)
 
 
 def run_capture(cmd, cwd=None, env=None, timeout_sec=240):
+    cmd, merged_env = _prepare_cmd_env(cmd, env=env)
     print("$", " ".join(cmd))
     return subprocess.run(
         cmd,
         cwd=cwd,
-        env=env,
+        env=merged_env,
         text=True,
         capture_output=True,
         timeout=timeout_sec,
@@ -69,6 +125,41 @@ def build_n_env_candidates():
     if 1 not in ordered:
         ordered.append(1)
     return ordered, target, gpu_name
+
+
+def infer_gpu_training_preset():
+    _, gpu_name, cpu_cap = infer_target_n_envs()
+    gpu_upper = (gpu_name or "").upper()
+
+    if "H100" in gpu_upper:
+        n_envs, spatial_size = 10, 192
+    elif "A100" in gpu_upper:
+        n_envs, spatial_size = 8, 160
+    elif "L4" in gpu_upper or "V100" in gpu_upper:
+        n_envs, spatial_size = 6, 128
+    elif "T4" in gpu_upper or "P100" in gpu_upper:
+        n_envs, spatial_size = 3, 128
+    else:
+        n_envs, spatial_size = 2, 96
+
+    n_envs = max(1, min(cpu_cap, int(n_envs)))
+    return {"gpu_name": gpu_name, "n_envs": n_envs, "spatial_size": spatial_size}
+
+
+def apply_auto_gpu_overrides():
+    preset = infer_gpu_training_preset()
+
+    if not os.environ.get("SIEDLER_NUM_ENVS"):
+        os.environ["SIEDLER_NUM_ENVS"] = str(preset["n_envs"])
+    if not os.environ.get("SIEDLER_SPATIAL_SIZE"):
+        os.environ["SIEDLER_SPATIAL_SIZE"] = str(preset["spatial_size"])
+
+    print(
+        "Auto GPU preset: "
+        f"{preset['gpu_name']} -> "
+        f"SIEDLER_NUM_ENVS={os.environ.get('SIEDLER_NUM_ENVS')}, "
+        f"SIEDLER_SPATIAL_SIZE={os.environ.get('SIEDLER_SPATIAL_SIZE')}"
+    )
 
 
 def parse_probe_sps(stdout_text: str):
@@ -343,10 +434,21 @@ Path(SAVE_DIR).mkdir(parents=True, exist_ok=True)
 os.environ["SIEDLER_SAVE_DIR"] = SAVE_DIR
 os.environ["SIEDLER_REQUIRE_DRIVE"] = "1"
 
-# Optional overrides:
-# os.environ["SIEDLER_NUM_ENVS"] = "8"
-# os.environ["SIEDLER_SPATIAL_SIZE"] = "160"
+# 7b) AUTO GPU PRESET (setzt n_envs/spatial_size passend zur Runtime)
+# Wenn SIEDLER_NUM_ENVS/SIEDLER_SPATIAL_SIZE bereits gesetzt sind, bleiben diese Werte erhalten.
+apply_auto_gpu_overrides()
+
+# Optionale manuelle Overrides (nur falls du bewusst testen willst):
+# os.environ["SIEDLER_NUM_ENVS"] = "3"
+# os.environ["SIEDLER_SPATIAL_SIZE"] = "128"
+# os.environ["SIEDLER_STATUS_EVERY_SEC"] = "5"   # Live-Status: Schritte/FPS alle X Sekunden
+# os.environ["SIEDLER_COMPACT_STATUS"] = "0"     # 0=Zeilenmodus (zuverlaessig in Colab)
+# os.environ["SIEDLER_STATUS_BAR_WIDTH"] = "24"  # Breite des Fortschritt-Balkens
 # os.environ["SIEDLER_TRAIN_PROFILE"] = "sparse"
+
+os.environ.setdefault("SIEDLER_STATUS_EVERY_SEC", "5")
+os.environ.setdefault("SIEDLER_COMPACT_STATUS", "0")
+os.environ.setdefault("SIEDLER_STATUS_BAR_WIDTH", "24")
 
 print(f"Model checkpoints/final model will be saved to: {SAVE_DIR}")
 print(f"Code source mode: {SOURCE_MODE}")

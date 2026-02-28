@@ -11,6 +11,8 @@ import struct
 import os
 import math
 
+from map_extract_config import EXTRACTED_DIR
+
 # Karten-Dimensionen
 MAP_WIDTH = 50480
 MAP_HEIGHT = 50496
@@ -140,8 +142,8 @@ def analyze_terrain_binary(bin_path):
 
 
 def main():
-    mapdata_path = r"C:\Users\marku\OneDrive\Desktop\wintersturm_extracted\mapdata.xml"
-    terrain_path = r"C:\Users\marku\OneDrive\Desktop\wintersturm_extracted\file_0.bin"
+    mapdata_path = str(EXTRACTED_DIR / "mapdata.xml")
+    terrain_path = str(EXTRACTED_DIR / "file_0.bin")
 
     print("=" * 60)
     print("DORFZENTREN-BAUPLÄTZE")
@@ -203,7 +205,7 @@ def main():
 
     # Versuche auch die anderen bin-Dateien
     for fname in ["file_1.bin", "block_5.bin", "data_2.bin"]:
-        fpath = os.path.join(r"C:\Users\marku\OneDrive\Desktop\wintersturm_extracted", fname)
+        fpath = os.path.join(str(EXTRACTED_DIR), fname)
         if os.path.exists(fpath):
             print(f"\n--- {fname} ---")
             size = os.path.getsize(fpath)

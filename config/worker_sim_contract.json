@@ -1,0 +1,1899 @@
+{
+  "meta": {
+    "generated_at_utc": "2026-02-11T20:34:10.403091+00:00",
+    "sources": {
+      "worker_truth_model": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_truth_model.json",
+      "worker_behavior_logic": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_behavior_logic.json",
+      "camp_worker_conditions": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\camp_worker_conditions.json",
+      "worker_camp_path_branch_matrix": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_camp_path_branch_matrix.json",
+      "all_original_values": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\all_original_values.jsonl"
+    },
+    "scope": "worker/camp/path behavior contract for simulation"
+  },
+  "global_parameters": {
+    "logic_worktime": {
+      "base": 125,
+      "threshold_work": 25,
+      "force_to_work_penalty": 0.2
+    },
+    "logic_movement": {
+      "worker_flight_distance": 2500,
+      "leader_nudge_count": 3,
+      "leader_approach_range": 200.0,
+      "attack_move_range": 2000,
+      "guard_max_distance_building": 1000.0,
+      "guard_move_distance_building": 900.0,
+      "guard_max_distance_other": 600.0,
+      "guard_move_distance_other": 300.0
+    },
+    "weather_speed_factors": {
+      "rain_move_speed_factor": 1.0,
+      "snow_move_speed_factor": 0.85,
+      "rain_exploration_building_factor": 0.8,
+      "rain_exploration_settler_factor": 0.8,
+      "snow_exploration_building_factor": 1.0,
+      "snow_exploration_settler_factor": 1.0
+    },
+    "default_walk_speed": 240,
+    "camp_internal": {
+      "slot_count": 8,
+      "slots": [
+        {
+          "x": -198,
+          "y": -185
+        },
+        {
+          "x": -6,
+          "y": -230
+        },
+        {
+          "x": 151,
+          "y": -114
+        },
+        {
+          "x": 174,
+          "y": 31
+        },
+        {
+          "x": 119,
+          "y": 127
+        },
+        {
+          "x": -61,
+          "y": 156
+        },
+        {
+          "x": -188,
+          "y": 111
+        },
+        {
+          "x": -288,
+          "y": -70
+        }
+      ],
+      "remove_delay_seconds": 10.0
+    },
+    "camp_large_fire": {
+      "num_blocked_points": 2,
+      "snap_tolerance": 30.0
+    },
+    "global_scalars_from_xml": {
+      "worker_flight_distance": {
+        "key": "WorkerFlightDistance",
+        "value_raw": "2500",
+        "value_int": 2500,
+        "value_float": 2500.0,
+        "file": "Logic.xml",
+        "path": "root/WorkerFlightDistance"
+      },
+      "alarm_recharge_time_ms": {
+        "key": "AlarmRechargeTime",
+        "value_raw": "180000",
+        "value_int": 180000,
+        "value_float": 180000.0,
+        "file": "Logic.xml",
+        "path": "root/AlarmRechargeTime"
+      },
+      "reattach_worker_frequency": {
+        "key": "ReAttachWorkerFrequency",
+        "value_raw": "10",
+        "value_int": 10,
+        "value_float": 10.0,
+        "file": "PlayerAttraction.xml",
+        "path": "root/ReAttachWorkerFrequency"
+      },
+      "max_distance_worker_to_farm": {
+        "key": "MaximumDistanceWorkerToFarm",
+        "value_raw": "8000",
+        "value_int": 8000,
+        "value_float": 8000.0,
+        "file": "PlayerAttraction.xml",
+        "path": "root/MaximumDistanceWorkerToFarm"
+      },
+      "max_distance_worker_to_residence": {
+        "key": "MaximumDistanceWorkerToResidence",
+        "value_raw": "8000",
+        "value_int": 8000,
+        "value_float": 8000.0,
+        "file": "PlayerAttraction.xml",
+        "path": "root/MaximumDistanceWorkerToResidence"
+      }
+    }
+  },
+  "invariants": {
+    "worker_count": 18,
+    "worktime_worker_count": 17,
+    "non_worktime_worker_count": 1,
+    "non_worktime_workers": [
+      "serf"
+    ],
+    "shared_core_tasklists_consistency": {
+      "is_consistent": false,
+      "mismatches": [
+        {
+          "worker": "farmer",
+          "node": "tl_worker_eat_start.xml",
+          "issue": "missing_node"
+        },
+        {
+          "worker": "farmer",
+          "node": "tl_worker_eat.xml",
+          "issue": "missing_node"
+        },
+        {
+          "worker": "tavernbarkeeper",
+          "node": "tl_worker_eat_start.xml",
+          "issue": "missing_node"
+        },
+        {
+          "worker": "tavernbarkeeper",
+          "node": "tl_worker_eat.xml",
+          "issue": "missing_node"
+        }
+      ]
+    },
+    "summary_from_logic_model": {
+      "worker_count": 18,
+      "workers_with_worktime": 17,
+      "workers_with_camp_idle_go_to": 17,
+      "workers_with_camp_worktime_change": 17,
+      "workers_with_unresolved_tasklists": []
+    },
+    "summary_from_camp_model": {
+      "workers_with_worktime": 17,
+      "workers_with_go_to_camp_in_idle_start": 17,
+      "workers_with_change_work_time_camp_in_idle_chain": 17
+    }
+  },
+  "notable_worker_variants": [
+    {
+      "worker": "farmer",
+      "reasons": [
+        "EatTaskList=TL_FARMER_EAT",
+        "EatIdleTaskList=TL_FARMER_IDLE"
+      ]
+    },
+    {
+      "worker": "tavernbarkeeper",
+      "reasons": [
+        "EatTaskList=TL_FARMER_EAT",
+        "EatIdleTaskList=TL_FARMER_IDLE"
+      ]
+    }
+  ],
+  "common_state_machine_rules": [
+    {
+      "id": "idle_start_to_idle",
+      "when": "cycle enters idle_start",
+      "tasks": [
+        "TASK_SET_ANIM",
+        "TASK_LEAVE_BUILDING",
+        "TASK_LEFT_BUILDING",
+        "TASK_GO_TO_CAMP",
+        "TASK_TURN_TO_TARGET_ORIENTATION",
+        "TASK_SET_TASK_LIST"
+      ],
+      "key_tasks_required": [
+        "TASK_GO_TO_CAMP",
+        "TASK_SET_TASK_LIST"
+      ],
+      "effects": [
+        "worker leaves current building context",
+        "worker goes to camp",
+        "worker orientation aligns to camp",
+        "task list transitions to idle loop"
+      ],
+      "dependencies": [
+        "camper_range",
+        "camp availability/pathing"
+      ]
+    },
+    {
+      "id": "idle_loop_camp_recovery",
+      "when": "worker is in idle loop",
+      "tasks": [
+        "TASK_SET_ANIM",
+        "TASK_RANDOM_WAIT_FOR_ANIM",
+        "TASK_SET_ANIM",
+        "TASK_RANDOM_WAIT_FOR_ANIM",
+        "TASK_SET_ANIM",
+        "TASK_RANDOM_WAIT_FOR_ANIM",
+        "TASK_SET_ANIM",
+        "TASK_RANDOM_WAIT_FOR_ANIM",
+        "TASK_SET_ANIM",
+        "TASK_RANDOM_WAIT_FOR_ANIM",
+        "TASK_CHANGE_WORK_TIME_CAMP",
+        "TASK_ADVANCE_IN_CYCLE"
+      ],
+      "task_counts": {
+        "TASK_ADVANCE_IN_CYCLE": 1,
+        "TASK_CHANGE_WORK_TIME_CAMP": 1,
+        "TASK_RANDOM_WAIT_FOR_ANIM": 5,
+        "TASK_SET_ANIM": 5
+      },
+      "key_tasks_required": [
+        "TASK_CHANGE_WORK_TIME_CAMP",
+        "TASK_ADVANCE_IN_CYCLE"
+      ],
+      "effects": [
+        "random idle animations",
+        "worktime receives camp delta",
+        "cycle advances to next decision state"
+      ],
+      "dependencies": [
+        "work_time_change_camp",
+        "worktime state variable"
+      ]
+    },
+    {
+      "id": "eat_start_path_and_check",
+      "when": "cycle chooses eat",
+      "tasks": [
+        "TASK_SET_ANIM",
+        "TASK_LEAVE_BUILDING",
+        "TASK_LEFT_BUILDING",
+        "TASK_GO_TO_EAT_BUILDING",
+        "TASK_CHECK_GO_TO_EAT_BUILDING_SUCCESS",
+        "TASK_ENTER_BUILDING",
+        "TASK_SET_TASK_LIST"
+      ],
+      "key_tasks_required": [
+        "TASK_GO_TO_EAT_BUILDING",
+        "TASK_CHECK_GO_TO_EAT_BUILDING_SUCCESS",
+        "TASK_SET_TASK_LIST"
+      ],
+      "effects": [
+        "attempt move to eat building",
+        "branch on GO_TO_EAT success check",
+        "enter building and transition to eat loop"
+      ],
+      "dependencies": [
+        "eat building availability",
+        "pathfinding success"
+      ]
+    },
+    {
+      "id": "eat_loop_farm_recovery",
+      "when": "worker is in eat loop",
+      "tasks": [
+        "TASK_CHECK_FEAR",
+        "TASK_RESET_TASK_LIST_TIMER",
+        "TASK_VANISH",
+        "TASK_EAT_WAIT",
+        "TASK_CHANGE_WORK_TIME_FARM",
+        "TASK_ADVANCE_IN_CYCLE"
+      ],
+      "task_counts": {
+        "TASK_ADVANCE_IN_CYCLE": 1,
+        "TASK_CHANGE_WORK_TIME_FARM": 1,
+        "TASK_CHECK_FEAR": 1,
+        "TASK_EAT_WAIT": 1,
+        "TASK_RESET_TASK_LIST_TIMER": 1,
+        "TASK_VANISH": 1
+      },
+      "key_tasks_required": [
+        "TASK_EAT_WAIT",
+        "TASK_CHANGE_WORK_TIME_FARM"
+      ],
+      "effects": [
+        "eat wait",
+        "worktime receives farm delta",
+        "cycle advances"
+      ],
+      "dependencies": [
+        "work_time_change_farm",
+        "eat_wait"
+      ]
+    },
+    {
+      "id": "rest_start_path_and_check",
+      "when": "cycle chooses rest",
+      "tasks": [
+        "TASK_SET_ANIM",
+        "TASK_LEAVE_BUILDING",
+        "TASK_LEFT_BUILDING",
+        "TASK_GO_TO_REST_BUILDING",
+        "TASK_CHECK_GO_TO_REST_BUILDING_SUCCESS",
+        "TASK_ENTER_BUILDING",
+        "TASK_SET_TASK_LIST"
+      ],
+      "key_tasks_required": [
+        "TASK_GO_TO_REST_BUILDING",
+        "TASK_CHECK_GO_TO_REST_BUILDING_SUCCESS",
+        "TASK_SET_TASK_LIST"
+      ],
+      "effects": [
+        "attempt move to rest building",
+        "branch on GO_TO_REST success check",
+        "enter building and transition to rest loop"
+      ],
+      "dependencies": [
+        "residence availability",
+        "pathfinding success"
+      ]
+    },
+    {
+      "id": "rest_loop_residence_recovery",
+      "when": "worker is in rest loop",
+      "tasks": [
+        "TASK_VANISH",
+        "TASK_CHECK_FEAR",
+        "TASK_RESET_TASK_LIST_TIMER",
+        "TASK_REST_WAIT",
+        "TASK_CHANGE_WORK_TIME_RESIDENCE",
+        "TASK_ADVANCE_IN_CYCLE"
+      ],
+      "task_counts": {
+        "TASK_ADVANCE_IN_CYCLE": 1,
+        "TASK_CHANGE_WORK_TIME_RESIDENCE": 1,
+        "TASK_CHECK_FEAR": 1,
+        "TASK_RESET_TASK_LIST_TIMER": 1,
+        "TASK_REST_WAIT": 1,
+        "TASK_VANISH": 1
+      },
+      "key_tasks_required": [
+        "TASK_REST_WAIT",
+        "TASK_CHANGE_WORK_TIME_RESIDENCE"
+      ],
+      "effects": [
+        "rest wait",
+        "worktime receives residence delta",
+        "cycle advances"
+      ],
+      "dependencies": [
+        "work_time_change_residence",
+        "rest_wait"
+      ]
+    },
+    {
+      "id": "work_start_path_and_check",
+      "when": "cycle chooses work",
+      "tasks": "worker-specific TL_*_WORK_START",
+      "key_tasks_required": [
+        "TASK_START_WORK_IF_AT_WORKPLACE",
+        "TASK_GO_TO_WORK_BUILDING",
+        "TASK_CHECK_GO_TO_WORK_BUILDING_SUCCESS",
+        "TASK_SET_TASK_LIST"
+      ],
+      "effects": [
+        "optionally collect supplier goods",
+        "attempt move to workplace",
+        "branch on GO_TO_WORK success check",
+        "transition to worker-specific work loop"
+      ],
+      "dependencies": [
+        "workplace assignment",
+        "supplier path (if needed)",
+        "pathfinding success"
+      ]
+    },
+    {
+      "id": "leave_settlement_path_and_check",
+      "when": "worker leaves settlement cycle",
+      "tasks": [
+        "TASK_SET_ANIM",
+        "TASK_LEAVE_BUILDING",
+        "TASK_LEFT_BUILDING",
+        "TASK_GO_TO_LEAVE_BUILDING",
+        "TASK_CHECK_GO_TO_VILLAGE_CENTER_SUCCESS",
+        "TASK_ENTER_BUILDING",
+        "TASK_LEAVE_SETTLEMENT",
+        "TASK_LIST_DONE"
+      ],
+      "key_tasks_required": [
+        "TASK_GO_TO_LEAVE_BUILDING",
+        "TASK_CHECK_GO_TO_VILLAGE_CENTER_SUCCESS",
+        "TASK_LEAVE_SETTLEMENT"
+      ],
+      "effects": [
+        "move to village center/leave building",
+        "branch on leave path success",
+        "leave settlement"
+      ],
+      "dependencies": [
+        "village center availability",
+        "pathfinding success"
+      ]
+    },
+    {
+      "id": "alarm_flee_interrupt",
+      "when": "fear/alarm branch activates",
+      "tasks": [
+        "TASK_SET_ANIM",
+        "TASK_LEAVE_BUILDING",
+        "TASK_LEFT_BUILDING",
+        "TASK_FLEE",
+        "TASK_SET_ANIM",
+        "TASK_WAIT",
+        "TASK_RETURN_TO_CYCLE"
+      ],
+      "key_tasks_required": [
+        "TASK_FLEE",
+        "TASK_WAIT",
+        "TASK_RETURN_TO_CYCLE"
+      ],
+      "effects": [
+        "worker interrupts normal cycle",
+        "flee task executed",
+        "returns to cycle after wait"
+      ],
+      "dependencies": [
+        "alarm mode",
+        "worker_flight_distance",
+        "pathfinding"
+      ]
+    },
+    {
+      "id": "go_to_defendable_building",
+      "when": "defendable building branch activates",
+      "tasks": [
+        "TASK_SET_ANIM",
+        "TASK_LEAVE_BUILDING",
+        "TASK_LEFT_BUILDING",
+        "TASK_MOVE_TO_DEFENDABLE_BUILDING",
+        "TASK_CHECK_GO_TO_DEFENDABLE_BUILDING_SUCCESS",
+        "TASK_ENTER_BUILDING",
+        "TASK_CHANGE_DEFENDABLE_BUILDING_ATTACHMENT",
+        "TASK_VANISH",
+        "TASK_DEFEND"
+      ],
+      "key_tasks_required": [
+        "TASK_MOVE_TO_DEFENDABLE_BUILDING",
+        "TASK_CHECK_GO_TO_DEFENDABLE_BUILDING_SUCCESS",
+        "TASK_DEFEND"
+      ],
+      "effects": [
+        "moves to defendable building",
+        "branches on path success",
+        "enters defend state"
+      ],
+      "dependencies": [
+        "defendable building availability",
+        "pathfinding success"
+      ]
+    }
+  ],
+  "worker_profiles": {
+    "alchemist": {
+      "env_name": "alchemist",
+      "source_file": "PU_Alchemist.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 20000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_ALCHEMIST_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_alchemist_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_alchemist_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "brickmaker": {
+      "env_name": "brickmaker",
+      "source_file": "PU_BrickMaker.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 30000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_BRICKMAKER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_brickmaker_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_brickmaker_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "coiner": {
+      "env_name": "coiner",
+      "source_file": "PU_Coiner.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 2000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 4000,
+        "work_time_change_work": -100,
+        "work_time_change_farm": 0.1,
+        "work_time_change_residence": 0.1,
+        "work_time_change_camp": 0.2,
+        "work_time_max_farm": 200,
+        "work_time_max_residence": 200,
+        "eat_wait": 500,
+        "rest_wait": 500
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_COINER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_coiner_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_coiner_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 2000,
+        "work_time_change_camp": 0.2,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "engineer": {
+      "env_name": "engineer",
+      "source_file": "PU_Engineer.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 4000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 3000,
+        "rest_wait": 2000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_ENGINEER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_engineer_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_engineer_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "farmer": {
+      "env_name": "farmer",
+      "source_file": "PU_Farmer.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 30,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 4000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_FARMER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_FARMER_EAT",
+        "EatIdleTaskList": "TL_FARMER_IDLE",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": false,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_farmer_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_farmer_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "gunsmith": {
+      "env_name": "gunsmith",
+      "source_file": "PU_Gunsmith.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 30,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 30000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_GUNSMITH_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_gunsmith_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_gunsmith_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "masterbuilder": {
+      "env_name": "master_builder",
+      "source_file": "PU_MasterBuilder.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 18000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_MASTER_BUILDER_WORK1_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_master_builder_work1_start.xml"
+        ],
+        "work_nodes": [
+          "tl_master_builder_work1.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "miner": {
+      "env_name": "miner",
+      "source_file": "PU_Miner.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 30,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 30000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_MINER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_miner_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_miner_claymine_work.xml",
+          "tl_miner_claymine_work_inside.xml",
+          "tl_miner_ironmine_work.xml",
+          "tl_miner_ironmine_work_inside.xml",
+          "tl_miner_stonemine_work.xml",
+          "tl_miner_stonemine_work_inside.xml",
+          "tl_miner_sulfurmine_work.xml",
+          "tl_miner_sulfurmine_work_inside.xml",
+          "tl_miner_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "priest": {
+      "env_name": "priest",
+      "source_file": "PU_Priest.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 4000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_PRIEST_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_priest_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_priest_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "sawmillworker": {
+      "env_name": "sawmill_worker",
+      "source_file": "PU_Sawmillworker.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 40000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_SAWMILLWORKER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_sawmillworker_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_sawmillworker_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "scholar": {
+      "env_name": "scholar",
+      "source_file": "PU_Scholar.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 30,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 30000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_SCHOLAR_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_scholar_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_scholar_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "serf": {
+      "env_name": "serf",
+      "source_file": "PU_Serf.xml",
+      "has_worktime": false,
+      "movement": {
+        "speed": 400,
+        "rotation_speed": 30,
+        "move_task_list": "TL_SERF_WALK",
+        "camper_range": 5000,
+        "resource_search_radius": 4500
+      },
+      "worktime": {
+        "work_wait_until": null,
+        "work_time_change_work": null,
+        "work_time_change_farm": null,
+        "work_time_change_residence": null,
+        "work_time_change_camp": null,
+        "work_time_max_farm": null,
+        "work_time_max_residence": null,
+        "eat_wait": null,
+        "rest_wait": null
+      },
+      "declared_tasklists": {
+        "ApproachConstructionSiteTaskList": "TL_SERF_GO_TO_CONSTRUCTION_SITE",
+        "TurnIntoBattleSerfTaskList": "TL_SERF_TURN_INTO_BATTLE_SERF",
+        "BattleTaskList": "TL_BATTLE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": false,
+        "has_change_work_time_camp_in_idle_chain": false,
+        "eat_path_has_success_check": false,
+        "rest_path_has_success_check": false
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [],
+        "work_nodes": []
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": null,
+        "decision_dependencies": [
+          "no worker worktime cycle (serf/non-worker behavior)"
+        ]
+      }
+    },
+    "smelter": {
+      "env_name": "smelter",
+      "source_file": "PU_Smelter.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 30,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 4000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 3000,
+        "rest_wait": 2000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_SMELTER_WORK1_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_smelter_work1.xml",
+          "tl_smelter_work1_start.xml"
+        ],
+        "work_nodes": [
+          "tl_smelter_work1_wait.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "smith": {
+      "env_name": "smith",
+      "source_file": "PU_Smith.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 30,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 30000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_SMITH_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_smith_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_smith_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "stonecutter": {
+      "env_name": "stonecutter",
+      "source_file": "PU_Stonecutter.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 15000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_STONECUTTER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_stonecutter_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_stonecutter_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "tavernbarkeeper": {
+      "env_name": "barkeeper",
+      "source_file": "PU_TavernBarkeeper.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 30,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 4000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_TAVERNBARKEEPER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_FARMER_EAT",
+        "EatIdleTaskList": "TL_FARMER_IDLE",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": false,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_tavernbarkeeper_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_tavernbarkeeper_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "trader": {
+      "env_name": "trader",
+      "source_file": "PU_Trader.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 18000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_TRADER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_trader_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_trader_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    },
+    "treasurer": {
+      "env_name": "treasurer",
+      "source_file": "PU_Treasurer.xml",
+      "has_worktime": true,
+      "movement": {
+        "speed": 320,
+        "rotation_speed": 15,
+        "move_task_list": null,
+        "camper_range": 5000,
+        "resource_search_radius": null
+      },
+      "worktime": {
+        "work_wait_until": 15000,
+        "work_time_change_work": -50,
+        "work_time_change_farm": 0.7,
+        "work_time_change_residence": 0.5,
+        "work_time_change_camp": 0.1,
+        "work_time_max_farm": 100,
+        "work_time_max_residence": 400,
+        "eat_wait": 2000,
+        "rest_wait": 3000
+      },
+      "declared_tasklists": {
+        "WorkTaskList": "TL_TREASURER_WORK_START",
+        "WorkIdleTaskList": "TL_WORKER_IDLE_START",
+        "EatTaskList": "TL_WORKER_EAT_START",
+        "EatIdleTaskList": "TL_WORKER_IDLE_START",
+        "RestTaskList": "TL_WORKER_REST_START",
+        "RestIdleTaskList": "TL_WORKER_IDLE_START",
+        "LeaveTaskList": "TL_WORKER_LEAVE",
+        "GoToDefendableBuildingTaskList": "TL_WORKER_GO_TO_DEFENDABLE_BUILDING",
+        "FlightTaskList": "TL_WORKER_FLEE"
+      },
+      "derived_flags": {
+        "has_go_to_camp_in_idle_start": true,
+        "has_change_work_time_camp_in_idle_chain": true,
+        "eat_path_has_success_check": true,
+        "rest_path_has_success_check": true
+      },
+      "work_task_nodes": {
+        "work_start_nodes": [
+          "tl_treasurer_work_start.xml"
+        ],
+        "work_nodes": [
+          "tl_treasurer_work.xml"
+        ]
+      },
+      "camp_dependencies": {
+        "camper_range": 5000,
+        "work_time_change_camp": 0.1,
+        "decision_dependencies": [
+          "worker has worktime and falls into eat/rest/idle cycle",
+          "farm/residence availability and reachability checks in tasklists",
+          "camper range limit from CCamperBehaviorProperties.Range",
+          "idle path uses TASK_GO_TO_CAMP then TASK_CHANGE_WORK_TIME_CAMP"
+        ]
+      }
+    }
+  },
+  "branch_anchors": {
+    "0x004ed68d": {
+      "purpose": "TASK_CHECK_GO_TO_WORK_BUILDING_SUCCESS branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 18,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "TASK_CHECK_GO_TO_WORK_BUILDING_SUCCESS"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5166733,
+          "mnemonic": "jo",
+          "true_target": 5166740,
+          "false_target": 5166735,
+          "predicate_hint": ""
+        }
+      ]
+    },
+    "0x004ed9e7": {
+      "purpose": "TASK_GO_TO_CAMP anchor",
+      "stats": {
+        "block_count": 1,
+        "instruction_count": 10,
+        "edge_count": 1,
+        "conditional_branches": 0,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "TASK_GO_TO_CAMP"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": []
+    },
+    "0x004ed50a": {
+      "purpose": "TASK_CHANGE_WORK_TIME_CAMP anchor",
+      "stats": {
+        "block_count": 1,
+        "instruction_count": 10,
+        "edge_count": 1,
+        "conditional_branches": 0,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "TASK_CHANGE_WORK_TIME_CAMP"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": []
+    },
+    "0x006781a8": {
+      "purpose": "worker reattach/distance checks",
+      "stats": {
+        "block_count": 4,
+        "instruction_count": 141,
+        "edge_count": 7,
+        "conditional_branches": 2,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "MaximumDistanceWorkerToFarm",
+          "MaximumDistanceWorkerToResidence",
+          "ReAttachWorkerFrequency"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 6783432,
+          "mnemonic": "jg",
+          "true_target": 6783443,
+          "false_target": 6783434,
+          "predicate_hint": "0x006781c2: cmp eax, dword ptr [ecx + 0x3adc]"
+        },
+        {
+          "at": 6783461,
+          "mnemonic": "jne",
+          "true_target": 6783434,
+          "false_target": 6783463,
+          "predicate_hint": "0x006781dd: cmp dword ptr [0xf6eaf8], -1"
+        }
+      ]
+    },
+    "0x0063201a": {
+      "purpose": "path runtime: next waypoint / orientation / pathing used",
+      "stats": {
+        "block_count": 4,
+        "instruction_count": 235,
+        "edge_count": 14,
+        "conditional_branches": 2,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "IsPathingUsed",
+          "NextWayPoint",
+          "NextWaypointOrientation"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 6496314,
+          "mnemonic": "jg",
+          "true_target": 6496325,
+          "false_target": 6496316,
+          "predicate_hint": "0x00632034: cmp eax, dword ptr [ecx + 0x3adc]"
+        },
+        {
+          "at": 6496343,
+          "mnemonic": "jne",
+          "true_target": 6496316,
+          "false_target": 6496345,
+          "predicate_hint": "0x0063204f: cmp dword ptr [0xf5cc30], -1"
+        }
+      ]
+    },
+    "0x00631e3d": {
+      "purpose": "path runtime: fine/coarse path",
+      "stats": {
+        "block_count": 4,
+        "instruction_count": 102,
+        "edge_count": 12,
+        "conditional_branches": 2,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "CoarsePath",
+          "FinePath"
+        ],
+        "classes": [],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 6495837,
+          "mnemonic": "jg",
+          "true_target": 6495848,
+          "false_target": 6495839,
+          "predicate_hint": "0x00631e57: cmp eax, dword ptr [ecx + 0x3adc]"
+        },
+        {
+          "at": 6495866,
+          "mnemonic": "jne",
+          "true_target": 6495839,
+          "false_target": 6495868,
+          "predicate_hint": "0x00631e72: cmp dword ptr [0xf5cc34], -1"
+        }
+      ]
+    },
+    "0x0062767a": {
+      "purpose": "dynamic blocking area / blocked points",
+      "stats": {
+        "block_count": 4,
+        "instruction_count": 417,
+        "edge_count": 20,
+        "conditional_branches": 2,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "BlockingArea",
+          "NumBlockedPoints"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 6452890,
+          "mnemonic": "jg",
+          "true_target": 6452901,
+          "false_target": 6452892,
+          "predicate_hint": "0x00627694: cmp eax, dword ptr [ecx + 0x3adc]"
+        },
+        {
+          "at": 6452919,
+          "mnemonic": "jne",
+          "true_target": 6452892,
+          "false_target": 6452921,
+          "predicate_hint": "0x006276af: cmp dword ptr [0xf583c4], -1"
+        }
+      ]
+    },
+    "0x00645c1c": {
+      "purpose": "CCampBehavior branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 18,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCCampBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 6577192,
+          "mnemonic": "je",
+          "true_target": 6577204,
+          "false_target": 6577194,
+          "predicate_hint": "0x00645c24: test byte ptr [ebp + 8], 1"
+        }
+      ]
+    },
+    "0x00645e98": {
+      "purpose": "CCamperBehavior branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 18,
+        "edge_count": 3,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCCamperBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 6577832,
+          "mnemonic": "je",
+          "true_target": 6577844,
+          "false_target": 6577834,
+          "predicate_hint": "0x00645ea2: mov dword ptr [esi], 0xbbe3c8"
+        }
+      ]
+    },
+    "0x0069c652": {
+      "purpose": "CWorkerBehavior branching hub",
+      "stats": {
+        "block_count": 8,
+        "instruction_count": 63,
+        "edge_count": 22,
+        "conditional_branches": 7,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCWorkerBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 6932087,
+          "mnemonic": "je",
+          "true_target": 6932139,
+          "false_target": 6932089,
+          "predicate_hint": "0x0069c675: test ebx, ebx"
+        },
+        {
+          "at": 6932161,
+          "mnemonic": "jne",
+          "true_target": 6932182,
+          "false_target": 6932163,
+          "predicate_hint": "0x0069c6bd: cmp dword ptr [edi + 0x20], -1"
+        },
+        {
+          "at": 6932171,
+          "mnemonic": "jne",
+          "true_target": 6932176,
+          "false_target": 6932173,
+          "predicate_hint": "0x0069c6c3: cmp dword ptr [esi*4 + 0xbe1434], -1"
+        },
+        {
+          "at": 6932180,
+          "mnemonic": "jl",
+          "true_target": 6932157,
+          "false_target": 6932182,
+          "predicate_hint": "0x0069c6d1: cmp esi, 6"
+        }
+      ]
+    },
+    "0x0069ce8f": {
+      "purpose": "CWorkerFleeBehavior branching hub",
+      "stats": {
+        "block_count": 6,
+        "instruction_count": 52,
+        "edge_count": 10,
+        "conditional_branches": 2,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCWorkerFleeBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 6934191,
+          "mnemonic": "jle",
+          "true_target": 6934196,
+          "false_target": 6934193,
+          "predicate_hint": "0x0069cea9: cmp eax, dword ptr [ecx + 0x3adc]"
+        },
+        {
+          "at": 6934225,
+          "mnemonic": "jne",
+          "true_target": 6934195,
+          "false_target": 6934227,
+          "predicate_hint": "0x0069cec9: cmp dword ptr [0xf78020], -1"
+        }
+      ]
+    }
+  },
+  "implementation_notes": [
+    "Use declared/resolved tasklists as authoritative state transitions.",
+    "Apply worktime deltas from TASK_CHANGE_WORK_TIME_* tasks in corresponding loops.",
+    "For eat/rest/work/leave transitions, branch on TASK_CHECK_GO_TO_*_SUCCESS outcomes.",
+    "Use camper_range plus pathing availability to determine camp reachability.",
+    "Respect global distance limits (farm/residence) and reattach frequency for assignment logic.",
+    "Integrate alarm/flee as interrupt branch with worker_flight_distance dependency."
+  ],
+  "known_limits": [
+    "CFG branch extraction is static and heuristic; indirect targets may be incomplete.",
+    "Some low-level formulas (exact arithmetic order/clamps) need further disassembly validation."
+  ]
+}

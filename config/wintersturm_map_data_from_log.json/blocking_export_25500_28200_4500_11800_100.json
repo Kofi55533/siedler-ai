@@ -1,0 +1,13 @@
+{
+  "x_min": 25500,
+  "x_max": 28200,
+  "y_min": 4500,
+  "y_max": 11800,
+  "step": 100,
+  "rows": 74,
+  "cols": 28,
+  "npy": "config\\wintersturm_map_data_from_log.json\\blocking_export_25500_28200_4500_11800_100.npy",
+  "walkable_count": 704,
+  "blocked_count": 1368,
+  "unknown_count": 0
+}

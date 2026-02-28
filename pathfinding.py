@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
-Pfadfindung und Karten-Management für Siedler AI.
+Pfadfindung und Karten-Management fÃ¼r Siedler AI.
 
-Dieses Modul enthält:
-1. WalkableGrid - Verwaltet begehbare/blockierte Flächen
+Dieses Modul enthÃ¤lt:
+1. WalkableGrid - Verwaltet begehbare/blockierte FlÃ¤chen
 2. A* Pathfinding - Findet optimale Wege
-3. BuildingManager - Verwaltet Gebäude und deren Blockierungen
-4. Bauplatz-Validierung - Prüft ob Gebäude platziert werden können
+3. BuildingManager - Verwaltet GebÃ¤ude und deren Blockierungen
+4. Bauplatz-Validierung - PrÃ¼ft ob GebÃ¤ude platziert werden kÃ¶nnen
 """
 
 import numpy as np
@@ -22,40 +22,77 @@ import os
 # =============================================================================
 
 # Grid-Skalierung (aus der Kartenanalyse)
+# Default: alte 1508x1496 Grid-GrÃ¶ÃŸe. Kann zur Laufzeit Ã¼berschrieben werden.
 SCALE_X = 33.5  # 1 Grid-Pixel = 33.5 Spieleinheiten
 SCALE_Y = 33.8  # 1 Grid-Pixel = 33.8 Spieleinheiten
 
-# Gebäudegrößen in Spieleinheiten
-BUILDING_SIZES = {
-    # Kleine Gebäude
-    "Wohnhaus": 400,
-    "Bauernhof": 400,
-    "Sägewerk": 400,
-    "Steinmetz": 400,
-    "Ziegelei": 400,
-    "Alchemist": 400,
 
-    # Mittlere Gebäude
-    "Hochschule": 600,
-    "Schmiede": 600,
-    "Kaserne": 600,
-    "Bogenmacher": 600,
-    "Büchsenmacherei": 600,
-    "Kirche": 600,
-    "Bank": 600,
+def set_grid_scale(scale_x: float, scale_y: float):
+    """Setzt die globale Grid-Skalierung (Welt -> Grid)."""
+    global SCALE_X, SCALE_Y
+    SCALE_X = float(scale_x)
+    SCALE_Y = float(scale_y)
 
-    # Große Gebäude
-    "Hauptquartier": 800,
-    "Dorfzentrum": 800,
 
-    # Minen (feste Positionen)
-    "Steinmine": 400,
-    "Eisenmine": 400,
-    "Lehmmine": 400,
-    "Schwefelmine": 400,
+def get_grid_scale() -> Tuple[float, float]:
+    """Gibt die aktuelle Grid-Skalierung zurÃ¼ck."""
+    return SCALE_X, SCALE_Y
+
+# GebÃ¤ude-Footprints in Spieleinheiten (width, height)
+# Werte aus Entity-XMLs (Blocked2 - Blocked1) Ã¼bernommen.
+BUILDING_FOOTPRINTS = {
+    # Kern-GebÃ¤ude
+    "Hauptquartier": (1200, 1200),
+    "Dorfzentrum": (1200, 1100),
+    "Wohnhaus": (400, 500),
+    "Bauernhof": (600, 1000),
+    # Produktions-GebÃ¤ude
+    "Hochschule": (1300, 1500),
+    "SÃ¤gemÃ¼hle": (900, 1600),
+    "SteinmetzhÃ¼tte": (800, 1000),
+    "Schmiede": (900, 700),
+    "LehmhÃ¼tte": (750, 1010),
+    "AlchimistenhÃ¼tte": (800, 1400),
+    "BÃ¼chsenmacherei": (1000, 1000),
+    "KanongieÃŸerei": (1500, 1300),
+    # Minen
+    "Eisenmine": (920, 1070),
+    "Steinmine": (1000, 1000),
+    "Lehmmine": (1220, 970),
+    "Schwefelmine": (920, 970),
+    # MilitÃ¤r
+    "Kaserne": (1400, 1400),
+    "SchieÃŸplatz": (1300, 1500),
+    "Stall": (1600, 1800),
+    "Turm": (600, 600),
+    # Spezial
+    "Bank": (900, 900),
+    "Kloster": (1200, 1400),
+    "Markt": (1200, 1200),
+    "Taverne": (800, 1000),
+    "Architektenstube": (600, 600),
+    "BrÃ¼cke": (400, 1200),
+    # Schmuck (Beautification)
+    "PB_Beautification01": (300, 300),
+    "PB_Beautification02": (500, 500),
+    "PB_Beautification03": (300, 300),
+    "PB_Beautification04": (300, 300),
+    "PB_Beautification05": (300, 300),
+    "PB_Beautification06": (300, 300),
+    "PB_Beautification07": (300, 300),
+    "PB_Beautification08": (300, 300),
+    "PB_Beautification09": (300, 300),
+    "PB_Beautification10": (300, 300),
+    "PB_Beautification11": (300, 300),
+    "PB_Beautification12": (300, 300),
 }
 
-# Bewegungsrichtungen für A* (8-direktional)
+
+def get_building_footprint(building_type: str) -> Tuple[int, int]:
+    """Gibt (width, height) des GebÃ¤udes zurÃ¼ck (Fallback: 400x400)."""
+    return BUILDING_FOOTPRINTS.get(building_type, (400, 400))
+
+# Bewegungsrichtungen fÃ¼r A* (8-direktional)
 DIRECTIONS = [
     (0, 1),   # rechts
     (1, 0),   # unten
@@ -70,6 +107,8 @@ DIRECTIONS = [
 # Bewegungskosten
 COST_STRAIGHT = 10
 COST_DIAGONAL = 14  # ~sqrt(2) * 10
+# Schutz gegen Worst-Case A* (Performance-Fallback)
+MAX_ASTAR_EXPANSIONS = 200000
 
 # =============================================================================
 # HILFSKLASSEN
@@ -79,8 +118,8 @@ class CellType(IntEnum):
     """Zellentypen im Grid."""
     WALKABLE = 0
     BLOCKED_TERRAIN = 1  # Berg, Wasser (permanent)
-    BLOCKED_BUILDING = 2  # Gebäude (dynamisch)
-    BLOCKED_TREE = 3      # Baum (dynamisch, kann gefällt werden)
+    BLOCKED_BUILDING = 2  # GebÃ¤ude (dynamisch)
+    BLOCKED_TREE = 3      # Baum (dynamisch, kann gefÃ¤llt werden)
     BLOCKED_RESOURCE = 4  # Ressourcen-Vorkommen
 
 
@@ -118,7 +157,7 @@ class PathResult:
     world_distance: float = 0.0  # Distanz in Spieleinheiten
 
     def get_world_path(self) -> List[Tuple[float, float]]:
-        """Gibt den Pfad in Welt-Koordinaten zurück."""
+        """Gibt den Pfad in Welt-Koordinaten zurÃ¼ck."""
         return [pos.to_world() for pos in self.path]
 
 
@@ -128,11 +167,11 @@ class PathResult:
 
 class WalkableGrid:
     """
-    Verwaltet die begehbaren und blockierten Flächen der Karte.
+    Verwaltet die begehbaren und blockierten FlÃ¤chen der Karte.
 
     Das Grid hat mehrere Layer:
     - terrain_base: Statische Terrain-Blockierungen (Berge, Wasser)
-    - buildings: Dynamische Gebäude-Blockierungen
+    - buildings: Dynamische GebÃ¤ude-Blockierungen
     - trees: Dynamische Baum-Blockierungen
     - resources: Ressourcen-Positionen (Vorkommen)
     """
@@ -149,20 +188,23 @@ class WalkableGrid:
         self.trees = np.zeros((height, width), dtype=np.uint8)
         self.resources = np.zeros((height, width), dtype=np.uint8)
 
-        # Gebäude-Tracking
-        self.building_positions: Dict[int, Tuple[GridPosition, str, int]] = {}
+        # GebÃ¤ude-Tracking
+        self.building_positions: Dict[int, Tuple[GridPosition, str, int, int]] = {}
         self.next_building_id = 1
 
         # Baum-Tracking
         self.tree_positions: Dict[int, GridPosition] = {}
         self.next_tree_id = 1
 
-        # Cache für Pfade (optional)
+        # Cache fÃ¼r Pfade (optional)
         self.path_cache: Dict[Tuple[GridPosition, GridPosition], PathResult] = {}
         self.cache_valid = True
+        self.revision = 0
+        # FÃ¼r laufende Einheiten: nur erhÃ¶hen wenn bestehende Pfade potenziell ungÃ¼ltig werden.
+        self.routing_revision = 0
 
     def copy_fresh(self) -> 'WalkableGrid':
-        """Erstellt eine frische Kopie mit nur dem Basis-Terrain (für schnelles Reset)."""
+        """Erstellt eine frische Kopie mit nur dem Basis-Terrain (fÃ¼r schnelles Reset)."""
         new_grid = WalkableGrid(self.width, self.height)
         new_grid.terrain_base = self.terrain_base.copy()  # Statisches Terrain kopieren
         # Dynamische Layer bleiben leer (buildings, trees, resources = 0)
@@ -170,27 +212,27 @@ class WalkableGrid:
 
     def load_terrain_from_file(self, terrain_file: str, walkable_threshold: Tuple[int, int] = (100, 160)):
         """
-        Lädt Terrain-Daten aus einer Binärdatei.
+        LÃ¤dt Terrain-Daten aus einer BinÃ¤rdatei.
 
         Args:
             terrain_file: Pfad zur Terrain-Datei (file_0.bin)
-            walkable_threshold: (min, max) Werte für begehbares Terrain
+            walkable_threshold: (min, max) Werte fÃ¼r begehbares Terrain
         """
         with open(terrain_file, 'rb') as f:
             data = f.read()
 
         terrain = np.frombuffer(data, dtype=np.uint8)
 
-        # Reshape auf Grid-Größe
+        # Reshape auf Grid-GrÃ¶ÃŸe
         if len(terrain) == self.width * self.height:
             terrain = terrain.reshape((self.height, self.width))
         else:
             # Versuche passende Dimensionen zu finden
             total = len(terrain)
-            # Bekannte Größe: 1508 x 1496 = 2,255,968
+            # Bekannte GrÃ¶ÃŸe: 1508 x 1496 = 2,255,968
             if total == 2255968:
                 terrain = terrain.reshape((1496, 1508))
-                # Resize wenn nötig
+                # Resize wenn nÃ¶tig
                 if terrain.shape != (self.height, self.width):
                     from scipy.ndimage import zoom
                     zoom_y = self.height / terrain.shape[0]
@@ -205,13 +247,13 @@ class WalkableGrid:
         print(f"  Begehbar: {np.sum(self.terrain_base)} Pixel ({100*np.mean(self.terrain_base):.1f}%)")
 
     def load_terrain_from_array(self, walkable_array: np.ndarray):
-        """Lädt Terrain direkt aus einem NumPy Array."""
+        """LÃ¤dt Terrain direkt aus einem NumPy Array."""
         if walkable_array.shape != (self.height, self.width):
-            raise ValueError(f"Array-Größe {walkable_array.shape} passt nicht zu Grid {self.height}x{self.width}")
+            raise ValueError(f"Array-GrÃ¶ÃŸe {walkable_array.shape} passt nicht zu Grid {self.height}x{self.width}")
         self.terrain_base = walkable_array.astype(np.uint8)
 
     def is_walkable(self, x: int, y: int) -> bool:
-        """Prüft ob eine Zelle begehbar ist."""
+        """PrÃ¼ft ob eine Zelle begehbar ist."""
         if not (0 <= x < self.width and 0 <= y < self.height):
             return False
 
@@ -220,36 +262,38 @@ class WalkableGrid:
                 self.trees[y, x] == 0)
 
     def is_walkable_pos(self, pos: GridPosition) -> bool:
-        """Prüft ob eine GridPosition begehbar ist."""
+        """PrÃ¼ft ob eine GridPosition begehbar ist."""
         return self.is_walkable(pos.x, pos.y)
 
     def get_walkable_grid(self) -> np.ndarray:
-        """Gibt das kombinierte begehbare Grid zurück."""
+        """Gibt das kombinierte begehbare Grid zurÃ¼ck."""
         return (self.terrain_base &
                 (1 - self.buildings) &
                 (1 - self.trees)).astype(np.uint8)
 
     # -------------------------------------------------------------------------
-    # Gebäude-Management
+    # GebÃ¤ude-Management
     # -------------------------------------------------------------------------
 
     def add_building(self, world_x: float, world_y: float, building_type: str) -> int:
         """
-        Fügt ein Gebäude hinzu und blockiert die entsprechenden Zellen.
+        FÃ¼gt ein GebÃ¤ude hinzu und blockiert die entsprechenden Zellen.
 
         Returns:
-            Building ID für späteres Entfernen
+            Building ID fÃ¼r spÃ¤teres Entfernen
         """
-        size = BUILDING_SIZES.get(building_type, 400)
-        size_in_grid = max(1, int(size / SCALE_X))
+        width, height = get_building_footprint(building_type)
+        size_x = max(1, int(width / SCALE_X))
+        size_y = max(1, int(height / SCALE_Y))
 
         # Grid-Position (Zentrum)
         center = GridPosition.from_world(world_x, world_y)
 
         # Blockiere alle Zellen im Bereich
-        half_size = size_in_grid // 2
-        for dy in range(-half_size, half_size + 1):
-            for dx in range(-half_size, half_size + 1):
+        half_x = size_x // 2
+        half_y = size_y // 2
+        for dy in range(-half_y, half_y + 1):
+            for dx in range(-half_x, half_x + 1):
                 gx, gy = center.x + dx, center.y + dy
                 if 0 <= gx < self.width and 0 <= gy < self.height:
                     self.buildings[gy, gx] = 1
@@ -257,36 +301,41 @@ class WalkableGrid:
         # Tracking
         building_id = self.next_building_id
         self.next_building_id += 1
-        self.building_positions[building_id] = (center, building_type, size_in_grid)
+        self.building_positions[building_id] = (center, building_type, size_x, size_y)
 
         # Cache invalidieren
         self.cache_valid = False
+        self.revision += 1
+        self.routing_revision += 1
 
         return building_id
 
     def remove_building(self, building_id: int):
-        """Entfernt ein Gebäude und gibt die Zellen frei."""
+        """Entfernt ein GebÃ¤ude und gibt die Zellen frei."""
         if building_id not in self.building_positions:
             return
 
-        center, building_type, size_in_grid = self.building_positions[building_id]
+        center, building_type, size_x, size_y = self.building_positions[building_id]
 
-        half_size = size_in_grid // 2
-        for dy in range(-half_size, half_size + 1):
-            for dx in range(-half_size, half_size + 1):
+        half_x = size_x // 2
+        half_y = size_y // 2
+        for dy in range(-half_y, half_y + 1):
+            for dx in range(-half_x, half_x + 1):
                 gx, gy = center.x + dx, center.y + dy
                 if 0 <= gx < self.width and 0 <= gy < self.height:
                     self.buildings[gy, gx] = 0
 
         del self.building_positions[building_id]
         self.cache_valid = False
+        self.revision += 1
+        self.routing_revision += 1
 
     # -------------------------------------------------------------------------
     # Baum-Management
     # -------------------------------------------------------------------------
 
     def add_tree(self, world_x: float, world_y: float) -> int:
-        """Fügt einen Baum hinzu."""
+        """FÃ¼gt einen Baum hinzu."""
         pos = GridPosition.from_world(world_x, world_y)
 
         if 0 <= pos.x < self.width and 0 <= pos.y < self.height:
@@ -297,10 +346,12 @@ class WalkableGrid:
         self.tree_positions[tree_id] = pos
 
         self.cache_valid = False
+        self.revision += 1
+        self.routing_revision += 1
         return tree_id
 
     def add_trees_batch(self, tree_list: List[Dict]) -> List[int]:
-        """Fügt mehrere Bäume auf einmal hinzu (effizienter)."""
+        """FÃ¼gt mehrere BÃ¤ume auf einmal hinzu (effizienter)."""
         tree_ids = []
         for tree in tree_list:
             tree_id = self.add_tree(tree["x"], tree["y"])
@@ -308,7 +359,7 @@ class WalkableGrid:
         return tree_ids
 
     def remove_tree(self, tree_id: int):
-        """Entfernt einen Baum (gefällt)."""
+        """Entfernt einen Baum (gefÃ¤llt)."""
         if tree_id not in self.tree_positions:
             return
 
@@ -318,9 +369,10 @@ class WalkableGrid:
 
         del self.tree_positions[tree_id]
         self.cache_valid = False
+        self.revision += 1
 
     def get_nearest_tree(self, world_x: float, world_y: float) -> Optional[Tuple[int, float]]:
-        """Findet den nächsten Baum zu einer Position."""
+        """Findet den nÃ¤chsten Baum zu einer Position."""
         if not self.tree_positions:
             return None
 
@@ -346,24 +398,26 @@ class WalkableGrid:
 
     def can_build_at(self, world_x: float, world_y: float, building_type: str) -> bool:
         """
-        Prüft ob ein Gebäude an einer Position gebaut werden kann.
+        PrÃ¼ft ob ein GebÃ¤ude an einer Position gebaut werden kann.
 
         Bedingungen:
-        1. Alle Zellen im Bereich müssen terrain-begehbar sein
-        2. Keine anderen Gebäude im Weg
-        3. Keine Bäume im Weg (müssen erst gefällt werden)
+        1. Alle Zellen im Bereich mÃ¼ssen terrain-begehbar sein
+        2. Keine anderen GebÃ¤ude im Weg
+        3. Keine BÃ¤ume im Weg (mÃ¼ssen erst gefÃ¤llt werden)
         """
-        size = BUILDING_SIZES.get(building_type, 400)
-        size_in_grid = max(1, int(size / SCALE_X))
+        width, height = get_building_footprint(building_type)
+        size_x = max(1, int(width / SCALE_X))
+        size_y = max(1, int(height / SCALE_Y))
 
         center = GridPosition.from_world(world_x, world_y)
-        half_size = size_in_grid // 2
+        half_x = size_x // 2
+        half_y = size_y // 2
 
-        for dy in range(-half_size, half_size + 1):
-            for dx in range(-half_size, half_size + 1):
+        for dy in range(-half_y, half_y + 1):
+            for dx in range(-half_x, half_x + 1):
                 gx, gy = center.x + dx, center.y + dy
 
-                # Außerhalb der Karte?
+                # AuÃŸerhalb der Karte?
                 if not (0 <= gx < self.width and 0 <= gy < self.height):
                     return False
 
@@ -371,27 +425,33 @@ class WalkableGrid:
                 if self.terrain_base[gy, gx] == 0:
                     return False
 
-                # Gebäude im Weg?
+                # GebÃ¤ude im Weg?
                 if self.buildings[gy, gx] == 1:
+                    return False
+
+                # BÃ¤ume im Weg?
+                if self.trees[gy, gx] == 1:
                     return False
 
         return True
 
     def get_trees_blocking_building(self, world_x: float, world_y: float,
                                      building_type: str) -> List[int]:
-        """Gibt Liste der Bäume zurück, die für den Bau gefällt werden müssen."""
-        size = BUILDING_SIZES.get(building_type, 400)
-        size_in_grid = max(1, int(size / SCALE_X))
+        """Gibt Liste der BÃ¤ume zurÃ¼ck, die fÃ¼r den Bau gefÃ¤llt werden mÃ¼ssen."""
+        width, height = get_building_footprint(building_type)
+        size_x = max(1, int(width / SCALE_X))
+        size_y = max(1, int(height / SCALE_Y))
 
         center = GridPosition.from_world(world_x, world_y)
-        half_size = size_in_grid // 2
+        half_x = size_x // 2
+        half_y = size_y // 2
 
         blocking_trees = []
 
         for tree_id, tree_pos in self.tree_positions.items():
             # Ist der Baum im Baubereich?
-            if (center.x - half_size <= tree_pos.x <= center.x + half_size and
-                center.y - half_size <= tree_pos.y <= center.y + half_size):
+            if (center.x - half_x <= tree_pos.x <= center.x + half_x and
+                center.y - half_y <= tree_pos.y <= center.y + half_y):
                 blocking_trees.append(tree_id)
 
         return blocking_trees
@@ -401,14 +461,15 @@ class WalkableGrid:
                                        search_radius: float = 5000,
                                        max_results: int = 10) -> List[Tuple[float, float, float]]:
         """
-        Findet gültige Baupositionen in der Nähe.
+        Findet gÃ¼ltige Baupositionen in der NÃ¤he.
 
         Returns:
             Liste von (x, y, distance) Tupeln, sortiert nach Distanz
         """
-        size = BUILDING_SIZES.get(building_type, 400)
-        size_in_grid = max(1, int(size / SCALE_X))
-        half_size = size_in_grid // 2
+        width, height = get_building_footprint(building_type)
+        size_x = max(1, int(width / SCALE_X))
+        size_y = max(1, int(height / SCALE_Y))
+        step = max(1, min(size_x, size_y))
 
         center = GridPosition.from_world(near_x, near_y)
         search_grid = int(search_radius / SCALE_X)
@@ -416,9 +477,9 @@ class WalkableGrid:
         valid_positions = []
 
         # Spiralsuche vom Zentrum aus
-        for radius in range(0, search_grid, size_in_grid):
-            for dy in range(-radius, radius + 1, size_in_grid):
-                for dx in range(-radius, radius + 1, size_in_grid):
+        for radius in range(0, search_grid, step):
+            for dy in range(-radius, radius + 1, step):
+                for dx in range(-radius, radius + 1, step):
                     if abs(dx) != radius and abs(dy) != radius:
                         continue  # Nur Rand der Spirale
 
@@ -433,8 +494,8 @@ class WalkableGrid:
                         if len(valid_positions) >= max_results * 2:
                             break
 
-        # Sortiere nach Distanz (und weniger Bäume zum Fällen)
-        valid_positions.sort(key=lambda p: (p[3], p[2]))  # Erst Bäume, dann Distanz
+        # Sortiere nach Distanz (und weniger BÃ¤ume zum FÃ¤llen)
+        valid_positions.sort(key=lambda p: (p[3], p[2]))  # Erst BÃ¤ume, dann Distanz
 
         return [(p[0], p[1], p[2]) for p in valid_positions[:max_results]]
 
@@ -451,7 +512,7 @@ class AStarPathfinder:
     - 8-direktionale Bewegung
     - Diagonale Kosten korrekt berechnet
     - Optional: Pfad-Caching
-    - Optional: Pfad-Glättung
+    - Optional: Pfad-GlÃ¤ttung
     """
 
     def __init__(self, grid: WalkableGrid):
@@ -466,7 +527,7 @@ class AStarPathfinder:
     def find_path(self, start_world: Tuple[float, float],
                   goal_world: Tuple[float, float]) -> PathResult:
         """
-        Findet den kürzesten Pfad zwischen zwei Welt-Positionen.
+        Findet den kuerzesten Pfad zwischen zwei Welt-Positionen.
 
         Args:
             start_world: (x, y) Startposition in Spieleinheiten
@@ -478,9 +539,8 @@ class AStarPathfinder:
         start = GridPosition.from_world(start_world[0], start_world[1])
         goal = GridPosition.from_world(goal_world[0], goal_world[1])
 
-        # Prüfe ob Start und Ziel gültig sind
+        # Pruefe ob Start und Ziel gueltig sind
         if not self.grid.is_walkable_pos(start):
-            # Finde nächste begehbare Zelle
             start = self._find_nearest_walkable(start)
             if start is None:
                 return PathResult(found=False)
@@ -490,59 +550,82 @@ class AStarPathfinder:
             if goal is None:
                 return PathResult(found=False)
 
-        # A* Algorithmus
+        width = self.grid.width
+        height = self.grid.height
+        terrain = self.grid.terrain_base
+        buildings = self.grid.buildings
+        trees = self.grid.trees
+
+        def is_walkable_xy(x: int, y: int) -> bool:
+            if x < 0 or y < 0 or x >= width or y >= height:
+                return False
+            return terrain[y, x] == 1 and buildings[y, x] == 0 and trees[y, x] == 0
+
+        sx, sy = start.x, start.y
+        gx, gy = goal.x, goal.y
+
+        # A* Algorithmus (array-basiert, schneller)
+        inf = np.iinfo(np.int32).max
+        g_score = np.full((height, width), inf, dtype=np.int32)
+        came_x = np.full((height, width), -1, dtype=np.int16)
+        came_y = np.full((height, width), -1, dtype=np.int16)
+
+        def heuristic_xy(x: int, y: int) -> int:
+            dx = abs(x - gx)
+            dy = abs(y - gy)
+            return COST_STRAIGHT * (dx + dy) + (COST_DIAGONAL - 2 * COST_STRAIGHT) * min(dx, dy)
+
+        g_score[sy, sx] = 0
         open_set = []
-        heapq.heappush(open_set, (0, id(start), start))
-
-        came_from: Dict[GridPosition, GridPosition] = {}
-        g_score: Dict[GridPosition, int] = {start: 0}
-        f_score: Dict[GridPosition, int] = {start: self._heuristic(start, goal)}
-
-        open_set_hash: Set[GridPosition] = {start}
+        heapq.heappush(open_set, (heuristic_xy(sx, sy), 0, sx, sy))
+        expansions = 0
 
         while open_set:
-            _, _, current = heapq.heappop(open_set)
-            open_set_hash.discard(current)
+            _, g_curr, x, y = heapq.heappop(open_set)
+            if g_curr != g_score[y, x]:
+                continue
 
-            if current == goal:
+            expansions += 1
+            if MAX_ASTAR_EXPANSIONS and expansions > MAX_ASTAR_EXPANSIONS:
+                return PathResult(found=False)
+
+            if x == gx and y == gy:
                 # Pfad rekonstruieren
-                path = self._reconstruct_path(came_from, current)
-                grid_dist = g_score[current]
+                path: List[GridPosition] = [GridPosition(x, y)]
+                while True:
+                    px = int(came_x[y, x])
+                    py = int(came_y[y, x])
+                    if px < 0 or py < 0:
+                        break
+                    path.append(GridPosition(px, py))
+                    x, y = px, py
+                path.reverse()
+                grid_dist = int(g_score[gy, gx])
                 world_dist = grid_dist * ((SCALE_X + SCALE_Y) / 2) / COST_STRAIGHT
-
                 return PathResult(
                     found=True,
                     path=path,
                     grid_distance=grid_dist,
-                    world_distance=world_dist
+                    world_distance=world_dist,
                 )
 
             for dx, dy in DIRECTIONS:
-                neighbor = GridPosition(current.x + dx, current.y + dy)
-
-                if not self.grid.is_walkable_pos(neighbor):
+                nx = x + dx
+                ny = y + dy
+                if not is_walkable_xy(nx, ny):
                     continue
-
-                # Diagonale Bewegung: Prüfe ob Ecken frei sind
                 if dx != 0 and dy != 0:
-                    if not (self.grid.is_walkable(current.x + dx, current.y) and
-                            self.grid.is_walkable(current.x, current.y + dy)):
+                    if not (is_walkable_xy(x + dx, y) and is_walkable_xy(x, y + dy)):
                         continue
-
-                # Bewegungskosten
                 move_cost = COST_DIAGONAL if (dx != 0 and dy != 0) else COST_STRAIGHT
-                tentative_g = g_score[current] + move_cost
+                tentative_g = g_curr + move_cost
+                if tentative_g < g_score[ny, nx]:
+                    g_score[ny, nx] = tentative_g
+                    came_x[ny, nx] = x
+                    came_y[ny, nx] = y
+                    f_score = tentative_g + heuristic_xy(nx, ny)
+                    heapq.heappush(open_set, (f_score, tentative_g, nx, ny))
 
-                if neighbor not in g_score or tentative_g < g_score[neighbor]:
-                    came_from[neighbor] = current
-                    g_score[neighbor] = tentative_g
-                    f_score[neighbor] = tentative_g + self._heuristic(neighbor, goal)
-
-                    if neighbor not in open_set_hash:
-                        heapq.heappush(open_set, (f_score[neighbor], id(neighbor), neighbor))
-                        open_set_hash.add(neighbor)
-
-        # Kein Pfad gefunden
         return PathResult(found=False)
 
     def _reconstruct_path(self, came_from: Dict[GridPosition, GridPosition],
@@ -555,8 +638,8 @@ class AStarPathfinder:
         path.reverse()
         return path
 
-    def _find_nearest_walkable(self, pos: GridPosition, max_radius: int = 10) -> Optional[GridPosition]:
-        """Findet die nächste begehbare Zelle."""
+    def _find_nearest_walkable(self, pos: GridPosition, max_radius: int = 80) -> Optional[GridPosition]:
+        """Findet die nÃ¤chste begehbare Zelle."""
         for radius in range(1, max_radius + 1):
             for dy in range(-radius, radius + 1):
                 for dx in range(-radius, radius + 1):
@@ -570,7 +653,7 @@ class AStarPathfinder:
 
     def get_path_distance(self, start_world: Tuple[float, float],
                           goal_world: Tuple[float, float]) -> float:
-        """Gibt nur die Pfaddistanz zurück (schneller wenn Pfad nicht benötigt)."""
+        """Gibt nur die Pfaddistanz zurÃ¼ck (schneller wenn Pfad nicht benÃ¶tigt)."""
         result = self.find_path(start_world, goal_world)
         return result.world_distance if result.found else float('inf')
 
@@ -581,7 +664,7 @@ class AStarPathfinder:
 
 class MapManager:
     """
-    Hauptklasse die Grid, Pfadfindung und Gebäude-Management kombiniert.
+    Hauptklasse die Grid, Pfadfindung und GebÃ¤ude-Management kombiniert.
 
     WICHTIG: Alle externen Methoden arbeiten mit WELT-Koordinaten.
     Intern werden diese zu lokalen Grid-Koordinaten konvertiert.
@@ -593,12 +676,12 @@ class MapManager:
 
         Args:
             width: Grid-Breite (Standard: Spieler-1-Quadrant)
-            height: Grid-Höhe
+            height: Grid-HÃ¶he
         """
         self.grid = WalkableGrid(width, height)
         self.pathfinder = AStarPathfinder(self.grid)
 
-        # Quadrant-Offset (für Spieler 1)
+        # Quadrant-Offset (fÃ¼r Spieler 1)
         # Das sind die Welt-Koordinaten des Grid-Ursprungs (0,0)
         self.offset_x = 25240.0
         self.offset_y = 0.0
@@ -610,9 +693,12 @@ class MapManager:
                         walkable_file: str = None,
                         resources_file: str = None):
         """
-        Lädt Kartendaten aus den exportierten Dateien.
+        LÃ¤dt Kartendaten aus den exportierten Dateien.
         """
-        base_dir = r"c:\Users\marku\OneDrive\Desktop\siedler_ai"
+        base_dir = os.environ.get(
+            "SIEDLER_DATA_DIR",
+            os.path.dirname(os.path.abspath(__file__)),
+        )
 
         # Walkable Grid laden
         if walkable_file is None:
@@ -620,6 +706,10 @@ class MapManager:
 
         if os.path.exists(walkable_file):
             walkable = np.load(walkable_file)
+            # Falls Grid-GrÃ¶ÃŸe nicht passt, initialisiere neu
+            if walkable.shape != (self.grid.height, self.grid.width):
+                self.grid = WalkableGrid(walkable.shape[1], walkable.shape[0])
+                self.pathfinder = AStarPathfinder(self.grid)
             self.grid.load_terrain_from_array(walkable)
             print(f"Walkable Grid geladen: {walkable.shape}")
 
@@ -635,25 +725,25 @@ class MapManager:
             self.offset_x = resources.get("quadrant_offset", {}).get("x", 25240.0)
             self.offset_y = resources.get("quadrant_offset", {}).get("y", 0.0)
 
-            # Bäume laden - WICHTIG: Konvertiere Welt- zu lokalen Koordinaten
-            # Versuche zuerst alle Bäume, dann Fallback auf nearest_50
+            # BÃ¤ume laden - WICHTIG: Konvertiere Welt- zu lokalen Koordinaten
+            # Versuche zuerst alle BÃ¤ume, dann Fallback auf nearest_50
             trees = resources.get("trees_all", resources.get("trees_nearest_50", []))
             tree_count = resources.get("trees_count", len(trees))
 
             for tree in trees:
                 # Originale Welt-Koordinaten
                 world_x, world_y = tree["x"], tree["y"]
-                # Konvertiere zu lokalen Koordinaten für das Grid
+                # Konvertiere zu lokalen Koordinaten fÃ¼r das Grid
                 local_x, local_y = self.to_local_coords(world_x, world_y)
-                # Füge zum Grid hinzu
+                # FÃ¼ge zum Grid hinzu
                 tree_id = self.grid.add_tree(local_x, local_y)
-                # Speichere Welt-Position für späteres Lookup
+                # Speichere Welt-Position fÃ¼r spÃ¤teres Lookup
                 self.tree_world_positions[tree_id] = (world_x, world_y)
 
-            print(f"Bäume geladen: {len(trees)} (von {tree_count} total)")
+            print(f"BÃ¤ume geladen: {len(trees)} (von {tree_count} total)")
 
     def _load_trees_from_data(self, trees: list):
-        """Lädt Bäume aus gecachten Daten (für schnelles Reset)."""
+        """LÃ¤dt BÃ¤ume aus gecachten Daten (fÃ¼r schnelles Reset)."""
         for tree in trees:
             world_x, world_y = tree["x"], tree["y"]
             local_x, local_y = self.to_local_coords(world_x, world_y)
@@ -679,17 +769,17 @@ class MapManager:
 
     def get_path_distance(self, start_world: Tuple[float, float],
                           goal_world: Tuple[float, float]) -> float:
-        """Gibt nur die Pfaddistanz zurück."""
+        """Gibt nur die Pfaddistanz zurÃ¼ck."""
         result = self.find_path(start_world, goal_world)
         return result.world_distance if result.found else float('inf')
 
     def add_building(self, world_x: float, world_y: float, building_type: str) -> int:
-        """Fügt ein Gebäude hinzu."""
+        """FÃ¼gt ein GebÃ¤ude hinzu."""
         local_x, local_y = self.to_local_coords(world_x, world_y)
         return self.grid.add_building(local_x, local_y, building_type)
 
     def can_build_at(self, world_x: float, world_y: float, building_type: str) -> bool:
-        """Prüft ob ein Gebäude gebaut werden kann."""
+        """PrÃ¼ft ob ein GebÃ¤ude gebaut werden kann."""
         local_x, local_y = self.to_local_coords(world_x, world_y)
         return self.grid.can_build_at(local_x, local_y, building_type)
 
@@ -701,7 +791,7 @@ class MapManager:
 
     def get_nearest_tree(self, world_x: float, world_y: float) -> Optional[Tuple[int, float, Tuple[float, float]]]:
         """
-        Findet den nächsten Baum zu einer Welt-Position.
+        Findet den nÃ¤chsten Baum zu einer Welt-Position.
 
         Returns:
             (tree_id, distance, (world_x, world_y)) oder None
@@ -723,7 +813,7 @@ class MapManager:
         return None
 
     def get_all_trees(self) -> List[Tuple[int, float, float]]:
-        """Gibt alle Bäume zurück als Liste von (id, world_x, world_y)."""
+        """Gibt alle BÃ¤ume zurÃ¼ck als Liste von (id, world_x, world_y)."""
         return [(tid, pos[0], pos[1]) for tid, pos in self.tree_world_positions.items()]
 
 
@@ -741,19 +831,19 @@ def test_pathfinding():
     manager = MapManager()
     manager.load_from_files()
 
-    # Test: Pfad vom HQ zum nächsten Baum
+    # Test: Pfad vom HQ zum nÃ¤chsten Baum
     hq_pos = (41100, 23100)
 
     print(f"\nHQ Position: {hq_pos}")
     print(f"Quadrant-Offset: ({manager.offset_x}, {manager.offset_y})")
     print(f"HQ lokal: {manager.to_local_coords(*hq_pos)}")
 
-    # Nächster Baum
+    # NÃ¤chster Baum
     nearest = manager.get_nearest_tree(hq_pos[0], hq_pos[1])
     if nearest:
         tree_id, distance, tree_world_pos = nearest
 
-        print(f"\nNächster Baum:")
+        print(f"\nNÃ¤chster Baum:")
         print(f"  ID: {tree_id}")
         print(f"  Welt-Position: ({tree_world_pos[0]:.0f}, {tree_world_pos[1]:.0f})")
         print(f"  Luftlinie-Distanz: {distance:.0f} Einheiten")
@@ -774,7 +864,7 @@ def test_pathfinding():
                 print(f"  Ziel-Grid: ({result.path[-1].x}, {result.path[-1].y})")
         else:
             print(f"\nKein Pfad gefunden!")
-            # Debug: Prüfe warum
+            # Debug: PrÃ¼fe warum
             start_local = manager.to_local_coords(*hq_pos)
             goal_local = manager.to_local_coords(*tree_world_pos)
             start_grid = GridPosition.from_world(start_local[0], start_local[1])
@@ -792,8 +882,8 @@ def test_pathfinding():
     test_positions = [
         (41100, 23100, "Hauptquartier"),  # HQ Position
         (40900, 22900, "Wohnhaus"),       # Nahe am HQ
-        (42000, 22000, "Sägewerk"),       # Etwas weiter weg
-        (42330, 24030, "Sägewerk"),       # Bei einem Baum
+        (42000, 22000, "SÃ¤gewerk"),       # Etwas weiter weg
+        (42330, 24030, "SÃ¤gewerk"),       # Bei einem Baum
     ]
 
     for x, y, building in test_positions:
@@ -802,11 +892,11 @@ def test_pathfinding():
             *manager.to_local_coords(x, y), building
         )
         print(f"  {building} bei ({x}, {y}): {'JA' if can_build else 'NEIN'} "
-              f"(Bäume im Weg: {len(blocking_trees)})")
+              f"(BÃ¤ume im Weg: {len(blocking_trees)})")
 
-    # Test: Zeige einige Bäume
+    # Test: Zeige einige BÃ¤ume
     print(f"\n" + "-" * 60)
-    print("BÄUME (erste 5)")
+    print("BÃ„UME (erste 5)")
     print("-" * 60)
     trees = manager.get_all_trees()[:5]
     for tid, tx, ty in trees:
@@ -816,3 +906,4 @@ def test_pathfinding():
 
 if __name__ == "__main__":
     test_pathfinding()
+

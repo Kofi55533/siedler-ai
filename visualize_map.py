@@ -391,7 +391,7 @@ def visualize_building_impact():
 
     size = BUILDING_SIZES.get(building_type, 400)
     fig.suptitle(f'Gebäude-Impact: {building_type} bei ({building_pos[0]}, {building_pos[1]})\n'
-                f'Gebäudegröße: {size} Einheiten → blockiert {blocked} Grid-Zellen', fontsize=12)
+                f'Gebäudegröße: {size} Einheiten -> blockiert {blocked} Grid-Zellen', fontsize=12)
 
     plt.tight_layout()
 
@@ -405,7 +405,7 @@ def visualize_building_impact():
     print(f"Position: {building_pos}")
     print(f"Größe: {size} Spieleinheiten")
     print(f"Blockierte Zellen: {blocked}")
-    print(f"\n→ JA, Gebäude blockieren die Begehbarkeit!")
+    print("\n-> JA, Gebäude blockieren die Begehbarkeit!")
 
 
 if __name__ == "__main__":

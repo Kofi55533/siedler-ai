@@ -1,0 +1,65 @@
+{
+  "map_name": "TestMap",
+  "terrain_params": {
+    "x_min": 25000,
+    "x_max": 25100,
+    "y_min": 0,
+    "y_max": 100,
+    "step": 100
+  },
+  "trees": [
+    {
+      "id": 1,
+      "x": 30000.0,
+      "y": 1000.0,
+      "amount": 75,
+      "type": "XD_Fir1"
+    }
+  ],
+  "shafts": [
+    {
+      "id": 2,
+      "x": 35000.0,
+      "y": 8000.0,
+      "amount": 400,
+      "resource": "Iron"
+    }
+  ],
+  "deposits": [
+    {
+      "id": 3,
+      "x": 34325.0,
+      "y": 7950.0,
+      "amount": 4000,
+      "resource": "Iron"
+    }
+  ],
+  "buildings": [
+    {
+      "id": 4,
+      "x": 41100.0,
+      "y": 23100.0,
+      "player": 1,
+      "type": "PB_Headquarters1",
+      "hp": 1000,
+      "max_hp": 1000
+    }
+  ],
+  "settlers": [],
+  "player_resources": {
+    "1": {
+      "gold": 500,
+      "clay": 2400,
+      "wood": 1750,
+      "stone": 700,
+      "iron": 50,
+      "sulfur": 50
+    }
+  },
+  "player_hqs": {
+    "1": {
+      "x": 41100.0,
+      "y": 23100.0
+    }
+  }
+}

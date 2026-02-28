@@ -35,12 +35,12 @@ TEAMS = {
 # =============================================================================
 
 START_RESOURCES = {
-    "Taler": 500,
-    "Lehm": 2400,
-    "Holz": 1750,
-    "Stein": 700,
-    "Eisen": 50,
-    "Schwefel": 50,
+    "GoldRoh": 500,
+    "LehmRoh": 2400,
+    "HolzRoh": 1750,
+    "SteinRoh": 700,
+    "EisenRoh": 50,
+    "SchwefelRoh": 50,
 }
 
 # =============================================================================
@@ -72,90 +72,98 @@ PLAYER_START_BUILDINGS = {
 # =============================================================================
 
 PLAYER_1_VILLAGE_CENTER_SLOTS = [
-    {"x": 39400, "y": 24300, "distance_to_hq": 2081, "status": "built"},  # Bereits gebaut!
+    {"x": 39400, "y": 24300, "distance_to_hq": 2080, "status": "built"},
     {"x": 34500, "y": 23700, "distance_to_hq": 6627, "status": "free"},
-    {"x": 43500, "y": 9400, "distance_to_hq": 13909, "status": "free"},
+    {"x": 43500, "y": 9400, "distance_to_hq": 13908, "status": "free"},
 ]
 
 # =============================================================================
-# MINENSCHÄCHTE/STOLLEN PRO SPIELER (wo Minen-Gebäude gebaut werden können)
-# Extrahiert aus mapdata.xml - nur Spieler 1 Quadrant
-# XD_Iron1, XD_Stone1, etc. = Schächte für Minen-Gebäude
+# STOLLEN PRO SPIELER
+# XD_Iron1, XD_Stone1, XD_Clay1, XD_Sulfur1
+# WICHTIG: Das sind Serf-Sammelpunkte (nicht Mine-Bauplätze).
 # =============================================================================
 
-# Schächte sind feste Positionen auf der Karte wo Minen-Gebäude gebaut werden MÜSSEN
+# Stollen sind feste Positionen auf der Karte, an denen Serfs Rohstoffe sammeln.
 PLAYER_1_MINE_SHAFTS = {
     "Eisenmine": [
-        {"x": 36276, "y": 8927, "distance_to_hq": 14971},
-        {"x": 37495, "y": 7801, "distance_to_hq": 15718},
-        {"x": 37784, "y": 7266, "distance_to_hq": 16178},
+        {"x": 36275.84, "y": 8927.04, "distance_to_hq": 14971},
+        {"x": 37495.02, "y": 7801.38, "distance_to_hq": 15717},
+        {"x": 37784.37, "y": 7265.83, "distance_to_hq": 16177},
     ],
     "Steinmine": [
-        {"x": 40056, "y": 14891, "distance_to_hq": 8276},
-        {"x": 39321, "y": 14716, "distance_to_hq": 8571},
-        {"x": 38633, "y": 14720, "distance_to_hq": 8735},
+        {"x": 40056.03, "y": 14890.56, "distance_to_hq": 8275},
+        {"x": 39320.85, "y": 14715.73, "distance_to_hq": 8570},
+        {"x": 38633.13, "y": 14720.38, "distance_to_hq": 8735},
     ],
     "Lehmmine": [
-        {"x": 35181, "y": 19553, "distance_to_hq": 6901},
-        {"x": 35106, "y": 18872, "distance_to_hq": 7335},
-        {"x": 34991, "y": 17997, "distance_to_hq": 7960},
+        {"x": 35180.72, "y": 19552.98, "distance_to_hq": 6900},
+        {"x": 35106.41, "y": 18871.68, "distance_to_hq": 7334},
+        {"x": 34991.41, "y": 17996.99, "distance_to_hq": 7959},
     ],
     "Schwefelmine": [
-        {"x": 44304, "y": 21484, "distance_to_hq": 3588},
-        {"x": 44006, "y": 20978, "distance_to_hq": 3598},
-        {"x": 44576, "y": 22120, "distance_to_hq": 3612},
+        {"x": 44304.14, "y": 21484.33, "distance_to_hq": 3588},
+        {"x": 44005.73, "y": 20978.49, "distance_to_hq": 3597},
+        {"x": 44576.42, "y": 22119.58, "distance_to_hq": 3612},
     ],
 }
 
 # =============================================================================
-# KLEINE VORKOMMEN PRO SPIELER (sammelbar durch Leibeigene OHNE Mine)
-# XD_IronPit1, XD_StonePit1, etc. = Kleine Vorkommen
-# Diese verschwinden wenn leer! Kapazität = 4000 Einheiten
+# VORKOMMEN PRO SPIELER (XD_*Pit1)
+# Diese Positionen sind die Mine-Bauplätze im Originalspiel.
+# Leibeigene können dort sammeln, solange keine Mine gebaut wurde.
+# Kapazität = 4000 Einheiten pro Vorkommen.
 # =============================================================================
 
 PLAYER_1_SMALL_DEPOSITS = {
     "Eisen": [
-        {"x": 34325, "y": 7950, "amount": 4000, "distance_to_hq": 16596},
-        {"x": 36325, "y": 6750, "amount": 4000, "distance_to_hq": 17033},
+        {"x": 34325.0, "y": 7950.0, "amount": 4000, "distance_to_hq": 16595},
+        {"x": 36325.0, "y": 6750.0, "amount": 4000, "distance_to_hq": 17033},
     ],
     "Stein": [
-        {"x": 42800, "y": 15100, "amount": 4000, "distance_to_hq": 8179},
+        {"x": 42800.0, "y": 15100.0, "amount": 4000, "distance_to_hq": 8178},
     ],
     "Lehm": [
-        {"x": 31125, "y": 18750, "amount": 4000, "distance_to_hq": 10882},
+        {"x": 31125.0, "y": 18750.0, "amount": 4000, "distance_to_hq": 10882},
     ],
     "Schwefel": [
-        {"x": 48125, "y": 20950, "amount": 4000, "distance_to_hq": 7347},
-        {"x": 47725, "y": 18550, "amount": 4000, "distance_to_hq": 8037},
+        {"x": 48125.0, "y": 20950.0, "amount": 4000, "distance_to_hq": 7346},
+        {"x": 47725.0, "y": 18550.0, "amount": 4000, "distance_to_hq": 8036},
     ],
 }
 
 # Zusammenfassung der Ressourcen pro Spieler
 RESOURCES_PER_PLAYER = {
-    "mine_shafts": {  # Schächte wo Minen gebaut werden können
+    "shafts": {
         "Eisenmine": 3,
         "Steinmine": 3,
         "Lehmmine": 3,
         "Schwefelmine": 3,
     },
-    "small_deposits": {  # Kleine Vorkommen (erschöpfbar)
+    "mine_build_slots": {
         "Eisen": {"count": 2, "total_amount": 8000},
         "Stein": {"count": 1, "total_amount": 4000},
         "Lehm": {"count": 1, "total_amount": 4000},
         "Schwefel": {"count": 2, "total_amount": 8000},
     },
-    "trees": 888,  # Bäume für Holz
+    "trees": {"count": 202, "wood_per_tree": 75, "total_wood": 15150},
 }
 
 # Legacy-Kompatibilität (wird noch von environment.py verwendet)
-PLAYER_1_MINE_POSITIONS = PLAYER_1_MINE_SHAFTS
-PLAYER_1_MINE_SLOTS = PLAYER_1_MINE_SHAFTS  # Alias
+PLAYER_1_MINE_BUILD_SLOTS = {
+    "Eisenmine": PLAYER_1_SMALL_DEPOSITS["Eisen"],
+    "Steinmine": PLAYER_1_SMALL_DEPOSITS["Stein"],
+    "Lehmmine": PLAYER_1_SMALL_DEPOSITS["Lehm"],
+    "Schwefelmine": PLAYER_1_SMALL_DEPOSITS["Schwefel"],
+}
+PLAYER_1_MINE_POSITIONS = PLAYER_1_MINE_BUILD_SLOTS
+PLAYER_1_MINE_SLOTS = PLAYER_1_MINE_BUILD_SLOTS  # Alias
+PLAYER_1_SHAFT_SLOTS = PLAYER_1_MINE_SHAFTS  # Alias
 PLAYER_1_DEPOSITS = PLAYER_1_SMALL_DEPOSITS  # Alias
 MINES_PER_PLAYER = {
-    "Steinmine": {"count": 3, "capacity": 100000},
-    "Eisenmine": {"count": 3, "capacity": 100000},
-    "Lehmmine": {"count": 3, "capacity": 100000},
-    "Schwefelmine": {"count": 3, "capacity": 100000},
+    "Steinmine": {"count": 1, "capacity": 4000},
+    "Eisenmine": {"count": 2, "capacity": 8000},
+    "Lehmmine": {"count": 1, "capacity": 4000},
+    "Schwefelmine": {"count": 2, "capacity": 8000},
 }
 DEPOSITS_PER_PLAYER = {
     "Stein": {"count": 1, "capacity": 4000},
@@ -167,58 +175,75 @@ DEPOSITS_PER_PLAYER = {
 # =============================================================================
 # BÄUME (HOLZ) PRO SPIELER
 # Extrahiert aus mapdata.xml - Spieler 1 Quadrant
-# Jeder Baum gibt 2 Holz bei Extraktion, verschwindet danach
+# Jeder Baum hat ResourceAmount=75, jede Extraktion gibt 2 Holz
+# = 37 Extraktionen pro Baum, dann verschwindet er
 # =============================================================================
 
 PLAYER_1_TREES_SUMMARY = {
-    "total_trees": 888,
-    "estimated_wood": 1776,  # 888 * 2 Holz pro Baum
+    "total_trees": 202,
+    "wood_per_tree": 75,
+    "extractions_per_tree": 37,  # 75 / 2 = 37 (abgerundet)
+    "estimated_wood": 15150,  # 202 * 75
     "tree_types": {
-        "XD_Fir2_small": 298,
-        "XD_Fir1_small": 267,
+        "XD_Fir1": 97,
         "XD_Fir2": 105,
-        "XD_Fir1": 96,
-        "XD_PineNorth3": 35,
-        "XD_PineNorth1": 28,
-        "XD_PineNorth2": 23,
-        "XD_DarkTree": 36,  # Verschiedene DarkTree-Typen zusammen
     },
-    "nearest_tree_distance": 1542,  # Nächster Baum zum HQ
-    "average_distance": 8000,  # Geschätzt
+    "nearest_tree_distance": 1542,
+    "average_distance": 12599,
 }
 
 # Die 50 nächsten Bäume zum HQ (für schnelles Holzsammeln am Anfang)
 PLAYER_1_TREES_NEAREST = [
-    {"x": 42330, "y": 24030, "type": "XD_PineNorth3", "distance_to_hq": 1542},
-    {"x": 41745, "y": 21626, "type": "XD_Fir1_small", "distance_to_hq": 1609},
-    {"x": 42424, "y": 22173, "type": "XD_Fir2_small", "distance_to_hq": 1616},
-    {"x": 42280, "y": 21879, "type": "XD_Fir1_small", "distance_to_hq": 1698},
-    {"x": 41780, "y": 21532, "type": "XD_Fir2", "distance_to_hq": 1709},
-    {"x": 41854, "y": 21529, "type": "XD_Fir2_small", "distance_to_hq": 1742},
-    {"x": 42934, "y": 23180, "type": "XD_Fir2_small", "distance_to_hq": 1836},
-    {"x": 42920, "y": 22820, "type": "XD_Fir1_small", "distance_to_hq": 1841},
-    {"x": 42920, "y": 23420, "type": "XD_Fir2", "distance_to_hq": 1848},
-    {"x": 42948, "y": 23124, "type": "XD_Fir2_small", "distance_to_hq": 1848},
-    {"x": 43076, "y": 23120, "type": "XD_Fir2_small", "distance_to_hq": 1976},
-    {"x": 43109, "y": 23270, "type": "XD_PineNorth2", "distance_to_hq": 2017},
-    {"x": 41169, "y": 21057, "type": "XD_Fir1", "distance_to_hq": 2044},
-    {"x": 43170, "y": 23270, "type": "XD_PineNorth2", "distance_to_hq": 2077},
-    {"x": 43180, "y": 23080, "type": "XD_Fir1_small", "distance_to_hq": 2080},
-    {"x": 43180, "y": 23180, "type": "XD_Fir2_small", "distance_to_hq": 2081},
-    {"x": 40980, "y": 20980, "type": "XD_Fir2_small", "distance_to_hq": 2123},
-    {"x": 43223, "y": 23476, "type": "XD_PineNorth2", "distance_to_hq": 2156},
-    {"x": 41853, "y": 21052, "type": "XD_Fir1_small", "distance_to_hq": 2182},
-    {"x": 42980, "y": 21953, "type": "XD_Fir1_small", "distance_to_hq": 2202},
-    {"x": 43326, "y": 23632, "type": "XD_PineNorth1", "distance_to_hq": 2280},
-    {"x": 41420, "y": 20880, "type": "XD_Fir2_small", "distance_to_hq": 2283},
-    {"x": 43340, "y": 23536, "type": "XD_PineNorth2", "distance_to_hq": 2286},
-    {"x": 43380, "y": 23680, "type": "XD_Fir1_small", "distance_to_hq": 2347},
-    {"x": 43396, "y": 23655, "type": "XD_PineNorth3", "distance_to_hq": 2355},
-    {"x": 43443, "y": 23568, "type": "XD_Fir1_small", "distance_to_hq": 2381},
-    {"x": 43455, "y": 22833, "type": "XD_Fir1_small", "distance_to_hq": 2382},
-    {"x": 43320, "y": 22880, "type": "XD_Fir2_small", "distance_to_hq": 2384},
-    {"x": 40620, "y": 20880, "type": "XD_Fir2_small", "distance_to_hq": 2290},
-    {"x": 43380, "y": 23080, "type": "XD_Fir2_small", "distance_to_hq": 2280},
+    {"x": 42330.0, "y": 24030.0, "type": "XD_PineNorth3", "distance_to_hq": 1542},
+    {"x": 41745.01, "y": 21625.85, "type": "XD_Fir1_small", "distance_to_hq": 1609},
+    {"x": 42423.56, "y": 22173.18, "type": "XD_Fir2_small", "distance_to_hq": 1616},
+    {"x": 42280.0, "y": 21879.22, "type": "XD_Fir1_small", "distance_to_hq": 1698},
+    {"x": 41780.0, "y": 21531.76, "type": "XD_Fir2", "distance_to_hq": 1709},
+    {"x": 41854.17, "y": 21529.4, "type": "XD_Fir2_small", "distance_to_hq": 1742},
+    {"x": 42934.41, "y": 23180.0, "type": "XD_Fir2_small", "distance_to_hq": 1836},
+    {"x": 42920.0, "y": 22820.0, "type": "XD_Fir1_small", "distance_to_hq": 1841},
+    {"x": 42948.17, "y": 23123.9, "type": "XD_Fir2_small", "distance_to_hq": 1848},
+    {"x": 42920.0, "y": 23420.0, "type": "XD_Fir2", "distance_to_hq": 1848},
+    {"x": 43075.51, "y": 23120.0, "type": "XD_Fir2_small", "distance_to_hq": 1976},
+    {"x": 43109.36, "y": 23270.0, "type": "XD_PineNorth2", "distance_to_hq": 2017},
+    {"x": 41169.3, "y": 21056.69, "type": "XD_Fir1", "distance_to_hq": 2044},
+    {"x": 43170.0, "y": 23270.0, "type": "XD_PineNorth2", "distance_to_hq": 2077},
+    {"x": 43180.0, "y": 23080.0, "type": "XD_Fir1_small", "distance_to_hq": 2080},
+    {"x": 43179.96, "y": 23180.0, "type": "XD_Fir2_small", "distance_to_hq": 2081},
+    {"x": 40980.0, "y": 20980.0, "type": "XD_Fir2_small", "distance_to_hq": 2123},
+    {"x": 43223.4, "y": 23475.51, "type": "XD_PineNorth2", "distance_to_hq": 2156},
+    {"x": 41852.76, "y": 21052.08, "type": "XD_Fir1_small", "distance_to_hq": 2182},
+    {"x": 42980.0, "y": 21953.13, "type": "XD_Fir1_small", "distance_to_hq": 2202},
+    {"x": 43135.46, "y": 23954.63, "type": "XD_Fir1_small", "distance_to_hq": 2208},
+    {"x": 41023.74, "y": 20880.0, "type": "XD_Fir2_small", "distance_to_hq": 2221},
+    {"x": 43228.61, "y": 23880.0, "type": "XD_Fir1_small", "distance_to_hq": 2267},
+    {"x": 42580.0, "y": 21380.0, "type": "XD_Fir2_small", "distance_to_hq": 2269},
+    {"x": 43254.34, "y": 23945.36, "type": "XD_Fir2_small", "distance_to_hq": 2314},
+    {"x": 42874.47, "y": 21580.0, "type": "XD_Fir2_small", "distance_to_hq": 2336},
+    {"x": 42320.0, "y": 21058.2, "type": "XD_Fir2_small", "distance_to_hq": 2379},
+    {"x": 42780.0, "y": 21380.0, "type": "XD_Fir2", "distance_to_hq": 2404},
+    {"x": 42420.0, "y": 21080.0, "type": "XD_Fir1_small", "distance_to_hq": 2413},
+    {"x": 42880.0, "y": 21454.35, "type": "XD_Fir1_small", "distance_to_hq": 2424},
+    {"x": 43403.15, "y": 24006.23, "type": "XD_PineNorth2", "distance_to_hq": 2475},
+    {"x": 43469.97, "y": 23820.0, "type": "XD_Fir2", "distance_to_hq": 2477},
+    {"x": 41380.0, "y": 20560.69, "type": "XD_Fir2", "distance_to_hq": 2555},
+    {"x": 42262.39, "y": 20820.0, "type": "XD_Fir2_small", "distance_to_hq": 2559},
+    {"x": 43220.0, "y": 21657.26, "type": "XD_Fir1", "distance_to_hq": 2564},
+    {"x": 43460.07, "y": 24180.0, "type": "XD_Fir1_small", "distance_to_hq": 2595},
+    {"x": 43680.0, "y": 22659.26, "type": "XD_Fir1_small", "distance_to_hq": 2617},
+    {"x": 42435.5, "y": 20847.56, "type": "XD_Fir2_small", "distance_to_hq": 2619},
+    {"x": 41730.0, "y": 20530.0, "type": "XD_DarkTree6", "distance_to_hq": 2646},
+    {"x": 43520.0, "y": 24178.24, "type": "XD_Fir2", "distance_to_hq": 2649},
+    {"x": 41820.0, "y": 20545.95, "type": "XD_Fir1", "distance_to_hq": 2654},
+    {"x": 43380.0, "y": 21720.0, "type": "XD_Fir2_small", "distance_to_hq": 2665},
+    {"x": 42880.0, "y": 21078.44, "type": "XD_Fir2_small", "distance_to_hq": 2694},
+    {"x": 43552.17, "y": 24220.7, "type": "XD_Fir2_small", "distance_to_hq": 2696},
+    {"x": 43456.44, "y": 24420.7, "type": "XD_Fir1_small", "distance_to_hq": 2701},
+    {"x": 43520.0, "y": 24330.11, "type": "XD_Fir2_small", "distance_to_hq": 2715},
+    {"x": 43620.0, "y": 24171.56, "type": "XD_Fir1_small", "distance_to_hq": 2738},
+    {"x": 43742.58, "y": 22346.54, "type": "XD_Fir1_small", "distance_to_hq": 2748},
+    {"x": 43033.99, "y": 21120.0, "type": "XD_Fir1_small", "distance_to_hq": 2768},
+    {"x": 43720.0, "y": 24037.17, "type": "XD_Fir2_small", "distance_to_hq": 2783},
 ]
 
 # =============================================================================

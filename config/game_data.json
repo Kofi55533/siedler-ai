@@ -3498,28 +3498,8 @@
       "conditions": [],
       "effects": []
     },
-    "mu_leaderbow2": {
-      "name": "mu_leaderbow2",
-      "category": "TC_MilitaryUnits",
-      "time": 1,
-      "cost": {
-        "clay": 100
-      },
-      "conditions": [],
-      "effects": []
-    },
     "mu_leaderbow3": {
       "name": "mu_leaderbow3",
-      "category": "TC_MilitaryUnits",
-      "time": 1,
-      "cost": {
-        "clay": 100
-      },
-      "conditions": [],
-      "effects": []
-    },
-    "mu_leaderbow4": {
-      "name": "mu_leaderbow4",
       "category": "TC_MilitaryUnits",
       "time": 1,
       "cost": {
@@ -3631,16 +3611,6 @@
     "mu_serf": {
       "name": "mu_serf",
       "category": "TC_MilitaryUnits",
-      "time": 1,
-      "cost": {
-        "clay": 100
-      },
-      "conditions": [],
-      "effects": []
-    },
-    "test_t_tracking": {
-      "name": "test_t_tracking",
-      "category": "TC_Technologies",
       "time": 1,
       "cost": {
         "clay": 100
@@ -4500,38 +4470,6 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
-    },
-    "t_test": {
-      "name": "t_test",
-      "category": "TC_TEST",
-      "time": 5,
-      "cost": {
-        "clay": 10
-      },
-      "conditions": [
-        {
-          "type": "building",
-          "value": "PU_Serf",
-          "amount": 1
-        }
-      ],
-      "effects": []
-    },
-    "t_test2": {
-      "name": "t_test2",
-      "category": "TC_TEST",
-      "time": 50,
-      "cost": {
-        "clay": 100
-      },
-      "conditions": [
-        {
-          "type": "building",
-          "value": "PB_Residence1",
-          "amount": 1
-        }
-      ],
       "effects": []
     },
     "t_townguard": {
@@ -6038,6 +5976,576 @@
       "max_random_damage": 0,
       "min_range": 0.0,
       "miss_chance": 2
+    },
+    "pu_battleserf": {
+      "name": "pu_battleserf",
+      "cost": {
+        "iron": 80
+      },
+      "max_health": 200,
+      "armor": 1,
+      "damage": 0,
+      "max_range": 0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_brickmaker": {
+      "name": "pu_brickmaker",
+      "cost": {},
+      "max_health": 100,
+      "armor": 1,
+      "damage": 0,
+      "max_range": 0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_coiner": {
+      "name": "pu_coiner",
+      "cost": {},
+      "max_health": 100,
+      "armor": 1,
+      "damage": 0,
+      "max_range": 0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_engineer": {
+      "name": "pu_engineer",
+      "cost": {},
+      "max_health": 100,
+      "armor": 1,
+      "damage": 0,
+      "max_range": 0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_leadercavalry1": {
+      "name": "pu_leadercavalry1",
+      "cost": {
+        "gold": 200,
+        "wood": 60
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 8,
+      "max_range": 2300.0,
+      "speed": 500,
+      "soldier_type": "PU_SoldierCavalry1",
+      "attachment_limit": 3,
+      "max_random_damage": 0,
+      "min_range": 500.0,
+      "miss_chance": 12
+    },
+    "pu_leadercavalry2": {
+      "name": "pu_leadercavalry2",
+      "cost": {
+        "gold": 250,
+        "wood": 70
+      },
+      "max_health": 150,
+      "armor": 1,
+      "damage": 12,
+      "max_range": 2700.0,
+      "speed": 500,
+      "soldier_type": "PU_SoldierCavalry2",
+      "attachment_limit": 3,
+      "max_random_damage": 0,
+      "min_range": 500.0,
+      "miss_chance": 12
+    },
+    "pu_leaderpolearm1": {
+      "name": "pu_leaderpolearm1",
+      "cost": {
+        "gold": 80,
+        "wood": 50
+      },
+      "max_health": 200,
+      "armor": 1,
+      "damage": 12,
+      "max_range": 300.0,
+      "speed": 360,
+      "soldier_type": "PU_SoldierPoleArm1",
+      "attachment_limit": 4,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_leaderpolearm2": {
+      "name": "pu_leaderpolearm2",
+      "cost": {
+        "gold": 120,
+        "wood": 60
+      },
+      "max_health": 200,
+      "armor": 2,
+      "damage": 14,
+      "max_range": 300.0,
+      "speed": 360,
+      "soldier_type": "PU_SoldierPoleArm2",
+      "attachment_limit": 4,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_leaderpolearm3": {
+      "name": "pu_leaderpolearm3",
+      "cost": {
+        "gold": 160,
+        "wood": 70
+      },
+      "max_health": 200,
+      "armor": 3,
+      "damage": 16,
+      "max_range": 300.0,
+      "speed": 360,
+      "soldier_type": "PU_SoldierPoleArm3",
+      "attachment_limit": 8,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_leaderpolearm4": {
+      "name": "pu_leaderpolearm4",
+      "cost": {
+        "gold": 200,
+        "wood": 80
+      },
+      "max_health": 200,
+      "armor": 4,
+      "damage": 18,
+      "max_range": 300.0,
+      "speed": 360,
+      "soldier_type": "PU_SoldierPoleArm4",
+      "attachment_limit": 8,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_scholar": {
+      "name": "pu_scholar",
+      "cost": {},
+      "max_health": 100,
+      "armor": 1,
+      "damage": 0,
+      "max_range": 0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldierbow1": {
+      "name": "pu_soldierbow1",
+      "cost": {
+        "gold": 30,
+        "wood": 30
+      },
+      "max_health": 100,
+      "armor": 0,
+      "damage": 8,
+      "max_range": 2300.0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 9
+    },
+    "pu_soldierbow2": {
+      "name": "pu_soldierbow2",
+      "cost": {
+        "gold": 40,
+        "wood": 40
+      },
+      "max_health": 100,
+      "armor": 0,
+      "damage": 10,
+      "max_range": 2500.0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 9
+    },
+    "pu_soldierbow3": {
+      "name": "pu_soldierbow3",
+      "cost": {
+        "gold": 50,
+        "iron": 40
+      },
+      "max_health": 100,
+      "armor": 0,
+      "damage": 12,
+      "max_range": 2700.0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 6
+    },
+    "pu_soldierbow4": {
+      "name": "pu_soldierbow4",
+      "cost": {
+        "gold": 60,
+        "iron": 50
+      },
+      "max_health": 100,
+      "armor": 0,
+      "damage": 14,
+      "max_range": 2900.0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 6
+    },
+    "pu_soldiercavalry1": {
+      "name": "pu_soldiercavalry1",
+      "cost": {
+        "gold": 80,
+        "iron": 30
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 8,
+      "max_range": 2500.0,
+      "speed": 480,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 12
+    },
+    "pu_soldiercavalry2": {
+      "name": "pu_soldiercavalry2",
+      "cost": {
+        "gold": 100,
+        "iron": 40
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 12,
+      "max_range": 2900.0,
+      "speed": 480,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 12
+    },
+    "pu_soldierheavycavalry1": {
+      "name": "pu_soldierheavycavalry1",
+      "cost": {
+        "gold": 120,
+        "iron": 40
+      },
+      "max_health": 250,
+      "armor": 0,
+      "damage": 26,
+      "max_range": 200.0,
+      "speed": 440,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldierheavycavalry2": {
+      "name": "pu_soldierheavycavalry2",
+      "cost": {
+        "gold": 150,
+        "iron": 50
+      },
+      "max_health": 250,
+      "armor": 0,
+      "damage": 32,
+      "max_range": 200.0,
+      "speed": 440,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldierpolearm1": {
+      "name": "pu_soldierpolearm1",
+      "cost": {
+        "gold": 30,
+        "wood": 20
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 12,
+      "max_range": 300.0,
+      "speed": 360,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldierpolearm2": {
+      "name": "pu_soldierpolearm2",
+      "cost": {
+        "gold": 40,
+        "wood": 30
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 14,
+      "max_range": 300.0,
+      "speed": 360,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldierpolearm3": {
+      "name": "pu_soldierpolearm3",
+      "cost": {
+        "gold": 50,
+        "wood": 40
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 16,
+      "max_range": 300.0,
+      "speed": 360,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldierpolearm4": {
+      "name": "pu_soldierpolearm4",
+      "cost": {
+        "gold": 60,
+        "wood": 50
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 18,
+      "max_range": 300.0,
+      "speed": 360,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldiersword1": {
+      "name": "pu_soldiersword1",
+      "cost": {
+        "gold": 30,
+        "iron": 20
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 12,
+      "max_range": 200.0,
+      "speed": 360,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldiersword2": {
+      "name": "pu_soldiersword2",
+      "cost": {
+        "gold": 40,
+        "iron": 30
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 14,
+      "max_range": 200.0,
+      "speed": 360,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldiersword3": {
+      "name": "pu_soldiersword3",
+      "cost": {
+        "gold": 50,
+        "iron": 40
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 16,
+      "max_range": 200.0,
+      "speed": 360,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldiersword4": {
+      "name": "pu_soldiersword4",
+      "cost": {
+        "gold": 60,
+        "iron": 50
+      },
+      "max_health": 150,
+      "armor": 0,
+      "damage": 18,
+      "max_range": 200.0,
+      "speed": 360,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 3,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_travelling_salesman": {
+      "name": "pu_travelling_salesman",
+      "cost": {},
+      "max_health": 150,
+      "armor": 0,
+      "damage": 0,
+      "max_range": 0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_gunsmith": {
+      "name": "pu_gunsmith",
+      "cost": {},
+      "max_health": 100,
+      "armor": 1,
+      "damage": 0,
+      "max_range": 0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_masterbuilder": {
+      "name": "pu_masterbuilder",
+      "cost": {},
+      "max_health": 100,
+      "armor": 1,
+      "damage": 0,
+      "max_range": 0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_scout": {
+      "name": "pu_scout",
+      "cost": {
+        "gold": 100,
+        "iron": 50
+      },
+      "max_health": 200,
+      "armor": 1,
+      "damage": 10,
+      "max_range": 200.0,
+      "speed": 360,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 2,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldierrifle1": {
+      "name": "pu_soldierrifle1",
+      "cost": {
+        "gold": 50,
+        "sulfur": 40
+      },
+      "max_health": 100,
+      "armor": 0,
+      "damage": 16,
+      "max_range": 2800.0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_soldierrifle2": {
+      "name": "pu_soldierrifle2",
+      "cost": {
+        "gold": 60,
+        "sulfur": 50
+      },
+      "max_health": 100,
+      "armor": 0,
+      "damage": 19,
+      "max_range": 3000.0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 2
+    },
+    "pu_tavernbarkeeper": {
+      "name": "pu_tavernbarkeeper",
+      "cost": {},
+      "max_health": 100,
+      "armor": 1,
+      "damage": 0,
+      "max_range": 0,
+      "speed": 320,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 0,
+      "min_range": 0.0,
+      "miss_chance": 0
+    },
+    "pu_thief": {
+      "name": "pu_thief",
+      "cost": {
+        "gold": 300,
+        "iron": 30
+      },
+      "max_health": 200,
+      "armor": 1,
+      "damage": 5,
+      "max_range": 200.0,
+      "speed": 400,
+      "soldier_type": "",
+      "attachment_limit": 0,
+      "max_random_damage": 8,
+      "min_range": 0.0,
+      "miss_chance": 0
     }
   },
   "heroes": {
@@ -6056,6 +6564,68 @@
       "exploration": 22,
       "max_random_damage": 4,
       "max_range": 250.0
+    },
+    "pu_hero1a": {
+      "name": "pu_hero1a",
+      "max_health": 600,
+      "armor": 3,
+      "damage": 16,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "hawk",
+          "cooldown": 60
+        }
+      ],
+      "exploration": 22,
+      "max_random_damage": 4,
+      "max_range": 250.0
+    },
+    "pu_hero1b": {
+      "name": "pu_hero1b",
+      "max_health": 600,
+      "armor": 3,
+      "damage": 16,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "hawk",
+          "cooldown": 60
+        }
+      ],
+      "exploration": 22,
+      "max_random_damage": 4,
+      "max_range": 250.0
+    },
+    "pu_hero1c": {
+      "name": "pu_hero1c",
+      "max_health": 600,
+      "armor": 3,
+      "damage": 16,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "hawk",
+          "cooldown": 60
+        }
+      ],
+      "exploration": 22,
+      "max_random_damage": 4,
+      "max_range": 250.0
+    },
+    "pu_hero1_hawk": {
+      "name": "pu_hero1_hawk",
+      "max_health": 20,
+      "armor": 3,
+      "damage": 0,
+      "speed": 500,
+      "abilities": [
+        {
+          "type": "hawk",
+          "cooldown": 60
+        }
+      ],
+      "exploration": 15
     },
     "pu_hero2": {
       "name": "pu_hero2",
@@ -6076,6 +6646,24 @@
       "exploration": 22,
       "max_random_damage": 4,
       "max_range": 250.0
+    },
+    "pu_hero2_cannon1": {
+      "name": "pu_hero2_cannon1",
+      "max_health": 600,
+      "armor": 3,
+      "damage": 0,
+      "speed": 400,
+      "abilities": [],
+      "exploration": 30
+    },
+    "pu_hero2_foundation1": {
+      "name": "pu_hero2_foundation1",
+      "max_health": 500,
+      "armor": 5,
+      "damage": 0,
+      "speed": 400,
+      "abilities": [],
+      "exploration": 0
     },
     "pu_hero3": {
       "name": "pu_hero3",
@@ -6101,6 +6689,24 @@
       "exploration": 22,
       "max_random_damage": 4,
       "max_range": 250.0
+    },
+    "pu_hero3_trap": {
+      "name": "pu_hero3_trap",
+      "max_health": 500,
+      "armor": 5,
+      "damage": 0,
+      "speed": 400,
+      "abilities": [],
+      "exploration": 0
+    },
+    "pu_hero3_trapcannon": {
+      "name": "pu_hero3_trapcannon",
+      "max_health": 600,
+      "armor": 3,
+      "damage": 0,
+      "speed": 400,
+      "abilities": [],
+      "exploration": 20
     },
     "pu_hero4": {
       "name": "pu_hero4",
@@ -6151,6 +6757,21 @@
       "max_random_damage": 4,
       "max_range": 2700.0
     },
+    "pu_hero5_outlaw": {
+      "name": "pu_hero5_outlaw",
+      "max_health": 200,
+      "armor": 4,
+      "damage": 0,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "summon",
+          "cooldown": 180,
+          "count": 3
+        }
+      ],
+      "exploration": 10
+    },
     "pu_hero6": {
       "name": "pu_hero6",
       "max_health": 600,
@@ -6175,6 +6796,38 @@
         }
       ],
       "exploration": 28,
+      "max_random_damage": 4,
+      "max_range": 250.0
+    },
+    "pu_hero10": {
+      "name": "pu_hero10",
+      "max_health": 600,
+      "armor": 4,
+      "damage": 28,
+      "speed": 400,
+      "abilities": [
+        {
+          "type": "ranged_effect",
+          "cooldown": 120,
+          "range": 1500.0,
+          "duration": 60,
+          "damage_factor": 2.0,
+          "armor_factor": 1.0,
+          "health_recovery": 0
+        }
+      ],
+      "exploration": 28,
+      "max_random_damage": 2,
+      "max_range": 2800.0
+    },
+    "pu_hero11": {
+      "name": "pu_hero11",
+      "max_health": 600,
+      "armor": 3,
+      "damage": 20,
+      "speed": 400,
+      "abilities": [],
+      "exploration": 22,
       "max_random_damage": 4,
       "max_range": 250.0
     }
@@ -6310,5 +6963,139 @@
       "2": 10,
       "3": 12
     }
+  },
+  "logic": {
+    "tax_levels": [
+      {
+        "regular_tax": 0,
+        "motivation_change": 0.2
+      },
+      {
+        "regular_tax": 5,
+        "motivation_change": 0.08
+      },
+      {
+        "regular_tax": 10,
+        "motivation_change": 0.0
+      },
+      {
+        "regular_tax": 15,
+        "motivation_change": -0.08
+      },
+      {
+        "regular_tax": 20,
+        "motivation_change": -0.12
+      }
+    ],
+    "motivation": {
+      "threshold_happy": 1.5,
+      "threshold_sad": 1.0,
+      "threshold_angry": 0.7,
+      "threshold_leave": 0.25,
+      "absolute_max": 3.0,
+      "game_start_max": 1.0
+    },
+    "worktime": {
+      "base": 125,
+      "threshold_work": 25
+    },
+    "payday": {
+      "tax_amount": 5,
+      "initial_tax_level": 2
+    }
+  },
+  "scharfschuetzen_path": {
+    "soldiers": {
+      "PU_LeaderRifle1": {
+        "name": "PU_LeaderRifle1",
+        "cost": {
+          "gold": 250,
+          "sulfur": 70
+        },
+        "training_time": 0,
+        "max_health": 150,
+        "armor": 1,
+        "damage": 16,
+        "max_range": 2800.0,
+        "speed": 320
+      },
+      "PU_LeaderRifle2": {
+        "name": "PU_LeaderRifle2",
+        "cost": {
+          "gold": 300,
+          "sulfur": 80
+        },
+        "training_time": 0,
+        "max_health": 150,
+        "armor": 2,
+        "damage": 19,
+        "max_range": 3000.0,
+        "speed": 320
+      }
+    },
+    "buildings": {
+      "PB_GunsmithWorkshop1": {
+        "name": "PB_GunsmithWorkshop1",
+        "cost": {
+          "stone": 400,
+          "sulfur": 300
+        },
+        "build_time": 110,
+        "max_workers": 2,
+        "max_health": 1200,
+        "upgrade": {
+          "to": "PB_GunsmithWorkshop2",
+          "time": 40,
+          "cost": {
+            "stone": 300,
+            "sulfur": 200
+          }
+        }
+      },
+      "PB_GunsmithWorkshop2": {
+        "name": "PB_GunsmithWorkshop2",
+        "cost": {},
+        "build_time": 60,
+        "max_workers": 4,
+        "max_health": 1700,
+        "upgrade": {
+          "to": "",
+          "time": 30,
+          "cost": {}
+        }
+      },
+      "PB_University1": {
+        "name": "PB_University1",
+        "cost": {
+          "wood": 200,
+          "clay": 300
+        },
+        "build_time": 90,
+        "max_workers": 6,
+        "max_health": 2000,
+        "upgrade": {
+          "to": "PB_University2",
+          "time": 50,
+          "cost": {
+            "gold": 150,
+            "stone": 100,
+            "clay": 100
+          }
+        }
+      },
+      "PB_University2": {
+        "name": "PB_University2",
+        "cost": {},
+        "build_time": 60,
+        "max_workers": 8,
+        "max_health": 3500,
+        "upgrade": {
+          "to": "",
+          "time": 30,
+          "cost": {}
+        }
+      }
+    },
+    "technologies": {}
   }
 }

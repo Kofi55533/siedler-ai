@@ -8,9 +8,10 @@ import struct
 import numpy as np
 import os
 
+from map_extract_config import EXTRACTED_DIR
+
 # Pfade
-EXTRACTED_DIR = r"C:\Users\marku\OneDrive\Desktop\wintersturm_extracted"
-TERRAIN_FILE = os.path.join(EXTRACTED_DIR, "file_0.bin")
+TERRAIN_FILE = os.path.join(str(EXTRACTED_DIR), "file_0.bin")
 
 # Karten-Dimensionen (aus mapdata.xml)
 MAP_WIDTH = 50480

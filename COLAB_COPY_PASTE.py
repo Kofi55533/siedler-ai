@@ -219,7 +219,8 @@ def infer_target_n_envs():
 
 def build_n_env_candidates():
     target, gpu_name, cpu_cap = infer_target_n_envs()
-    raw = [min(cpu_cap, target + 2), target, target - 1, target - 2, 8, 6, 4, 3, 2, 1]
+    top_probe = min(cpu_cap, max(12, target + 6))
+    raw = list(range(top_probe, max(0, top_probe - 10), -1)) + [target, target - 1, target - 2, 8, 6, 4, 3, 2, 1]
     seen = set()
     ordered = []
     for n in raw:
@@ -297,7 +298,20 @@ def auto_select_fastest_n_envs():
                 "running benchmark override for max throughput."
             )
             cpu_cap = max(1, (os.cpu_count() or 1) - 1)
-            raw = [min(cpu_cap, manual + 2), manual + 1, manual, manual - 1, manual - 2, 8, 6, 4, 3, 2, 1]
+            top_probe = min(cpu_cap, max(12, manual + 6))
+            raw = list(range(top_probe, max(0, top_probe - 10), -1)) + [
+                manual + 2,
+                manual + 1,
+                manual,
+                manual - 1,
+                manual - 2,
+                8,
+                6,
+                4,
+                3,
+                2,
+                1,
+            ]
             seen = set()
             candidates = []
             for n in raw:
@@ -612,15 +626,11 @@ os.environ.setdefault("SIEDLER_RUN_EVAL", "0")
 os.environ.setdefault("SIEDLER_RUN_EXPORT", "0")
 os.environ.setdefault("SIEDLER_EVAL_RENDER", "0")
 
-# Stabiler Startwert ohne Benchmark, aber CPU-adaptiv (max. 6 Envs).
-os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "0"
-cpu_cap = max(1, (os.cpu_count() or 1) - 1)
-adaptive_n_envs = min(6, cpu_cap)
-os.environ["SIEDLER_NUM_ENVS"] = str(adaptive_n_envs)
+# Benchmark wieder aktivieren, damit hohe n_envs (z.B. 12+) gefunden werden koennen.
+os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "1"
 print(f"Simulation mode: {TRAIN_MODE}")
 print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")
 print(f"Resume enabled: {os.environ.get('SIEDLER_RESUME')}")
-print(f"Adaptive n_envs pin: {os.environ.get('SIEDLER_NUM_ENVS')} (cpu_cap={cpu_cap})")
 print(
     "Post-train phases: "
     f"eval={os.environ.get('SIEDLER_RUN_EVAL')} "

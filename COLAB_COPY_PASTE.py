@@ -85,6 +85,55 @@ def run_capture(cmd, cwd=None, env=None, timeout_sec=240):
     )
 
 
+def print_repo_revision(repo_dir: str):
+    result = run_capture(["git", "log", "-1", "--pretty=format:%h %cs %s"], cwd=repo_dir, timeout_sec=30)
+    if result.returncode == 0 and result.stdout:
+        print(f"Repo revision: {result.stdout.strip()}")
+    else:
+        print("Repo revision: unknown")
+
+
+def pip_install_with_retry(packages, retries=3):
+    last_error = None
+    for attempt in range(1, retries + 1):
+        try:
+            run([sys.executable, "-m", "pip", "install", "-q", *packages])
+            return
+        except subprocess.CalledProcessError as exc:
+            last_error = exc
+            if attempt == retries:
+                raise
+            print(f"pip install failed (attempt {attempt}/{retries}); retrying...")
+            time.sleep(2)
+    if last_error is not None:
+        raise last_error
+
+
+def smoke_check_training_imports():
+    smoke_code = (
+        "import production_system as ps\n"
+        "import worker_simulation as ws\n"
+        "print('SMOKE has_refiner_ops=', hasattr(ps, 'get_refiner_resource_ops_per_cycle'))\n"
+        "print('SMOKE has_force_to_work_penalty=', hasattr(ws, 'FORCE_TO_WORK_PENALTY'))\n"
+        "import colab_training\n"
+        "print('SMOKE_IMPORT_OK')\n"
+    )
+    result = run_capture(
+        [sys.executable, "-u", "-c", smoke_code],
+        cwd=PROJECT_DIR,
+        timeout_sec=180,
+    )
+    if result.stdout:
+        print(result.stdout)
+    if result.stderr:
+        print(result.stderr)
+    if result.returncode != 0:
+        raise RuntimeError(
+            "Preflight import smoke-check failed. "
+            "Restart runtime and rerun cell. If it still fails, check repo commit output above."
+        )
+
+
 def infer_target_n_envs():
     cpu_cap = max(1, (os.cpu_count() or 1) - 1)
     target = min(cpu_cap, 4)
@@ -148,11 +197,15 @@ def infer_gpu_training_preset():
 
 def apply_auto_gpu_overrides():
     preset = infer_gpu_training_preset()
+    os.environ.pop("SIEDLER_NUM_ENVS_AUTO", None)
+    os.environ.pop("SIEDLER_SPATIAL_SIZE_AUTO", None)
 
     if not os.environ.get("SIEDLER_NUM_ENVS"):
         os.environ["SIEDLER_NUM_ENVS"] = str(preset["n_envs"])
+        os.environ["SIEDLER_NUM_ENVS_AUTO"] = "1"
     if not os.environ.get("SIEDLER_SPATIAL_SIZE"):
         os.environ["SIEDLER_SPATIAL_SIZE"] = str(preset["spatial_size"])
+        os.environ["SIEDLER_SPATIAL_SIZE_AUTO"] = "1"
 
     print(
         "Auto GPU preset: "
@@ -172,6 +225,9 @@ def parse_probe_sps(stdout_text: str):
 def auto_select_fastest_n_envs():
     if os.environ.get("SIEDLER_NUM_ENVS"):
         manual = max(1, int(os.environ["SIEDLER_NUM_ENVS"]))
+        if os.environ.get("SIEDLER_NUM_ENVS_AUTO") == "1":
+            print(f"Using auto GPU SIEDLER_NUM_ENVS={manual}")
+            return manual, False
         print(f"Using manual SIEDLER_NUM_ENVS={manual}")
         return manual, True
 
@@ -288,6 +344,7 @@ if len(entries) == 1 and entries[0].is_dir() and SOURCE_MODE == "zip":
 
 os.chdir(PROJECT_DIR)
 print(f"Project dir: {PROJECT_DIR}")
+print_repo_revision(PROJECT_DIR)
 Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 os.environ["SIEDLER_DATA_DIR"] = DATA_DIR
 print(f"Data dir: {DATA_DIR}")
@@ -362,8 +419,7 @@ def sync_legacy_env_data_layout():
 
 
 # 4) INSTALL DEPENDENCIES
-for package in ("gymnasium", "stable-baselines3", "sb3-contrib", "tensorboard"):
-    run([sys.executable, "-m", "pip", "install", "-q", package])
+pip_install_with_retry(["gymnasium", "stable-baselines3", "sb3-contrib", "tensorboard"])
 
 
 # 5) AUTO-SYNC REQUIRED DATA TO GOOGLE DRIVE
@@ -427,6 +483,8 @@ if missing:
         + "\n\nIf SOURCE_MODE='git': commit/push missing files first.\n"
           "For large data files, upload once to DATA_DIR and keep SOURCE_MODE='git'."
     )
+
+smoke_check_training_imports()
 
 
 # 7) FORCE SAVE TO DRIVE

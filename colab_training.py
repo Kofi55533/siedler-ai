@@ -715,9 +715,33 @@ def _get_base_env(env):
     return base
 
 
-def _supports_multihead_api(env) -> bool:
+def _get_multihead_metadata(env):
+    """
+    Liefert (action_head_sizes, phase_dim) robust fuer Dummy/SubprocVecEnv.
+    """
+    if hasattr(env, "env_method") and hasattr(env, "get_attr"):
+        try:
+            head_sizes_list = env.env_method("get_action_head_sizes")
+            phase_dim_list = env.get_attr("phase_dim")
+            if head_sizes_list and phase_dim_list:
+                head_sizes = head_sizes_list[0]
+                phase_dim = int(phase_dim_list[0])
+                if head_sizes is not None and phase_dim > 0:
+                    return list(head_sizes), phase_dim
+        except Exception:
+            pass
+
     base = _get_base_env(env)
-    return hasattr(base, "get_action_head_sizes") and hasattr(base, "phase_dim")
+    if hasattr(base, "get_action_head_sizes") and hasattr(base, "phase_dim"):
+        try:
+            head_sizes = base.get_action_head_sizes()
+            phase_dim = int(base.phase_dim)
+            if head_sizes is not None and phase_dim > 0:
+                return list(head_sizes), phase_dim
+        except Exception:
+            pass
+
+    return None, None
 
 
 def make_env(
@@ -913,15 +937,14 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     else:
         print(f"Observation Space: {env.observation_space}")
 
-    supports_multihead = _supports_multihead_api(env)
-    head_sizes = None
-    phase_dim = None
-    if supports_multihead:
-        try:
-            head_sizes = env.env_method("get_action_head_sizes")[0]
-            phase_dim = env.get_attr("phase_dim")[0]
-        except Exception:
-            supports_multihead = False
+    head_sizes, phase_dim = _get_multihead_metadata(env)
+    if head_sizes is None or phase_dim is None:
+        env.close()
+        raise RuntimeError(
+            "Action-Masking ist verpflichtend, aber Multi-Head API wurde nicht erkannt. "
+            "Erwartet: get_action_head_sizes(), phase_dim und get_action_mask(). "
+            "Bitte neuesten Repo-Stand nutzen und Runtime neu starten."
+        )
 
     policy_kwargs = dict(config.get("policy_kwargs") or {})
     if config.get("auto_scale_arch", False):
@@ -930,21 +953,14 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         else:
             obs_dim = env.observation_space.shape[0]
         policy_kwargs["net_arch"] = _select_net_arch(obs_dim)
-    if supports_multihead and head_sizes is not None and phase_dim is not None:
-        policy_kwargs.update({
-            "action_head_sizes": head_sizes,
-            "phase_dim": phase_dim,
-        })
-        policy_cls = MultiHeadMaskablePolicy
-        model_cls = MaskablePPO
-    else:
-        policy_kwargs.pop("action_head_sizes", None)
-        policy_kwargs.pop("phase_dim", None)
-        policy_cls = "MultiInputPolicy" if isinstance(env.observation_space, gym.spaces.Dict) else "MlpPolicy"
-        model_cls = PPO
-        print("Hinweis: Legacy-Env erkannt, Fallback auf PPO ohne Action-Masking.")
+    policy_kwargs.update({
+        "action_head_sizes": head_sizes,
+        "phase_dim": phase_dim,
+    })
+    policy_cls = MultiHeadMaskablePolicy
+    model_cls = MaskablePPO
 
-    if isinstance(env.observation_space, gym.spaces.Dict) and supports_multihead:
+    if isinstance(env.observation_space, gym.spaces.Dict):
         extractor_dims = _select_extractor_dims()
         policy_kwargs.update({
             "features_extractor_class": SpatialVectorExtractor,

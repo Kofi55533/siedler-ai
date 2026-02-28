@@ -44,6 +44,37 @@ def install_dependencies():
     print("Alle AbhÃƒÂ¤ngigkeiten installiert!")
 
 
+def install_dependencies_robust():
+    """Install dependencies from requirements-colab.txt with fallback."""
+    import subprocess
+    import sys
+    import time
+    from pathlib import Path
+
+    req_file = Path(__file__).resolve().parent / "requirements-colab.txt"
+    if req_file.exists():
+        cmd = [sys.executable, "-m", "pip", "install", "-q", "-r", str(req_file)]
+        for attempt in range(1, 4):
+            try:
+                subprocess.check_call(cmd)
+                print(f"Alle Abhaengigkeiten installiert aus {req_file.name}.")
+                return
+            except subprocess.CalledProcessError:
+                if attempt == 3:
+                    raise
+                print(f"pip install fehlgeschlagen (Versuch {attempt}/3), retry...")
+                time.sleep(2)
+
+    packages = [
+        "gymnasium",
+        "stable-baselines3",
+        "sb3-contrib",
+        "tensorboard",
+    ]
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", *packages])
+    print("Alle Abhaengigkeiten installiert (Fallback-Paketliste).")
+
+
 # =============================================================================
 # IMPORTS
 # =============================================================================
@@ -69,7 +100,7 @@ try:
     from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 except ImportError:
     print("Installiere AbhÃƒÂ¤ngigkeiten...")
-    install_dependencies()
+    install_dependencies_robust()
     import gymnasium as gym
     from sb3_contrib import MaskablePPO
     from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback

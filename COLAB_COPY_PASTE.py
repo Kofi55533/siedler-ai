@@ -109,17 +109,34 @@ def pip_install_with_retry(packages, retries=3):
         raise last_error
 
 
+def install_colab_dependencies():
+    req_file = Path(PROJECT_DIR) / "requirements-colab.txt"
+    if req_file.exists():
+        print(f"Installing dependencies from {req_file.name}")
+        pip_install_with_retry(["-r", str(req_file)])
+        return
+
+    print("requirements-colab.txt not found; using fallback package list.")
+    pip_install_with_retry(["gymnasium", "stable-baselines3", "sb3-contrib", "tensorboard"])
+
+
 def smoke_check_training_imports():
-    smoke_code = (
-        "import production_system as ps\n"
-        "import worker_simulation as ws\n"
-        "print('SMOKE has_refiner_ops=', hasattr(ps, 'get_refiner_resource_ops_per_cycle'))\n"
-        "print('SMOKE has_force_to_work_penalty=', hasattr(ws, 'FORCE_TO_WORK_PENALTY'))\n"
-        "import colab_training\n"
-        "print('SMOKE_IMPORT_OK')\n"
-    )
+    smoke_script = Path(PROJECT_DIR) / "smoke_check.py"
+    if smoke_script.exists():
+        smoke_cmd = [sys.executable, "-u", str(smoke_script), "--check-deps"]
+    else:
+        smoke_code = (
+            "import production_system as ps\n"
+            "import worker_simulation as ws\n"
+            "print('SMOKE has_refiner_ops=', hasattr(ps, 'get_refiner_resource_ops_per_cycle'))\n"
+            "print('SMOKE has_force_to_work_penalty=', hasattr(ws, 'FORCE_TO_WORK_PENALTY'))\n"
+            "import colab_training\n"
+            "print('SMOKE_IMPORT_OK')\n"
+        )
+        smoke_cmd = [sys.executable, "-u", "-c", smoke_code]
+
     result = run_capture(
-        [sys.executable, "-u", "-c", smoke_code],
+        smoke_cmd,
         cwd=PROJECT_DIR,
         timeout_sec=180,
     )
@@ -419,7 +436,7 @@ def sync_legacy_env_data_layout():
 
 
 # 4) INSTALL DEPENDENCIES
-pip_install_with_retry(["gymnasium", "stable-baselines3", "sb3-contrib", "tensorboard"])
+install_colab_dependencies()
 
 
 # 5) AUTO-SYNC REQUIRED DATA TO GOOGLE DRIVE

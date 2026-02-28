@@ -2121,8 +2121,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.hq_position = (hq_data["x"], hq_data["y"])
 
         # Numpy-Daten einmal laden und cachen
-        import os
-        import copy
         base_dir = os.environ.get(
             "SIEDLER_DATA_DIR",
             os.path.dirname(os.path.abspath(__file__)),

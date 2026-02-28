@@ -342,7 +342,7 @@ SOURCE_MODE = "git"
 # Training mode:
 #   "fast_train" -> maximale FPS (weniger Simulations-Treue)
 #   "full_sim"   -> volle Simulations-Treue (langsamer)
-TRAIN_MODE = "fast_train"
+TRAIN_MODE = "full_sim"
 
 REPO_URL = "https://github.com/Kofi55533/siedler-ai.git"
 REPO_BRANCH = "main"
@@ -502,7 +502,10 @@ elif not truth_dst.exists():
     extract_file_from_zip_to_data_dir(Path(DRIVE_ZIP), "config/worker_truth_model.json")
 
 # Legacy-Path fuer alte Environment-Versionen bereitstellen.
-sync_legacy_env_data_layout()
+if _env_truthy(os.environ.get("SIEDLER_ENABLE_LEGACY_MIRROR", "0")):
+    sync_legacy_env_data_layout()
+else:
+    print("Legacy env data mirror: disabled (set SIEDLER_ENABLE_LEGACY_MIRROR=1 to enable)")
 
 
 # 6) PREFLIGHT CHECK (clear message before long training start)
@@ -546,9 +549,11 @@ if TRAIN_MODE == "fast_train":
     os.environ.setdefault("SIEDLER_FAST_TRAIN", "1")
     os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "1")
     os.environ.setdefault("SIEDLER_USE_SPATIAL", "0")
-    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "1")
+    # Fuer reproduzierbare Runs standardmaessig aus; bei Bedarf manuell auf 1 setzen.
+    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "0")
     os.environ.setdefault("SIEDLER_TENSORBOARD", "0")
+    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "sparse")
 else:
     os.environ.setdefault("SIEDLER_FAST_TRAIN", "0")
     os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "0")
@@ -556,7 +561,9 @@ else:
     os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "1")
     os.environ.setdefault("SIEDLER_TENSORBOARD", "1")
+    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "balanced")
 print(f"Simulation mode: {TRAIN_MODE}")
+print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")
 
 # 7b) AUTO GPU PRESET (setzt n_envs/spatial_size passend zur Runtime)
 # Wenn SIEDLER_NUM_ENVS/SIEDLER_SPATIAL_SIZE bereits gesetzt sind, bleiben diese Werte erhalten.

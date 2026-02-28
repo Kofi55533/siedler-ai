@@ -242,6 +242,34 @@ def ensure_data_file(dst_name: str, project_candidates):
     return False
 
 
+def sync_legacy_env_data_layout():
+    """
+    Kompatibilitaet fuer alte environment.py-Versionen mit hart codiertem Windows-Pfad.
+    """
+    legacy_root = Path(PROJECT_DIR) / r"c:\Users\marku\OneDrive\Desktop\siedler_ai"
+    legacy_root.mkdir(parents=True, exist_ok=True)
+
+    walkable_sources = [
+        Path(DATA_DIR) / "player1_walkable.npy",
+        Path(DATA_DIR) / "player1_walkable_515.npy",
+        Path(PROJECT_DIR) / "player1_walkable.npy",
+        Path(PROJECT_DIR) / "player1_walkable_515.npy",
+    ]
+    walkable_src = next((p for p in walkable_sources if p.exists()), None)
+    if walkable_src is not None:
+        shutil.copy2(walkable_src, legacy_root / "player1_walkable.npy")
+
+    resources_sources = [
+        Path(DATA_DIR) / "player1_resources.json",
+        Path(PROJECT_DIR) / "player1_resources.json",
+    ]
+    resources_src = next((p for p in resources_sources if p.exists()), None)
+    if resources_src is not None:
+        shutil.copy2(resources_src, legacy_root / "player1_resources.json")
+
+    print(f"Legacy env data mirror: {legacy_root}")
+
+
 # 4) INSTALL DEPENDENCIES
 for package in ("gymnasium", "stable-baselines3", "sb3-contrib", "tensorboard"):
     run([sys.executable, "-m", "pip", "install", "-q", package])
@@ -276,6 +304,9 @@ if truth_src.exists() and not truth_dst.exists():
     print("Synced optional file to DATA_DIR: config/worker_truth_model.json")
 elif not truth_dst.exists():
     extract_file_from_zip_to_data_dir(Path(DRIVE_ZIP), "config/worker_truth_model.json")
+
+# Legacy-Path fuer alte Environment-Versionen bereitstellen.
+sync_legacy_env_data_layout()
 
 
 # 6) PREFLIGHT CHECK (clear message before long training start)

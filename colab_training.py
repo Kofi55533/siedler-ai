@@ -50,6 +50,7 @@ def install_dependencies():
 
 import os
 import json
+import inspect
 import numpy as np
 import time
 from datetime import datetime
@@ -452,15 +453,24 @@ def _validate_runtime_files():
     walkable_candidates = [
         data_dir / "player1_walkable_515.npy",
         data_dir / "player1_walkable.npy",
+        root_dir / "player1_walkable_515.npy",
+        root_dir / "player1_walkable.npy",
     ]
     if not any(path.exists() for path in walkable_candidates):
         missing.append(
-            f"player1_walkable_515.npy oder player1_walkable.npy (im Datenordner: {data_dir})"
+            "player1_walkable_515.npy oder player1_walkable.npy "
+            f"(im Datenordner: {data_dir} oder Projektordner: {root_dir})"
         )
 
-    resources_file = data_dir / "player1_resources.json"
-    if not resources_file.exists():
-        missing.append(f"player1_resources.json (im Datenordner: {data_dir})")
+    resources_candidates = [
+        data_dir / "player1_resources.json",
+        root_dir / "player1_resources.json",
+    ]
+    if not any(path.exists() for path in resources_candidates):
+        missing.append(
+            "player1_resources.json "
+            f"(im Datenordner: {data_dir} oder Projektordner: {root_dir})"
+        )
 
     if missing:
         formatted = "\n".join(f"  - {item}" for item in missing)
@@ -490,6 +500,48 @@ def _get_spatial_size():
     return 128
 
 
+def _get_env_init_param_names() -> set:
+    try:
+        sig = inspect.signature(SiedlerScharfschuetzenEnv.__init__)
+        return set(sig.parameters.keys())
+    except Exception:
+        return set()
+
+
+def _create_env_instance(
+    player_id: int = 1,
+    use_spatial_obs: bool = True,
+    spatial_size: int = 128,
+    reward_profile: dict = None,
+):
+    """
+    Erstellt Environment robust fuer alte/neue Environment-APIs.
+    """
+    params = _get_env_init_param_names()
+    kwargs = {"player_id": player_id}
+    if "use_spatial_obs" in params:
+        kwargs["use_spatial_obs"] = use_spatial_obs
+    if "spatial_size" in params:
+        kwargs["spatial_size"] = spatial_size
+    if "reward_profile" in params:
+        kwargs["reward_profile"] = reward_profile
+    return SiedlerScharfschuetzenEnv(**kwargs)
+
+
+def _get_base_env(env):
+    base = env
+    if hasattr(base, "envs") and base.envs:
+        base = base.envs[0]
+    if hasattr(base, "unwrapped"):
+        base = base.unwrapped
+    return base
+
+
+def _supports_multihead_api(env) -> bool:
+    base = _get_base_env(env)
+    return hasattr(base, "get_action_head_sizes") and hasattr(base, "phase_dim")
+
+
 def make_env(
     rank: int,
     seed: int = 0,
@@ -498,7 +550,7 @@ def make_env(
     reward_profile: dict = None,
 ):
     def _init():
-        env = SiedlerScharfschuetzenEnv(
+        env = _create_env_instance(
             player_id=1,
             use_spatial_obs=use_spatial_obs,
             spatial_size=spatial_size,
@@ -657,8 +709,16 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     else:
         print(f"Observation Space: {env.observation_space}")
 
-    head_sizes = env.env_method("get_action_head_sizes")[0]
-    phase_dim = env.get_attr("phase_dim")[0]
+    supports_multihead = _supports_multihead_api(env)
+    head_sizes = None
+    phase_dim = None
+    if supports_multihead:
+        try:
+            head_sizes = env.env_method("get_action_head_sizes")[0]
+            phase_dim = env.get_attr("phase_dim")[0]
+        except Exception:
+            supports_multihead = False
+
     policy_kwargs = dict(config.get("policy_kwargs") or {})
     if config.get("auto_scale_arch", False):
         if isinstance(env.observation_space, gym.spaces.Dict):
@@ -666,11 +726,19 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         else:
             obs_dim = env.observation_space.shape[0]
         policy_kwargs["net_arch"] = _select_net_arch(obs_dim)
-    policy_kwargs.update({
-        "action_head_sizes": head_sizes,
-        "phase_dim": phase_dim,
-    })
-    if isinstance(env.observation_space, gym.spaces.Dict):
+    if supports_multihead and head_sizes is not None and phase_dim is not None:
+        policy_kwargs.update({
+            "action_head_sizes": head_sizes,
+            "phase_dim": phase_dim,
+        })
+        policy_cls = MultiHeadMaskablePolicy
+    else:
+        policy_kwargs.pop("action_head_sizes", None)
+        policy_kwargs.pop("phase_dim", None)
+        policy_cls = "MultiInputPolicy" if isinstance(env.observation_space, gym.spaces.Dict) else "MlpPolicy"
+        print("Hinweis: Fallback auf Standard-Policy (kein MultiHead-API im Environment erkannt).")
+
+    if isinstance(env.observation_space, gym.spaces.Dict) and supports_multihead:
         extractor_dims = _select_extractor_dims()
         policy_kwargs.update({
             "features_extractor_class": SpatialVectorExtractor,
@@ -691,7 +759,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
 
     # Modell erstellen
     model = MaskablePPO(
-        MultiHeadMaskablePolicy,
+        policy_cls,
         env,
         learning_rate=config["learning_rate"],
         n_steps=config["n_steps"],
@@ -755,7 +823,7 @@ def evaluate(
     """
     if reward_profile is None:
         reward_profile = get_train_profile(profile_name)["reward_profile"]
-    env = SiedlerScharfschuetzenEnv(
+    env = _create_env_instance(
         player_id=1,
         use_spatial_obs=use_spatial_obs,
         spatial_size=spatial_size,
@@ -823,7 +891,7 @@ def export_strategy(
     """
     if reward_profile is None:
         reward_profile = get_train_profile(profile_name)["reward_profile"]
-    env = SiedlerScharfschuetzenEnv(
+    env = _create_env_instance(
         player_id=1,
         use_spatial_obs=use_spatial_obs,
         spatial_size=spatial_size,

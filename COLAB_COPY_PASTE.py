@@ -605,7 +605,9 @@ else:
     os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "balanced")
 
 # Robustheit fuer Colab-Disconnects + weniger Overhead nach dem Training.
-os.environ.setdefault("SIEDLER_RESUME", "1")
+# Immer neu trainieren (kein Resume von alten Checkpoints).
+os.environ["SIEDLER_RESUME"] = "0"
+os.environ.pop("SIEDLER_RESUME_PATH", None)
 os.environ.setdefault("SIEDLER_RUN_EVAL", "0")
 os.environ.setdefault("SIEDLER_RUN_EXPORT", "0")
 os.environ.setdefault("SIEDLER_EVAL_RENDER", "0")

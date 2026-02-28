@@ -313,8 +313,14 @@ except ImportError:
     WORKER_FORCE_TO_WORK_PENALTY = 0.2
 from production_system import (
     ProductionSystem, Mine, Refiner, Serf, SerfState, ResourceType,
-    SERF_EXTRACTION, get_refiner_resource_ops_per_cycle
+    SERF_EXTRACTION,
 )
+
+try:
+    from production_system import get_refiner_resource_ops_per_cycle
+except ImportError:
+    def get_refiner_resource_ops_per_cycle(worker_type: str, fallback: int = 2) -> int:
+        return max(1, int(fallback))
 
 # NEU: Pfadfindung fÃƒÆ’Ã‚Â¼r exakte Laufwege
 import pathfinding

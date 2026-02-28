@@ -305,8 +305,12 @@ from wood_zones_config import WOOD_ZONES
 from worker_simulation import (
     Position, WorkforceManager, Worker, Farm, Residence, Camp,
     WorkerState, WORKER_PARAMS, WORKER_SPEEDS,
-    FORCE_TO_WORK_PENALTY as WORKER_FORCE_TO_WORK_PENALTY,
 )
+
+try:
+    from worker_simulation import FORCE_TO_WORK_PENALTY as WORKER_FORCE_TO_WORK_PENALTY
+except ImportError:
+    WORKER_FORCE_TO_WORK_PENALTY = 0.2
 from production_system import (
     ProductionSystem, Mine, Refiner, Serf, SerfState, ResourceType,
     SERF_EXTRACTION, get_refiner_resource_ops_per_cycle

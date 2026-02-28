@@ -13,6 +13,10 @@ import time
 import zipfile
 
 
+def _env_truthy(value):
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _prepare_cmd_env(cmd, env=None):
     cmd = list(cmd)
     exe_name = Path(cmd[0]).name.lower() if cmd else ""
@@ -196,6 +200,9 @@ def build_n_env_candidates():
 def infer_gpu_training_preset():
     _, gpu_name, cpu_cap = infer_target_n_envs()
     gpu_upper = (gpu_name or "").upper()
+    fast_mode = _env_truthy(os.environ.get("SIEDLER_FAST_TRAIN")) or (
+        str(os.environ.get("SIEDLER_SIM_MODE", "")).strip().lower() == "fast_train"
+    )
 
     if "H100" in gpu_upper:
         n_envs, spatial_size = 10, 192
@@ -209,6 +216,8 @@ def infer_gpu_training_preset():
         n_envs, spatial_size = 2, 96
 
     n_envs = max(1, min(cpu_cap, int(n_envs)))
+    if fast_mode:
+        spatial_size = min(spatial_size, 96)
     return {"gpu_name": gpu_name, "n_envs": n_envs, "spatial_size": spatial_size}
 
 
@@ -242,13 +251,32 @@ def parse_probe_sps(stdout_text: str):
 def auto_select_fastest_n_envs():
     if os.environ.get("SIEDLER_NUM_ENVS"):
         manual = max(1, int(os.environ["SIEDLER_NUM_ENVS"]))
-        if os.environ.get("SIEDLER_NUM_ENVS_AUTO") == "1":
+        is_auto = os.environ.get("SIEDLER_NUM_ENVS_AUTO") == "1"
+        benchmark_auto = _env_truthy(os.environ.get("SIEDLER_BENCHMARK_AUTO_ENVS", "0"))
+        if is_auto and not benchmark_auto:
             print(f"Using auto GPU SIEDLER_NUM_ENVS={manual}")
             return manual, False
-        print(f"Using manual SIEDLER_NUM_ENVS={manual}")
-        return manual, True
-
-    candidates, target, gpu_name = build_n_env_candidates()
+        if is_auto and benchmark_auto:
+            print(
+                f"Auto GPU preset SIEDLER_NUM_ENVS={manual} detected; "
+                "running benchmark override for max throughput."
+            )
+            cpu_cap = max(1, (os.cpu_count() or 1) - 1)
+            raw = [min(cpu_cap, manual + 2), manual + 1, manual, manual - 1, manual - 2, 8, 6, 4, 3, 2, 1]
+            seen = set()
+            candidates = []
+            for n in raw:
+                if 1 <= n <= cpu_cap and n not in seen:
+                    seen.add(n)
+                    candidates.append(n)
+            candidates.sort(reverse=True)
+            target = manual
+            gpu_name = infer_target_n_envs()[1]
+        else:
+            print(f"Using manual SIEDLER_NUM_ENVS={manual}")
+            return manual, True
+    else:
+        candidates, target, gpu_name = build_n_env_candidates()
     print("Auto benchmark for n_envs started")
     print(f"GPU: {gpu_name}")
     print(f"Probe candidates: {candidates} (target={target})")
@@ -311,6 +339,10 @@ def build_fallback_n_envs(start_n: int):
 #   "git" -> always clone latest from GitHub (recommended)
 #   "zip" -> fallback to zip in MyDrive
 SOURCE_MODE = "git"
+# Training mode:
+#   "fast_train" -> maximale FPS (weniger Simulations-Treue)
+#   "full_sim"   -> volle Simulations-Treue (langsamer)
+TRAIN_MODE = "fast_train"
 
 REPO_URL = "https://github.com/Kofi55533/siedler-ai.git"
 REPO_BRANCH = "main"
@@ -508,6 +540,23 @@ smoke_check_training_imports()
 Path(SAVE_DIR).mkdir(parents=True, exist_ok=True)
 os.environ["SIEDLER_SAVE_DIR"] = SAVE_DIR
 os.environ["SIEDLER_REQUIRE_DRIVE"] = "1"
+os.environ["SIEDLER_SIM_MODE"] = TRAIN_MODE
+
+if TRAIN_MODE == "fast_train":
+    os.environ.setdefault("SIEDLER_FAST_TRAIN", "1")
+    os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "1")
+    os.environ.setdefault("SIEDLER_USE_SPATIAL", "0")
+    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "1")
+    os.environ.setdefault("SIEDLER_PROGRESS_BAR", "0")
+    os.environ.setdefault("SIEDLER_TENSORBOARD", "0")
+else:
+    os.environ.setdefault("SIEDLER_FAST_TRAIN", "0")
+    os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "0")
+    os.environ.setdefault("SIEDLER_USE_SPATIAL", "1")
+    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")
+    os.environ.setdefault("SIEDLER_PROGRESS_BAR", "1")
+    os.environ.setdefault("SIEDLER_TENSORBOARD", "1")
+print(f"Simulation mode: {TRAIN_MODE}")
 
 # 7b) AUTO GPU PRESET (setzt n_envs/spatial_size passend zur Runtime)
 # Wenn SIEDLER_NUM_ENVS/SIEDLER_SPATIAL_SIZE bereits gesetzt sind, bleiben diese Werte erhalten.

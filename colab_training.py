@@ -126,6 +126,32 @@ except Exception:
 th.backends.cuda.matmul.allow_tf32 = True
 
 
+def _env_truthy(value: Optional[str]) -> bool:
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _resolve_sim_mode() -> str:
+    mode = str(os.environ.get("SIEDLER_SIM_MODE", "")).strip().lower()
+    if mode in {"fast_train", "full_sim"}:
+        return mode
+    return "fast_train" if _env_truthy(os.environ.get("SIEDLER_FAST_TRAIN", "0")) else "full_sim"
+
+
+def _get_use_spatial_obs() -> bool:
+    raw = os.environ.get("SIEDLER_USE_SPATIAL")
+    if raw is not None:
+        return _env_truthy(raw)
+    return _resolve_sim_mode() != "fast_train"
+
+
+def _tensorboard_enabled() -> bool:
+    return _env_truthy(os.environ.get("SIEDLER_TENSORBOARD", "1"))
+
+
+def _progress_bar_enabled() -> bool:
+    return _env_truthy(os.environ.get("SIEDLER_PROGRESS_BAR", "1"))
+
+
 def _select_net_arch(obs_dim: int):
     if obs_dim >= 400:
         return [1024, 512, 512]
@@ -753,8 +779,9 @@ def probe_env_throughput(profile_name: str = None, probe_steps: int = 96):
 
     reward_profile = profile["reward_profile"]
     spatial_size = _get_spatial_size()
+    use_spatial_obs = _get_use_spatial_obs()
     env = create_env(
-        use_spatial_obs=True,
+        use_spatial_obs=use_spatial_obs,
         spatial_size=spatial_size,
         reward_profile=reward_profile,
     )
@@ -778,7 +805,8 @@ def probe_env_throughput(profile_name: str = None, probe_steps: int = 96):
 
     print(
         f"ENV_PROBE_RESULT n_envs={n_envs} "
-        f"throughput_sps={throughput_sps:.2f} spatial={spatial_size}"
+        f"throughput_sps={throughput_sps:.2f} spatial={spatial_size} "
+        f"use_spatial={int(use_spatial_obs)}"
     )
     return {
         "n_envs": n_envs,
@@ -820,6 +848,10 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     tuning_info = _auto_tune_for_colab(config, explicit_config=custom_config)
     reward_profile = profile["reward_profile"]
     save_path = _resolve_training_save_path(save_path)
+    sim_mode = _resolve_sim_mode()
+    use_spatial_obs = _get_use_spatial_obs()
+    tensorboard_enabled = _tensorboard_enabled()
+    progress_bar_enabled = _progress_bar_enabled()
 
     _validate_runtime_files()
 
@@ -831,6 +863,10 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     print(f"Batch Size: {config['batch_size']}")
     print(f"n_steps: {config['n_steps']}")
     print(f"Save Path: {save_path}")
+    print(f"Sim Mode: {sim_mode}")
+    print(f"Spatial Obs: {use_spatial_obs}")
+    print(f"TensorBoard: {tensorboard_enabled}")
+    print(f"Progress Bar: {progress_bar_enabled}")
     print(f"Profil: {profile['name']} ({profile['description']})")
     terminal_dependency_bonus = float(reward_profile.get("terminal_dependency_bonus", 0.0))
     terminal_bonus = float(reward_profile.get("terminal_recruitable_bonus", 0.0))
@@ -861,7 +897,6 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     print("=" * 60)
 
     # Environment erstellen
-    use_spatial_obs = True
     spatial_size = _get_spatial_size()
     env = create_env(
         use_spatial_obs=use_spatial_obs,
@@ -953,7 +988,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         policy_kwargs=policy_kwargs,
         device=device,
         verbose=1,
-        tensorboard_log=f"{save_path}/tensorboard/",
+        tensorboard_log=(f"{save_path}/tensorboard/" if tensorboard_enabled else None),
     )
 
     print("\nTraining startet...")
@@ -964,7 +999,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     learn_kwargs = {
         "total_timesteps": config["total_timesteps"],
         "callback": [checkpoint_callback, scharfschuetzen_callback],
-        "progress_bar": True,
+        "progress_bar": progress_bar_enabled,
     }
     model.learn(**learn_kwargs)
 
@@ -1135,9 +1170,14 @@ if __name__ == "__main__":
     # Pfad fÃƒÂ¼r Modelle
     SAVE_PATH = _resolve_training_save_path("./siedler_training")
     active_profile = get_train_profile()
+    use_spatial_obs = _get_use_spatial_obs()
+    spatial_size = _get_spatial_size()
+    sim_mode = _resolve_sim_mode()
 
     print_runtime_recommendation()
     print(f"Aktiver Save-Pfad: {SAVE_PATH}")
+    print(f"Simulation mode: {sim_mode}")
+    print(f"use_spatial_obs={use_spatial_obs} spatial_size={spatial_size}")
 
     # Erstelle Ordner falls nicht vorhanden
     os.makedirs(SAVE_PATH, exist_ok=True)
@@ -1162,8 +1202,8 @@ if __name__ == "__main__":
         model,
         n_episodes=5,
         render=True,
-        use_spatial_obs=True,
-        spatial_size=_get_spatial_size(),
+        use_spatial_obs=use_spatial_obs,
+        spatial_size=spatial_size,
         reward_profile=active_profile["reward_profile"],
     )
 
@@ -1175,8 +1215,8 @@ if __name__ == "__main__":
     strategy = export_strategy(
         model,
         save_path=f"{SAVE_PATH}/strategy.json",
-        use_spatial_obs=True,
-        spatial_size=_get_spatial_size(),
+        use_spatial_obs=use_spatial_obs,
+        spatial_size=spatial_size,
         reward_profile=active_profile["reward_profile"],
     )
 

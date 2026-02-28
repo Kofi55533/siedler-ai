@@ -25,6 +25,18 @@ try:
 except Exception:
     MAP_EXTRACT_DIR = None
 
+
+def _env_truthy(value: Optional[str]) -> bool:
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _resolve_sim_mode_from_env() -> str:
+    mode = str(os.environ.get("SIEDLER_SIM_MODE", "")).strip().lower()
+    if mode in {"fast_train", "full_sim"}:
+        return mode
+    return "fast_train" if _env_truthy(os.environ.get("SIEDLER_FAST_TRAIN", "0")) else "full_sim"
+
+
 # ============================================================================
 # MULTI-STEP ACTION SYSTEM (NEU - aus GEPLANTE_AENDERUNGEN.md)
 # ============================================================================
@@ -1864,6 +1876,12 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.render_mode = render_mode
         self.use_spatial_obs = bool(use_spatial_obs)
         self.spatial_size = int(spatial_size)
+        self.sim_mode = _resolve_sim_mode_from_env()
+        disable_runtime_pathing_raw = os.environ.get("SIEDLER_DISABLE_RUNTIME_PATHING")
+        if disable_runtime_pathing_raw is None:
+            self.disable_runtime_pathing = self.sim_mode == "fast_train"
+        else:
+            self.disable_runtime_pathing = _env_truthy(disable_runtime_pathing_raw)
         self.reward_profile = _resolve_reward_profile(reward_profile)
         self._last_scharf_resource_potential = 0.0
         self._last_scharf_dependency_progress = 0.0
@@ -7912,13 +7930,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         shoes_speed = self.active_tech_effects.get("speed_modifier", 0)
         self.workforce_manager.set_speed_bonus(shoes_speed)
 
-        grid_revision = self._get_routing_revision()
+        runtime_pathfinder = None if self.disable_runtime_pathing else self._find_path_world
+        grid_revision = None if runtime_pathfinder is None else self._get_routing_revision()
 
         # WorkTime-System ticken (Worker Pausen-Simulation)
         self.workforce_manager.tick(
             TIME_STEP,
             active_workplaces=self._get_active_workplaces(),
-            pathfinder=self._find_path_world,
+            pathfinder=runtime_pathfinder,
             path_revision=grid_revision
         )
         self._prune_runtime_workers()
@@ -7954,7 +7973,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         }
         production_output = self.production_system.tick(
             TIME_STEP,
-            pathfinder=self._find_path_world,
+            pathfinder=runtime_pathfinder,
             path_revision=grid_revision
         )
 

@@ -612,12 +612,15 @@ os.environ.setdefault("SIEDLER_RUN_EVAL", "0")
 os.environ.setdefault("SIEDLER_RUN_EXPORT", "0")
 os.environ.setdefault("SIEDLER_EVAL_RENDER", "0")
 
-# Fester schneller Startwert (L4): kein erneuter n_envs-Benchmark, direkt mit 6 Envs.
+# Stabiler Startwert ohne Benchmark, aber CPU-adaptiv (max. 6 Envs).
 os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "0"
-os.environ["SIEDLER_NUM_ENVS"] = "6"
+cpu_cap = max(1, (os.cpu_count() or 1) - 1)
+adaptive_n_envs = min(6, cpu_cap)
+os.environ["SIEDLER_NUM_ENVS"] = str(adaptive_n_envs)
 print(f"Simulation mode: {TRAIN_MODE}")
 print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")
 print(f"Resume enabled: {os.environ.get('SIEDLER_RESUME')}")
+print(f"Adaptive n_envs pin: {os.environ.get('SIEDLER_NUM_ENVS')} (cpu_cap={cpu_cap})")
 print(
     "Post-train phases: "
     f"eval={os.environ.get('SIEDLER_RUN_EVAL')} "

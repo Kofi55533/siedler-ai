@@ -585,7 +585,8 @@ if TRAIN_MODE == "fast_train":
     os.environ.setdefault("SIEDLER_TURBO_FPS", "1")
     os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "1")
     os.environ.setdefault("SIEDLER_USE_SPATIAL", "0")
-    os.environ.setdefault("SIEDLER_RUNTIME_STATUS", "0")
+    # Fortschritt wieder sichtbar, aber ohne Spam (Intervall unten auf 30s).
+    os.environ.setdefault("SIEDLER_RUNTIME_STATUS", "1")
     os.environ.setdefault("SIEDLER_SB3_VERBOSE", "0")
     # Max-FPS-Default: n_envs automatisch auf dieser Runtime benchmarken.
     os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "1")

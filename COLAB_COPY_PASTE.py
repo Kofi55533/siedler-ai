@@ -582,6 +582,7 @@ os.environ["SIEDLER_SIM_MODE"] = TRAIN_MODE
 
 if TRAIN_MODE == "fast_train":
     os.environ.setdefault("SIEDLER_FAST_TRAIN", "1")
+    os.environ.setdefault("SIEDLER_TURBO_FPS", "1")
     os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "1")
     os.environ.setdefault("SIEDLER_USE_SPATIAL", "0")
     # Max-FPS-Default: n_envs automatisch auf dieser Runtime benchmarken.
@@ -591,6 +592,7 @@ if TRAIN_MODE == "fast_train":
     os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "sparse")
 else:
     os.environ.setdefault("SIEDLER_FAST_TRAIN", "0")
+    os.environ.setdefault("SIEDLER_TURBO_FPS", "0")
     os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "0")
     os.environ.setdefault("SIEDLER_USE_SPATIAL", "1")
     os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")

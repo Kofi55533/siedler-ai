@@ -153,7 +153,25 @@ def _progress_bar_enabled() -> bool:
     return _env_truthy(os.environ.get("SIEDLER_PROGRESS_BAR", "1"))
 
 
+def _prefer_speed_mode() -> bool:
+    """
+    Turbo-FPS Modus:
+    - explizit ueber SIEDLER_TURBO_FPS steuerbar
+    - sonst in fast_train standardmaessig aktiv
+    """
+    raw = os.environ.get("SIEDLER_TURBO_FPS")
+    if raw is not None:
+        return _env_truthy(raw)
+    return _resolve_sim_mode() == "fast_train"
+
+
 def _select_net_arch(obs_dim: int):
+    if _prefer_speed_mode():
+        if obs_dim >= 400:
+            return [768, 384, 256]
+        if obs_dim >= 250:
+            return [512, 256, 256]
+        return [384, 192, 192]
     if obs_dim >= 400:
         return [1024, 512, 512]
     if obs_dim >= 250:
@@ -375,6 +393,14 @@ def _infer_colab_preset(runtime: Dict[str, object]) -> Dict[str, object]:
         }
 
     preset["n_envs"] = int(max(1, min(int(preset["n_envs"]), cpu_cap_envs)))
+
+    if _prefer_speed_mode() and preset["name"] in {"l4_v100", "t4_p100", "generic_cuda"}:
+        # Reduziert PPO-Update-Overhead deutlich fuer hoehere effective FPS.
+        preset["n_steps"] = 2048
+        preset["batch_size"] = 1024
+        preset["n_epochs"] = 4
+        preset["learning_rate"] = 0.0003
+
     return preset
 
 

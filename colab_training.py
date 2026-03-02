@@ -350,6 +350,7 @@ def _cleanup_old_training_artifacts(save_path: str) -> int:
     patterns = (
         "siedler_checkpoint_*_steps.zip",
         "siedler_final.zip",
+        "siedler_best_reward.zip",
     )
     for pattern in patterns:
         for path in root.glob(pattern):
@@ -543,10 +544,10 @@ class ScharfschuetzenCallback(BaseCallback):
         compact_status: bool = True,
         status_bar_width: int = 24,
         runtime_status_enabled: bool = True,
+        best_model_path: Optional[str] = None,
         verbose: int = 1,
     ):
         super().__init__(verbose)
-        self.check_freq = check_freq
         self.status_every_sec = max(1, int(status_every_sec))
         self.runtime_status_enabled = bool(runtime_status_enabled)
         self._requested_compact_status = bool(compact_status)
@@ -554,29 +555,16 @@ class ScharfschuetzenCallback(BaseCallback):
         # In Colab/Subprocess ist carriage-return oft unzuverlaessig -> automatisch Zeilenmodus.
         self.compact_status = bool(self._requested_compact_status and self._tty_capable)
         self.status_bar_width = max(10, int(status_bar_width))
-        self.best_scharfschuetzen = 0
+        self.best_model_path = str(best_model_path) if best_model_path else None
         self.episode_rewards = []
-        self.episode_scharfschuetzen = []
         self.best_episode_reward = None
+        self.best_model_save_count = 0
         self._episode_reward_accumulators = None
         self._episodes_finished = 0
         self._train_start_time = None
         self._last_status_time = None
         self._last_status_steps = 0
         self._last_status_line_len = 0
-
-    def _get_env_attr(self, name, default=None):
-        if hasattr(self.training_env, "get_attr"):
-            try:
-                return self.training_env.get_attr(name)[0]
-            except Exception:
-                pass
-        if hasattr(self.training_env, "envs"):
-            env = self.training_env.envs[0]
-            if hasattr(env, "unwrapped"):
-                env = env.unwrapped
-            return getattr(env, name, default)
-        return default
 
     def _on_training_start(self) -> None:
         now = time.perf_counter()
@@ -593,6 +581,23 @@ class ScharfschuetzenCallback(BaseCallback):
         m = (sec % 3600) // 60
         s = sec % 60
         return f"{h:02d}:{m:02d}:{s:02d}"
+
+    def _maybe_save_best_reward_model(self, episode_reward: float) -> None:
+        if self.best_model_path is None:
+            return
+        if self.model is None:
+            return
+        try:
+            self.model.save(self.best_model_path)
+            self.best_model_save_count += 1
+            if self.verbose > 0:
+                print(
+                    "Neues Best-Reward-Modell gespeichert: "
+                    f"reward={episode_reward:.2f} path={self.best_model_path}.zip"
+                )
+        except Exception as exc:
+            if self.verbose > 0:
+                print(f"Warnung: Best-Reward-Modell konnte nicht gespeichert werden ({exc})")
 
     def _update_episode_reward_tracking(self) -> None:
         rewards = self.locals.get("rewards")
@@ -624,6 +629,7 @@ class ScharfschuetzenCallback(BaseCallback):
             self._episodes_finished += 1
             if self.best_episode_reward is None or ep_reward > float(self.best_episode_reward):
                 self.best_episode_reward = ep_reward
+                self._maybe_save_best_reward_model(ep_reward)
 
         if len(self.episode_rewards) > 2000:
             self.episode_rewards = self.episode_rewards[-1000:]
@@ -740,18 +746,6 @@ class ScharfschuetzenCallback(BaseCallback):
     def _on_step(self) -> bool:
         self._update_episode_reward_tracking()
         self._maybe_print_runtime_status()
-
-        if self.n_calls % self.check_freq == 0:
-            scharfschuetzen = self._get_env_attr("scharfschuetzen", 0)
-
-            if scharfschuetzen > self.best_scharfschuetzen:
-                self.best_scharfschuetzen = scharfschuetzen
-                if self.verbose > 0:
-                    print(f"Neuer Rekord: {scharfschuetzen} Scharfschuetzen!")
-
-            if self.verbose > 0 and self.n_calls % (self.check_freq * 10) == 0:
-                print(f"Step {self.n_calls}: Best Scharfschuetzen = {self.best_scharfschuetzen}")
-
         return True
 
     def _on_training_end(self) -> None:
@@ -1182,12 +1176,15 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         "0", "false", "no", "off"
     }
     runtime_status_enabled = _runtime_status_enabled()
+    best_model_path = f"{save_path}/siedler_best_reward"
+    print(f"Best-Reward-Modell: {best_model_path}.zip")
     scharfschuetzen_callback = ScharfschuetzenCallback(
         check_freq=1000,
         status_every_sec=status_every_sec,
         compact_status=compact_status,
         status_bar_width=status_bar_width,
         runtime_status_enabled=runtime_status_enabled,
+        best_model_path=best_model_path,
         verbose=1 if runtime_status_enabled else 0,
     )
 
@@ -1274,9 +1271,16 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     model.save(final_path)
     print(f"\nModell gespeichert: {final_path}")
 
-    # Beste Ergebnisse
-    print(f"\nBeste erreichte ScharfschÃƒÂ¼tzen: {scharfschuetzen_callback.best_scharfschuetzen}")
-
+    # Beste Reward-Ergebnisse
+    if scharfschuetzen_callback.best_episode_reward is not None:
+        print(
+            "Bestes Episode-Reward: "
+            f"{float(scharfschuetzen_callback.best_episode_reward):.2f} "
+            f"(gespeichert unter {best_model_path}.zip, "
+            f"updates={int(scharfschuetzen_callback.best_model_save_count)})"
+        )
+    else:
+        print("Bestes Episode-Reward: n/a (noch keine abgeschlossene Episode waehrend Training).")
     return model
 
 

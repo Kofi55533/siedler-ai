@@ -1842,6 +1842,16 @@ DEFAULT_REWARD_PROFILE = {
     "terminal_delta_from_start": 1.0,
     # Clamp terminal deltas at >= 0 to avoid punishing temporary investments.
     "terminal_delta_positive_only": 1.0,
+    # Dense shaping on state deltas (off by default to preserve sparse behavior).
+    "step_delta_potential_bonus": 0.0,
+    "step_delta_dependency_bonus": 0.0,
+    "step_delta_research_bonus": 0.0,
+    "step_delta_construction_bonus": 0.0,
+    "step_unlock_recruitable_bonus": 0.0,
+    "step_time_penalty": 0.0,
+    "step_potential_use_cumulative_earnings": 1.0,
+    "step_potential_include_start_resources": 0.0,
+    "step_delta_positive_only": 1.0,
 }
 
 
@@ -1896,12 +1906,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._start_scharf_recruitable = False
         self._last_scharf_resource_potential = 0.0
         self._last_scharf_dependency_progress = 0.0
+        self._last_step_potential_metric = 0.0
+        self._last_scharf_research_progress = 0.0
+        self._last_scharf_construction_progress = 0.0
+        self._last_scharf_recruitable = False
         self._terminal_start_total_taler = 0.0
         self._terminal_start_total_schwefel = 0.0
         self._terminal_prev_total_taler = 0.0
         self._terminal_prev_total_schwefel = 0.0
         self._terminal_cumulative_taler_earned = 0.0
         self._terminal_cumulative_schwefel_earned = 0.0
+        self._scharf_required_buildings, self._scharf_required_techs = self._get_scharf_requirements()
 
         # GebÃƒÆ’Ã‚Â¤ude-Listen fÃƒÆ’Ã‚Â¼r Actions
         self.buildable_buildings = [b for b in buildings_db.keys() if get_building_level(b) == 1]
@@ -2665,6 +2680,24 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_scharf_resource_potential = self._start_scharf_resource_potential
         self._last_scharf_dependency_progress = self._start_scharf_dependency_progress
         self._reset_terminal_cumulative_tracker()
+        self._last_scharf_research_progress = self._get_scharf_research_progress_metric()
+        self._last_scharf_construction_progress = self._get_scharf_construction_progress_metric()
+        self._last_scharf_recruitable = self._start_scharf_recruitable
+
+        use_step_cumulative = float(
+            self.reward_profile.get("step_potential_use_cumulative_earnings", 1.0)
+        ) > 0.0
+        step_include_start = float(
+            self.reward_profile.get("step_potential_include_start_resources", 0.0)
+        ) > 0.0
+        if use_step_cumulative:
+            self._last_step_potential_metric = float(
+                self._get_scharf_cumulative_resource_potential(
+                    include_start_resources=step_include_start
+                )
+            )
+        else:
+            self._last_step_potential_metric = self._last_scharf_resource_potential
 
         return self._get_observation(), {}
 
@@ -3217,7 +3250,22 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return max(1.0, taler_cost), max(1.0, sulfur_cost)
 
     def _get_scharf_soldier_types(self) -> List[str]:
-        return [soldier for soldier in self.soldier_types if "Scharf" in str(soldier)]
+        soldier_types = getattr(self, "soldier_types", None)
+        if soldier_types is None:
+            soldier_types = list(soldiers_db.keys())
+        return [soldier for soldier in soldier_types if "Scharf" in str(soldier)]
+
+    def _get_scharf_requirements(self) -> Tuple[Set[str], Set[str]]:
+        """Ermittelt fuer Scharfschuetzen relevante Gebaeude- und Technologie-Anforderungen."""
+        req_buildings: Set[str] = set()
+        req_techs: Set[str] = set()
+        for soldier in self._get_scharf_soldier_types():
+            for req in soldiers_db.get(soldier, {}).get("requirements", []):
+                if req in buildings_db:
+                    req_buildings.add(req)
+                elif req in technologies:
+                    req_techs.add(req)
+        return req_buildings, req_techs
 
     def _get_scharf_resource_potential(self) -> float:
         """Theoretisch rekrutierbare Scharfschuetzen nur aus Taler+Schwefel."""
@@ -3225,6 +3273,81 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         taler_total = float(self._get_total_resource(RESOURCE_TALER))
         sulfur_total = float(self._get_total_resource(RESOURCE_SCHWEFEL))
         return float(max(0.0, min(taler_total / taler_cost, sulfur_total / sulfur_cost)))
+
+    def _get_scharf_research_progress_metric(self) -> float:
+        """
+        Fortschrittsmetrik (0..1) fuer scharf-relevante Forschung.
+        Belohnt auch laengere Forschungen bereits waehrend sie laufen.
+        """
+        required_techs = self._scharf_required_techs or set()
+        if not required_techs:
+            return 0.0
+
+        in_progress: Dict[str, float] = {}
+        for tech, remaining in self.current_researches:
+            if tech not in required_techs:
+                continue
+            total = float(technologies.get(tech, {}).get("research_time", 0.0))
+            if total <= 0.0:
+                continue
+            progress = max(0.0, min(1.0, 1.0 - (float(remaining) / total)))
+            prev = in_progress.get(tech, 0.0)
+            if progress > prev:
+                in_progress[tech] = progress
+
+        score = 0.0
+        for tech in required_techs:
+            if tech in self.researched_techs:
+                score += 1.0
+            else:
+                score += float(in_progress.get(tech, 0.0))
+
+        return float(max(0.0, min(1.0, score / max(1, len(required_techs)))))
+
+    def _get_scharf_construction_progress_metric(self) -> float:
+        """
+        Fortschrittsmetrik (0..1) fuer scharf-relevante Gebaeude.
+        Beruecksichtigt bereits laufende Baustellen.
+        """
+        required_buildings = self._scharf_required_buildings or set()
+        if not required_buildings:
+            return 0.0
+
+        score = 0.0
+        for building in required_buildings:
+            if self.buildings.get(building, 0) >= 1:
+                score += 1.0
+                continue
+
+            progress = 0.0
+            for site in self.construction_sites:
+                if site.get("building") != building:
+                    continue
+                total = float(site.get("total_time", 0.0))
+                if total <= 0.0:
+                    continue
+                remaining = float(site.get("remaining_work", total))
+                site_progress = max(0.0, min(1.0, 1.0 - (remaining / total)))
+                if site_progress > progress:
+                    progress = site_progress
+
+            for item in self.construction_queue:
+                if len(item) < 2:
+                    continue
+                queued_building = item[0]
+                if queued_building != building:
+                    continue
+                total = float(buildings_db.get(building, {}).get("build_time", 0.0))
+                if total <= 0.0:
+                    continue
+                remaining = float(item[1])
+                queued_progress = max(0.0, min(1.0, 1.0 - (remaining / total)))
+                if queued_progress > progress:
+                    progress = queued_progress
+
+            score += progress
+
+        return float(max(0.0, min(1.0, score / max(1, len(required_buildings)))))
 
     def _reset_terminal_cumulative_tracker(self) -> None:
         """Initialisiert Tracking fuer kumulierte Episode-Einnahmen (Taler/Schwefel)."""
@@ -6176,12 +6299,73 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         resource_potential_now = self._get_scharf_resource_potential()
         dependency_progress_now = self._get_scharf_dependency_progress()
         self._update_terminal_cumulative_tracker()
+        research_progress_now = self._get_scharf_research_progress_metric()
+        construction_progress_now = self._get_scharf_construction_progress_metric()
+        recruitable_now = self._is_scharf_recruitable_now()
 
         info["scharf_resource_potential"] = resource_potential_now
         info["scharf_dependency_progress"] = dependency_progress_now
+        info["scharf_research_progress"] = research_progress_now
+        info["scharf_construction_progress"] = construction_progress_now
 
+        # Dense shaping aus reinen Zustandsaenderungen (aktionsagnostisch).
+        step_use_cumulative_potential = float(
+            self.reward_profile.get("step_potential_use_cumulative_earnings", 1.0)
+        ) > 0.0
+        step_include_start_resources = float(
+            self.reward_profile.get("step_potential_include_start_resources", 0.0)
+        ) > 0.0
+        if step_use_cumulative_potential:
+            step_potential_metric_now = float(
+                self._get_scharf_cumulative_resource_potential(
+                    include_start_resources=step_include_start_resources
+                )
+            )
+        else:
+            step_potential_metric_now = float(resource_potential_now)
+
+        step_delta_potential = step_potential_metric_now - float(self._last_step_potential_metric)
+        step_delta_dependency = float(dependency_progress_now) - float(self._last_scharf_dependency_progress)
+        step_delta_research = float(research_progress_now) - float(self._last_scharf_research_progress)
+        step_delta_construction = float(construction_progress_now) - float(self._last_scharf_construction_progress)
+        step_unlock_recruitable = bool(recruitable_now and (not self._last_scharf_recruitable))
+
+        step_positive_only = float(self.reward_profile.get("step_delta_positive_only", 1.0)) > 0.0
+        if step_positive_only:
+            step_delta_potential = max(0.0, step_delta_potential)
+            step_delta_dependency = max(0.0, step_delta_dependency)
+            step_delta_research = max(0.0, step_delta_research)
+            step_delta_construction = max(0.0, step_delta_construction)
+
+        step_reward = 0.0
+        step_reward += step_delta_potential * float(self.reward_profile.get("step_delta_potential_bonus", 0.0))
+        step_reward += step_delta_dependency * float(self.reward_profile.get("step_delta_dependency_bonus", 0.0))
+        step_reward += step_delta_research * float(self.reward_profile.get("step_delta_research_bonus", 0.0))
+        step_reward += step_delta_construction * float(self.reward_profile.get("step_delta_construction_bonus", 0.0))
+        if step_unlock_recruitable:
+            step_reward += float(self.reward_profile.get("step_unlock_recruitable_bonus", 0.0))
+        step_reward -= abs(float(self.reward_profile.get("step_time_penalty", 0.0)))
+        reward += step_reward
+
+        info["step_potential_source"] = (
+            "cumulative_earnings" if step_use_cumulative_potential else "current_stock"
+        )
+        info["step_potential_include_start_resources"] = bool(step_include_start_resources)
+        info["step_delta_positive_only"] = bool(step_positive_only)
+        info["step_potential_metric"] = float(step_potential_metric_now)
+        info["step_delta_potential"] = float(step_delta_potential)
+        info["step_delta_dependency"] = float(step_delta_dependency)
+        info["step_delta_research"] = float(step_delta_research)
+        info["step_delta_construction"] = float(step_delta_construction)
+        info["step_unlock_recruitable"] = bool(step_unlock_recruitable)
+        info["step_reward"] = float(step_reward)
+
+        self._last_step_potential_metric = float(step_potential_metric_now)
         self._last_scharf_resource_potential = resource_potential_now
         self._last_scharf_dependency_progress = dependency_progress_now
+        self._last_scharf_research_progress = research_progress_now
+        self._last_scharf_construction_progress = construction_progress_now
+        self._last_scharf_recruitable = recruitable_now
 
         terminated = self.current_time >= self.max_time
         if terminated:
@@ -6234,7 +6418,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             info["terminal_dependency_metric"] = dependency_metric
             info["terminal_potential_bonus"] = terminal_potential_bonus
             info["terminal_dependency_bonus"] = terminal_dependency_bonus
-            recruitable_now = self._is_scharf_recruitable_now()
             if use_terminal_delta:
                 recruitable_bonus_awarded = recruitable_now and (not self._start_scharf_recruitable)
             else:

@@ -759,7 +759,7 @@ class ScharfschuetzenCallback(BaseCallback):
 
 TRAINING_CONFIG = {
     # Timesteps - ERHÃƒâ€“HT fÃƒÂ¼r sparse rewards (nur ScharfschÃƒÂ¼tzen am Ende)
-    "total_timesteps": 50_000_000,  # 50M Steps fuer sparse rewards
+    "total_timesteps": 50_000_000,  # 50M Steps (angepasst)
 
     # Modell-Hyperparameter
     "learning_rate": 0.0003,
@@ -1089,6 +1089,32 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         f"{'cumulative_earnings' if potential_cumulative else 'current_stock'} "
         f"(include_start_resources={include_start_resources})"
     )
+    step_delta_potential = float(reward_profile.get("step_delta_potential_bonus", 0.0))
+    step_delta_dependency = float(reward_profile.get("step_delta_dependency_bonus", 0.0))
+    step_delta_research = float(reward_profile.get("step_delta_research_bonus", 0.0))
+    step_delta_construction = float(reward_profile.get("step_delta_construction_bonus", 0.0))
+    step_unlock_bonus = float(reward_profile.get("step_unlock_recruitable_bonus", 0.0))
+    step_time_penalty = float(reward_profile.get("step_time_penalty", 0.0))
+    if any(
+        abs(v) > 1e-9
+        for v in (
+            step_delta_potential,
+            step_delta_dependency,
+            step_delta_research,
+            step_delta_construction,
+            step_unlock_bonus,
+            step_time_penalty,
+        )
+    ):
+        print(
+            "Reward-Step-Shaping: "
+            f"delta_potential={step_delta_potential}, "
+            f"delta_dependency={step_delta_dependency}, "
+            f"delta_research={step_delta_research}, "
+            f"delta_construction={step_delta_construction}, "
+            f"unlock_recruitable={step_unlock_bonus}, "
+            f"time_penalty={step_time_penalty}"
+        )
     device = "cuda" if th.cuda.is_available() else "cpu"
     print(f"Device: {device}")
     if tuning_info.get("enabled"):

@@ -627,9 +627,9 @@ os.environ.setdefault("SIEDLER_RUN_EVAL", "0")
 os.environ.setdefault("SIEDLER_RUN_EXPORT", "0")
 os.environ.setdefault("SIEDLER_EVAL_RENDER", "0")
 
-# Gleiches Setup wie dein guter Lauf: kein erneuter Benchmark, feste Env-Zahl.
-os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "0"
-os.environ["SIEDLER_NUM_ENVS"] = "9"
+# Auto n_envs Benchmark aktivieren (keine feste Env-Zahl erzwingen).
+os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "1"
+os.environ.pop("SIEDLER_NUM_ENVS", None)
 os.environ["SIEDLER_SPATIAL_SIZE"] = "96"
 print(f"Simulation mode: {TRAIN_MODE}")
 print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")
@@ -644,9 +644,7 @@ print(
 # Wenn SIEDLER_NUM_ENVS/SIEDLER_SPATIAL_SIZE bereits gesetzt sind, bleiben diese Werte erhalten.
 apply_auto_gpu_overrides()
 
-# Explizit als manuelles Setup markieren (kein Auto-Override im n_env-Selektor).
-os.environ.pop("SIEDLER_NUM_ENVS_AUTO", None)
-os.environ.pop("SIEDLER_SPATIAL_SIZE_AUTO", None)
+# Auto-Flags behalten, damit auto_select_fastest_n_envs() den Benchmark ausfuehrt.
 
 # Optionale manuelle Overrides (nur falls du bewusst testen willst):
 # os.environ["SIEDLER_NUM_ENVS"] = "3"
@@ -654,7 +652,8 @@ os.environ.pop("SIEDLER_SPATIAL_SIZE_AUTO", None)
 # os.environ["SIEDLER_STATUS_EVERY_SEC"] = "5"   # Live-Status: Schritte/FPS alle X Sekunden
 # os.environ["SIEDLER_COMPACT_STATUS"] = "0"     # 0=Zeilenmodus (zuverlaessig in Colab)
 # os.environ["SIEDLER_STATUS_BAR_WIDTH"] = "24"  # Breite des Fortschritt-Balkens
-# os.environ["SIEDLER_TRAIN_PROFILE"] = "sparse"
+# os.environ["SIEDLER_TRAIN_PROFILE"] = "sparse"   # terminal-lastig
+# os.environ["SIEDLER_TRAIN_PROFILE"] = "dense_v2" # zustandsaenderungs-basiertes Dense-Shaping
 
 os.environ.setdefault("SIEDLER_STATUS_EVERY_SEC", "10")
 os.environ.setdefault("SIEDLER_COMPACT_STATUS", "0")

@@ -674,7 +674,7 @@ class ScharfschuetzenCallback(BaseCallback):
 
 TRAINING_CONFIG = {
     # Timesteps - ERHÃƒâ€“HT fÃƒÂ¼r sparse rewards (nur ScharfschÃƒÂ¼tzen am Ende)
-    "total_timesteps": 5_000_000,  # 5M Steps fÃƒÂ¼r sparse rewards
+    "total_timesteps": 50_000_000,  # 50M Steps fuer sparse rewards
 
     # Modell-Hyperparameter
     "learning_rate": 0.0003,
@@ -985,6 +985,12 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     terminal_dependency_bonus = float(reward_profile.get("terminal_dependency_bonus", 0.0))
     terminal_bonus = float(reward_profile.get("terminal_recruitable_bonus", 0.0))
     terminal_potential_bonus = float(reward_profile.get("terminal_potential_bonus_per_unit", 0.0))
+    potential_cumulative = float(
+        reward_profile.get("terminal_potential_use_cumulative_earnings", 1.0)
+    ) > 0.0
+    include_start_resources = float(
+        reward_profile.get("terminal_potential_include_start_resources", 0.0)
+    ) > 0.0
     print(
         "Reward-Profil: terminal_dependency_bonus="
         f"{terminal_dependency_bonus}, "
@@ -992,6 +998,11 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         f"{terminal_bonus}, "
         "terminal_potential_bonus_per_unit="
         f"{terminal_potential_bonus}"
+    )
+    print(
+        "Reward-Potential-Quelle: "
+        f"{'cumulative_earnings' if potential_cumulative else 'current_stock'} "
+        f"(include_start_resources={include_start_resources})"
     )
     device = "cuda" if th.cuda.is_available() else "cpu"
     print(f"Device: {device}")

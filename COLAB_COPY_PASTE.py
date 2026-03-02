@@ -618,7 +618,7 @@ else:
     os.environ.setdefault("SIEDLER_TENSORBOARD", "1")
     os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "balanced")
 
-# Robustheit fuer Colab-Disconnects + weniger Overhead nach dem Training.
+# Robustheit fuer Colab-Disconnects + klarer Fresh-Start.
 # Immer neu trainieren (kein Resume von alten Checkpoints).
 os.environ["SIEDLER_RESUME"] = "0"
 os.environ.pop("SIEDLER_RESUME_PATH", None)
@@ -626,8 +626,10 @@ os.environ.setdefault("SIEDLER_RUN_EVAL", "0")
 os.environ.setdefault("SIEDLER_RUN_EXPORT", "0")
 os.environ.setdefault("SIEDLER_EVAL_RENDER", "0")
 
-# Benchmark wieder aktivieren, damit hohe n_envs (z.B. 12+) gefunden werden koennen.
-os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "1"
+# Gleiches Setup wie dein guter Lauf: kein erneuter Benchmark, feste Env-Zahl.
+os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "0"
+os.environ["SIEDLER_NUM_ENVS"] = "9"
+os.environ["SIEDLER_SPATIAL_SIZE"] = "96"
 print(f"Simulation mode: {TRAIN_MODE}")
 print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")
 print(f"Resume enabled: {os.environ.get('SIEDLER_RESUME')}")
@@ -640,6 +642,10 @@ print(
 # 7b) AUTO GPU PRESET (setzt n_envs/spatial_size passend zur Runtime)
 # Wenn SIEDLER_NUM_ENVS/SIEDLER_SPATIAL_SIZE bereits gesetzt sind, bleiben diese Werte erhalten.
 apply_auto_gpu_overrides()
+
+# Explizit als manuelles Setup markieren (kein Auto-Override im n_env-Selektor).
+os.environ.pop("SIEDLER_NUM_ENVS_AUTO", None)
+os.environ.pop("SIEDLER_SPATIAL_SIZE_AUTO", None)
 
 # Optionale manuelle Overrides (nur falls du bewusst testen willst):
 # os.environ["SIEDLER_NUM_ENVS"] = "3"

@@ -1834,6 +1834,14 @@ DEFAULT_REWARD_PROFILE = {
     "terminal_dependency_bonus": 20.0,
     "terminal_recruitable_bonus": 150.0,
     "terminal_potential_bonus_per_unit": 80.0,
+    # Potential reward from cumulative resource earnings instead of end-of-episode stock.
+    "terminal_potential_use_cumulative_earnings": 1.0,
+    # Optional: include start resources in cumulative potential metric.
+    "terminal_potential_include_start_resources": 0.0,
+    # Use terminal deltas vs. episode start to avoid free reward from pure waiting.
+    "terminal_delta_from_start": 1.0,
+    # Clamp terminal deltas at >= 0 to avoid punishing temporary investments.
+    "terminal_delta_positive_only": 1.0,
 }
 
 
@@ -1883,8 +1891,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         else:
             self.disable_runtime_pathing = _env_truthy(disable_runtime_pathing_raw)
         self.reward_profile = _resolve_reward_profile(reward_profile)
+        self._start_scharf_resource_potential = 0.0
+        self._start_scharf_dependency_progress = 0.0
+        self._start_scharf_recruitable = False
         self._last_scharf_resource_potential = 0.0
         self._last_scharf_dependency_progress = 0.0
+        self._terminal_start_total_taler = 0.0
+        self._terminal_start_total_schwefel = 0.0
+        self._terminal_prev_total_taler = 0.0
+        self._terminal_prev_total_schwefel = 0.0
+        self._terminal_cumulative_taler_earned = 0.0
+        self._terminal_cumulative_schwefel_earned = 0.0
 
         # GebÃƒÆ’Ã‚Â¤ude-Listen fÃƒÆ’Ã‚Â¼r Actions
         self.buildable_buildings = [b for b in buildings_db.keys() if get_building_level(b) == 1]
@@ -2641,8 +2658,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 self._spatial_dynamic_dirty[name] = True
             self._walkable_dirty = True
 
-        self._last_scharf_resource_potential = self._get_scharf_resource_potential()
-        self._last_scharf_dependency_progress = self._get_scharf_dependency_progress()
+        self._start_scharf_resource_potential = self._get_scharf_resource_potential()
+        self._start_scharf_dependency_progress = self._get_scharf_dependency_progress()
+        self._start_scharf_recruitable = self._is_scharf_recruitable_now()
+
+        self._last_scharf_resource_potential = self._start_scharf_resource_potential
+        self._last_scharf_dependency_progress = self._start_scharf_dependency_progress
+        self._reset_terminal_cumulative_tracker()
 
         return self._get_observation(), {}
 
@@ -3202,6 +3224,41 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         taler_cost, sulfur_cost = self._get_scharf_costs()
         taler_total = float(self._get_total_resource(RESOURCE_TALER))
         sulfur_total = float(self._get_total_resource(RESOURCE_SCHWEFEL))
+        return float(max(0.0, min(taler_total / taler_cost, sulfur_total / sulfur_cost)))
+
+    def _reset_terminal_cumulative_tracker(self) -> None:
+        """Initialisiert Tracking fuer kumulierte Episode-Einnahmen (Taler/Schwefel)."""
+        self._terminal_start_total_taler = float(self._get_total_resource(RESOURCE_TALER))
+        self._terminal_start_total_schwefel = float(self._get_total_resource(RESOURCE_SCHWEFEL))
+        self._terminal_prev_total_taler = self._terminal_start_total_taler
+        self._terminal_prev_total_schwefel = self._terminal_start_total_schwefel
+        self._terminal_cumulative_taler_earned = 0.0
+        self._terminal_cumulative_schwefel_earned = 0.0
+
+    def _update_terminal_cumulative_tracker(self) -> None:
+        """Akkumuliert positive Delta-Zugaenge je Step (sparse reward bleibt unveraendert)."""
+        current_taler = float(self._get_total_resource(RESOURCE_TALER))
+        current_schwefel = float(self._get_total_resource(RESOURCE_SCHWEFEL))
+
+        delta_taler = current_taler - float(self._terminal_prev_total_taler)
+        delta_schwefel = current_schwefel - float(self._terminal_prev_total_schwefel)
+
+        if delta_taler > 0.0:
+            self._terminal_cumulative_taler_earned += float(delta_taler)
+        if delta_schwefel > 0.0:
+            self._terminal_cumulative_schwefel_earned += float(delta_schwefel)
+
+        self._terminal_prev_total_taler = current_taler
+        self._terminal_prev_total_schwefel = current_schwefel
+
+    def _get_scharf_cumulative_resource_potential(self, include_start_resources: bool = False) -> float:
+        """Scharfschuetzen-Potential aus kumulierten Episode-Einnahmen."""
+        taler_cost, sulfur_cost = self._get_scharf_costs()
+        taler_total = float(self._terminal_cumulative_taler_earned)
+        sulfur_total = float(self._terminal_cumulative_schwefel_earned)
+        if include_start_resources:
+            taler_total += float(self._terminal_start_total_taler)
+            sulfur_total += float(self._terminal_start_total_schwefel)
         return float(max(0.0, min(taler_total / taler_cost, sulfur_total / sulfur_cost)))
 
     def _get_scharf_dependency_progress(self) -> float:
@@ -6118,6 +6175,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         resource_potential_now = self._get_scharf_resource_potential()
         dependency_progress_now = self._get_scharf_dependency_progress()
+        self._update_terminal_cumulative_tracker()
 
         info["scharf_resource_potential"] = resource_potential_now
         info["scharf_dependency_progress"] = dependency_progress_now
@@ -6127,19 +6185,63 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         terminated = self.current_time >= self.max_time
         if terminated:
-            terminal_potential_bonus = resource_potential_now * float(
+            use_terminal_delta = float(self.reward_profile.get("terminal_delta_from_start", 1.0)) > 0.0
+            positive_only = float(self.reward_profile.get("terminal_delta_positive_only", 1.0)) > 0.0
+            use_cumulative_potential = float(
+                self.reward_profile.get("terminal_potential_use_cumulative_earnings", 1.0)
+            ) > 0.0
+            include_start_resources = float(
+                self.reward_profile.get("terminal_potential_include_start_resources", 0.0)
+            ) > 0.0
+
+            if use_cumulative_potential:
+                potential_metric = float(
+                    self._get_scharf_cumulative_resource_potential(
+                        include_start_resources=include_start_resources
+                    )
+                )
+            else:
+                potential_metric = float(resource_potential_now)
+                if use_terminal_delta:
+                    potential_metric -= float(self._start_scharf_resource_potential)
+            dependency_metric = float(dependency_progress_now)
+            if use_terminal_delta:
+                dependency_metric -= float(self._start_scharf_dependency_progress)
+            if positive_only:
+                potential_metric = max(0.0, potential_metric)
+                dependency_metric = max(0.0, dependency_metric)
+
+            terminal_potential_bonus = potential_metric * float(
                 self.reward_profile.get("terminal_potential_bonus_per_unit", 0.0)
             )
-            terminal_dependency_bonus = dependency_progress_now * float(
+            terminal_dependency_bonus = dependency_metric * float(
                 self.reward_profile.get("terminal_dependency_bonus", 0.0)
             )
             reward += terminal_potential_bonus
             reward += terminal_dependency_bonus
+            info["terminal_delta_from_start"] = bool(use_terminal_delta)
+            info["terminal_delta_positive_only"] = bool(positive_only)
+            info["terminal_potential_source"] = (
+                "cumulative_earnings" if use_cumulative_potential else "current_stock"
+            )
+            info["terminal_potential_include_start_resources"] = bool(include_start_resources)
+            info["terminal_delta_applied_to_potential"] = bool(
+                use_terminal_delta and (not use_cumulative_potential)
+            )
+            info["terminal_cumulative_taler_earned"] = float(self._terminal_cumulative_taler_earned)
+            info["terminal_cumulative_schwefel_earned"] = float(self._terminal_cumulative_schwefel_earned)
+            info["terminal_potential_metric"] = potential_metric
+            info["terminal_dependency_metric"] = dependency_metric
             info["terminal_potential_bonus"] = terminal_potential_bonus
             info["terminal_dependency_bonus"] = terminal_dependency_bonus
-            if self._is_scharf_recruitable_now():
+            recruitable_now = self._is_scharf_recruitable_now()
+            if use_terminal_delta:
+                recruitable_bonus_awarded = recruitable_now and (not self._start_scharf_recruitable)
+            else:
+                recruitable_bonus_awarded = recruitable_now
+            if recruitable_bonus_awarded:
                 reward += float(self.reward_profile.get("terminal_recruitable_bonus", 0.0))
-                info["terminal_recruitable_bonus_awarded"] = True
+            info["terminal_recruitable_bonus_awarded"] = bool(recruitable_bonus_awarded)
         return self._get_observation(), reward, terminated, False, info
 
     def _resolve_area(self, category, specific):

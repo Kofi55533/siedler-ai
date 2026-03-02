@@ -18,6 +18,8 @@ TRAIN_PROFILES = {
             "terminal_dependency_bonus": 22.0,
             "terminal_recruitable_bonus": 120.0,
             "terminal_potential_bonus_per_unit": 70.0,
+            "terminal_potential_use_cumulative_earnings": 1.0,
+            "terminal_potential_include_start_resources": 0.0,
         },
     },
     "balanced": {
@@ -32,6 +34,8 @@ TRAIN_PROFILES = {
             "terminal_dependency_bonus": 20.0,
             "terminal_recruitable_bonus": 150.0,
             "terminal_potential_bonus_per_unit": 80.0,
+            "terminal_potential_use_cumulative_earnings": 1.0,
+            "terminal_potential_include_start_resources": 0.0,
         },
     },
     "aggressive": {
@@ -45,6 +49,8 @@ TRAIN_PROFILES = {
             "terminal_dependency_bonus": 26.0,
             "terminal_recruitable_bonus": 100.0,
             "terminal_potential_bonus_per_unit": 60.0,
+            "terminal_potential_use_cumulative_earnings": 1.0,
+            "terminal_potential_include_start_resources": 0.0,
         },
     },
     "sparse": {
@@ -59,6 +65,8 @@ TRAIN_PROFILES = {
             "terminal_dependency_bonus": 10.0,
             "terminal_recruitable_bonus": 320.0,
             "terminal_potential_bonus_per_unit": 120.0,
+            "terminal_potential_use_cumulative_earnings": 1.0,
+            "terminal_potential_include_start_resources": 0.0,
         },
     },
 }

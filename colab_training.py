@@ -337,6 +337,30 @@ def _find_latest_checkpoint(save_path: str) -> Tuple[Optional[str], int]:
     return str(best_path), int(best_steps)
 
 
+def _cleanup_old_training_artifacts(save_path: str) -> int:
+    """
+    Entfernt alte Modelldateien fuer echten Fresh-Start.
+    Rueckgabe: Anzahl geloeschter Dateien.
+    """
+    root = Path(save_path)
+    if not root.exists():
+        return 0
+
+    removed = 0
+    patterns = (
+        "siedler_checkpoint_*_steps.zip",
+        "siedler_final.zip",
+    )
+    for pattern in patterns:
+        for path in root.glob(pattern):
+            try:
+                path.unlink()
+                removed += 1
+            except OSError:
+                continue
+    return removed
+
+
 def _infer_colab_preset(runtime: Dict[str, object]) -> Dict[str, object]:
     gpu_name = str(runtime.get("gpu_name") or "").upper()
     cpu_count = int(runtime.get("cpu_count") or 1)
@@ -533,6 +557,9 @@ class ScharfschuetzenCallback(BaseCallback):
         self.best_scharfschuetzen = 0
         self.episode_rewards = []
         self.episode_scharfschuetzen = []
+        self.best_episode_reward = None
+        self._episode_reward_accumulators = None
+        self._episodes_finished = 0
         self._train_start_time = None
         self._last_status_time = None
         self._last_status_steps = 0
@@ -567,6 +594,52 @@ class ScharfschuetzenCallback(BaseCallback):
         s = sec % 60
         return f"{h:02d}:{m:02d}:{s:02d}"
 
+    def _update_episode_reward_tracking(self) -> None:
+        rewards = self.locals.get("rewards")
+        dones = self.locals.get("dones")
+        if rewards is None or dones is None:
+            return
+
+        reward_arr = np.asarray(rewards, dtype=np.float64).reshape(-1)
+        done_arr = np.asarray(dones, dtype=bool).reshape(-1)
+        if reward_arr.size == 0 or done_arr.size == 0:
+            return
+
+        n = int(min(reward_arr.size, done_arr.size))
+        reward_arr = reward_arr[:n]
+        done_arr = done_arr[:n]
+
+        if (
+            self._episode_reward_accumulators is None
+            or len(self._episode_reward_accumulators) != n
+        ):
+            self._episode_reward_accumulators = np.zeros(n, dtype=np.float64)
+
+        self._episode_reward_accumulators += reward_arr
+        finished_indices = np.where(done_arr)[0]
+        for idx in finished_indices:
+            ep_reward = float(self._episode_reward_accumulators[idx])
+            self._episode_reward_accumulators[idx] = 0.0
+            self.episode_rewards.append(ep_reward)
+            self._episodes_finished += 1
+            if self.best_episode_reward is None or ep_reward > float(self.best_episode_reward):
+                self.best_episode_reward = ep_reward
+
+        if len(self.episode_rewards) > 2000:
+            self.episode_rewards = self.episode_rewards[-1000:]
+
+    def _get_episode_reward_stats(self) -> Tuple[Optional[float], Optional[float], int]:
+        if not self.episode_rewards:
+            return None, None, int(self._episodes_finished)
+        window = self.episode_rewards[-100:]
+        avg_reward = float(np.mean(window))
+        best_reward = float(
+            self.best_episode_reward
+            if self.best_episode_reward is not None
+            else np.max(self.episode_rewards)
+        )
+        return avg_reward, best_reward, int(self._episodes_finished)
+
     def _render_status_line(
         self,
         total_steps: int,
@@ -575,6 +648,9 @@ class ScharfschuetzenCallback(BaseCallback):
         avg_fps: float,
         eta_sec: float,
         remaining_steps: int,
+        avg_episode_reward: Optional[float],
+        best_episode_reward: Optional[float],
+        episode_count: int,
     ) -> str:
         bar_width = self.status_bar_width
         if target_steps > 0:
@@ -588,6 +664,14 @@ class ScharfschuetzenCallback(BaseCallback):
             bar = "-" * bar_width
             progress = f"{total_steps:,}"
         eta_text = self._format_seconds(eta_sec) if math.isfinite(eta_sec) else "--:--:--"
+        if avg_episode_reward is None or best_episode_reward is None:
+            reward_part = f" | epR(avg100)=n/a | best=n/a | eps={episode_count}"
+        else:
+            reward_part = (
+                f" | epR(avg100)={avg_episode_reward:7.1f}"
+                f" | best={best_episode_reward:7.1f}"
+                f" | eps={episode_count}"
+            )
         return (
             "[TRAIN] "
             f"[{bar}] "
@@ -597,6 +681,7 @@ class ScharfschuetzenCallback(BaseCallback):
             f"left={remaining_steps:,} | "
             f"eta={eta_text} | "
             f"steps={progress}"
+            f"{reward_part}"
         )
 
     def _maybe_print_runtime_status(self) -> None:
@@ -628,6 +713,8 @@ class ScharfschuetzenCallback(BaseCallback):
             remaining_steps = 0
             eta_sec = float("inf")
 
+        avg_episode_reward, best_episode_reward, episode_count = self._get_episode_reward_stats()
+
         line = self._render_status_line(
             total_steps=total_steps,
             target_steps=target_steps,
@@ -635,6 +722,9 @@ class ScharfschuetzenCallback(BaseCallback):
             avg_fps=avg_fps,
             eta_sec=eta_sec,
             remaining_steps=remaining_steps,
+            avg_episode_reward=avg_episode_reward,
+            best_episode_reward=best_episode_reward,
+            episode_count=episode_count,
         )
 
         if self.compact_status:
@@ -648,6 +738,7 @@ class ScharfschuetzenCallback(BaseCallback):
         self._last_status_steps = total_steps
 
     def _on_step(self) -> bool:
+        self._update_episode_reward_tracking()
         self._maybe_print_runtime_status()
 
         if self.n_calls % self.check_freq == 0:
@@ -1102,6 +1193,14 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
 
     # Modell erstellen oder Resume von Checkpoint
     resume_enabled = _env_truthy(os.environ.get("SIEDLER_RESUME", "1"))
+    clean_on_fresh = _env_truthy(os.environ.get("SIEDLER_CLEAN_CHECKPOINTS_ON_FRESH", "1"))
+    if not resume_enabled and clean_on_fresh:
+        removed_count = _cleanup_old_training_artifacts(save_path)
+        print(
+            "Fresh-Start: "
+            f"{removed_count} alte Modelldateien entfernt "
+            f"(Checkpoints/Final)."
+        )
     resume_path_raw = str(os.environ.get("SIEDLER_RESUME_PATH", "")).strip()
     resume_path = None
     resume_steps = 0

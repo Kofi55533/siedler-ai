@@ -621,6 +621,7 @@ else:
 # Robustheit fuer Colab-Disconnects + klarer Fresh-Start.
 # Immer neu trainieren (kein Resume von alten Checkpoints).
 os.environ["SIEDLER_RESUME"] = "0"
+os.environ.setdefault("SIEDLER_CLEAN_CHECKPOINTS_ON_FRESH", "1")
 os.environ.pop("SIEDLER_RESUME_PATH", None)
 os.environ.setdefault("SIEDLER_RUN_EVAL", "0")
 os.environ.setdefault("SIEDLER_RUN_EXPORT", "0")

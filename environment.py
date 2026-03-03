@@ -1844,13 +1844,29 @@ DEFAULT_REWARD_PROFILE = {
     "terminal_delta_positive_only": 1.0,
     # Dense shaping on state deltas (off by default to preserve sparse behavior).
     "step_delta_potential_bonus": 0.0,
+    # Event bonus when cumulative resource potential crosses the next whole-unit threshold.
+    "step_new_resource_potential_unit_bonus": 0.0,
+    # Optional single progress channel (weighted mix of dependency/research/construction).
+    "step_delta_progress_bonus": 0.0,
+    "step_progress_mix_dependency": 1.0,
+    "step_progress_mix_research": 1.0,
+    "step_progress_mix_construction": 1.0,
     "step_delta_dependency_bonus": 0.0,
     "step_delta_research_bonus": 0.0,
     "step_delta_construction_bonus": 0.0,
+    # Reward per newly reached taxable worker (episode high-water mark).
+    "step_worker_growth_bonus": 0.0,
     "step_unlock_recruitable_bonus": 0.0,
     "step_time_penalty": 0.0,
+    # Event rewards for serf economy growth (episode high-water marks).
+    "action_buy_serf_growth_bonus": 0.0,
+    # Penalty per serf that stays unassigned (idle) for more than N consecutive steps.
+    "step_unassigned_serf_penalty": 0.0,
+    "step_unassigned_serf_threshold_steps": 2.0,
     "step_potential_use_cumulative_earnings": 1.0,
     "step_potential_include_start_resources": 0.0,
+    # Which Scharfschuetzen tier to use for step potential conversion (1=min-tier fallback, 2=T2).
+    "step_potential_scharf_tier": 1.0,
     "step_delta_positive_only": 1.0,
 }
 
@@ -1907,6 +1923,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_scharf_resource_potential = 0.0
         self._last_scharf_dependency_progress = 0.0
         self._last_step_potential_metric = 0.0
+        self._last_step_potential_units = 0
+        self._last_step_unlock_progress = 0.0
+        self._best_step_taxable_workers = 0.0
         self._last_scharf_research_progress = 0.0
         self._last_scharf_construction_progress = 0.0
         self._last_scharf_recruitable = False
@@ -1916,6 +1935,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._terminal_prev_total_schwefel = 0.0
         self._terminal_cumulative_taler_earned = 0.0
         self._terminal_cumulative_schwefel_earned = 0.0
+        self._best_total_leibeigene = 0
+        self._serf_unassigned_steps: Dict[int, int] = {}
         self._scharf_required_buildings, self._scharf_required_techs = self._get_scharf_requirements()
 
         # GebÃƒÆ’Ã‚Â¤ude-Listen fÃƒÆ’Ã‚Â¼r Actions
@@ -2640,6 +2661,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.total_leibeigene = 0
             self.free_leibeigene = 0
             self.serf_areas[SerfArea.FREE]["count"] = 0
+        self._best_total_leibeigene = int(self.total_leibeigene)
+        self._serf_unassigned_steps = {}
         hq_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
         for i in range(self.total_leibeigene):
             serf = Serf(
@@ -2680,8 +2703,15 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_scharf_resource_potential = self._start_scharf_resource_potential
         self._last_scharf_dependency_progress = self._start_scharf_dependency_progress
         self._reset_terminal_cumulative_tracker()
-        self._last_scharf_research_progress = self._get_scharf_research_progress_metric()
-        self._last_scharf_construction_progress = self._get_scharf_construction_progress_metric()
+        current_research_progress = self._get_scharf_research_progress_metric()
+        current_construction_progress = self._get_scharf_construction_progress_metric()
+        self._last_scharf_research_progress = current_research_progress
+        self._last_scharf_construction_progress = current_construction_progress
+        self._last_step_unlock_progress = self._get_step_unlock_progress_metric(
+            dependency_progress=self._last_scharf_dependency_progress,
+            research_progress=current_research_progress,
+            construction_progress=current_construction_progress,
+        )
         self._last_scharf_recruitable = self._start_scharf_recruitable
 
         use_step_cumulative = float(
@@ -2690,14 +2720,23 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         step_include_start = float(
             self.reward_profile.get("step_potential_include_start_resources", 0.0)
         ) > 0.0
+        step_potential_tier = self._get_reward_profile_scharf_tier(
+            "step_potential_scharf_tier",
+            default=1,
+        )
         if use_step_cumulative:
             self._last_step_potential_metric = float(
                 self._get_scharf_cumulative_resource_potential(
-                    include_start_resources=step_include_start
+                    include_start_resources=step_include_start,
+                    target_tier=step_potential_tier,
                 )
             )
         else:
-            self._last_step_potential_metric = self._last_scharf_resource_potential
+            self._last_step_potential_metric = self._get_scharf_resource_potential(
+                target_tier=step_potential_tier
+            )
+        self._last_step_potential_units = int(max(0, int(np.floor(self._last_step_potential_metric))))
+        self._best_step_taxable_workers = float(self._get_taxable_worker_count())
 
         return self._get_observation(), {}
 
@@ -3234,20 +3273,73 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         current = float(sum(max(0.0, float(e.get("remaining", 0.0))) for e in entries))
         return float(max(0.0, min(1.0, current / initial_total)))
 
-    def _get_scharf_costs(self) -> Tuple[float, float]:
-        """Liefert Basis-Kosten fuer Scharfschuetzen (Taler, Schwefel)."""
-        candidates = []
+    def _get_scharf_costs(self, target_tier: Optional[int] = None) -> Tuple[float, float]:
+        """Liefert Scharfschuetzen-Kosten (Taler, Schwefel), optional tier-spezifisch."""
+        candidates: List[Tuple[int, float, float]] = []
         for name, cfg in soldiers_db.items():
             if "Scharf" not in str(name):
                 continue
             cost = cfg.get("cost", {})
             taler = float(cost.get(RESOURCE_TALER, 1e9))
             sulfur = float(cost.get(RESOURCE_SCHWEFEL, 1e9))
-            candidates.append((taler, sulfur))
+            tier = 1
+            match = re.search(r"_(\d+)$", str(name))
+            if match:
+                try:
+                    tier = max(1, int(match.group(1)))
+                except (TypeError, ValueError):
+                    tier = 1
+            candidates.append((tier, taler, sulfur))
         if not candidates:
             return 250.0, 70.0
-        taler_cost, sulfur_cost = min(candidates, key=lambda x: x[0])
+
+        if target_tier is not None:
+            tier_candidates = [(taler, sulfur) for tier, taler, sulfur in candidates if tier == int(target_tier)]
+            if tier_candidates:
+                taler_cost, sulfur_cost = min(tier_candidates, key=lambda x: x[0])
+                return max(1.0, taler_cost), max(1.0, sulfur_cost)
+
+        taler_cost, sulfur_cost = min(
+            [(taler, sulfur) for _, taler, sulfur in candidates],
+            key=lambda x: x[0],
+        )
         return max(1.0, taler_cost), max(1.0, sulfur_cost)
+
+    def _get_reward_profile_scharf_tier(self, key: str, default: int = 1) -> int:
+        raw_value = self.reward_profile.get(key, float(default))
+        try:
+            parsed = int(round(float(raw_value)))
+        except (TypeError, ValueError):
+            parsed = int(default)
+        return max(1, parsed)
+
+    def _reward_for_buy_serf_growth(self) -> float:
+        current_total = max(0, int(self.total_leibeigene))
+        previous_best = int(self._best_total_leibeigene)
+        gained = max(0, current_total - previous_best)
+        if current_total > previous_best:
+            self._best_total_leibeigene = current_total
+        return float(gained) * float(self.reward_profile.get("action_buy_serf_growth_bonus", 0.0))
+
+    def _count_unassigned_serfs_over_threshold(self, threshold_steps: int) -> int:
+        threshold = max(0, int(threshold_steps))
+        active_ids: Set[int] = set()
+        over_threshold = 0
+
+        for serf in self.production_system.serfs:
+            serf_id = int(id(serf))
+            active_ids.add(serf_id)
+            prev = int(self._serf_unassigned_steps.get(serf_id, 0))
+            current = prev + 1 if serf.is_idle() else 0
+            self._serf_unassigned_steps[serf_id] = current
+            if current > threshold:
+                over_threshold += 1
+
+        stale_ids = [sid for sid in self._serf_unassigned_steps.keys() if sid not in active_ids]
+        for sid in stale_ids:
+            self._serf_unassigned_steps.pop(sid, None)
+
+        return int(over_threshold)
 
     def _get_scharf_soldier_types(self) -> List[str]:
         soldier_types = getattr(self, "soldier_types", None)
@@ -3267,9 +3359,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     req_techs.add(req)
         return req_buildings, req_techs
 
-    def _get_scharf_resource_potential(self) -> float:
+    def _get_scharf_resource_potential(self, target_tier: Optional[int] = None) -> float:
         """Theoretisch rekrutierbare Scharfschuetzen nur aus Taler+Schwefel."""
-        taler_cost, sulfur_cost = self._get_scharf_costs()
+        taler_cost, sulfur_cost = self._get_scharf_costs(target_tier=target_tier)
         taler_total = float(self._get_total_resource(RESOURCE_TALER))
         sulfur_total = float(self._get_total_resource(RESOURCE_SCHWEFEL))
         return float(max(0.0, min(taler_total / taler_cost, sulfur_total / sulfur_cost)))
@@ -3374,9 +3466,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._terminal_prev_total_taler = current_taler
         self._terminal_prev_total_schwefel = current_schwefel
 
-    def _get_scharf_cumulative_resource_potential(self, include_start_resources: bool = False) -> float:
+    def _get_scharf_cumulative_resource_potential(
+        self,
+        include_start_resources: bool = False,
+        target_tier: Optional[int] = None,
+    ) -> float:
         """Scharfschuetzen-Potential aus kumulierten Episode-Einnahmen."""
-        taler_cost, sulfur_cost = self._get_scharf_costs()
+        taler_cost, sulfur_cost = self._get_scharf_costs(target_tier=target_tier)
         taler_total = float(self._terminal_cumulative_taler_earned)
         sulfur_total = float(self._terminal_cumulative_schwefel_earned)
         if include_start_resources:
@@ -3418,6 +3514,32 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             best_progress = max(best_progress, progress)
 
         return float(max(0.0, min(1.0, best_progress)))
+
+    def _get_step_unlock_progress_metric(
+        self,
+        dependency_progress: float,
+        research_progress: float,
+        construction_progress: float,
+    ) -> float:
+        """Kompakter Fortschrittswert (0..1) fuer Step-Shaping."""
+        dep_weight = max(0.0, float(self.reward_profile.get("step_progress_mix_dependency", 1.0)))
+        research_weight = max(0.0, float(self.reward_profile.get("step_progress_mix_research", 1.0)))
+        construction_weight = max(0.0, float(self.reward_profile.get("step_progress_mix_construction", 1.0)))
+        total_weight = dep_weight + research_weight + construction_weight
+
+        dep = float(max(0.0, min(1.0, dependency_progress)))
+        research = float(max(0.0, min(1.0, research_progress)))
+        construction = float(max(0.0, min(1.0, construction_progress)))
+
+        if total_weight <= 1e-9:
+            return dep
+
+        metric = (
+            dep * dep_weight
+            + research * research_weight
+            + construction * construction_weight
+        ) / total_weight
+        return float(max(0.0, min(1.0, metric)))
 
     def _is_scharf_recruitable_now(self) -> bool:
         for soldier in self._get_scharf_soldier_types():
@@ -3631,6 +3753,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             if count > 0:
                 income += buildings_db.get(b_name, {}).get("taler_income", 0) * count
         return income
+
+    def _get_taxable_worker_count(self) -> int:
+        return int(len(self.workforce_manager.workers))
+
+    def _get_taler_income_per_cycle(self) -> float:
+        tax_info = TAX_LEVELS.get(self.current_tax_level, TAX_LEVELS[2])
+        taxable_workers = float(self._get_taxable_worker_count())
+        tax_income = float(tax_info["regular_tax"]) * taxable_workers
+        tax_income *= float(self._get_tax_income_multiplier())
+        building_income = float(self._get_taler_income()) * float(self._get_trade_income_multiplier())
+        return float(max(0.0, tax_income + building_income))
 
     def _get_total_village_capacity(self) -> int:
         """Berechnet die maximale Arbeiter-KapazitÃƒÆ’Ã‚Â¤t aller Dorfzentren.
@@ -6231,8 +6364,23 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # MULTI-STEP FLOW MANAGEMENT
         # =================================================================
         phase_size = self.action_spaces[self.current_phase].n
-        if action < 0 or action >= phase_size:
-            action = 0
+        local_mask = np.asarray(self._get_local_action_mask(), dtype=bool).reshape(-1)
+        is_in_range = 0 <= int(action) < phase_size
+        is_mask_valid = bool(local_mask[int(action)]) if is_in_range and int(action) < local_mask.size else False
+        if not is_mask_valid:
+            valid_indices = np.flatnonzero(local_mask[:phase_size])
+            if valid_indices.size > 0:
+                action = int(valid_indices[0])
+            else:
+                if self.current_phase != ActionPhase.MAIN:
+                    # Failsafe: ungültigen Subflow hart abbrechen statt No-Op auszuführen.
+                    self.current_phase = ActionPhase.MAIN
+                    self.current_flow = None
+                    self.flow_step = 0
+                    self.pending_selections = {}
+                    obs = self._get_observation()
+                    return obs, 0.0, False, False, {"blocked_invalid_action": True, "phase_reset": "main"}
+                action = 0
         if self.current_phase == ActionPhase.MAIN:
             action_name = MAIN_ACTIONS[action]
             self.current_flow = action_name
@@ -6302,6 +6450,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         research_progress_now = self._get_scharf_research_progress_metric()
         construction_progress_now = self._get_scharf_construction_progress_metric()
         recruitable_now = self._is_scharf_recruitable_now()
+        taxable_workers_now = float(self._get_taxable_worker_count())
+        taler_income_per_cycle_now = float(self._get_taler_income_per_cycle())
 
         info["scharf_resource_potential"] = resource_potential_now
         info["scharf_dependency_progress"] = dependency_progress_now
@@ -6315,56 +6465,105 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         step_include_start_resources = float(
             self.reward_profile.get("step_potential_include_start_resources", 0.0)
         ) > 0.0
+        step_potential_tier = self._get_reward_profile_scharf_tier(
+            "step_potential_scharf_tier",
+            default=1,
+        )
         if step_use_cumulative_potential:
             step_potential_metric_now = float(
                 self._get_scharf_cumulative_resource_potential(
-                    include_start_resources=step_include_start_resources
+                    include_start_resources=step_include_start_resources,
+                    target_tier=step_potential_tier,
                 )
             )
         else:
-            step_potential_metric_now = float(resource_potential_now)
+            step_potential_metric_now = float(self._get_scharf_resource_potential(target_tier=step_potential_tier))
 
         step_delta_potential = step_potential_metric_now - float(self._last_step_potential_metric)
+        step_potential_units_now = int(max(0, int(np.floor(step_potential_metric_now))))
+        step_new_potential_units = max(0, step_potential_units_now - int(self._last_step_potential_units))
         step_delta_dependency = float(dependency_progress_now) - float(self._last_scharf_dependency_progress)
         step_delta_research = float(research_progress_now) - float(self._last_scharf_research_progress)
         step_delta_construction = float(construction_progress_now) - float(self._last_scharf_construction_progress)
+        # Anti-exploit: reward only for surpassing the episode-high taxable worker count.
+        step_worker_growth = max(0.0, float(taxable_workers_now) - float(self._best_step_taxable_workers))
+        step_unlock_progress_now = self._get_step_unlock_progress_metric(
+            dependency_progress=dependency_progress_now,
+            research_progress=research_progress_now,
+            construction_progress=construction_progress_now,
+        )
+        step_delta_progress = step_unlock_progress_now - float(self._last_step_unlock_progress)
         step_unlock_recruitable = bool(recruitable_now and (not self._last_scharf_recruitable))
 
         step_positive_only = float(self.reward_profile.get("step_delta_positive_only", 1.0)) > 0.0
         if step_positive_only:
             step_delta_potential = max(0.0, step_delta_potential)
+            step_delta_progress = max(0.0, step_delta_progress)
             step_delta_dependency = max(0.0, step_delta_dependency)
             step_delta_research = max(0.0, step_delta_research)
             step_delta_construction = max(0.0, step_delta_construction)
+            step_worker_growth = max(0.0, step_worker_growth)
+
+        idle_threshold_steps = max(
+            0,
+            int(round(float(self.reward_profile.get("step_unassigned_serf_threshold_steps", 2.0)))),
+        )
+        unassigned_serfs_over_threshold = self._count_unassigned_serfs_over_threshold(idle_threshold_steps)
+        step_unassigned_serf_penalty = (
+            float(unassigned_serfs_over_threshold)
+            * abs(float(self.reward_profile.get("step_unassigned_serf_penalty", 0.0)))
+        )
 
         step_reward = 0.0
         step_reward += step_delta_potential * float(self.reward_profile.get("step_delta_potential_bonus", 0.0))
+        step_reward += float(step_new_potential_units) * float(
+            self.reward_profile.get("step_new_resource_potential_unit_bonus", 0.0)
+        )
+        step_reward += step_delta_progress * float(self.reward_profile.get("step_delta_progress_bonus", 0.0))
         step_reward += step_delta_dependency * float(self.reward_profile.get("step_delta_dependency_bonus", 0.0))
         step_reward += step_delta_research * float(self.reward_profile.get("step_delta_research_bonus", 0.0))
         step_reward += step_delta_construction * float(self.reward_profile.get("step_delta_construction_bonus", 0.0))
+        step_reward += step_worker_growth * float(
+            self.reward_profile.get("step_worker_growth_bonus", 0.0)
+        )
         if step_unlock_recruitable:
             step_reward += float(self.reward_profile.get("step_unlock_recruitable_bonus", 0.0))
         step_reward -= abs(float(self.reward_profile.get("step_time_penalty", 0.0)))
+        step_reward -= float(step_unassigned_serf_penalty)
         reward += step_reward
 
         info["step_potential_source"] = (
             "cumulative_earnings" if step_use_cumulative_potential else "current_stock"
         )
+        info["step_potential_scharf_tier"] = int(step_potential_tier)
         info["step_potential_include_start_resources"] = bool(step_include_start_resources)
         info["step_delta_positive_only"] = bool(step_positive_only)
         info["step_potential_metric"] = float(step_potential_metric_now)
+        info["step_potential_units"] = int(step_potential_units_now)
+        info["step_new_potential_units"] = int(step_new_potential_units)
+        info["step_taxable_workers"] = float(taxable_workers_now)
+        info["step_taler_income_per_cycle"] = float(taler_income_per_cycle_now)
         info["step_delta_potential"] = float(step_delta_potential)
+        info["step_unlock_progress_metric"] = float(step_unlock_progress_now)
+        info["step_delta_unlock_progress"] = float(step_delta_progress)
         info["step_delta_dependency"] = float(step_delta_dependency)
         info["step_delta_research"] = float(step_delta_research)
         info["step_delta_construction"] = float(step_delta_construction)
+        info["step_worker_growth"] = float(step_worker_growth)
+        info["step_unassigned_serf_threshold_steps"] = int(idle_threshold_steps)
+        info["step_unassigned_serfs_over_threshold"] = int(unassigned_serfs_over_threshold)
+        info["step_unassigned_serf_penalty"] = float(step_unassigned_serf_penalty)
         info["step_unlock_recruitable"] = bool(step_unlock_recruitable)
         info["step_reward"] = float(step_reward)
 
         self._last_step_potential_metric = float(step_potential_metric_now)
+        self._last_step_potential_units = int(step_potential_units_now)
+        self._best_step_taxable_workers = max(float(self._best_step_taxable_workers), float(taxable_workers_now))
         self._last_scharf_resource_potential = resource_potential_now
         self._last_scharf_dependency_progress = dependency_progress_now
         self._last_scharf_research_progress = research_progress_now
         self._last_scharf_construction_progress = construction_progress_now
+        self._last_step_unlock_progress = step_unlock_progress_now
         self._last_scharf_recruitable = recruitable_now
 
         terminated = self.current_time >= self.max_time
@@ -6790,7 +6989,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self._assign_serfs_to_specific_area(area, quantity)
             return 0.0
         if tgt_cat == 6:
-            return self._assign_serf_to_construction_site(SerfArea.FREE, quantity, tgt_spec)
+            self._assign_serf_to_construction_site(SerfArea.FREE, quantity, tgt_spec)
+            return 0.0
         if tgt_cat == 7:
             if tgt_spec >= len(self.buildable_buildings):
                 return 0.0
@@ -7003,22 +7203,22 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.free_leibeigene += actual_quantity
         return 0.0
 
-    def _assign_serf_to_construction_site(self, source_area: SerfArea, quantity: int, site_index: int):
+    def _assign_serf_to_construction_site(self, source_area: SerfArea, quantity: int, site_index: int) -> int:
         """Weist Serfs zu einer spezifischen Baustelle zu."""
         from worker_simulation import Position
 
         if source_area != SerfArea.FREE:
-            return 0.0
+            return 0
         if site_index < 0 or site_index >= len(self.construction_sites):
-            return 0.0
+            return 0
         if self.free_leibeigene <= 0:
-            return 0.0
+            return 0
 
         target_site = self.construction_sites[site_index]
         already_assigned = int(target_site.get("serfs_assigned", 0) or 0)
         capacity_left = max(0, MAX_ACTIVE_BUILDERS_PER_SITE - already_assigned)
         if capacity_left <= 0:
-            return 0.0
+            return 0
 
         requested = min(int(quantity), capacity_left)
         assigned = 0
@@ -7042,12 +7242,47 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 assigned += 1
 
         if assigned <= 0:
-            return 0.0
+            return 0
 
         target_site["serfs_assigned"] += assigned
         self.free_leibeigene = max(0, self.free_leibeigene - assigned)
         self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
-        return 0.0
+        return int(assigned)
+
+    def _get_local_action_mask(self) -> np.ndarray:
+        """Dynamische Maske fuer die aktuelle Phase (ohne globales Padding)."""
+        if self.current_phase == ActionPhase.MAIN:
+            return self._mask_main_actions()
+        if self.current_phase == ActionPhase.BUILDING:
+            return self._mask_buildings()
+        if self.current_phase == ActionPhase.POSITION_GROUP:
+            return self._mask_position_group()
+        if self.current_phase == ActionPhase.POSITION_INDEX:
+            return self._mask_position_index()
+        if self.current_phase == ActionPhase.TECH_BUILDING:
+            return self._mask_tech_building()
+        if self.current_phase == ActionPhase.TECH:
+            return self._mask_technologies()
+        if self.current_phase == ActionPhase.SOLDIER:
+            return self._mask_soldiers()
+        if self.current_phase == ActionPhase.QUANTITY:
+            return self._mask_quantity()
+        if self.current_phase == ActionPhase.SOURCE_CATEGORY:
+            return self._mask_source_category()
+        if self.current_phase == ActionPhase.SOURCE_SPECIFIC:
+            return self._mask_source_specific()
+        if self.current_phase == ActionPhase.TARGET_CATEGORY:
+            return self._mask_target_category()
+        if self.current_phase == ActionPhase.TARGET_SPECIFIC:
+            return self._mask_target_specific()
+        if self.current_phase == ActionPhase.CATEGORY:
+            return self._mask_bless_categories()
+        if self.current_phase == ActionPhase.TAX_LEVEL:
+            return self._mask_tax_levels()
+        if self.current_phase == ActionPhase.ON_OFF:
+            return self._mask_alarm_on_off()
+        size = self.action_spaces[self.current_phase].n
+        return np.ones(size, dtype=bool)
 
     def _pad_action_mask(self, mask: np.ndarray) -> np.ndarray:
         """Pad/clip mask to fixed action_space size."""
@@ -7061,39 +7296,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def action_masks(self):
         """Dynamische Maske basierend auf aktueller Phase (auf max size gepadded)."""
-        if self.current_phase == ActionPhase.MAIN:
-            local = self._mask_main_actions()
-        elif self.current_phase == ActionPhase.BUILDING:
-            local = self._mask_buildings()
-        elif self.current_phase == ActionPhase.POSITION_GROUP:
-            local = self._mask_position_group()
-        elif self.current_phase == ActionPhase.POSITION_INDEX:
-            local = self._mask_position_index()
-        elif self.current_phase == ActionPhase.TECH_BUILDING:
-            local = self._mask_tech_building()
-        elif self.current_phase == ActionPhase.TECH:
-            local = self._mask_technologies()
-        elif self.current_phase == ActionPhase.SOLDIER:
-            local = self._mask_soldiers()
-        elif self.current_phase == ActionPhase.QUANTITY:
-            local = self._mask_quantity()
-        elif self.current_phase == ActionPhase.SOURCE_CATEGORY:
-            local = self._mask_source_category()
-        elif self.current_phase == ActionPhase.SOURCE_SPECIFIC:
-            local = self._mask_source_specific()
-        elif self.current_phase == ActionPhase.TARGET_CATEGORY:
-            local = self._mask_target_category()
-        elif self.current_phase == ActionPhase.TARGET_SPECIFIC:
-            local = self._mask_target_specific()
-        elif self.current_phase == ActionPhase.CATEGORY:
-            local = self._mask_bless_categories()
-        elif self.current_phase == ActionPhase.TAX_LEVEL:
-            local = self._mask_tax_levels()
-        elif self.current_phase == ActionPhase.ON_OFF:
-            local = np.ones(2, dtype=bool)
-        else:
-            size = self.action_spaces[self.current_phase].n
-            local = np.ones(size, dtype=bool)
+        local = self._get_local_action_mask()
         return self._pad_action_mask(local)
 
     def get_action_head_sizes(self):
@@ -7121,18 +7324,15 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             elif action_name == "dismiss_serf":
                 mask[i] = self._can_dismiss_serf()
             elif action_name == "assign_serf":
-                # Erlaubt wenn Leibeigene irgendwo verfuegbar ODER Gebaeude baubar (Neubau-Target)
-                has_assignable = any(self.serf_areas.get(a, {}).get("count", 0) > 0 for a in SerfArea)
-                has_buildable = any(self._can_build(b) for b in self.buildable_buildings)
-                mask[i] = has_assignable or has_buildable
+                mask[i] = self._can_assign_serf_action(batch_size=1)
             elif action_name == "demolish":
                 mask[i] = any(self._can_demolish(b) for b in self.demolishable_buildings)
             elif action_name == "bless":
                 mask[i] = self._can_bless()
             elif action_name == "tax":
-                mask[i] = True
+                mask[i] = any(level != self.current_tax_level for level in TAX_LEVELS.keys())
             elif action_name == "alarm":
-                mask[i] = True
+                mask[i] = (self.alarm_active or (not self.alarm_active and self.alarm_cooldown <= 0))
         return mask
 
     def _mask_buildings(self):
@@ -7434,12 +7634,123 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _mask_quantity(self):
         """Maske fuer Mengen-Auswahl (1,2,3,5,10,20)."""
-        mask = np.ones(6, dtype=bool)
+        mask = np.zeros(len(QUANTITY_VALUES), dtype=bool)
+
+        if self.current_flow == "buy_serf":
+            for i, batch_size in enumerate(QUANTITY_VALUES):
+                mask[i] = self._can_buy_serf_batch(batch_size)
+            return mask
+
+        if self.current_flow == "recruit":
+            soldier_idx = self.pending_selections.get(ActionPhase.SOLDIER, 0)
+            if 0 <= soldier_idx < len(self.soldier_types):
+                soldier = self.soldier_types[soldier_idx]
+                for i, batch_size in enumerate(QUANTITY_VALUES):
+                    mask[i] = self._can_recruit_batch(soldier, batch_size)
+            return mask
+
+        if self.current_flow in {"dismiss_serf", "assign_serf"}:
+            src_cat = int(self.pending_selections.get(ActionPhase.SOURCE_CATEGORY, 0) or 0)
+            src_spec = int(self.pending_selections.get(ActionPhase.SOURCE_SPECIFIC, 0) or 0)
+            for i, batch_size in enumerate(QUANTITY_VALUES):
+                if not self._can_use_source_batch(src_cat, src_spec, batch_size):
+                    continue
+                if self.current_flow == "dismiss_serf":
+                    mask[i] = True
+                    continue
+
+                if src_cat == 0:
+                    available_free = self.free_leibeigene
+                    mask[i] = self._has_assign_target_for_batch(
+                        batch_size=batch_size,
+                        available_free=available_free,
+                        allow_target_free=False,  # FREE -> FREE waere ein No-Op.
+                    )
+                else:
+                    available_free = max(self.free_leibeigene, batch_size)
+                    mask[i] = self._has_assign_target_for_batch(
+                        batch_size=batch_size,
+                        available_free=available_free,
+                        allow_target_free=True,  # Recall nach FREE ist erlaubt/sinnvoll.
+                    )
+            return mask
+
+        mask[:] = True
         return mask
 
     def _get_selected_batch_size(self) -> int:
         qty_idx = int(self.pending_selections.get(ActionPhase.QUANTITY, 0) or 0)
         return QUANTITY_VALUES[min(qty_idx, len(QUANTITY_VALUES) - 1)]
+
+    def _can_use_source_batch(self, src_cat: int, src_spec: int, batch_size: int) -> bool:
+        """Prueft, ob aus der gewaehlten Source mindestens `batch_size` Serfs bewegt werden koennen."""
+        if batch_size <= 0:
+            return False
+        if src_cat == 0:
+            return self.serf_areas.get(SerfArea.FREE, {}).get("count", 0) >= batch_size
+        if src_cat == 1:
+            return self._can_recall_wood_tree_batch(src_spec, batch_size)
+        if src_cat in CATEGORY_AREA_MAP:
+            area = self._resolve_area(src_cat, src_spec)
+            return self._can_recall_from_specific_area(area, batch_size)
+        if src_cat == 6:
+            if src_spec < 0 or src_spec >= len(self.construction_sites):
+                return False
+            return int(self.construction_sites[src_spec].get("serfs_assigned", 0) or 0) >= batch_size
+        return False
+
+    def _has_nonfree_source_for_batch(self, batch_size: int) -> bool:
+        if batch_size <= 0:
+            return False
+        if any(tree.get("serfs_assigned", 0) >= batch_size for tree in self.tree_list_internal):
+            return True
+        for cat_idx in range(2, 6):
+            for area in CATEGORY_AREA_MAP.get(cat_idx, []):
+                if self._can_recall_from_specific_area(area, batch_size):
+                    return True
+        if any(int(site.get("serfs_assigned", 0) or 0) >= batch_size for site in self.construction_sites):
+            return True
+        return False
+
+    def _has_assign_target_for_batch(self, batch_size: int, available_free: int, allow_target_free: bool) -> bool:
+        """Prueft, ob fuer die Menge mindestens ein sinnvolles Ziel existiert."""
+        if batch_size <= 0:
+            return False
+        if allow_target_free:
+            return True
+        if any(
+            self._can_assign_wood_tree_batch(i, batch_size, available_free_override=available_free)
+            for i in range(len(self.tree_list_internal))
+        ):
+            return True
+        for cat_idx in range(2, 6):
+            areas = CATEGORY_AREA_MAP.get(cat_idx, [])
+            if any(
+                self._can_assign_serf_to_specific_area(area, batch_size, available_free_override=available_free)
+                for area in areas
+            ):
+                return True
+        if available_free > 0 and any(
+            int(site.get("serfs_assigned", 0) or 0) < MAX_ACTIVE_BUILDERS_PER_SITE
+            for site in self.construction_sites
+        ):
+            return True
+        if available_free > 0 and any(self._can_build(b) for b in self.buildable_buildings):
+            return True
+        return False
+
+    def _can_assign_serf_action(self, batch_size: int = 1) -> bool:
+        if batch_size <= 0:
+            return False
+        if self.free_leibeigene >= batch_size and self._has_assign_target_for_batch(
+            batch_size=batch_size,
+            available_free=self.free_leibeigene,
+            allow_target_free=False,
+        ):
+            return True
+        if self._has_nonfree_source_for_batch(batch_size):
+            return True
+        return False
 
     def _can_recall_from_specific_area(self, area: SerfArea, batch_size: int) -> bool:
         if batch_size <= 0:
@@ -7521,8 +7832,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         """Kategorie-Auswahl: Wohin Leibeigene schicken?"""
         batch_size = self._get_selected_batch_size()
         available_free = self._get_target_phase_available_free(batch_size)
+        src_cat = int(self.pending_selections.get(ActionPhase.SOURCE_CATEGORY, 0) or 0)
+        src_spec = int(self.pending_selections.get(ActionPhase.SOURCE_SPECIFIC, 0) or 0)
         mask = np.zeros(len(TARGET_CATEGORIES), dtype=bool)
-        mask[0] = True  # 0=Frei: immer mÃƒÆ’Ã‚Â¶glich
+        # FREE als Ziel nur sinnvoll, wenn aus einem NICHT-FREE Bereich recalled wird.
+        mask[0] = (src_cat != 0) and self._can_use_source_batch(src_cat, src_spec, batch_size)
         mask[1] = any(
             self._can_assign_wood_tree_batch(i, batch_size, available_free_override=available_free)
             for i in range(len(self.tree_list_internal))
@@ -7584,7 +7898,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _mask_tax_levels(self):
         """Maske fuer Steuerstufen."""
-        mask = np.ones(len(TAX_LEVELS), dtype=bool)
+        mask = np.zeros(len(TAX_LEVELS), dtype=bool)
+        for level in TAX_LEVELS.keys():
+            if 0 <= level < len(mask):
+                mask[level] = (level != self.current_tax_level)
+        return mask
+
+    def _mask_alarm_on_off(self):
+        """Maske fuer Alarm an/aus ohne No-Op-Auswahl."""
+        mask = np.zeros(2, dtype=bool)
+        mask[0] = (not self.alarm_active) and (self.alarm_cooldown <= 0)  # einschalten
+        mask[1] = bool(self.alarm_active)  # ausschalten
         return mask
 
     def _build_building(self, building, position: Optional[dict] = None):
@@ -7823,7 +8147,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         serf = Serf(position=Position(x=hq_pos.x, y=hq_pos.y), target_resource=None)
         self.production_system.serfs.append(serf)
 
-        return 0.0  # MINIMALER REWARD
+        return self._reward_for_buy_serf_growth()
 
     def _find_serf_index_for_area(self, area: SerfArea):
         """Sucht einen Serf passend zum Bereich (Best-Effort)."""

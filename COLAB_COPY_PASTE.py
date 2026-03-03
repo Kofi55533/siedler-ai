@@ -605,7 +605,7 @@ if TRAIN_MODE == "fast_train":
     os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "1")
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "0")
     os.environ.setdefault("SIEDLER_TENSORBOARD", "0")
-    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "sparse")
+    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "dense_v2")
 else:
     os.environ.setdefault("SIEDLER_FAST_TRAIN", "0")
     os.environ.setdefault("SIEDLER_TURBO_FPS", "0")

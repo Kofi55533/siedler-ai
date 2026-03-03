@@ -15,11 +15,22 @@ TRAIN_PROFILES = {
         "description": "Historisches Verhalten (alte Reward-Gewichte).",
         "config_overrides": {},
         "reward_profile": {
-            "terminal_dependency_bonus": 22.0,
-            "terminal_recruitable_bonus": 120.0,
-            "terminal_potential_bonus_per_unit": 70.0,
-            "terminal_potential_use_cumulative_earnings": 1.0,
+            # Terminal komplett aus fuer Legacy.
+            "terminal_dependency_bonus": 0.0,
+            "terminal_recruitable_bonus": 0.0,
+            "terminal_potential_bonus_per_unit": 0.0,
+            "terminal_potential_use_cumulative_earnings": 0.0,
             "terminal_potential_include_start_resources": 0.0,
+            "terminal_delta_from_start": 0.0,
+            "terminal_delta_positive_only": 0.0,
+            # Legacy bekommt explizites Serf-Economy-Shaping:
+            # Kaufen bleibt growth-basiert.
+            "action_buy_serf_growth_bonus": 1.0,
+            # Serf-Malus: wenn ein Leibeigener >2 Steps idle/unassigned bleibt.
+            "step_unassigned_serf_penalty": 1.0,
+            "step_unassigned_serf_threshold_steps": 2.0,
+            # Wie dense_v2: +1 je neuem Taxable-Worker-Highscore.
+            "step_worker_growth_bonus": 1.0,
         },
     },
     "balanced": {
@@ -70,7 +81,7 @@ TRAIN_PROFILES = {
         },
     },
     "dense_v2": {
-        "description": "Zustandsaenderungs-basiertes Shaping fuer verzoegerte Aktionen (Forschung/Bau/Serf-Logistik).",
+        "description": "Event-Reward fuer Potential + Steuerbasis/Taler-Income-Wachstum.",
         "config_overrides": {
             "learning_rate": 0.00025,
             "gamma": 0.997,
@@ -78,20 +89,14 @@ TRAIN_PROFILES = {
             "batch_size": 128,
         },
         "reward_profile": {
-            "terminal_dependency_bonus": 12.0,
-            "terminal_recruitable_bonus": 220.0,
-            "terminal_potential_bonus_per_unit": 90.0,
-            "terminal_potential_use_cumulative_earnings": 1.0,
-            "terminal_potential_include_start_resources": 0.0,
-            "step_delta_potential_bonus": 2.0,
-            "step_delta_dependency_bonus": 8.0,
-            "step_delta_research_bonus": 6.0,
-            "step_delta_construction_bonus": 4.0,
-            "step_unlock_recruitable_bonus": 20.0,
-            "step_time_penalty": 0.001,
-            "step_potential_use_cumulative_earnings": 1.0,
-            "step_potential_include_start_resources": 0.0,
-            "step_delta_positive_only": 1.0,
+            # Diese drei Keys muessen explizit 0 sein, sonst greifen Default-Terminal-Rewards.
+            "terminal_dependency_bonus": 0.0,
+            "terminal_recruitable_bonus": 0.0,
+            "terminal_potential_bonus_per_unit": 0.0,
+            # +1 Reward je neuem Highscore bei potenziell rekrutierbaren T2-Scharfschuetzen.
+            "step_new_resource_potential_unit_bonus": 1.0,
+            "step_potential_scharf_tier": 2.0,
+            "step_worker_growth_bonus": 1.0,
         },
     },
 }

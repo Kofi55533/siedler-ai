@@ -18,6 +18,8 @@ TRAIN_PROFILES = {
             # Legacy bekommt explizites Serf-Economy-Shaping:
             # Kaufen bleibt growth-basiert.
             "action_buy_serf_growth_bonus": 1.0,
+            # Einmalig pro neu gekauftem/spawned FREE-Serf bei erster Zuweisung.
+            "action_assign_spawned_serf_bonus": 1.0,
             # Wie dense_v2: +1 je neuem Taxable-Worker-Highscore.
             "step_worker_growth_bonus": 1.0,
         },

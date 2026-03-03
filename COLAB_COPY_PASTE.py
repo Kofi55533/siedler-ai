@@ -399,7 +399,7 @@ TRAIN_PROFILE = "legacy"
 # Auf High-End Colab GPUs ist 10 ein guter Startwert.
 FIXED_NUM_ENVS = 10
 # Ziel-Timesteps fuer diesen Run
-TRAIN_TOTAL_TIMESTEPS = 500_000
+TRAIN_TOTAL_TIMESTEPS = 5_000_000
 # Nach dem Training automatisch Modellverhalten analysieren.
 RUN_POST_ANALYSIS = True
 # Anzahl Analyse-Episoden (deterministische Policy mit Action-Mask).

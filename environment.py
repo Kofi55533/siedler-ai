@@ -53,7 +53,7 @@ class ActionPhase(Enum):
     QUANTITY = "quantity"               # Menge wÃƒÆ’Ã‚Â¤hlen (1,2,3,5,10,20)
     SOURCE_CATEGORY = "source_category" # Quell-Kategorie (Frei/Holz/Eisen/Stein/Lehm/Schwefel/Baustelle)
     SOURCE_SPECIFIC = "source_specific" # Spezifischer Quell-Ort innerhalb der Kategorie
-    TARGET_CATEGORY = "target_category" # Ziel-Kategorie (Frei/Holz/.../Baustelle/Neubau)
+    TARGET_CATEGORY = "target_category" # Ziel-Kategorie (Holz/.../Baustelle/Neubau; Frei als Ziel deaktiviert)
     TARGET_SPECIFIC = "target_specific" # Spezifischer Ziel-Ort innerhalb der Kategorie
     CATEGORY = "category"               # Segen-Kategorie
     TAX_LEVEL = "tax_level"             # Steuerstufe
@@ -74,7 +74,7 @@ SOURCE_CATEGORIES = {
 }
 
 TARGET_CATEGORIES = {
-    0: "Frei",
+    0: "Frei (deaktiviert)",
     1: "Holz",
     2: "Eisen",
     3: "Stein",
@@ -1849,6 +1849,8 @@ DEFAULT_REWARD_PROFILE = {
     "step_time_penalty": 0.0,
     # Event rewards for serf economy growth (episode high-water marks).
     "action_buy_serf_growth_bonus": 0.0,
+    # One-time reward for assigning newly bought/spawned unassigned serfs from FREE.
+    "action_assign_spawned_serf_bonus": 0.0,
     "step_potential_use_cumulative_earnings": 1.0,
     "step_potential_include_start_resources": 0.0,
     # Which Scharfschuetzen tier to use for step potential conversion (1=min-tier fallback, 2=T2).
@@ -1922,6 +1924,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._terminal_cumulative_taler_earned = 0.0
         self._terminal_cumulative_schwefel_earned = 0.0
         self._best_total_leibeigene = 0
+        self._pending_spawned_unassigned_serfs = 0
         self._scharf_required_buildings, self._scharf_required_techs = self._get_scharf_requirements()
 
         # GebÃƒÆ’Ã‚Â¤ude-Listen fÃƒÆ’Ã‚Â¼r Actions
@@ -2647,6 +2650,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.free_leibeigene = 0
             self.serf_areas[SerfArea.FREE]["count"] = 0
         self._best_total_leibeigene = int(self.total_leibeigene)
+        # Start-Serfs sind keine "neu gekauften" Serfs -> keine initialen Pending-Tokens.
+        self._pending_spawned_unassigned_serfs = 0
         hq_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
         for i in range(self.total_leibeigene):
             serf = Serf(
@@ -3304,6 +3309,19 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if current_total > previous_best:
             self._best_total_leibeigene = current_total
         return float(gained) * float(self.reward_profile.get("action_buy_serf_growth_bonus", 0.0))
+
+    def _reward_for_assigning_spawned_serfs(self, assigned_from_free: int) -> float:
+        """Einmaliger Reward fuer frisch gespawnte/gekaufte FREE-Serfs beim ersten Assign."""
+        assigned = max(0, int(assigned_from_free))
+        if assigned <= 0:
+            return 0.0
+        pending = max(0, int(getattr(self, "_pending_spawned_unassigned_serfs", 0)))
+        rewarded_units = min(assigned, pending)
+        if rewarded_units <= 0:
+            return 0.0
+        self._pending_spawned_unassigned_serfs = max(0, pending - rewarded_units)
+        bonus = float(self.reward_profile.get("action_assign_spawned_serf_bonus", 0.0))
+        return float(rewarded_units) * bonus
 
     def _get_scharf_soldier_types(self) -> List[str]:
         soldier_types = getattr(self, "soldier_types", None)
@@ -6388,13 +6406,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             if self.current_phase == ActionPhase.SOURCE_CATEGORY and action == 0:
                 self.pending_selections[ActionPhase.SOURCE_SPECIFIC] = 0
                 self.flow_step += 1  # SOURCE_SPECIFIC ÃƒÆ’Ã‚Â¼berspringen
-            elif self.current_phase == ActionPhase.TARGET_CATEGORY and action == 0:
+            elif (
+                self.current_phase == ActionPhase.TARGET_CATEGORY
+                and action == 0
+                and self.current_flow != "assign_serf"
+            ):
                 self.pending_selections[ActionPhase.TARGET_SPECIFIC] = 0
                 self.flow_step += 1  # TARGET_SPECIFIC ÃƒÆ’Ã‚Â¼berspringen
-                if self.current_flow == "assign_serf":
-                    self.pending_selections[ActionPhase.POSITION_GROUP] = 0
-                    self.pending_selections[ActionPhase.POSITION_INDEX] = 0
-                    self.flow_step += 2
             elif (
                 self.current_flow == "assign_serf"
                 and self.current_phase == ActionPhase.TARGET_SPECIFIC
@@ -6523,6 +6541,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         info["step_worker_growth"] = float(step_worker_growth)
         info["step_unlock_recruitable"] = bool(step_unlock_recruitable)
         info["step_reward"] = float(step_reward)
+        info["pending_spawned_unassigned_serfs"] = int(
+            max(0, int(getattr(self, "_pending_spawned_unassigned_serfs", 0)))
+        )
 
         self._last_step_potential_metric = float(step_potential_metric_now)
         self._last_step_potential_units = int(step_potential_units_now)
@@ -6980,9 +7001,12 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             tgt_spec = self._to_int_choice(selections.get(ActionPhase.TARGET_SPECIFIC, 0), 0)
             quantity = [1, 2, 3, 5, 10, 20][min(qty_idx, 5)]
             if src_cat == 0:
-                return self._assign_serfs_to_selection(tgt_cat, tgt_spec, quantity, selections)
+                free_before = int(self.free_leibeigene)
+                reward = float(self._assign_serfs_to_selection(tgt_cat, tgt_spec, quantity, selections))
+                assigned_from_free = max(0, free_before - int(self.free_leibeigene))
+                reward += self._reward_for_assigning_spawned_serfs(assigned_from_free)
+                return reward
             if tgt_cat == 0:
-                self._recall_serfs_from_selection(src_cat, src_spec, quantity)
                 return 0.0
             moved = self._recall_serfs_from_selection(src_cat, src_spec, quantity)
             return self._assign_serfs_to_selection(tgt_cat, tgt_spec, moved, selections)
@@ -7258,13 +7282,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if current_phase == ActionPhase.SOURCE_CATEGORY and int(choice) == 0:
             next_selections[ActionPhase.SOURCE_SPECIFIC] = 0
             next_phase_idx += 1
-        elif current_phase == ActionPhase.TARGET_CATEGORY and int(choice) == 0:
+        elif (
+            current_phase == ActionPhase.TARGET_CATEGORY
+            and int(choice) == 0
+            and flow_name != "assign_serf"
+        ):
             next_selections[ActionPhase.TARGET_SPECIFIC] = 0
             next_phase_idx += 1
-            if flow_name == "assign_serf":
-                next_selections[ActionPhase.POSITION_GROUP] = 0
-                next_selections[ActionPhase.POSITION_INDEX] = 0
-                next_phase_idx += 2
         elif flow_name == "assign_serf" and current_phase == ActionPhase.TARGET_SPECIFIC:
             target_cat = self._to_int_choice(next_selections.get(ActionPhase.TARGET_CATEGORY, 0), 0)
             if target_cat != 7:
@@ -7345,7 +7369,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 return False
 
             if tgt_cat == 0:
-                return src_cat != 0
+                return False
 
             available_free = self._get_available_free_for_assign(src_cat=src_cat, batch_size=quantity)
             if available_free <= 0:
@@ -7897,7 +7921,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     mask[i] = self._has_assign_target_for_batch(
                         batch_size=batch_size,
                         available_free=available_free,
-                        allow_target_free=True,  # Recall nach FREE ist erlaubt/sinnvoll.
+                        allow_target_free=False,
                     )
             return mask
 
@@ -7942,8 +7966,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         """Prueft, ob fuer die Menge mindestens ein sinnvolles Ziel existiert."""
         if batch_size <= 0:
             return False
-        if allow_target_free:
-            return True
+        # Frei als Ziel ist deaktiviert; Parameter bleibt nur aus API-Kompatibilitaet erhalten.
+        _ = allow_target_free
         if any(
             self._can_assign_wood_tree_batch(i, batch_size, available_free_override=available_free)
             for i in range(len(self.tree_list_internal))
@@ -7974,7 +7998,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             allow_target_free=False,
         ):
             return True
-        if self._has_nonfree_source_for_batch(batch_size):
+        if self._has_nonfree_source_for_batch(batch_size) and self._has_assign_target_for_batch(
+            batch_size=batch_size,
+            available_free=max(self.free_leibeigene, batch_size),
+            allow_target_free=False,
+        ):
             return True
         return False
 
@@ -8058,11 +8086,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         """Kategorie-Auswahl: Wohin Leibeigene schicken?"""
         batch_size = self._get_selected_batch_size()
         available_free = self._get_target_phase_available_free(batch_size)
-        src_cat = int(self.pending_selections.get(ActionPhase.SOURCE_CATEGORY, 0) or 0)
-        src_spec = int(self.pending_selections.get(ActionPhase.SOURCE_SPECIFIC, 0) or 0)
         mask = np.zeros(len(TARGET_CATEGORIES), dtype=bool)
-        # FREE als Ziel nur sinnvoll, wenn aus einem NICHT-FREE Bereich recalled wird.
-        mask[0] = (src_cat != 0) and self._can_use_source_batch(src_cat, src_spec, batch_size)
+        mask[0] = False  # Frei als Zielkategorie ist deaktiviert.
         mask[1] = any(
             self._can_assign_wood_tree_batch(i, batch_size, available_free_override=available_free)
             for i in range(len(self.tree_list_internal))
@@ -8086,9 +8111,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         batch_size = self._get_selected_batch_size()
         available_free = self._get_target_phase_available_free(batch_size)
         mask = np.zeros(self.target_specific_size, dtype=bool)
-        if cat == 0:  # Frei (sollte ÃƒÆ’Ã‚Â¼bersprungen werden, Fallback)
-            mask[0] = True
-        elif cat == 1:
+        if cat == 1:
             for i, _tree in enumerate(self.tree_list_internal[:self.target_specific_size]):
                 mask[i] = self._can_assign_wood_tree_batch(i, batch_size, available_free_override=available_free)
         elif cat in CATEGORY_AREA_MAP:
@@ -8109,6 +8132,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 if i < self.target_specific_size and available_free > 0 and self._can_build(b):
                     mask[i] = True
         if not mask.any():
+            if cat == 0:
+                return mask
             mask[0] = True
         return mask
 
@@ -8367,6 +8392,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._spend_resource(RESOURCE_TALER, SERF_BUY_COST)
         self.total_leibeigene += 1
         self.free_leibeigene += 1
+        self._pending_spawned_unassigned_serfs = max(0, int(self._pending_spawned_unassigned_serfs)) + 1
 
         # Neuen Serf erstellen (vereinfacht - keine IDs mehr)
         hq_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
@@ -8547,6 +8573,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         self.total_leibeigene -= 1
         self.free_leibeigene -= 1
+        # Ohne stabile Serf-IDs konservativ gegen Ghost-Tokens absichern.
+        self._pending_spawned_unassigned_serfs = max(
+            0,
+            int(getattr(self, "_pending_spawned_unassigned_serfs", 0)) - 1,
+        )
 
         # Einen idle Serf entfernen (vereinfacht)
         for i, serf in enumerate(self.production_system.serfs):

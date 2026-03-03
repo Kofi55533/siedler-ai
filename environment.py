@@ -6358,15 +6358,33 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         """Gibt Anzahl aktiver Baustellen zurÃƒÆ’Ã‚Â¼ck."""
         return len(self.construction_sites)
 
+    @staticmethod
+    def _to_int_choice(value, default: int = 0) -> int:
+        """Normalisiert Action-/Selection-Werte robust auf int."""
+        try:
+            if isinstance(value, np.ndarray):
+                arr = np.asarray(value).reshape(-1)
+                if arr.size <= 0:
+                    return int(default)
+                return int(arr[0])
+            if isinstance(value, (list, tuple)):
+                if len(value) <= 0:
+                    return int(default)
+                return int(value[0])
+            return int(value)
+        except Exception:
+            return int(default)
+
     def step(self, action):
         """Multi-Step Action Flow."""
         # =================================================================
         # MULTI-STEP FLOW MANAGEMENT
         # =================================================================
+        action = self._to_int_choice(action, default=0)
         phase_size = self.action_spaces[self.current_phase].n
         local_mask = np.asarray(self._get_local_action_mask(), dtype=bool).reshape(-1)
-        is_in_range = 0 <= int(action) < phase_size
-        is_mask_valid = bool(local_mask[int(action)]) if is_in_range and int(action) < local_mask.size else False
+        is_in_range = 0 <= action < phase_size
+        is_mask_valid = bool(local_mask[action]) if is_in_range and action < local_mask.size else False
         if not is_mask_valid:
             valid_indices = np.flatnonzero(local_mask[:phase_size])
             if valid_indices.size > 0:
@@ -6385,7 +6403,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             action_name = MAIN_ACTIONS[action]
             self.current_flow = action_name
             self.flow_step = 0
-            self.pending_selections = {ActionPhase.MAIN: action}
+            self.pending_selections = {ActionPhase.MAIN: int(action)}
             flow_phases = ACTION_FLOWS[action_name]
             if len(flow_phases) == 1:
                 reward = self._execute_action(action_name, self.pending_selections)
@@ -6399,7 +6417,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 return obs, 0.0, False, False, {"multi_step": True, "phase": self.current_phase.value}
         else:
             action_name = self.current_flow
-            self.pending_selections[self.current_phase] = action
+            self.pending_selections[self.current_phase] = int(action)
             self.flow_step += 1
 
             # Sonderfall: "Frei" (Kategorie 0) ÃƒÆ’Ã‚Â¼berspringt die SPECIFIC-Phase
@@ -7006,7 +7024,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if action_name == "wait":
             return 0.0
         elif action_name == "upgrade":
-            building_idx = selections.get(ActionPhase.BUILDING, 0)
+            building_idx = self._to_int_choice(selections.get(ActionPhase.BUILDING, 0), 0)
             if building_idx < len(self.upgradeable_buildings):
                 building = self.upgradeable_buildings[building_idx]
                 if self._can_upgrade(building):
@@ -7014,8 +7032,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     return self._upgrade_building(building, pos_key)
             return 0.0
         elif action_name == "research":
-            building_idx = selections.get(ActionPhase.TECH_BUILDING, 0)
-            tech_idx = selections.get(ActionPhase.TECH, 0)
+            building_idx = self._to_int_choice(selections.get(ActionPhase.TECH_BUILDING, 0), 0)
+            tech_idx = self._to_int_choice(selections.get(ActionPhase.TECH, 0), 0)
             building = RESEARCH_BUILDINGS[min(building_idx, len(RESEARCH_BUILDINGS) - 1)]
             techs = self.tech_by_building.get(building, [])
             if tech_idx < len(techs):
@@ -7024,8 +7042,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     return self._research_tech(tech)
             return 0.0
         elif action_name == "recruit":
-            soldier_idx = selections.get(ActionPhase.SOLDIER, 0)
-            quantity_idx = selections.get(ActionPhase.QUANTITY, 0)
+            soldier_idx = self._to_int_choice(selections.get(ActionPhase.SOLDIER, 0), 0)
+            quantity_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY, 0), 0)
             quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
             if soldier_idx < len(self.soldier_types):
                 soldier = self.soldier_types[soldier_idx]
@@ -7036,7 +7054,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 return reward
             return 0.0
         elif action_name == "buy_serf":
-            quantity_idx = selections.get(ActionPhase.QUANTITY, 0)
+            quantity_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY, 0), 0)
             quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
             reward = 0.0
             for _ in range(quantity):
@@ -7044,9 +7062,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     reward += self._buy_serf()
             return reward
         elif action_name == "dismiss_serf":
-            src_cat = selections.get(ActionPhase.SOURCE_CATEGORY, 0)
-            src_spec = selections.get(ActionPhase.SOURCE_SPECIFIC, 0)
-            quantity_idx = selections.get(ActionPhase.QUANTITY, 0)
+            src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
+            src_spec = self._to_int_choice(selections.get(ActionPhase.SOURCE_SPECIFIC, 0), 0)
+            quantity_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY, 0), 0)
             quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
             if src_cat == 0:
                 reward = 0.0
@@ -7061,11 +7079,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     reward += self._dismiss_serf_from_area(SerfArea.FREE)
             return reward
         elif action_name == "assign_serf":
-            src_cat = selections.get(ActionPhase.SOURCE_CATEGORY, 0)
-            src_spec = selections.get(ActionPhase.SOURCE_SPECIFIC, 0)
-            qty_idx = selections.get(ActionPhase.QUANTITY, 0)
-            tgt_cat = selections.get(ActionPhase.TARGET_CATEGORY, 0)
-            tgt_spec = selections.get(ActionPhase.TARGET_SPECIFIC, 0)
+            src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
+            src_spec = self._to_int_choice(selections.get(ActionPhase.SOURCE_SPECIFIC, 0), 0)
+            qty_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY, 0), 0)
+            tgt_cat = self._to_int_choice(selections.get(ActionPhase.TARGET_CATEGORY, 0), 0)
+            tgt_spec = self._to_int_choice(selections.get(ActionPhase.TARGET_SPECIFIC, 0), 0)
             quantity = [1, 2, 3, 5, 10, 20][min(qty_idx, 5)]
             if src_cat == 0:
                 return self._assign_serfs_to_selection(tgt_cat, tgt_spec, quantity, selections)
@@ -7075,7 +7093,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             moved = self._recall_serfs_from_selection(src_cat, src_spec, quantity)
             return self._assign_serfs_to_selection(tgt_cat, tgt_spec, moved, selections)
         elif action_name == "demolish":
-            building_idx = selections.get(ActionPhase.BUILDING, 0)
+            building_idx = self._to_int_choice(selections.get(ActionPhase.BUILDING, 0), 0)
             if building_idx < len(self.demolishable_buildings):
                 building = self.demolishable_buildings[building_idx]
                 if self._can_demolish(building):
@@ -7083,17 +7101,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     return self._demolish_building(building, pos_key)
             return 0.0
         elif action_name == "bless":
-            category_idx = selections.get(ActionPhase.CATEGORY, 0)
+            category_idx = self._to_int_choice(selections.get(ActionPhase.CATEGORY, 0), 0)
             if category_idx in BLESS_CATEGORIES and self._can_bless(category_idx):
                 return self._bless(category_idx)
             return 0.0
         elif action_name == "tax":
-            tax_level = selections.get(ActionPhase.TAX_LEVEL, 0)
+            tax_level = self._to_int_choice(selections.get(ActionPhase.TAX_LEVEL, 0), 0)
             if tax_level != self.current_tax_level and tax_level in TAX_LEVELS:
                 return self._set_tax_level(tax_level)
             return 0.0
         elif action_name == "alarm":
-            on_off = selections.get(ActionPhase.ON_OFF, 0)
+            on_off = self._to_int_choice(selections.get(ActionPhase.ON_OFF, 0), 0)
             if on_off == 0:
                 if not self.alarm_active and self.alarm_cooldown <= 0:
                     self.alarm_active = True
@@ -7249,8 +7267,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
         return int(assigned)
 
-    def _get_local_action_mask(self) -> np.ndarray:
-        """Dynamische Maske fuer die aktuelle Phase (ohne globales Padding)."""
+    def _get_local_action_mask_raw(self) -> np.ndarray:
+        """Dynamische Maske fuer die aktuelle Phase (ohne zusaetzliche Zukunfts-Pruefung)."""
         if self.current_phase == ActionPhase.MAIN:
             return self._mask_main_actions()
         if self.current_phase == ActionPhase.BUILDING:
@@ -7283,6 +7301,320 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             return self._mask_alarm_on_off()
         size = self.action_spaces[self.current_phase].n
         return np.ones(size, dtype=bool)
+
+    def _get_flow_feasibility_cache(self) -> Dict[Tuple, bool]:
+        cache_key = ("flow_feasibility_cache",)
+        cache = self._get_can_cache(cache_key)
+        if not isinstance(cache, dict):
+            cache = {}
+            self._set_can_cache(cache_key, cache)
+        return cache
+
+    def _serialize_flow_selections(self, flow_name: str, selections: Dict[ActionPhase, int]) -> Tuple[Tuple[str, int], ...]:
+        flow_phases = ACTION_FLOWS.get(flow_name, [])
+        serialized: List[Tuple[str, int]] = []
+        for phase in flow_phases:
+            if phase in selections:
+                serialized.append((phase.value, self._to_int_choice(selections.get(phase, 0), 0)))
+        return tuple(serialized)
+
+    def _get_phase_mask_for_feasibility(
+        self,
+        flow_name: str,
+        phase: ActionPhase,
+        selections: Dict[ActionPhase, int],
+    ) -> np.ndarray:
+        old_phase = self.current_phase
+        old_flow = self.current_flow
+        old_step = self.flow_step
+        old_pending = dict(self.pending_selections)
+        try:
+            self.current_phase = phase
+            self.current_flow = flow_name
+            self.pending_selections = {
+                key: self._to_int_choice(value, 0)
+                for key, value in dict(selections).items()
+            }
+            return np.asarray(self._get_local_action_mask_raw(), dtype=bool).reshape(-1)
+        finally:
+            self.current_phase = old_phase
+            self.current_flow = old_flow
+            self.flow_step = old_step
+            self.pending_selections = old_pending
+
+    def _advance_flow_prefix(
+        self,
+        flow_name: str,
+        phase_idx: int,
+        selections: Dict[ActionPhase, int],
+        choice: int,
+    ) -> Tuple[Dict[ActionPhase, int], int]:
+        flow_phases = ACTION_FLOWS.get(flow_name, [])
+        if phase_idx < 0 or phase_idx >= len(flow_phases):
+            return dict(selections), len(flow_phases)
+
+        current_phase = flow_phases[phase_idx]
+        next_selections = {
+            key: self._to_int_choice(value, 0)
+            for key, value in dict(selections).items()
+        }
+        next_selections[current_phase] = int(choice)
+        next_phase_idx = phase_idx + 1
+
+        if current_phase == ActionPhase.SOURCE_CATEGORY and int(choice) == 0:
+            next_selections[ActionPhase.SOURCE_SPECIFIC] = 0
+            next_phase_idx += 1
+        elif current_phase == ActionPhase.TARGET_CATEGORY and int(choice) == 0:
+            next_selections[ActionPhase.TARGET_SPECIFIC] = 0
+            next_phase_idx += 1
+            if flow_name == "assign_serf":
+                next_selections[ActionPhase.POSITION_GROUP] = 0
+                next_selections[ActionPhase.POSITION_INDEX] = 0
+                next_phase_idx += 2
+        elif flow_name == "assign_serf" and current_phase == ActionPhase.TARGET_SPECIFIC:
+            target_cat = self._to_int_choice(next_selections.get(ActionPhase.TARGET_CATEGORY, 0), 0)
+            if target_cat != 7:
+                next_selections[ActionPhase.POSITION_GROUP] = 0
+                next_selections[ActionPhase.POSITION_INDEX] = 0
+                next_phase_idx += 2
+
+        return next_selections, next_phase_idx
+
+    def _get_selected_batch_size_from_selections(self, selections: Dict[ActionPhase, int]) -> int:
+        qty_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY, 0), 0)
+        qty_idx = max(0, min(qty_idx, len(QUANTITY_VALUES) - 1))
+        return int(QUANTITY_VALUES[qty_idx])
+
+    def _get_available_free_for_assign(
+        self,
+        src_cat: int,
+        batch_size: int,
+    ) -> int:
+        if src_cat == 0:
+            return int(self.free_leibeigene)
+        return int(max(self.free_leibeigene, batch_size))
+
+    def _is_complete_flow_selection_feasible(
+        self,
+        flow_name: str,
+        selections: Dict[ActionPhase, int],
+    ) -> bool:
+        if flow_name == "wait":
+            return True
+
+        if flow_name == "upgrade":
+            building_idx = self._to_int_choice(selections.get(ActionPhase.BUILDING, 0), 0)
+            if building_idx < 0 or building_idx >= len(self.upgradeable_buildings):
+                return False
+            building = self.upgradeable_buildings[building_idx]
+            if not self._can_upgrade(building):
+                return False
+            return self._select_building_instance_key(building, selections) is not None
+
+        if flow_name == "research":
+            building_idx = self._to_int_choice(selections.get(ActionPhase.TECH_BUILDING, 0), 0)
+            tech_idx = self._to_int_choice(selections.get(ActionPhase.TECH, 0), 0)
+            if not RESEARCH_BUILDINGS:
+                return False
+            building = RESEARCH_BUILDINGS[min(max(0, building_idx), len(RESEARCH_BUILDINGS) - 1)]
+            techs = self.tech_by_building.get(building, [])
+            if tech_idx < 0 or tech_idx >= len(techs):
+                return False
+            return self._can_research(techs[tech_idx])
+
+        if flow_name == "recruit":
+            soldier_idx = self._to_int_choice(selections.get(ActionPhase.SOLDIER, 0), 0)
+            if soldier_idx < 0 or soldier_idx >= len(self.soldier_types):
+                return False
+            soldier = self.soldier_types[soldier_idx]
+            quantity = self._get_selected_batch_size_from_selections(selections)
+            return self._can_recruit_batch(soldier, quantity)
+
+        if flow_name == "buy_serf":
+            quantity = self._get_selected_batch_size_from_selections(selections)
+            return self._can_buy_serf_batch(quantity)
+
+        if flow_name == "dismiss_serf":
+            src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
+            src_spec = self._to_int_choice(selections.get(ActionPhase.SOURCE_SPECIFIC, 0), 0)
+            quantity = self._get_selected_batch_size_from_selections(selections)
+            return self._can_use_source_batch(src_cat, src_spec, quantity)
+
+        if flow_name == "assign_serf":
+            src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
+            src_spec = self._to_int_choice(selections.get(ActionPhase.SOURCE_SPECIFIC, 0), 0)
+            tgt_cat = self._to_int_choice(selections.get(ActionPhase.TARGET_CATEGORY, 0), 0)
+            tgt_spec = self._to_int_choice(selections.get(ActionPhase.TARGET_SPECIFIC, 0), 0)
+            quantity = self._get_selected_batch_size_from_selections(selections)
+
+            if not self._can_use_source_batch(src_cat, src_spec, quantity):
+                return False
+
+            if tgt_cat == 0:
+                return src_cat != 0
+
+            available_free = self._get_available_free_for_assign(src_cat=src_cat, batch_size=quantity)
+            if available_free <= 0:
+                return False
+
+            if tgt_cat == 1:
+                if tgt_spec < 0 or tgt_spec >= len(self.tree_list_internal):
+                    return False
+                return self._can_assign_wood_tree_batch(
+                    tgt_spec,
+                    quantity,
+                    available_free_override=available_free,
+                )
+
+            if tgt_cat in CATEGORY_AREA_MAP:
+                areas = CATEGORY_AREA_MAP.get(tgt_cat, [])
+                if tgt_spec < 0 or tgt_spec >= len(areas):
+                    return False
+                return self._can_assign_serf_to_specific_area(
+                    areas[tgt_spec],
+                    quantity,
+                    available_free_override=available_free,
+                )
+
+            if tgt_cat == 6:
+                if tgt_spec < 0 or tgt_spec >= len(self.construction_sites):
+                    return False
+                already_assigned = int(self.construction_sites[tgt_spec].get("serfs_assigned", 0) or 0)
+                return already_assigned < MAX_ACTIVE_BUILDERS_PER_SITE
+
+            if tgt_cat == 7:
+                if tgt_spec < 0 or tgt_spec >= len(self.buildable_buildings):
+                    return False
+                building = self.buildable_buildings[tgt_spec]
+                if not self._can_build(building):
+                    return False
+                return self._select_build_position(building, selections) is not None
+
+            return False
+
+        if flow_name == "demolish":
+            building_idx = self._to_int_choice(selections.get(ActionPhase.BUILDING, 0), 0)
+            if building_idx < 0 or building_idx >= len(self.demolishable_buildings):
+                return False
+            building = self.demolishable_buildings[building_idx]
+            if not self._can_demolish(building):
+                return False
+            return self._select_building_instance_key(building, selections) is not None
+
+        if flow_name == "bless":
+            category_idx = self._to_int_choice(selections.get(ActionPhase.CATEGORY, 0), 0)
+            return category_idx in BLESS_CATEGORIES and self._can_bless(category_idx)
+
+        if flow_name == "tax":
+            tax_level = self._to_int_choice(selections.get(ActionPhase.TAX_LEVEL, 0), 0)
+            return tax_level != self.current_tax_level and tax_level in TAX_LEVELS
+
+        if flow_name == "alarm":
+            on_off = self._to_int_choice(selections.get(ActionPhase.ON_OFF, 0), 0)
+            if on_off == 0:
+                return (not self.alarm_active) and (self.alarm_cooldown <= 0)
+            if on_off == 1:
+                return bool(self.alarm_active)
+            return False
+
+        return False
+
+    def _has_feasible_flow_completion(
+        self,
+        flow_name: str,
+        phase_idx: int,
+        selections: Dict[ActionPhase, int],
+        cache: Dict[Tuple, bool],
+    ) -> bool:
+        flow_phases = ACTION_FLOWS.get(flow_name, [])
+        if phase_idx >= len(flow_phases):
+            return self._is_complete_flow_selection_feasible(flow_name, selections)
+
+        cache_key = (
+            "flow_completion",
+            flow_name,
+            int(phase_idx),
+            self._serialize_flow_selections(flow_name, selections),
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return bool(cached)
+
+        phase = flow_phases[phase_idx]
+        mask = self._get_phase_mask_for_feasibility(flow_name, phase, selections)
+        feasible = False
+        for choice in np.flatnonzero(mask):
+            next_selections, next_phase_idx = self._advance_flow_prefix(
+                flow_name=flow_name,
+                phase_idx=phase_idx,
+                selections=selections,
+                choice=int(choice),
+            )
+            if self._has_feasible_flow_completion(flow_name, next_phase_idx, next_selections, cache):
+                feasible = True
+                break
+        cache[cache_key] = bool(feasible)
+        return bool(feasible)
+
+    def _filter_mask_by_future_feasibility(self, mask: np.ndarray) -> np.ndarray:
+        """Filtert aktuelle Maskenwerte auf echte Zukunfts-Erreichbarkeit."""
+        mask = np.asarray(mask, dtype=bool).reshape(-1)
+        if mask.size <= 0:
+            return mask
+
+        filtered = np.zeros_like(mask, dtype=bool)
+        cache = self._get_flow_feasibility_cache()
+
+        if self.current_phase == ActionPhase.MAIN:
+            for idx in np.flatnonzero(mask):
+                idx = int(idx)
+                if idx < 0 or idx >= len(MAIN_ACTIONS):
+                    continue
+                flow_name = MAIN_ACTIONS[idx]
+                flow_phases = ACTION_FLOWS.get(flow_name, [])
+                selections = {ActionPhase.MAIN: idx}
+                if len(flow_phases) <= 1:
+                    filtered[idx] = self._is_complete_flow_selection_feasible(flow_name, selections)
+                else:
+                    filtered[idx] = self._has_feasible_flow_completion(
+                        flow_name=flow_name,
+                        phase_idx=1,
+                        selections=selections,
+                        cache=cache,
+                    )
+            return filtered
+
+        flow_name = self.current_flow
+        flow_phases = ACTION_FLOWS.get(flow_name, []) if flow_name else []
+        if not flow_name or self.current_phase not in flow_phases:
+            return mask
+
+        phase_idx = flow_phases.index(self.current_phase)
+        selections = {
+            key: self._to_int_choice(value, 0)
+            for key, value in dict(self.pending_selections).items()
+        }
+
+        for idx in np.flatnonzero(mask):
+            idx = int(idx)
+            next_selections, next_phase_idx = self._advance_flow_prefix(
+                flow_name=flow_name,
+                phase_idx=phase_idx,
+                selections=selections,
+                choice=idx,
+            )
+            filtered[idx] = self._has_feasible_flow_completion(
+                flow_name=flow_name,
+                phase_idx=next_phase_idx,
+                selections=next_selections,
+                cache=cache,
+            )
+        return filtered
+
+    def _get_local_action_mask(self) -> np.ndarray:
+        """Dynamische Maske fuer die aktuelle Phase mit kompletter Zukunfts-Pruefung."""
+        raw_mask = self._get_local_action_mask_raw()
+        return self._filter_mask_by_future_feasibility(raw_mask)
 
     def _pad_action_mask(self, mask: np.ndarray) -> np.ndarray:
         """Pad/clip mask to fixed action_space size."""

@@ -3095,8 +3095,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if not res_type:
             return 0.0
 
-        efficiency = self.workforce_manager.get_average_efficiency() if hasattr(self, "workforce_manager") else 1.0
-        rates = self.production_system.get_production_rates(efficiency)
+        # Cache all rates per tick — called 12x per step (once per resource in RESOURCE_MAP)
+        _cache_key = ("_prod_rates_all",)
+        rates = self._get_can_cache(_cache_key)
+        if rates is None:
+            efficiency = self.workforce_manager.get_average_efficiency() if hasattr(self, "workforce_manager") else 1.0
+            rates = self.production_system.get_production_rates(efficiency)
+            self._set_can_cache(_cache_key, rates)
         rate = rates.get(res_type, 0.0)
 
         # Output-Bonus nur auf veredelte Ressourcen anwenden
@@ -6833,9 +6838,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.resource_workers[RESOURCE_HOLZ_ROH] = self.wood_serfs
 
         if hasattr(self, "tree_list_internal"):
-            for tree in self.tree_list_internal:
-                key = self._pos_key_from_xy(tree.get("x", 0), tree.get("y", 0))
-                tree["serfs_assigned"] = tree_serfs_by_pos.get(key, 0)
+            if tree_serfs_by_pos:
+                for tree in self.tree_list_internal:
+                    key = self._pos_key_from_xy(tree.get("x", 0), tree.get("y", 0))
+                    tree["serfs_assigned"] = tree_serfs_by_pos.get(key, 0)
+            else:
+                # Keine Holz-Serfs aktiv: alle auf 0 ohne pos_key Berechnung
+                for tree in self.tree_list_internal:
+                    tree["serfs_assigned"] = 0
 
         # Deposits
         for category, cat_data in getattr(self, "deposit_categories", {}).items():
@@ -6845,9 +6855,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         for category, shaft_data in getattr(self, "shaft_categories", {}).items():
             shaft_data["serfs_assigned"] = shaft_counts.get(category, 0)
             pos_map = shaft_serfs_by_pos.get(category, {})
-            for shaft in shaft_data.get("shafts", []):
-                key = self._pos_key_from_xy(shaft.get("x", 0), shaft.get("y", 0))
-                shaft["serfs_assigned"] = pos_map.get(key, 0)
+            if pos_map:
+                for shaft in shaft_data.get("shafts", []):
+                    key = self._pos_key_from_xy(shaft.get("x", 0), shaft.get("y", 0))
+                    shaft["serfs_assigned"] = pos_map.get(key, 0)
+            else:
+                for shaft in shaft_data.get("shafts", []):
+                    shaft["serfs_assigned"] = 0
 
         for category in ["Eisen", "Stein", "Lehm", "Schwefel"]:
             raw_name = category_to_raw.get(category)

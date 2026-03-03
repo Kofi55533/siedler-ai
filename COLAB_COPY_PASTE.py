@@ -4,6 +4,7 @@
 # ============================================================================
 
 from pathlib import Path
+import json
 import os
 import re
 import shutil
@@ -392,6 +393,10 @@ SOURCE_MODE = "git"
 #   "fast_train" -> maximale FPS (weniger Simulations-Treue)
 #   "full_sim"   -> volle Simulations-Treue (langsamer)
 TRAIN_MODE = "fast_train"
+# Reward-/Trainingsprofil (z. B. legacy, sparse, dense_v2, balanced, aggressive)
+TRAIN_PROFILE = "legacy"
+# Ziel-Timesteps fuer diesen Run
+TRAIN_TOTAL_TIMESTEPS = 500_000
 
 REPO_URL = "https://github.com/Kofi55533/siedler-ai.git"
 REPO_BRANCH = "main"
@@ -400,6 +405,34 @@ DRIVE_ZIP = "/content/drive/MyDrive/siedler_ai_colab_bundle.zip"
 PROJECT_DIR = "/content/siedler_ai"
 SAVE_DIR = "/content/drive/MyDrive/siedler_training"
 DATA_DIR = "/content/drive/MyDrive/siedler_data"
+
+
+def build_train_overrides():
+    """
+    Explizite Train-Overrides fuer reproduzierbare Runs aus dieser One-Cell.
+    """
+    total_steps = max(1, int(TRAIN_TOTAL_TIMESTEPS))
+    cfg = {
+        "total_timesteps": total_steps,
+        "checkpoint_freq": max(50_000, total_steps // 5),
+        "eval_freq": max(50_000, total_steps // 5),
+    }
+
+    profile = str(TRAIN_PROFILE).strip().lower()
+    mode = str(TRAIN_MODE).strip().lower()
+    if mode == "fast_train" and profile == "legacy":
+        # High-End fast_train Preset fuer Legacy.
+        cfg.update({
+            "learning_rate": 0.0002,
+            "n_steps": 4096,
+            "batch_size": 1024,
+            "n_epochs": 6,
+            "gamma": 0.995,
+            "gae_lambda": 0.95,
+            "clip_range": 0.2,
+            "ent_coef": 0.012,
+        })
+    return cfg
 
 
 # 2) MOUNT GOOGLE DRIVE
@@ -605,7 +638,7 @@ if TRAIN_MODE == "fast_train":
     os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "1")
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "0")
     os.environ.setdefault("SIEDLER_TENSORBOARD", "0")
-    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "dense_v2")
+    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", TRAIN_PROFILE)
 else:
     os.environ.setdefault("SIEDLER_FAST_TRAIN", "0")
     os.environ.setdefault("SIEDLER_TURBO_FPS", "0")
@@ -616,7 +649,10 @@ else:
     os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "1")
     os.environ.setdefault("SIEDLER_TENSORBOARD", "1")
-    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "balanced")
+    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", TRAIN_PROFILE)
+
+# Fuer diese One-Cell immer explizit setzen (ueberschreibt eventuell alte Notebook-Env-Werte).
+os.environ["SIEDLER_TRAIN_PROFILE"] = TRAIN_PROFILE
 
 # Robustheit fuer Colab-Disconnects + klarer Fresh-Start.
 # Immer neu trainieren (kein Resume von alten Checkpoints).
@@ -631,8 +667,10 @@ os.environ.setdefault("SIEDLER_EVAL_RENDER", "0")
 os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "1"
 os.environ.pop("SIEDLER_NUM_ENVS", None)
 os.environ["SIEDLER_SPATIAL_SIZE"] = "96"
+train_overrides = build_train_overrides()
 print(f"Simulation mode: {TRAIN_MODE}")
 print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")
+print(f"Total timesteps: {int(train_overrides.get('total_timesteps', 0))}")
 print(f"Resume enabled: {os.environ.get('SIEDLER_RESUME')}")
 print(
     "Post-train phases: "
@@ -669,11 +707,23 @@ print(f"Effective SIEDLER_NUM_ENVS={selected_n_envs}")
 # 9) START TRAINING (with guarded fallback)
 fallback_chain = [selected_n_envs] if manual_override else build_fallback_n_envs(selected_n_envs)
 last_error = None
+train_overrides_json = json.dumps(train_overrides)
+train_entry_code = (
+    "import json, os\n"
+    "import colab_training as ct\n"
+    "cfg = json.loads(os.environ['SIEDLER_TRAIN_OVERRIDES_JSON'])\n"
+    "profile = os.environ.get('SIEDLER_TRAIN_PROFILE')\n"
+    "save_dir = os.environ.get('SIEDLER_SAVE_DIR', './siedler_training')\n"
+    "ct.train(config=cfg, save_path=save_dir, profile_name=profile)\n"
+)
 for idx, n_envs in enumerate(fallback_chain):
     os.environ["SIEDLER_NUM_ENVS"] = str(n_envs)
     print(f"Training attempt {idx + 1}/{len(fallback_chain)} with SIEDLER_NUM_ENVS={n_envs}")
     try:
-        run([sys.executable, "colab_training.py"])
+        run(
+            [sys.executable, "-u", "-c", train_entry_code],
+            env={"SIEDLER_TRAIN_OVERRIDES_JSON": train_overrides_json},
+        )
         last_error = None
         break
     except subprocess.CalledProcessError as exc:

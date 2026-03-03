@@ -15,20 +15,9 @@ TRAIN_PROFILES = {
         "description": "Historisches Verhalten (alte Reward-Gewichte).",
         "config_overrides": {},
         "reward_profile": {
-            # Terminal komplett aus fuer Legacy.
-            "terminal_dependency_bonus": 0.0,
-            "terminal_recruitable_bonus": 0.0,
-            "terminal_potential_bonus_per_unit": 0.0,
-            "terminal_potential_use_cumulative_earnings": 0.0,
-            "terminal_potential_include_start_resources": 0.0,
-            "terminal_delta_from_start": 0.0,
-            "terminal_delta_positive_only": 0.0,
             # Legacy bekommt explizites Serf-Economy-Shaping:
             # Kaufen bleibt growth-basiert.
             "action_buy_serf_growth_bonus": 1.0,
-            # Serf-Malus: wenn ein Leibeigener >2 Steps idle/unassigned bleibt.
-            "step_unassigned_serf_penalty": 1.0,
-            "step_unassigned_serf_threshold_steps": 2.0,
             # Wie dense_v2: +1 je neuem Taxable-Worker-Highscore.
             "step_worker_growth_bonus": 1.0,
         },
@@ -41,13 +30,7 @@ TRAIN_PROFILES = {
             "ent_coef": 0.015,
             "batch_size": 128,
         },
-        "reward_profile": {
-            "terminal_dependency_bonus": 20.0,
-            "terminal_recruitable_bonus": 150.0,
-            "terminal_potential_bonus_per_unit": 80.0,
-            "terminal_potential_use_cumulative_earnings": 1.0,
-            "terminal_potential_include_start_resources": 0.0,
-        },
+        "reward_profile": {},
     },
     "aggressive": {
         "description": "Schnellere Exploration mit dichterem Reward.",
@@ -56,29 +39,17 @@ TRAIN_PROFILES = {
             "gamma": 0.995,
             "ent_coef": 0.02,
         },
-        "reward_profile": {
-            "terminal_dependency_bonus": 26.0,
-            "terminal_recruitable_bonus": 100.0,
-            "terminal_potential_bonus_per_unit": 60.0,
-            "terminal_potential_use_cumulative_earnings": 1.0,
-            "terminal_potential_include_start_resources": 0.0,
-        },
+        "reward_profile": {},
     },
     "sparse": {
-        "description": "Nahe am Endziel: starker Terminal-Bonus, wenig dichte Shaping-Rewards.",
+        "description": "Nahe am Endziel mit wenig dichten Shaping-Rewards.",
         "config_overrides": {
             "learning_rate": 0.0002,
             "gamma": 0.999,
             "ent_coef": 0.02,
             "batch_size": 128,
         },
-        "reward_profile": {
-            "terminal_dependency_bonus": 10.0,
-            "terminal_recruitable_bonus": 320.0,
-            "terminal_potential_bonus_per_unit": 120.0,
-            "terminal_potential_use_cumulative_earnings": 1.0,
-            "terminal_potential_include_start_resources": 0.0,
-        },
+        "reward_profile": {},
     },
     "dense_v2": {
         "description": "Event-Reward fuer Potential + Steuerbasis/Taler-Income-Wachstum.",
@@ -89,10 +60,6 @@ TRAIN_PROFILES = {
             "batch_size": 128,
         },
         "reward_profile": {
-            # Diese drei Keys muessen explizit 0 sein, sonst greifen Default-Terminal-Rewards.
-            "terminal_dependency_bonus": 0.0,
-            "terminal_recruitable_bonus": 0.0,
-            "terminal_potential_bonus_per_unit": 0.0,
             # +1 Reward je neuem Highscore bei potenziell rekrutierbaren T2-Scharfschuetzen.
             "step_new_resource_potential_unit_bonus": 1.0,
             "step_potential_scharf_tier": 2.0,

@@ -1831,17 +1831,6 @@ def _select_resource_trees(resources_data: Dict[str, Any], base_dir: str) -> Lis
 
 
 DEFAULT_REWARD_PROFILE = {
-    "terminal_dependency_bonus": 20.0,
-    "terminal_recruitable_bonus": 150.0,
-    "terminal_potential_bonus_per_unit": 80.0,
-    # Potential reward from cumulative resource earnings instead of end-of-episode stock.
-    "terminal_potential_use_cumulative_earnings": 1.0,
-    # Optional: include start resources in cumulative potential metric.
-    "terminal_potential_include_start_resources": 0.0,
-    # Use terminal deltas vs. episode start to avoid free reward from pure waiting.
-    "terminal_delta_from_start": 1.0,
-    # Clamp terminal deltas at >= 0 to avoid punishing temporary investments.
-    "terminal_delta_positive_only": 1.0,
     # Dense shaping on state deltas (off by default to preserve sparse behavior).
     "step_delta_potential_bonus": 0.0,
     # Event bonus when cumulative resource potential crosses the next whole-unit threshold.
@@ -1860,9 +1849,6 @@ DEFAULT_REWARD_PROFILE = {
     "step_time_penalty": 0.0,
     # Event rewards for serf economy growth (episode high-water marks).
     "action_buy_serf_growth_bonus": 0.0,
-    # Penalty per serf that stays unassigned (idle) for more than N consecutive steps.
-    "step_unassigned_serf_penalty": 0.0,
-    "step_unassigned_serf_threshold_steps": 2.0,
     "step_potential_use_cumulative_earnings": 1.0,
     "step_potential_include_start_resources": 0.0,
     # Which Scharfschuetzen tier to use for step potential conversion (1=min-tier fallback, 2=T2).
@@ -1936,7 +1922,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._terminal_cumulative_taler_earned = 0.0
         self._terminal_cumulative_schwefel_earned = 0.0
         self._best_total_leibeigene = 0
-        self._serf_unassigned_steps: Dict[int, int] = {}
         self._scharf_required_buildings, self._scharf_required_techs = self._get_scharf_requirements()
 
         # GebÃƒÆ’Ã‚Â¤ude-Listen fÃƒÆ’Ã‚Â¼r Actions
@@ -2662,7 +2647,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.free_leibeigene = 0
             self.serf_areas[SerfArea.FREE]["count"] = 0
         self._best_total_leibeigene = int(self.total_leibeigene)
-        self._serf_unassigned_steps = {}
         hq_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
         for i in range(self.total_leibeigene):
             serf = Serf(
@@ -3320,26 +3304,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if current_total > previous_best:
             self._best_total_leibeigene = current_total
         return float(gained) * float(self.reward_profile.get("action_buy_serf_growth_bonus", 0.0))
-
-    def _count_unassigned_serfs_over_threshold(self, threshold_steps: int) -> int:
-        threshold = max(0, int(threshold_steps))
-        active_ids: Set[int] = set()
-        over_threshold = 0
-
-        for serf in self.production_system.serfs:
-            serf_id = int(id(serf))
-            active_ids.add(serf_id)
-            prev = int(self._serf_unassigned_steps.get(serf_id, 0))
-            current = prev + 1 if serf.is_idle() else 0
-            self._serf_unassigned_steps[serf_id] = current
-            if current > threshold:
-                over_threshold += 1
-
-        stale_ids = [sid for sid in self._serf_unassigned_steps.keys() if sid not in active_ids]
-        for sid in stale_ids:
-            self._serf_unassigned_steps.pop(sid, None)
-
-        return int(over_threshold)
 
     def _get_scharf_soldier_types(self) -> List[str]:
         soldier_types = getattr(self, "soldier_types", None)
@@ -6522,16 +6486,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             step_delta_construction = max(0.0, step_delta_construction)
             step_worker_growth = max(0.0, step_worker_growth)
 
-        idle_threshold_steps = max(
-            0,
-            int(round(float(self.reward_profile.get("step_unassigned_serf_threshold_steps", 2.0)))),
-        )
-        unassigned_serfs_over_threshold = self._count_unassigned_serfs_over_threshold(idle_threshold_steps)
-        step_unassigned_serf_penalty = (
-            float(unassigned_serfs_over_threshold)
-            * abs(float(self.reward_profile.get("step_unassigned_serf_penalty", 0.0)))
-        )
-
         step_reward = 0.0
         step_reward += step_delta_potential * float(self.reward_profile.get("step_delta_potential_bonus", 0.0))
         step_reward += float(step_new_potential_units) * float(
@@ -6547,7 +6501,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if step_unlock_recruitable:
             step_reward += float(self.reward_profile.get("step_unlock_recruitable_bonus", 0.0))
         step_reward -= abs(float(self.reward_profile.get("step_time_penalty", 0.0)))
-        step_reward -= float(step_unassigned_serf_penalty)
         reward += step_reward
 
         info["step_potential_source"] = (
@@ -6568,9 +6521,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         info["step_delta_research"] = float(step_delta_research)
         info["step_delta_construction"] = float(step_delta_construction)
         info["step_worker_growth"] = float(step_worker_growth)
-        info["step_unassigned_serf_threshold_steps"] = int(idle_threshold_steps)
-        info["step_unassigned_serfs_over_threshold"] = int(unassigned_serfs_over_threshold)
-        info["step_unassigned_serf_penalty"] = float(step_unassigned_serf_penalty)
         info["step_unlock_recruitable"] = bool(step_unlock_recruitable)
         info["step_reward"] = float(step_reward)
 
@@ -6585,63 +6535,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_scharf_recruitable = recruitable_now
 
         terminated = self.current_time >= self.max_time
-        if terminated:
-            use_terminal_delta = float(self.reward_profile.get("terminal_delta_from_start", 1.0)) > 0.0
-            positive_only = float(self.reward_profile.get("terminal_delta_positive_only", 1.0)) > 0.0
-            use_cumulative_potential = float(
-                self.reward_profile.get("terminal_potential_use_cumulative_earnings", 1.0)
-            ) > 0.0
-            include_start_resources = float(
-                self.reward_profile.get("terminal_potential_include_start_resources", 0.0)
-            ) > 0.0
-
-            if use_cumulative_potential:
-                potential_metric = float(
-                    self._get_scharf_cumulative_resource_potential(
-                        include_start_resources=include_start_resources
-                    )
-                )
-            else:
-                potential_metric = float(resource_potential_now)
-                if use_terminal_delta:
-                    potential_metric -= float(self._start_scharf_resource_potential)
-            dependency_metric = float(dependency_progress_now)
-            if use_terminal_delta:
-                dependency_metric -= float(self._start_scharf_dependency_progress)
-            if positive_only:
-                potential_metric = max(0.0, potential_metric)
-                dependency_metric = max(0.0, dependency_metric)
-
-            terminal_potential_bonus = potential_metric * float(
-                self.reward_profile.get("terminal_potential_bonus_per_unit", 0.0)
-            )
-            terminal_dependency_bonus = dependency_metric * float(
-                self.reward_profile.get("terminal_dependency_bonus", 0.0)
-            )
-            reward += terminal_potential_bonus
-            reward += terminal_dependency_bonus
-            info["terminal_delta_from_start"] = bool(use_terminal_delta)
-            info["terminal_delta_positive_only"] = bool(positive_only)
-            info["terminal_potential_source"] = (
-                "cumulative_earnings" if use_cumulative_potential else "current_stock"
-            )
-            info["terminal_potential_include_start_resources"] = bool(include_start_resources)
-            info["terminal_delta_applied_to_potential"] = bool(
-                use_terminal_delta and (not use_cumulative_potential)
-            )
-            info["terminal_cumulative_taler_earned"] = float(self._terminal_cumulative_taler_earned)
-            info["terminal_cumulative_schwefel_earned"] = float(self._terminal_cumulative_schwefel_earned)
-            info["terminal_potential_metric"] = potential_metric
-            info["terminal_dependency_metric"] = dependency_metric
-            info["terminal_potential_bonus"] = terminal_potential_bonus
-            info["terminal_dependency_bonus"] = terminal_dependency_bonus
-            if use_terminal_delta:
-                recruitable_bonus_awarded = recruitable_now and (not self._start_scharf_recruitable)
-            else:
-                recruitable_bonus_awarded = recruitable_now
-            if recruitable_bonus_awarded:
-                reward += float(self.reward_profile.get("terminal_recruitable_bonus", 0.0))
-            info["terminal_recruitable_bonus_awarded"] = bool(recruitable_bonus_awarded)
+        # Terminal reward logic intentionally disabled.
         return self._get_observation(), reward, terminated, False, info
 
     def _resolve_area(self, category, specific):

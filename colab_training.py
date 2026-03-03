@@ -1071,7 +1071,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     terminal_bonus = float(reward_profile.get("terminal_recruitable_bonus", 0.0))
     terminal_potential_bonus = float(reward_profile.get("terminal_potential_bonus_per_unit", 0.0))
     potential_cumulative = float(
-        reward_profile.get("terminal_potential_use_cumulative_earnings", 1.0)
+        reward_profile.get("terminal_potential_use_cumulative_earnings", 0.0)
     ) > 0.0
     include_start_resources = float(
         reward_profile.get("terminal_potential_include_start_resources", 0.0)

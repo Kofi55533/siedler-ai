@@ -7546,6 +7546,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 if idx < 0 or idx >= len(MAIN_ACTIONS):
                     continue
                 flow_name = MAIN_ACTIONS[idx]
+                if flow_name in {"wait", "research", "recruit", "buy_serf", "dismiss_serf", "bless", "tax", "alarm"}:
+                    # Fuer diese Flows garantiert die lokale MAIN-Maske bereits mindestens einen gueltigen Completion-Pfad.
+                    filtered[idx] = True
+                    continue
                 flow_phases = ACTION_FLOWS.get(flow_name, [])
                 selections = {ActionPhase.MAIN: idx}
                 if len(flow_phases) <= 1:
@@ -7614,20 +7618,31 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _mask_main_actions(self):
         """Maske fuer die 11 Hauptaktionen (build in assign_serf integriert)."""
+        cache_key = ("mask_main_actions",)
+        cached = self._get_can_cache(cache_key)
+        if isinstance(cached, np.ndarray):
+            return np.asarray(cached, dtype=bool).copy()
+
         # MAIN_ACTIONS = [wait, upgrade, research, recruit, buy_serf, dismiss_serf, assign_serf, demolish, bless, tax, alarm]
         n = len(MAIN_ACTIONS)
         mask = np.ones(n, dtype=bool)
+        can_upgrade_any = any(self._can_upgrade(b) for b in self.upgradeable_buildings)
+        has_university = (
+            self.buildings.get("Hochschule_1", 0) > 0
+            or self.buildings.get("Hochschule_2", 0) > 0
+        )
+        can_research_any = has_university and self._can_research_any()
+        can_recruit_any = any(self._can_recruit(s) for s in self.soldier_types)
+        can_demolish_any = any(self._can_demolish(b) for b in self.demolishable_buildings)
         for i, action_name in enumerate(MAIN_ACTIONS):
             if action_name == "wait":
                 mask[i] = True
             elif action_name == "upgrade":
-                mask[i] = any(self._can_upgrade(b) for b in self.upgradeable_buildings)
+                mask[i] = can_upgrade_any
             elif action_name == "research":
-                has_university = (self.buildings.get("Hochschule_1", 0) > 0 or
-                                 self.buildings.get("Hochschule_2", 0) > 0)
-                mask[i] = has_university and self._can_research_any()
+                mask[i] = can_research_any
             elif action_name == "recruit":
-                mask[i] = any(self._can_recruit(s) for s in self.soldier_types)
+                mask[i] = can_recruit_any
             elif action_name == "buy_serf":
                 mask[i] = self._can_buy_serf()
             elif action_name == "dismiss_serf":
@@ -7635,13 +7650,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             elif action_name == "assign_serf":
                 mask[i] = self._can_assign_serf_action(batch_size=1)
             elif action_name == "demolish":
-                mask[i] = any(self._can_demolish(b) for b in self.demolishable_buildings)
+                mask[i] = can_demolish_any
             elif action_name == "bless":
                 mask[i] = self._can_bless()
             elif action_name == "tax":
                 mask[i] = any(level != self.current_tax_level for level in TAX_LEVELS.keys())
             elif action_name == "alarm":
                 mask[i] = (self.alarm_active or (not self.alarm_active and self.alarm_cooldown <= 0))
+        self._set_can_cache(cache_key, mask.copy())
         return mask
 
     def _mask_buildings(self):
@@ -8009,61 +8025,73 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return False
 
     def _has_nonfree_source_for_batch(self, batch_size: int) -> bool:
+        cache_key = ("nonfree_source_batch", int(batch_size))
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return bool(cached)
         if batch_size <= 0:
-            return False
+            return self._set_can_cache(cache_key, False)
         if any(tree.get("serfs_assigned", 0) >= batch_size for tree in self.tree_list_internal):
-            return True
+            return self._set_can_cache(cache_key, True)
         for cat_idx in range(2, 6):
             for area in CATEGORY_AREA_MAP.get(cat_idx, []):
                 if self._can_recall_from_specific_area(area, batch_size):
-                    return True
+                    return self._set_can_cache(cache_key, True)
         if any(int(site.get("serfs_assigned", 0) or 0) >= batch_size for site in self.construction_sites):
-            return True
-        return False
+            return self._set_can_cache(cache_key, True)
+        return self._set_can_cache(cache_key, False)
 
     def _has_assign_target_for_batch(self, batch_size: int, available_free: int, allow_target_free: bool) -> bool:
         """Prueft, ob fuer die Menge mindestens ein sinnvolles Ziel existiert."""
+        cache_key = ("assign_target_batch", int(batch_size), int(available_free))
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return bool(cached)
         if batch_size <= 0:
-            return False
+            return self._set_can_cache(cache_key, False)
         # Frei als Ziel ist deaktiviert; Parameter bleibt nur aus API-Kompatibilitaet erhalten.
         _ = allow_target_free
         if any(
             self._can_assign_wood_tree_batch(i, batch_size, available_free_override=available_free)
             for i in range(len(self.tree_list_internal))
         ):
-            return True
+            return self._set_can_cache(cache_key, True)
         for cat_idx in range(2, 6):
             areas = CATEGORY_AREA_MAP.get(cat_idx, [])
             if any(
                 self._can_assign_serf_to_specific_area(area, batch_size, available_free_override=available_free)
                 for area in areas
             ):
-                return True
+                return self._set_can_cache(cache_key, True)
         if available_free > 0 and any(
             int(site.get("serfs_assigned", 0) or 0) < MAX_ACTIVE_BUILDERS_PER_SITE
             for site in self.construction_sites
         ):
-            return True
+            return self._set_can_cache(cache_key, True)
         if available_free > 0 and any(self._can_build(b) for b in self.buildable_buildings):
-            return True
-        return False
+            return self._set_can_cache(cache_key, True)
+        return self._set_can_cache(cache_key, False)
 
     def _can_assign_serf_action(self, batch_size: int = 1) -> bool:
+        cache_key = ("assign_serf_action", int(batch_size))
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return bool(cached)
         if batch_size <= 0:
-            return False
+            return self._set_can_cache(cache_key, False)
         if self.free_leibeigene >= batch_size and self._has_assign_target_for_batch(
             batch_size=batch_size,
             available_free=self.free_leibeigene,
             allow_target_free=False,
         ):
-            return True
+            return self._set_can_cache(cache_key, True)
         if self._has_nonfree_source_for_batch(batch_size) and self._has_assign_target_for_batch(
             batch_size=batch_size,
             available_free=max(self.free_leibeigene, batch_size),
             allow_target_free=False,
         ):
-            return True
-        return False
+            return self._set_can_cache(cache_key, True)
+        return self._set_can_cache(cache_key, False)
 
     def _can_recall_from_specific_area(self, area: SerfArea, batch_size: int) -> bool:
         if batch_size <= 0:

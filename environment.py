@@ -1433,6 +1433,11 @@ soldiers_db = {
                     "population_cost": 1, "train_time": 10, "upgrade_to": None},
 }
 
+# Minimalkosten an Talern über alle Soldaten-Typen (für schnellen Recruit-Guard in Masking)
+_MIN_SOLDIER_TALER_COST = min(
+    (info.get("cost", {}).get(RESOURCE_TALER, 0) for info in soldiers_db.values()),
+    default=50,
+)
 
 # =============================================================================
 # SPIELKONSTANTEN
@@ -7039,6 +7044,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             tgt_cat = self._to_int_choice(selections.get(ActionPhase.TARGET_CATEGORY, 0), 0)
             tgt_spec = self._to_int_choice(selections.get(ActionPhase.TARGET_SPECIFIC, 0), 0)
             quantity = [1, 2, 3, 5, 10, 20][min(qty_idx, 5)]
+            self._serf_areas_dirty = True  # Serf-Zuweisung ändert Areas
             if src_cat == 0:
                 free_before = int(self.free_leibeigene)
                 reward = float(self._assign_serfs_to_selection(tgt_cat, tgt_spec, quantity, selections))
@@ -7672,7 +7678,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             or self.buildings.get("Hochschule_2", 0) > 0
         )
         can_research_any = has_university and self._can_research_any()
-        can_recruit_any = any(self._can_recruit(s) for s in self.soldier_types)
+        # Fast-reject: alle Soldaten kosten Taler - wenn nicht genug, keine Iteration nötig
+        can_recruit_any = (
+            self.resources.get(RESOURCE_TALER, 0) >= _MIN_SOLDIER_TALER_COST
+            and any(self._can_recruit(s) for s in self.soldier_types)
+        )
         can_demolish_any = any(self._can_demolish(b) for b in self.demolishable_buildings)
         for i, action_name in enumerate(MAIN_ACTIONS):
             if action_name == "wait":
@@ -9147,8 +9157,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         for i in reversed(completed):
             self.recruit_queue.pop(i)
 
-        # Serf-Areas aus echten Serf-Objekten rekonstruieren
-        self._recount_serf_areas()
+        # Serf-Areas rekonstruieren — nur wenn Serfs aktiv waren (Events) oder unbedingt nötig
+        if getattr(self.production_system, "last_serf_events", None) or getattr(self, "_serf_areas_dirty", True):
+            self._recount_serf_areas()
+            self._serf_areas_dirty = False
 
     def _get_nearest_worker_spawn_position(self, pos_x, pos_y):
         """Gibt die Position des naechsten Dorfzentrums zurueck (HQ ausgeschlossen)."""

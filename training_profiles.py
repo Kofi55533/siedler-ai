@@ -26,13 +26,9 @@ TRAIN_PROFILES = {
             # Legacy bekommt explizites Serf-Economy-Shaping:
             # Kaufen bleibt growth-basiert.
             "action_buy_serf_growth_bonus": 1.0,
-            # Anti-Idle Shaping:
-            # kleiner laufender Malus fuer long-idle Serfs + positive Recovery/Clear-Events.
-            "step_unassigned_serf_penalty": 0.25,
+            # Serf-Malus: wenn ein Leibeigener >2 Steps idle/unassigned bleibt.
+            "step_unassigned_serf_penalty": 1.0,
             "step_unassigned_serf_threshold_steps": 2.0,
-            "step_unassigned_serf_recovery_bonus": 0.25,
-            "step_unassigned_serf_clear_bonus": 1.0,
-            "step_unassigned_serf_clear_once_per_episode": 1.0,
             # Wie dense_v2: +1 je neuem Taxable-Worker-Highscore.
             "step_worker_growth_bonus": 1.0,
         },

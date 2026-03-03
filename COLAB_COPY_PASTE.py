@@ -395,6 +395,9 @@ SOURCE_MODE = "git"
 TRAIN_MODE = "fast_train"
 # Reward-/Trainingsprofil (z. B. legacy, sparse, dense_v2, balanced, aggressive)
 TRAIN_PROFILE = "legacy"
+# Fester Parallelisierungsgrad fuer Training (kein FPS-Benchmark mehr).
+# Auf High-End Colab GPUs ist 10 ein guter Startwert.
+FIXED_NUM_ENVS = 10
 # Ziel-Timesteps fuer diesen Run
 TRAIN_TOTAL_TIMESTEPS = 500_000
 # Nach dem Training automatisch Modellverhalten analysieren.
@@ -640,8 +643,7 @@ if TRAIN_MODE == "fast_train":
     os.environ.setdefault("SIEDLER_USE_SPATIAL", "0")
     os.environ.setdefault("SIEDLER_RUNTIME_STATUS", "0")
     os.environ.setdefault("SIEDLER_SB3_VERBOSE", "1")
-    # Max-FPS-Default: n_envs automatisch auf dieser Runtime benchmarken.
-    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "1")
+    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")
     os.environ.setdefault("SIEDLER_PROGRESS_BAR", "0")
     os.environ.setdefault("SIEDLER_TENSORBOARD", "0")
     os.environ.setdefault("SIEDLER_TRAIN_PROFILE", TRAIN_PROFILE)
@@ -669,13 +671,16 @@ os.environ.setdefault("SIEDLER_RUN_EVAL", "0")
 os.environ.setdefault("SIEDLER_RUN_EXPORT", "0")
 os.environ.setdefault("SIEDLER_EVAL_RENDER", "0")
 
-# Auto n_envs Benchmark aktivieren (keine feste Env-Zahl erzwingen).
-os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "1"
-os.environ.pop("SIEDLER_NUM_ENVS", None)
+# Kein FPS-Benchmark: feste n_envs-Konfiguration.
+cpu_cap = max(1, (os.cpu_count() or 1) - 1)
+effective_n_envs = max(1, min(int(FIXED_NUM_ENVS), cpu_cap))
+os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "0"
+os.environ["SIEDLER_NUM_ENVS"] = str(effective_n_envs)
 os.environ["SIEDLER_SPATIAL_SIZE"] = "96"
 train_overrides = build_train_overrides()
 print(f"Simulation mode: {TRAIN_MODE}")
 print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")
+print(f"Fixed n_envs: {effective_n_envs} (cpu_cap={cpu_cap})")
 print(f"Total timesteps: {int(train_overrides.get('total_timesteps', 0))}")
 print(f"Post analysis enabled: {int(bool(RUN_POST_ANALYSIS))} (episodes={POST_ANALYSIS_EPISODES})")
 print(f"Resume enabled: {os.environ.get('SIEDLER_RESUME')}")
@@ -685,11 +690,7 @@ print(
     f"export={os.environ.get('SIEDLER_RUN_EXPORT')}"
 )
 
-# 7b) AUTO GPU PRESET (setzt n_envs/spatial_size passend zur Runtime)
-# Wenn SIEDLER_NUM_ENVS/SIEDLER_SPATIAL_SIZE bereits gesetzt sind, bleiben diese Werte erhalten.
-apply_auto_gpu_overrides()
-
-# Auto-Flags behalten, damit auto_select_fastest_n_envs() den Benchmark ausfuehrt.
+# 7b) Keine Auto-Benchmark-/Auto-GPU-Ueberschreibung aktiv.
 
 # Optionale manuelle Overrides (nur falls du bewusst testen willst):
 # os.environ["SIEDLER_NUM_ENVS"] = "3"
@@ -707,13 +708,7 @@ os.environ.setdefault("SIEDLER_STATUS_BAR_WIDTH", "24")
 print(f"Model checkpoints/final model will be saved to: {SAVE_DIR}")
 print(f"Code source mode: {SOURCE_MODE}")
 
-# 8) AUTO-SELECT FASTEST STABLE N_ENVS
-selected_n_envs, manual_override = auto_select_fastest_n_envs()
-print(f"Effective SIEDLER_NUM_ENVS={selected_n_envs}")
-
-# 9) START TRAINING (with guarded fallback)
-fallback_chain = [selected_n_envs] if manual_override else build_fallback_n_envs(selected_n_envs)
-last_error = None
+# 8) START TRAINING (fixed n_envs, no FPS benchmark/fallback loop)
 train_overrides_json = json.dumps(train_overrides)
 train_entry_code = (
     "import json, os\n"
@@ -723,21 +718,16 @@ train_entry_code = (
     "save_dir = os.environ.get('SIEDLER_SAVE_DIR', './siedler_training')\n"
     "ct.train(config=cfg, save_path=save_dir, profile_name=profile)\n"
 )
-for idx, n_envs in enumerate(fallback_chain):
-    os.environ["SIEDLER_NUM_ENVS"] = str(n_envs)
-    print(f"Training attempt {idx + 1}/{len(fallback_chain)} with SIEDLER_NUM_ENVS={n_envs}")
-    try:
-        run(
-            [sys.executable, "-u", "-c", train_entry_code],
-            env={"SIEDLER_TRAIN_OVERRIDES_JSON": train_overrides_json},
-        )
-        last_error = None
-        break
-    except subprocess.CalledProcessError as exc:
-        last_error = exc
-        if idx == len(fallback_chain) - 1:
-            raise
-        print(f"Training crashed for n_envs={n_envs}; retrying with fewer envs...")
+last_error = None
+print(f"Training with fixed SIEDLER_NUM_ENVS={os.environ.get('SIEDLER_NUM_ENVS')}")
+try:
+    run(
+        [sys.executable, "-u", "-c", train_entry_code],
+        env={"SIEDLER_TRAIN_OVERRIDES_JSON": train_overrides_json},
+    )
+except subprocess.CalledProcessError as exc:
+    last_error = exc
+    raise
 
 if last_error is None:
     print("Training finished successfully.")

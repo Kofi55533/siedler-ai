@@ -7558,27 +7558,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         cache = self._get_flow_feasibility_cache()
 
         if self.current_phase == ActionPhase.MAIN:
-            for idx in np.flatnonzero(mask):
-                idx = int(idx)
-                if idx < 0 or idx >= len(MAIN_ACTIONS):
-                    continue
-                flow_name = MAIN_ACTIONS[idx]
-                if flow_name in {"wait", "research", "recruit", "buy_serf", "dismiss_serf", "bless", "tax", "alarm"}:
-                    # Fuer diese Flows garantiert die lokale MAIN-Maske bereits mindestens einen gueltigen Completion-Pfad.
-                    filtered[idx] = True
-                    continue
-                flow_phases = ACTION_FLOWS.get(flow_name, [])
-                selections = {ActionPhase.MAIN: idx}
-                if len(flow_phases) <= 1:
-                    filtered[idx] = self._is_complete_flow_selection_feasible(flow_name, selections)
-                else:
-                    filtered[idx] = self._has_feasible_flow_completion(
-                        flow_name=flow_name,
-                        phase_idx=1,
-                        selections=selections,
-                        cache=cache,
-                    )
-            return filtered
+            # Die MAIN-Maske ist bereits ueber spezifische _can_* Checks vollstaendig
+            # zukunftsfeasible; rekursive Nachpruefung waere redundant.
+            return mask
 
         flow_name = self.current_flow
         flow_phases = ACTION_FLOWS.get(flow_name, []) if flow_name else []
@@ -7611,8 +7593,27 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _get_local_action_mask(self) -> np.ndarray:
         """Dynamische Maske fuer die aktuelle Phase mit kompletter Zukunfts-Pruefung."""
+        pending_serialized: Tuple[Tuple[str, int], ...] = tuple(
+            sorted(
+                (str(getattr(key, "value", key)), self._to_int_choice(value, 0))
+                for key, value in dict(self.pending_selections).items()
+            )
+        )
+        cache_key = (
+            "local_action_mask",
+            str(getattr(self.current_phase, "value", self.current_phase)),
+            str(self.current_flow) if self.current_flow is not None else "",
+            int(self.flow_step),
+            pending_serialized,
+        )
+        cached = self._get_can_cache(cache_key)
+        if isinstance(cached, np.ndarray):
+            return np.asarray(cached, dtype=bool).copy()
+
         raw_mask = self._get_local_action_mask_raw()
-        return self._filter_mask_by_future_feasibility(raw_mask)
+        filtered = self._filter_mask_by_future_feasibility(raw_mask)
+        self._set_can_cache(cache_key, np.asarray(filtered, dtype=bool).copy())
+        return filtered
 
     def _pad_action_mask(self, mask: np.ndarray) -> np.ndarray:
         """Pad/clip mask to fixed action_space size."""

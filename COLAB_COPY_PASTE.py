@@ -637,27 +637,28 @@ os.environ["SIEDLER_REQUIRE_DRIVE"] = "1"
 os.environ["SIEDLER_SIM_MODE"] = TRAIN_MODE
 
 if TRAIN_MODE == "fast_train":
-    os.environ.setdefault("SIEDLER_FAST_TRAIN", "1")
-    os.environ.setdefault("SIEDLER_TURBO_FPS", "1")
-    os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "1")
-    os.environ.setdefault("SIEDLER_USE_SPATIAL", "0")
-    os.environ.setdefault("SIEDLER_RUNTIME_STATUS", "0")
-    os.environ.setdefault("SIEDLER_SB3_VERBOSE", "1")
-    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")
-    os.environ.setdefault("SIEDLER_PROGRESS_BAR", "0")
-    os.environ.setdefault("SIEDLER_TENSORBOARD", "0")
-    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", TRAIN_PROFILE)
+    # Hart setzen, damit alte Notebook-Env-Werte nie unbemerkt fast_train ausbremsen.
+    os.environ["SIEDLER_FAST_TRAIN"] = "1"
+    os.environ["SIEDLER_TURBO_FPS"] = "1"
+    os.environ["SIEDLER_DISABLE_RUNTIME_PATHING"] = "1"
+    os.environ["SIEDLER_USE_SPATIAL"] = "0"
+    os.environ["SIEDLER_RUNTIME_STATUS"] = "0"
+    os.environ["SIEDLER_SB3_VERBOSE"] = "1"
+    os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "0"
+    os.environ["SIEDLER_PROGRESS_BAR"] = "0"
+    os.environ["SIEDLER_TENSORBOARD"] = "0"
+    os.environ["SIEDLER_TRAIN_PROFILE"] = TRAIN_PROFILE
 else:
-    os.environ.setdefault("SIEDLER_FAST_TRAIN", "0")
-    os.environ.setdefault("SIEDLER_TURBO_FPS", "0")
-    os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "0")
-    os.environ.setdefault("SIEDLER_USE_SPATIAL", "1")
-    os.environ.setdefault("SIEDLER_RUNTIME_STATUS", "0")
-    os.environ.setdefault("SIEDLER_SB3_VERBOSE", "1")
-    os.environ.setdefault("SIEDLER_BENCHMARK_AUTO_ENVS", "0")
-    os.environ.setdefault("SIEDLER_PROGRESS_BAR", "1")
-    os.environ.setdefault("SIEDLER_TENSORBOARD", "1")
-    os.environ.setdefault("SIEDLER_TRAIN_PROFILE", TRAIN_PROFILE)
+    os.environ["SIEDLER_FAST_TRAIN"] = "0"
+    os.environ["SIEDLER_TURBO_FPS"] = "0"
+    os.environ["SIEDLER_DISABLE_RUNTIME_PATHING"] = "0"
+    os.environ["SIEDLER_USE_SPATIAL"] = "1"
+    os.environ["SIEDLER_RUNTIME_STATUS"] = "0"
+    os.environ["SIEDLER_SB3_VERBOSE"] = "1"
+    os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "0"
+    os.environ["SIEDLER_PROGRESS_BAR"] = "1"
+    os.environ["SIEDLER_TENSORBOARD"] = "1"
+    os.environ["SIEDLER_TRAIN_PROFILE"] = TRAIN_PROFILE
 
 # Fuer diese One-Cell immer explizit setzen (ueberschreibt eventuell alte Notebook-Env-Werte).
 os.environ["SIEDLER_TRAIN_PROFILE"] = TRAIN_PROFILE
@@ -665,11 +666,11 @@ os.environ["SIEDLER_TRAIN_PROFILE"] = TRAIN_PROFILE
 # Robustheit fuer Colab-Disconnects + klarer Fresh-Start.
 # Immer neu trainieren (kein Resume von alten Checkpoints).
 os.environ["SIEDLER_RESUME"] = "0"
-os.environ.setdefault("SIEDLER_CLEAN_CHECKPOINTS_ON_FRESH", "1")
+os.environ["SIEDLER_CLEAN_CHECKPOINTS_ON_FRESH"] = "1"
 os.environ.pop("SIEDLER_RESUME_PATH", None)
-os.environ.setdefault("SIEDLER_RUN_EVAL", "0")
-os.environ.setdefault("SIEDLER_RUN_EXPORT", "0")
-os.environ.setdefault("SIEDLER_EVAL_RENDER", "0")
+os.environ["SIEDLER_RUN_EVAL"] = "0"
+os.environ["SIEDLER_RUN_EXPORT"] = "0"
+os.environ["SIEDLER_EVAL_RENDER"] = "0"
 
 # Kein FPS-Benchmark: feste n_envs-Konfiguration.
 cpu_cap = max(1, (os.cpu_count() or 1) - 1)
@@ -681,6 +682,13 @@ train_overrides = build_train_overrides()
 print(f"Simulation mode: {TRAIN_MODE}")
 print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")
 print(f"Fixed n_envs: {effective_n_envs} (cpu_cap={cpu_cap})")
+print(
+    "Effective fast flags: "
+    f"FAST={os.environ.get('SIEDLER_FAST_TRAIN')} "
+    f"SPATIAL={os.environ.get('SIEDLER_USE_SPATIAL')} "
+    f"PATHING_OFF={os.environ.get('SIEDLER_DISABLE_RUNTIME_PATHING')} "
+    f"TURBO={os.environ.get('SIEDLER_TURBO_FPS')}"
+)
 print(f"Total timesteps: {int(train_overrides.get('total_timesteps', 0))}")
 print(f"Post analysis enabled: {int(bool(RUN_POST_ANALYSIS))} (episodes={POST_ANALYSIS_EPISODES})")
 print(f"Resume enabled: {os.environ.get('SIEDLER_RESUME')}")

@@ -378,6 +378,36 @@ REFINED_TO_RAW = {
 }
 RAW_TO_REFINED = {raw: refined for refined, raw in REFINED_TO_RAW.items()}
 
+# Statische Mappings fuer _get_production_rate() – einmal definiert, nie neu erstellt
+# (ResourceType bereits importiert, RESOURCE_* Strings oben definiert)
+def _build_resource_type_map():
+    try:
+        return {
+            RESOURCE_HOLZ: ResourceType.WOOD,
+            RESOURCE_STEIN: ResourceType.STONE,
+            RESOURCE_LEHM: ResourceType.CLAY,
+            RESOURCE_EISEN: ResourceType.IRON,
+            RESOURCE_SCHWEFEL: ResourceType.SULFUR,
+            RESOURCE_TALER: ResourceType.GOLD,
+            RESOURCE_HOLZ_ROH: ResourceType.WOOD_RAW,
+            RESOURCE_STEIN_ROH: ResourceType.STONE_RAW,
+            RESOURCE_LEHM_ROH: ResourceType.CLAY_RAW,
+            RESOURCE_EISEN_ROH: ResourceType.IRON_RAW,
+            RESOURCE_SCHWEFEL_ROH: ResourceType.SULFUR_RAW,
+            RESOURCE_GOLD_ROH: ResourceType.GOLD_RAW,
+        }
+    except AttributeError:
+        return {}
+_RESOURCE_TYPE_MAP = _build_resource_type_map()
+_RESOURCE_KEY_MAP = {
+    RESOURCE_HOLZ: "wood",
+    RESOURCE_STEIN: "stone",
+    RESOURCE_LEHM: "clay",
+    RESOURCE_EISEN: "iron",
+    RESOURCE_SCHWEFEL: "sulfur",
+    RESOURCE_TALER: "gold",
+}
+
 # Worker-Typ Normalisierung (XML/PU_Namen -> interne Namen)
 WORKER_TYPE_ALIASES = {
     "sawmillworker": "sawmill_worker",
@@ -2399,6 +2429,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.upgrade_queue = []
         self.upgrading_positions = set()
         self.current_researches = []
+        self.researching_set: set = set()  # Maintained set fuer O(1) Lookup in _get_observation
         self.recruit_queue = []
 
         # NEU: Realistisches Bau-System mit Leibeigenen-Zuweisung
@@ -2932,10 +2963,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             for b in self.upgradeable_buildings:
                 obs.append(self.buildings.get(b, 0) / 5.0)
 
-            researching_set = {cr[0] for cr in self.current_researches} if self.current_researches else set()
             for t in self.tech_list:
                 obs.append(1.0 if t in self.researched_techs else 0.0)
-                obs.append(1.0 if t in researching_set else 0.0)
+                obs.append(1.0 if t in self.researching_set else 0.0)
 
             for s in self.soldier_types:
                 obs.append(self.soldiers.get(s, 0) / 50.0)
@@ -3061,21 +3091,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if not hasattr(self, "production_system"):
             return 0.0
 
-        resource_type_map = {
-            RESOURCE_HOLZ: ResourceType.WOOD,
-            RESOURCE_STEIN: ResourceType.STONE,
-            RESOURCE_LEHM: ResourceType.CLAY,
-            RESOURCE_EISEN: ResourceType.IRON,
-            RESOURCE_SCHWEFEL: ResourceType.SULFUR,
-            RESOURCE_TALER: ResourceType.GOLD,
-            RESOURCE_HOLZ_ROH: ResourceType.WOOD_RAW,
-            RESOURCE_STEIN_ROH: ResourceType.STONE_RAW,
-            RESOURCE_LEHM_ROH: ResourceType.CLAY_RAW,
-            RESOURCE_EISEN_ROH: ResourceType.IRON_RAW,
-            RESOURCE_SCHWEFEL_ROH: ResourceType.SULFUR_RAW,
-            RESOURCE_GOLD_ROH: ResourceType.GOLD_RAW,
-        }
-        res_type = resource_type_map.get(resource)
+        res_type = _RESOURCE_TYPE_MAP.get(resource)
         if not res_type:
             return 0.0
 
@@ -3084,15 +3100,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         rate = rates.get(res_type, 0.0)
 
         # Output-Bonus nur auf veredelte Ressourcen anwenden
-        resource_key_map = {
-            RESOURCE_HOLZ: "wood",
-            RESOURCE_STEIN: "stone",
-            RESOURCE_LEHM: "clay",
-            RESOURCE_EISEN: "iron",
-            RESOURCE_SCHWEFEL: "sulfur",
-            RESOURCE_TALER: "gold",
-        }
-        resource_key = resource_key_map.get(resource)
+        resource_key = _RESOURCE_KEY_MAP.get(resource)
         if resource_key:
             bonus_pct = self._get_resource_output_bonus_pct(resource_key)
             rate *= (1.0 + (bonus_pct / 100.0))
@@ -7705,12 +7713,18 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return mask
 
     def _get_building_instance_keys(self, building: str) -> List[str]:
-        """Gibt alle Instanz-Keys fuer ein Gebaeude in stabiler Reihenfolge."""
-        return [
+        """Gibt alle Instanz-Keys fuer ein Gebaeude in stabiler Reihenfolge (mit Caching)."""
+        cache_key = ("building_keys", building, frozenset(self.upgrading_positions))
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return cached
+        result = [
             key
             for key in self.building_position_map.keys()
             if key.startswith(building) and key not in self.upgrading_positions
         ]
+        self._set_can_cache(cache_key, result)
+        return result
 
     def _get_position_phase_building(self, building_idx: int) -> Optional[str]:
         """Loest Building-Index fuer Positionsphasen (upgrade/demolish/build) auf."""
@@ -8494,6 +8508,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._spend_costs(tech_info["cost"])
 
         self.current_researches.append((tech, tech_info["research_time"]))
+        self.researching_set.add(tech)
 
         # MINIMALER REWARD: Agent soll selbst die optimale Strategie finden
         return 0.0
@@ -9095,6 +9110,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 remaining -= TIME_STEP * scholar_efficiency
                 if remaining <= 0:
                     self.researched_techs.add(tech)
+                    self.researching_set.discard(tech)
                     completed_any = True
                 else:
                     updated.append((tech, remaining))

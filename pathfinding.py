@@ -195,6 +195,10 @@ class WalkableGrid:
         # Baum-Tracking
         self.tree_positions: Dict[int, GridPosition] = {}
         self.next_tree_id = 1
+        # KDTree fuer O(log n) nearest-tree Suche (lazy rebuild bei Aenderungen)
+        self._tree_kd_tree = None  # scipy.spatial.KDTree oder None
+        self._tree_kd_ids: List[int] = []  # Mapping KDTree-Index -> tree_id
+        self._tree_kd_dirty = True
 
         # Cache fÃ¼r Pfade (optional)
         self.path_cache: Dict[Tuple[GridPosition, GridPosition], PathResult] = {}
@@ -289,14 +293,15 @@ class WalkableGrid:
         # Grid-Position (Zentrum)
         center = GridPosition.from_world(world_x, world_y)
 
-        # Blockiere alle Zellen im Bereich
+        # Blockiere alle Zellen im Bereich (Numpy-Slicing statt nested Python-Loops)
         half_x = size_x // 2
         half_y = size_y // 2
-        for dy in range(-half_y, half_y + 1):
-            for dx in range(-half_x, half_x + 1):
-                gx, gy = center.x + dx, center.y + dy
-                if 0 <= gx < self.width and 0 <= gy < self.height:
-                    self.buildings[gy, gx] = 1
+        y1 = max(0, center.y - half_y)
+        y2 = min(self.height, center.y + half_y + 1)
+        x1 = max(0, center.x - half_x)
+        x2 = min(self.width, center.x + half_x + 1)
+        if y1 < y2 and x1 < x2:
+            self.buildings[y1:y2, x1:x2] = 1
 
         # Tracking
         building_id = self.next_building_id
@@ -319,11 +324,12 @@ class WalkableGrid:
 
         half_x = size_x // 2
         half_y = size_y // 2
-        for dy in range(-half_y, half_y + 1):
-            for dx in range(-half_x, half_x + 1):
-                gx, gy = center.x + dx, center.y + dy
-                if 0 <= gx < self.width and 0 <= gy < self.height:
-                    self.buildings[gy, gx] = 0
+        y1 = max(0, center.y - half_y)
+        y2 = min(self.height, center.y + half_y + 1)
+        x1 = max(0, center.x - half_x)
+        x2 = min(self.width, center.x + half_x + 1)
+        if y1 < y2 and x1 < x2:
+            self.buildings[y1:y2, x1:x2] = 0
 
         del self.building_positions[building_id]
         self.cache_valid = False
@@ -344,6 +350,7 @@ class WalkableGrid:
         tree_id = self.next_tree_id
         self.next_tree_id += 1
         self.tree_positions[tree_id] = pos
+        self._tree_kd_dirty = True
 
         self.cache_valid = False
         self.revision += 1
@@ -368,25 +375,52 @@ class WalkableGrid:
             self.trees[pos.y, pos.x] = 0
 
         del self.tree_positions[tree_id]
+        self._tree_kd_dirty = True
         self.cache_valid = False
         self.revision += 1
 
+    def _rebuild_tree_kd(self):
+        """Baut KDTree aus aktuellen Baum-Positionen neu (lazy, nur bei Bedarf)."""
+        if not self.tree_positions:
+            self._tree_kd_tree = None
+            self._tree_kd_ids = []
+            self._tree_kd_dirty = False
+            return
+        try:
+            from scipy.spatial import KDTree
+            ids = list(self.tree_positions.keys())
+            coords = np.array([(self.tree_positions[i].x, self.tree_positions[i].y) for i in ids], dtype=np.float32)
+            self._tree_kd_tree = KDTree(coords)
+            self._tree_kd_ids = ids
+        except ImportError:
+            self._tree_kd_tree = None
+        self._tree_kd_dirty = False
+
     def get_nearest_tree(self, world_x: float, world_y: float) -> Optional[Tuple[int, float]]:
-        """Findet den nÃ¤chsten Baum zu einer Position."""
+        """Findet den naechsten Baum zu einer Position (O(log n) via KDTree)."""
         if not self.tree_positions:
             return None
 
         start = GridPosition.from_world(world_x, world_y)
 
+        # KDTree-Pfad: O(log n) statt O(n) lineare Suche
+        if self._tree_kd_dirty:
+            self._rebuild_tree_kd()
+
+        if self._tree_kd_tree is not None:
+            dist, idx = self._tree_kd_tree.query([start.x, start.y])
+            nearest_id = self._tree_kd_ids[int(idx)]
+            world_dist = float(dist) * ((SCALE_X + SCALE_Y) / 2)
+            return (nearest_id, world_dist)
+
+        # Fallback: lineare Suche (wenn scipy nicht verfuegbar)
         min_dist = float('inf')
         nearest_id = None
-
         for tree_id, pos in self.tree_positions.items():
-            dist = abs(pos.x - start.x) + abs(pos.y - start.y)  # Manhattan
+            dist = abs(pos.x - start.x) + abs(pos.y - start.y)
             if dist < min_dist:
                 min_dist = dist
                 nearest_id = tree_id
-
         if nearest_id is not None:
             world_dist = min_dist * ((SCALE_X + SCALE_Y) / 2)
             return (nearest_id, world_dist)
@@ -413,25 +447,26 @@ class WalkableGrid:
         half_x = size_x // 2
         half_y = size_y // 2
 
-        for dy in range(-half_y, half_y + 1):
-            for dx in range(-half_x, half_x + 1):
-                gx, gy = center.x + dx, center.y + dy
+        # Pruefe ob Bereich innerhalb der Karte liegt
+        if (center.x - half_x < 0 or center.x + half_x >= self.width or
+                center.y - half_y < 0 or center.y + half_y >= self.height):
+            return False
 
-                # AuÃŸerhalb der Karte?
-                if not (0 <= gx < self.width and 0 <= gy < self.height):
-                    return False
+        # Numpy-Slicing statt nested Python-Loops
+        y1 = center.y - half_y
+        y2 = center.y + half_y + 1
+        x1 = center.x - half_x
+        x2 = center.x + half_x + 1
+        region_terrain = self.terrain_base[y1:y2, x1:x2]
+        region_buildings = self.buildings[y1:y2, x1:x2]
+        region_trees = self.trees[y1:y2, x1:x2]
 
-                # Terrain nicht begehbar?
-                if self.terrain_base[gy, gx] == 0:
-                    return False
-
-                # GebÃ¤ude im Weg?
-                if self.buildings[gy, gx] == 1:
-                    return False
-
-                # BÃ¤ume im Weg?
-                if self.trees[gy, gx] == 1:
-                    return False
+        if not np.all(region_terrain == 1):
+            return False
+        if np.any(region_buildings == 1):
+            return False
+        if np.any(region_trees == 1):
+            return False
 
         return True
 
@@ -517,6 +552,12 @@ class AStarPathfinder:
 
     def __init__(self, grid: WalkableGrid):
         self.grid = grid
+        # Pre-allocate A* arrays einmalig (verhindert ~2.2MB Allokation pro find_path()-Aufruf)
+        h, w = grid.height, grid.width
+        self._astar_inf = np.iinfo(np.int32).max
+        self._g_score = np.full((h, w), self._astar_inf, dtype=np.int32)
+        self._came_x = np.full((h, w), -1, dtype=np.int16)
+        self._came_y = np.full((h, w), -1, dtype=np.int16)
 
     def _heuristic(self, a: GridPosition, b: GridPosition) -> int:
         """Diagonale Distanz Heuristik (Octile distance)."""
@@ -565,10 +606,14 @@ class AStarPathfinder:
         gx, gy = goal.x, goal.y
 
         # A* Algorithmus (array-basiert, schneller)
-        inf = np.iinfo(np.int32).max
-        g_score = np.full((height, width), inf, dtype=np.int32)
-        came_x = np.full((height, width), -1, dtype=np.int16)
-        came_y = np.full((height, width), -1, dtype=np.int16)
+        # Verwende pre-allozierte Arrays und reset per fill() statt np.full()
+        inf = self._astar_inf
+        g_score = self._g_score
+        came_x = self._came_x
+        came_y = self._came_y
+        g_score.fill(inf)
+        came_x.fill(-1)
+        came_y.fill(-1)
 
         def heuristic_xy(x: int, y: int) -> int:
             dx = abs(x - gx)

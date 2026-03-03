@@ -732,19 +732,25 @@ class Worker:
 
     def _find_farm(self, farms: List[Farm]):
         """Findet naechsten Bauernhof in Worker-spezifischer CAMPER_RANGE."""
-        nearest = None
         camper_range = self._get_camper_range()
-        min_dist = camper_range
-        min_path_cost = float("inf")
         pathfinder = getattr(self, "_pathfinder", None)
 
+        # Schritt 1: Filter + Euclidean-Sort, nur Top-5 Kandidaten fuer A*
+        candidates = []
         for farm in farms:
             if not (farm.has_farmer and farm.has_space()):
                 continue
             dist = self.position.distance_to(farm.position)
-            if dist >= camper_range:
-                continue
+            if dist < camper_range:
+                candidates.append((dist, farm))
+        candidates.sort(key=lambda x: x[0])
+        candidates = candidates[:5]  # Nur Top-5 per Euclidean-Distanz an A* weitergeben
 
+        nearest = None
+        min_path_cost = float("inf")
+        min_dist = camper_range
+
+        for dist, farm in candidates:
             path_cost = dist
             if pathfinder:
                 try:
@@ -776,19 +782,25 @@ class Worker:
 
     def _find_residence(self, residences: List[Residence]):
         """Findet naechstes Wohnhaus in Worker-spezifischer CAMPER_RANGE."""
-        nearest = None
         camper_range = self._get_camper_range()
-        min_dist = camper_range
-        min_path_cost = float("inf")
         pathfinder = getattr(self, "_pathfinder", None)
 
+        # Schritt 1: Filter + Euclidean-Sort, nur Top-5 Kandidaten fuer A*
+        candidates = []
         for residence in residences:
             if not residence.has_space():
                 continue
             dist = self.position.distance_to(residence.position)
-            if dist >= camper_range:
-                continue
+            if dist < camper_range:
+                candidates.append((dist, residence))
+        candidates.sort(key=lambda x: x[0])
+        candidates = candidates[:5]  # Nur Top-5 per Euclidean-Distanz an A* weitergeben
 
+        nearest = None
+        min_path_cost = float("inf")
+        min_dist = camper_range
+
+        for dist, residence in candidates:
             path_cost = dist
             if pathfinder:
                 try:
@@ -1085,11 +1097,11 @@ class WorkforceManager:
 
     def get_working_workers(self) -> int:
         """Anzahl arbeitender Worker."""
-        return len([w for w in self.workers if w.is_working()])
+        return sum(1 for w in self.workers if w.state == WorkerState.WORKING)
 
     def get_exhausted_workers(self) -> int:
-        """Anzahl erschÃ¶pfter Worker."""
-        return len([w for w in self.workers if w.is_exhausted()])
+        """Anzahl erschoepfter Worker."""
+        return sum(1 for w in self.workers if w.work_time <= EXHAUSTED_THRESHOLD)
 
     def get_average_efficiency(self, worker_type: Optional[str] = None) -> float:
         """Durchschnittliche Effizienz aller Worker oder eines Typs."""
@@ -1149,31 +1161,61 @@ class WorkforceManager:
         return self.get_exhausted_workers() / len(self.workers)
 
     def get_stats(self) -> Dict[str, float]:
-        """Gibt alle wichtigen Statistiken zurÃ¼ck."""
-        # ZÃ¤hle Worker nach Zustand
-        eating_workers = len([w for w in self.workers if w.state == WorkerState.EATING])
-        resting_workers = len([w for w in self.workers if w.state == WorkerState.RESTING])
-        walking_workers = len([w for w in self.workers if w.state in [
-            WorkerState.WALKING_TO_FARM, WorkerState.WALKING_TO_RESIDENCE, WorkerState.WALKING_TO_CAMP
-        ]])
-        camping_workers = len([w for w in self.workers if w.state == WorkerState.CAMPING])
+        """Gibt alle wichtigen Statistiken zurueck (Single-Pass optimiert)."""
+        _WALKING_STATES = frozenset({
+            WorkerState.WALKING_TO_FARM,
+            WorkerState.WALKING_TO_RESIDENCE,
+            WorkerState.WALKING_TO_CAMP,
+        })
+        eating = resting = walking = camping = working = exhausted = 0
+        eff_sum = 0.0
+        wt_sum = 0.0
+        wt_count = 0
+        for w in self.workers:
+            s = w.state
+            if s == WorkerState.EATING:
+                eating += 1
+            elif s == WorkerState.RESTING:
+                resting += 1
+            elif s in _WALKING_STATES:
+                walking += 1
+            elif s == WorkerState.CAMPING:
+                camping += 1
+            elif s == WorkerState.WORKING:
+                working += 1
+            if w.work_time <= EXHAUSTED_THRESHOLD:
+                exhausted += 1
+            eff_sum += w.get_efficiency()
+            if w.has_worktime_system:
+                wt_sum += w.work_time
+                wt_count += 1
+
+        total = len(self.workers)
+        avg_eff = eff_sum / total if total else 1.0
+        avg_wt = wt_sum / wt_count if wt_count else 100.0
+        exhausted_ratio = exhausted / total if total else 0.0
+
+        farm_capacity = self.get_total_farm_capacity()
+        residence_capacity = self.get_total_residence_capacity()
+        farm_util = (eating / farm_capacity) if farm_capacity else 1.0
+        residence_util = self.get_current_workers() / residence_capacity if residence_capacity else 1.0
 
         return {
-            "total_workers": len(self.workers),
-            "working_workers": self.get_working_workers(),
-            "eating_workers": eating_workers,
-            "resting_workers": resting_workers,
-            "walking_workers": walking_workers,
-            "camping_workers": camping_workers,
-            "exhausted_workers": self.get_exhausted_workers(),
-            "exhausted_ratio": self.get_exhausted_ratio(),
-            "average_efficiency": self.get_average_efficiency(),
-            "avg_work_time": self.get_average_worktime(),  # Alias fÃ¼r environment.py
-            "average_worktime": self.get_average_worktime(),
-            "residence_capacity": self.get_total_residence_capacity(),
-            "residence_utilization": self.get_residence_utilization(),
-            "farm_capacity": self.get_total_farm_capacity(),
-            "farm_utilization": self.get_farm_utilization(),
+            "total_workers": total,
+            "working_workers": working,
+            "eating_workers": eating,
+            "resting_workers": resting,
+            "walking_workers": walking,
+            "camping_workers": camping,
+            "exhausted_workers": exhausted,
+            "exhausted_ratio": exhausted_ratio,
+            "average_efficiency": avg_eff,
+            "avg_work_time": avg_wt,
+            "average_worktime": avg_wt,
+            "residence_capacity": residence_capacity,
+            "residence_utilization": residence_util,
+            "farm_capacity": farm_capacity,
+            "farm_utilization": farm_util,
         }
 
 

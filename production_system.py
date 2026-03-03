@@ -21,6 +21,7 @@ SERFS:
 """
 
 import json
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, Callable
 from enum import Enum
@@ -647,16 +648,6 @@ class Serf:
         """Prüft ob Leibeigener untätig ist."""
         return self.state == SerfState.IDLE
 
-    # Legacy-Kompatibilität
-    def start_extraction(self, resource: ResourceType, position: Position):
-        """Legacy: Startet Extraktion sofort an Position."""
-        self.assign_to_resource(resource, position, position)
-        self.state = SerfState.EXTRACTING  # Sofort extrahieren
-
-    def stop_extraction(self):
-        """Legacy: Stoppt Extraktion."""
-        self.stop()
-
 
 @dataclass
 class ProductionSystem:
@@ -694,7 +685,7 @@ class ProductionSystem:
         Returns:
             Dict mit produzierten Ressourcen in diesem Tick
         """
-        produced = {r: 0.0 for r in ResourceType}
+        produced = defaultdict(float)
 
         # Worker-Effizienz holen
         efficiency = 1.0
@@ -705,6 +696,11 @@ class ProductionSystem:
             efficiency_by_type = self.workforce_manager.get_efficiency_by_type()
             speed_bonus = self.workforce_manager.speed_bonus
 
+        # Aktive Mine-Typen einmal vorberechnen (verhindert O(N*M) in _tick_refiners)
+        active_mine_types = frozenset(
+            m.resource_type for m in self.mines.values() if m.current_workers > 0
+        )
+
         # Minen produzieren
         mine_production = self._tick_mines(dt, efficiency, efficiency_by_type)
         for resource, amount in mine_production.items():
@@ -712,7 +708,7 @@ class ProductionSystem:
             self.resources[resource] += amount
 
         # Refiner produzieren
-        refiner_production = self._tick_refiners(dt, efficiency, efficiency_by_type, speed_bonus)
+        refiner_production = self._tick_refiners(dt, efficiency, efficiency_by_type, speed_bonus, active_mine_types)
         for resource, amount in refiner_production.items():
             produced[resource] += amount
             self.resources[resource] += amount
@@ -728,28 +724,30 @@ class ProductionSystem:
 
     def _tick_mines(self, dt: float, efficiency: float,
                     efficiency_by_type: Optional[Dict[str, float]] = None) -> Dict[ResourceType, float]:
-        """Tick für alle Minen."""
-        production = {}
+        """Tick fuer alle Minen."""
+        production: Dict[ResourceType, float] = defaultdict(float)
 
         for mine in self.mines.values():
             if mine.efficiency_override is not None:
                 eff = mine.efficiency_override
             else:
                 eff = efficiency if efficiency_by_type is None else efficiency_by_type.get(mine.worker_type, 0.0)
-            rate = mine.get_production_rate(eff)
-            amount = rate * dt
-
-            if mine.resource_type not in production:
-                production[mine.resource_type] = 0.0
-            production[mine.resource_type] += amount
+            production[mine.resource_type] += mine.get_production_rate(eff) * dt
 
         return production
 
     def _tick_refiners(self, dt: float, efficiency: float,
                        efficiency_by_type: Optional[Dict[str, float]] = None,
-                       speed_bonus: int = 0) -> Dict[ResourceType, float]:
-        """Tick für alle Refiner."""
-        production = {}
+                       speed_bonus: int = 0,
+                       active_mine_types: Optional[frozenset] = None) -> Dict[ResourceType, float]:
+        """Tick fuer alle Refiner."""
+        production: Dict[ResourceType, float] = defaultdict(float)
+
+        # Fallback: aktive Mine-Typen berechnen wenn nicht uebergeben
+        if active_mine_types is None:
+            active_mine_types = frozenset(
+                m.resource_type for m in self.mines.values() if m.current_workers > 0
+            )
 
         for refiner in self.refiners.values():
             if refiner.efficiency_override is not None:
@@ -764,21 +762,12 @@ class ProductionSystem:
             # zugehoerige Mine aktiv ist (mit Workern). Ohne aktive Mine produziert
             # der Refiner nichts - er "veredelt" ja das Minen-Output.
             if refiner.input_resource == refiner.resource_type:
-                # Pruefe ob eine Mine fuer diese Ressource aktiv ist
-                has_active_mine = any(
-                    m.resource_type == refiner.resource_type and m.current_workers > 0
-                    for m in self.mines.values()
-                )
-                if not has_active_mine:
+                # Nutze pre-computetes Set statt O(N) any()-Schleife
+                if refiner.resource_type not in active_mine_types:
                     continue  # Ohne aktive Mine kein Refiner-Output
 
                 # Zusatz-Produzent - kein Input-Verbrauch, aber nur mit aktiver Mine
-                output_rate = refiner.get_production_rate(eff, speed_bonus=speed_bonus)
-                amount = output_rate * dt
-
-                if refiner.resource_type not in production:
-                    production[refiner.resource_type] = 0.0
-                production[refiner.resource_type] += amount
+                production[refiner.resource_type] += refiner.get_production_rate(eff, speed_bonus=speed_bonus) * dt
             else:
                 # Verschiedene Input/Output Ressourcen - normaler Verbrauch
                 input_rate = refiner.get_input_consumption_rate(eff, speed_bonus=speed_bonus)
@@ -787,24 +776,14 @@ class ProductionSystem:
                 available = self.resources.get(refiner.input_resource, 0)
                 if available < input_needed:
                     # Nicht genug Input - proportional reduzieren
-                    if input_needed > 0:
-                        ratio = available / input_needed
-                    else:
-                        ratio = 0
+                    ratio = available / input_needed if input_needed > 0 else 0
                     input_needed = available
                 else:
                     ratio = 1.0
 
-                # Input verbrauchen
+                # Input verbrauchen und Output produzieren
                 self.resources[refiner.input_resource] -= input_needed
-
-                # Output produzieren
-                output_rate = refiner.get_production_rate(eff, speed_bonus=speed_bonus)
-                amount = output_rate * dt * ratio
-
-                if refiner.resource_type not in production:
-                    production[refiner.resource_type] = 0.0
-                production[refiner.resource_type] += amount
+                production[refiner.resource_type] += refiner.get_production_rate(eff, speed_bonus=speed_bonus) * dt * ratio
 
         return production
 

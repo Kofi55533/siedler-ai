@@ -155,10 +155,7 @@ PLAYER_1_MINE_BUILD_SLOTS = {
     "Lehmmine": PLAYER_1_SMALL_DEPOSITS["Lehm"],
     "Schwefelmine": PLAYER_1_SMALL_DEPOSITS["Schwefel"],
 }
-PLAYER_1_MINE_POSITIONS = PLAYER_1_MINE_BUILD_SLOTS
-PLAYER_1_MINE_SLOTS = PLAYER_1_MINE_BUILD_SLOTS  # Alias
-PLAYER_1_SHAFT_SLOTS = PLAYER_1_MINE_SHAFTS  # Alias
-PLAYER_1_DEPOSITS = PLAYER_1_SMALL_DEPOSITS  # Alias
+PLAYER_1_MINE_POSITIONS = PLAYER_1_MINE_BUILD_SLOTS  # Alias (genutzt von environment.py)
 MINES_PER_PLAYER = {
     "Steinmine": {"count": 1, "capacity": 4000},
     "Eisenmine": {"count": 2, "capacity": 8000},

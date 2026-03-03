@@ -1863,6 +1863,12 @@ DEFAULT_REWARD_PROFILE = {
     # Penalty per serf that stays unassigned (idle) for more than N consecutive steps.
     "step_unassigned_serf_penalty": 0.0,
     "step_unassigned_serf_threshold_steps": 2.0,
+    # Positive reward when the long-idle backlog is reduced (delta over-threshold count).
+    "step_unassigned_serf_recovery_bonus": 0.0,
+    # Positive event reward when long-idle backlog transitions from >0 to 0.
+    "step_unassigned_serf_clear_bonus": 0.0,
+    # 1.0 => clear bonus can trigger only once per episode (anti-exploit).
+    "step_unassigned_serf_clear_once_per_episode": 1.0,
     "step_potential_use_cumulative_earnings": 1.0,
     "step_potential_include_start_resources": 0.0,
     # Which Scharfschuetzen tier to use for step potential conversion (1=min-tier fallback, 2=T2).
@@ -1937,6 +1943,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._terminal_cumulative_schwefel_earned = 0.0
         self._best_total_leibeigene = 0
         self._serf_unassigned_steps: Dict[int, int] = {}
+        self._last_unassigned_serfs_over_threshold = 0
+        self._unassigned_clear_bonus_paid = False
         self._scharf_required_buildings, self._scharf_required_techs = self._get_scharf_requirements()
 
         # GebÃƒÆ’Ã‚Â¤ude-Listen fÃƒÆ’Ã‚Â¼r Actions
@@ -2663,6 +2671,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.serf_areas[SerfArea.FREE]["count"] = 0
         self._best_total_leibeigene = int(self.total_leibeigene)
         self._serf_unassigned_steps = {}
+        self._last_unassigned_serfs_over_threshold = 0
+        self._unassigned_clear_bonus_paid = False
         hq_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
         for i in range(self.total_leibeigene):
             serf = Serf(
@@ -6526,10 +6536,35 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             0,
             int(round(float(self.reward_profile.get("step_unassigned_serf_threshold_steps", 2.0)))),
         )
+        prev_unassigned_serfs_over_threshold = int(self._last_unassigned_serfs_over_threshold)
         unassigned_serfs_over_threshold = self._count_unassigned_serfs_over_threshold(idle_threshold_steps)
+        step_unassigned_serf_recovery = max(
+            0,
+            prev_unassigned_serfs_over_threshold - int(unassigned_serfs_over_threshold),
+        )
+        clear_once_per_episode = float(
+            self.reward_profile.get("step_unassigned_serf_clear_once_per_episode", 1.0)
+        ) > 0.0
+        clear_event_candidate = (
+            prev_unassigned_serfs_over_threshold > 0 and int(unassigned_serfs_over_threshold) == 0
+        )
+        step_unassigned_serf_clear_event = bool(
+            clear_event_candidate and (not clear_once_per_episode or (not self._unassigned_clear_bonus_paid))
+        )
+        if step_unassigned_serf_clear_event and clear_once_per_episode:
+            self._unassigned_clear_bonus_paid = True
         step_unassigned_serf_penalty = (
             float(unassigned_serfs_over_threshold)
             * abs(float(self.reward_profile.get("step_unassigned_serf_penalty", 0.0)))
+        )
+        step_unassigned_serf_recovery_reward = (
+            float(step_unassigned_serf_recovery)
+            * float(self.reward_profile.get("step_unassigned_serf_recovery_bonus", 0.0))
+        )
+        step_unassigned_serf_clear_reward = (
+            float(self.reward_profile.get("step_unassigned_serf_clear_bonus", 0.0))
+            if step_unassigned_serf_clear_event
+            else 0.0
         )
 
         step_reward = 0.0
@@ -6548,6 +6583,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             step_reward += float(self.reward_profile.get("step_unlock_recruitable_bonus", 0.0))
         step_reward -= abs(float(self.reward_profile.get("step_time_penalty", 0.0)))
         step_reward -= float(step_unassigned_serf_penalty)
+        step_reward += float(step_unassigned_serf_recovery_reward)
+        step_reward += float(step_unassigned_serf_clear_reward)
         reward += step_reward
 
         info["step_potential_source"] = (
@@ -6569,8 +6606,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         info["step_delta_construction"] = float(step_delta_construction)
         info["step_worker_growth"] = float(step_worker_growth)
         info["step_unassigned_serf_threshold_steps"] = int(idle_threshold_steps)
+        info["step_unassigned_serfs_over_threshold_prev"] = int(prev_unassigned_serfs_over_threshold)
         info["step_unassigned_serfs_over_threshold"] = int(unassigned_serfs_over_threshold)
         info["step_unassigned_serf_penalty"] = float(step_unassigned_serf_penalty)
+        info["step_unassigned_serf_recovery"] = int(step_unassigned_serf_recovery)
+        info["step_unassigned_serf_recovery_reward"] = float(step_unassigned_serf_recovery_reward)
+        info["step_unassigned_serf_clear_event"] = bool(step_unassigned_serf_clear_event)
+        info["step_unassigned_serf_clear_reward"] = float(step_unassigned_serf_clear_reward)
+        info["step_unassigned_serf_clear_bonus_paid"] = bool(self._unassigned_clear_bonus_paid)
         info["step_unlock_recruitable"] = bool(step_unlock_recruitable)
         info["step_reward"] = float(step_reward)
 
@@ -6583,6 +6626,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_scharf_construction_progress = construction_progress_now
         self._last_step_unlock_progress = step_unlock_progress_now
         self._last_scharf_recruitable = recruitable_now
+        self._last_unassigned_serfs_over_threshold = int(unassigned_serfs_over_threshold)
 
         terminated = self.current_time >= self.max_time
         if terminated:

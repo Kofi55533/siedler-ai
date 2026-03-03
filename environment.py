@@ -7236,12 +7236,62 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 serialized.append((phase.value, self._to_int_choice(selections.get(phase, 0), 0)))
         return tuple(serialized)
 
+    def _phase_feasibility_resolved_by_local_mask(
+        self,
+        flow_name: str,
+        phase: ActionPhase,
+        selections: Dict[ActionPhase, int],
+    ) -> bool:
+        """
+        True, wenn eine lokale Phasenmaske bereits garantiert, dass ein gueltiger
+        Choice zu einem vollstaendig ausfuehrbaren Flow fuehrt.
+        """
+        _ = selections
+        if flow_name == "wait":
+            return True
+        if flow_name == "research":
+            return phase in {ActionPhase.TECH_BUILDING, ActionPhase.TECH}
+        if flow_name == "recruit":
+            return phase in {ActionPhase.SOLDIER, ActionPhase.QUANTITY}
+        if flow_name == "buy_serf":
+            return phase == ActionPhase.QUANTITY
+        if flow_name == "dismiss_serf":
+            return phase == ActionPhase.QUANTITY
+        if flow_name == "assign_serf":
+            return phase in {
+                ActionPhase.QUANTITY,
+                ActionPhase.TARGET_CATEGORY,
+                ActionPhase.TARGET_SPECIFIC,
+                ActionPhase.POSITION_GROUP,
+                ActionPhase.POSITION_INDEX,
+            }
+        if flow_name in {"upgrade", "demolish"}:
+            return phase in {ActionPhase.BUILDING, ActionPhase.POSITION_GROUP, ActionPhase.POSITION_INDEX}
+        if flow_name == "bless":
+            return phase == ActionPhase.CATEGORY
+        if flow_name == "tax":
+            return phase == ActionPhase.TAX_LEVEL
+        if flow_name == "alarm":
+            return phase == ActionPhase.ON_OFF
+        return False
+
     def _get_phase_mask_for_feasibility(
         self,
         flow_name: str,
         phase: ActionPhase,
         selections: Dict[ActionPhase, int],
     ) -> np.ndarray:
+        cache = self._get_flow_feasibility_cache()
+        mask_cache_key = (
+            "phase_mask",
+            flow_name,
+            phase.value,
+            self._serialize_flow_selections(flow_name, selections),
+        )
+        cached_mask = cache.get(mask_cache_key)
+        if isinstance(cached_mask, np.ndarray):
+            return np.asarray(cached_mask, dtype=bool).reshape(-1).copy()
+
         old_phase = self.current_phase
         old_flow = self.current_flow
         old_step = self.flow_step
@@ -7253,7 +7303,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 key: self._to_int_choice(value, 0)
                 for key, value in dict(selections).items()
             }
-            return np.asarray(self._get_local_action_mask_raw(), dtype=bool).reshape(-1)
+            mask = np.asarray(self._get_local_action_mask_raw(), dtype=bool).reshape(-1)
+            cache[mask_cache_key] = mask.copy()
+            return mask
         finally:
             self.current_phase = old_phase
             self.current_flow = old_flow
@@ -7460,6 +7512,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         phase = flow_phases[phase_idx]
         mask = self._get_phase_mask_for_feasibility(flow_name, phase, selections)
+        if self._phase_feasibility_resolved_by_local_mask(flow_name, phase, selections):
+            feasible = bool(np.any(mask))
+            cache[cache_key] = bool(feasible)
+            return bool(feasible)
+
         feasible = False
         for choice in np.flatnonzero(mask):
             next_selections, next_phase_idx = self._advance_flow_prefix(
@@ -7512,6 +7569,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             key: self._to_int_choice(value, 0)
             for key, value in dict(self.pending_selections).items()
         }
+        if self._phase_feasibility_resolved_by_local_mask(flow_name, self.current_phase, selections):
+            return mask
 
         for idx in np.flatnonzero(mask):
             idx = int(idx)

@@ -3147,6 +3147,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         - MotivationThresholdLeave = 0.25 (verlÃƒÆ’Ã‚Â¤sst Settlement!)
         - MotivationAbsoluteMaxMotivation = 3.0
         """
+        cache_key = ("total_motivation",)
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return float(cached)
+
         motivation = self.base_motivation
 
         # Motivation aus GebÃƒÆ’Ã‚Â¤uden (z.B. Kloster, Schmuck)
@@ -3159,7 +3164,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Wird ÃƒÆ’Ã‚Â¼ber _get_blessed_worker_types() an WorkforceManager ÃƒÆ’Ã‚Â¼bergeben
 
         # Clamp auf gÃƒÆ’Ã‚Â¼ltige Werte
-        return max(0.25, min(3.0, motivation))
+        result = max(0.25, min(3.0, motivation))
+        self._set_can_cache(cache_key, float(result))
+        return float(result)
 
     def _get_blessed_worker_types(self) -> set:
         """Gibt die Menge aller aktuell gesegneten Worker-Typen zurÃƒÆ’Ã‚Â¼ck.
@@ -3695,15 +3702,20 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _can_demolish(self, building: str) -> bool:
         """PrÃƒÆ’Ã‚Â¼ft ob ein GebÃƒÆ’Ã‚Â¤ude abgerissen werden kann."""
+        cache_key = ("can_demolish", building)
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return bool(cached)
+
         # GebÃƒÆ’Ã‚Â¤ude muss existieren
         if self.buildings.get(building, 0) < 1:
-            return False
+            return self._set_can_cache(cache_key, False)
         if not self._get_building_instance_keys(building):
-            return False
+            return self._set_can_cache(cache_key, False)
         # HQ kann nicht abgerissen werden
         if "Hauptquartier" in building:
-            return False
-        return True
+            return self._set_can_cache(cache_key, False)
+        return self._set_can_cache(cache_key, True)
 
     def _can_bless(self, category: int = None) -> bool:
         """PrÃƒÆ’Ã‚Â¼ft ob Segnung mÃƒÆ’Ã‚Â¶glich ist.
@@ -4497,20 +4509,25 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
 
     def _can_upgrade(self, building):
+        cache_key = ("can_upgrade", building)
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return bool(cached)
+
         if self.buildings.get(building, 0) < 1:
-            return False
+            return self._set_can_cache(cache_key, False)
         if not self._get_building_instance_keys(building):
-            return False
+            return self._set_can_cache(cache_key, False)
 
         b_info = buildings_db.get(building)
         if not b_info or not b_info.get("upgrade_to"):
-            return False
+            return self._set_can_cache(cache_key, False)
 
         for resource, amount in b_info.get("upgrade_cost", {}).items():
             if self._get_total_resource(resource) < amount:
-                return False
+                return self._set_can_cache(cache_key, False)
 
-        return True
+        return self._set_can_cache(cache_key, True)
 
     def _can_research(self, tech):
         if getattr(self, "_research_check_cache_time", None) != self.current_time:
@@ -7662,20 +7679,29 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _mask_buildings(self):
         """Maske fuer Gebaeude-Auswahl (upgrade/demolish)."""
+        cache_key = ("mask_buildings", str(self.current_flow))
+        cached = self._get_can_cache(cache_key)
+        if isinstance(cached, np.ndarray):
+            return np.asarray(cached, dtype=bool).copy()
+
         size = self.action_spaces[ActionPhase.BUILDING].n
         if self.current_flow == "upgrade":
             mask = np.zeros(size, dtype=bool)
             for i, b in enumerate(self.upgradeable_buildings):
                 if i < size:
                     mask[i] = self._can_upgrade(b)
+            self._set_can_cache(cache_key, mask.copy())
             return mask
         elif self.current_flow == "demolish":
             mask = np.zeros(size, dtype=bool)
             for i, b in enumerate(self.demolishable_buildings):
                 if i < size:
                     mask[i] = self._can_demolish(b)
+            self._set_can_cache(cache_key, mask.copy())
             return mask
-        return np.ones(size, dtype=bool)
+        mask = np.ones(size, dtype=bool)
+        self._set_can_cache(cache_key, mask.copy())
+        return mask
 
     def _get_building_instance_keys(self, building: str) -> List[str]:
         """Gibt alle Instanz-Keys fuer ein Gebaeude in stabiler Reihenfolge."""
@@ -8041,6 +8067,21 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             return self._set_can_cache(cache_key, True)
         return self._set_can_cache(cache_key, False)
 
+    def _has_assignable_tree_for_batch(self, batch_size: int) -> bool:
+        cache_key = ("assignable_tree_batch", int(batch_size))
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return bool(cached)
+        if batch_size <= 0:
+            return self._set_can_cache(cache_key, False)
+        for tree in self.tree_list_internal:
+            if (
+                tree.get("resource_remaining", 0) > 0
+                and tree.get("serfs_assigned", 0) + batch_size <= MAX_SERFS_PER_TREE
+            ):
+                return self._set_can_cache(cache_key, True)
+        return self._set_can_cache(cache_key, False)
+
     def _has_assign_target_for_batch(self, batch_size: int, available_free: int, allow_target_free: bool) -> bool:
         """Prueft, ob fuer die Menge mindestens ein sinnvolles Ziel existiert."""
         cache_key = ("assign_target_batch", int(batch_size), int(available_free))
@@ -8051,10 +8092,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             return self._set_can_cache(cache_key, False)
         # Frei als Ziel ist deaktiviert; Parameter bleibt nur aus API-Kompatibilitaet erhalten.
         _ = allow_target_free
-        if any(
-            self._can_assign_wood_tree_batch(i, batch_size, available_free_override=available_free)
-            for i in range(len(self.tree_list_internal))
-        ):
+        if available_free >= batch_size and self._has_assignable_tree_for_batch(batch_size):
             return self._set_can_cache(cache_key, True)
         for cat_idx in range(2, 6):
             areas = CATEGORY_AREA_MAP.get(cat_idx, [])
@@ -8175,10 +8213,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         available_free = self._get_target_phase_available_free(batch_size)
         mask = np.zeros(len(TARGET_CATEGORIES), dtype=bool)
         mask[0] = False  # Frei als Zielkategorie ist deaktiviert.
-        mask[1] = any(
-            self._can_assign_wood_tree_batch(i, batch_size, available_free_override=available_free)
-            for i in range(len(self.tree_list_internal))
-        )
+        mask[1] = available_free >= batch_size and self._has_assignable_tree_for_batch(batch_size)
         for cat_idx in range(2, 6):
             areas = CATEGORY_AREA_MAP.get(cat_idx, [])
             mask[cat_idx] = any(

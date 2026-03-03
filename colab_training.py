@@ -370,22 +370,22 @@ def _infer_colab_preset(runtime: Dict[str, object]) -> Dict[str, object]:
     if "H100" in gpu_name:
         preset = {
             "name": "h100",
-            "n_envs": 10,
+            "n_envs": cpu_cap_envs,  # alle verfügbaren CPUs nutzen
             "spatial_size": 192,
-            "n_steps": 4096,
-            "batch_size": 1024,
-            "n_epochs": 6,
+            "n_steps": 2048,
+            "batch_size": 4096,
+            "n_epochs": 4,
             "learning_rate": 0.0002,
             "ent_coef": 0.012,
         }
     elif "A100" in gpu_name:
         preset = {
             "name": "a100",
-            "n_envs": 8,
+            "n_envs": cpu_cap_envs,  # alle verfügbaren CPUs nutzen
             "spatial_size": 160,
-            "n_steps": 3072,
-            "batch_size": 512,
-            "n_epochs": 6,
+            "n_steps": 2048,
+            "batch_size": 2048,
+            "n_epochs": 4,
             "learning_rate": 0.00025,
             "ent_coef": 0.015,
         }

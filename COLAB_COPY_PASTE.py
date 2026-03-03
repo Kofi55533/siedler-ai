@@ -242,9 +242,9 @@ def infer_gpu_training_preset():
     )
 
     if "H100" in gpu_upper:
-        n_envs, spatial_size = 10, 192
+        n_envs, spatial_size = cpu_cap, 192  # alle verfügbaren CPUs
     elif "A100" in gpu_upper:
-        n_envs, spatial_size = 8, 160
+        n_envs, spatial_size = cpu_cap, 160  # alle verfügbaren CPUs
     elif "L4" in gpu_upper or "V100" in gpu_upper:
         n_envs, spatial_size = 10, 128
     elif "T4" in gpu_upper or "P100" in gpu_upper:

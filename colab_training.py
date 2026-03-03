@@ -392,33 +392,33 @@ def _infer_colab_preset(runtime: Dict[str, object]) -> Dict[str, object]:
     elif "L4" in gpu_name or "V100" in gpu_name:
         preset = {
             "name": "l4_v100",
-            "n_envs": 10,
+            "n_envs": cpu_cap_envs,
             "spatial_size": 128,
-            "n_steps": 3072,
-            "batch_size": 384,
-            "n_epochs": 6,
+            "n_steps": 2048,
+            "batch_size": 1024,
+            "n_epochs": 4,
             "learning_rate": 0.00025,
             "ent_coef": 0.015,
         }
     elif "T4" in gpu_name or "P100" in gpu_name:
         preset = {
             "name": "t4_p100",
-            "n_envs": 4,
+            "n_envs": cpu_cap_envs,
             "spatial_size": 128,
             "n_steps": 2048,
-            "batch_size": 256,
-            "n_epochs": 6,
+            "batch_size": 512,
+            "n_epochs": 4,
             "learning_rate": 0.00025,
             "ent_coef": 0.02,
         }
     elif bool(runtime.get("has_cuda")):
         preset = {
             "name": "generic_cuda",
-            "n_envs": 4,
+            "n_envs": cpu_cap_envs,
             "spatial_size": 128,
             "n_steps": 2048,
-            "batch_size": 256,
-            "n_epochs": 6,
+            "batch_size": 512,
+            "n_epochs": 4,
             "learning_rate": 0.00025,
             "ent_coef": 0.02,
         }
@@ -435,13 +435,6 @@ def _infer_colab_preset(runtime: Dict[str, object]) -> Dict[str, object]:
         }
 
     preset["n_envs"] = int(max(1, min(int(preset["n_envs"]), cpu_cap_envs)))
-
-    if _prefer_speed_mode() and preset["name"] in {"l4_v100", "t4_p100", "generic_cuda"}:
-        # Reduziert PPO-Update-Overhead deutlich fuer hoehere effective FPS.
-        preset["n_steps"] = 2048
-        preset["batch_size"] = 2048
-        preset["n_epochs"] = 2
-        preset["learning_rate"] = 0.0003
 
     return preset
 

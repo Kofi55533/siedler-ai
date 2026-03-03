@@ -242,15 +242,15 @@ def infer_gpu_training_preset():
     )
 
     if "H100" in gpu_upper:
-        n_envs, spatial_size = cpu_cap, 192  # alle verfügbaren CPUs
+        n_envs, spatial_size = cpu_cap, 192
     elif "A100" in gpu_upper:
-        n_envs, spatial_size = cpu_cap, 160  # alle verfügbaren CPUs
+        n_envs, spatial_size = cpu_cap, 160
     elif "L4" in gpu_upper or "V100" in gpu_upper:
-        n_envs, spatial_size = 10, 128
+        n_envs, spatial_size = cpu_cap, 128
     elif "T4" in gpu_upper or "P100" in gpu_upper:
-        n_envs, spatial_size = 3, 128
+        n_envs, spatial_size = cpu_cap, 128
     else:
-        n_envs, spatial_size = 2, 96
+        n_envs, spatial_size = cpu_cap, 96
 
     n_envs = max(1, min(cpu_cap, int(n_envs)))
     if fast_mode:
@@ -395,9 +395,9 @@ SOURCE_MODE = "git"
 TRAIN_MODE = "fast_train"
 # Reward-/Trainingsprofil (z. B. legacy, sparse, dense_v2, balanced, aggressive)
 TRAIN_PROFILE = "legacy"
-# Fester Parallelisierungsgrad fuer Training (kein FPS-Benchmark mehr).
-# Auf High-End Colab GPUs ist 10 ein guter Startwert.
-FIXED_NUM_ENVS = 10
+# Fester Parallelisierungsgrad fuer Training (None = automatisch nach GPU/CPU).
+# Setze auf eine Zahl (z. B. 10) um den Wert manuell zu fixieren.
+FIXED_NUM_ENVS = None
 # Ziel-Timesteps fuer diesen Run
 TRAIN_TOTAL_TIMESTEPS = 5_000_000
 # Nach dem Training automatisch Modellverhalten analysieren.
@@ -672,12 +672,18 @@ os.environ["SIEDLER_RUN_EVAL"] = "0"
 os.environ["SIEDLER_RUN_EXPORT"] = "0"
 os.environ["SIEDLER_EVAL_RENDER"] = "0"
 
-# Kein FPS-Benchmark: feste n_envs-Konfiguration.
+# Kein FPS-Benchmark: n_envs automatisch nach GPU/CPU oder manuell fixiert.
 cpu_cap = max(1, (os.cpu_count() or 1) - 1)
-effective_n_envs = max(1, min(int(FIXED_NUM_ENVS), cpu_cap))
+if FIXED_NUM_ENVS is None:
+    _gpu_preset = infer_gpu_training_preset()
+    effective_n_envs = _gpu_preset["n_envs"]
+    _spatial_size = _gpu_preset["spatial_size"]
+else:
+    effective_n_envs = max(1, min(int(FIXED_NUM_ENVS), cpu_cap))
+    _spatial_size = 96
 os.environ["SIEDLER_BENCHMARK_AUTO_ENVS"] = "0"
 os.environ["SIEDLER_NUM_ENVS"] = str(effective_n_envs)
-os.environ["SIEDLER_SPATIAL_SIZE"] = "96"
+os.environ["SIEDLER_SPATIAL_SIZE"] = str(_spatial_size)
 train_overrides = build_train_overrides()
 print(f"Simulation mode: {TRAIN_MODE}")
 print(f"Training profile: {os.environ.get('SIEDLER_TRAIN_PROFILE')}")

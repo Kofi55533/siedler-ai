@@ -205,7 +205,7 @@ def infer_target_n_envs():
             elif "A100" in gpu_name:
                 target = 8
             elif "L4" in gpu_name or "V100" in gpu_name:
-                target = 6
+                target = 10
             elif "T4" in gpu_name or "P100" in gpu_name:
                 target = 4
             else:
@@ -246,7 +246,7 @@ def infer_gpu_training_preset():
     elif "A100" in gpu_upper:
         n_envs, spatial_size = 8, 160
     elif "L4" in gpu_upper or "V100" in gpu_upper:
-        n_envs, spatial_size = 6, 128
+        n_envs, spatial_size = 10, 128
     elif "T4" in gpu_upper or "P100" in gpu_upper:
         n_envs, spatial_size = 3, 128
     else:

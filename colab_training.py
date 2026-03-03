@@ -392,7 +392,7 @@ def _infer_colab_preset(runtime: Dict[str, object]) -> Dict[str, object]:
     elif "L4" in gpu_name or "V100" in gpu_name:
         preset = {
             "name": "l4_v100",
-            "n_envs": 6,
+            "n_envs": 10,
             "spatial_size": 128,
             "n_steps": 3072,
             "batch_size": 384,

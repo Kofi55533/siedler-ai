@@ -399,7 +399,7 @@ TRAIN_PROFILE = "legacy"
 # Setze auf eine Zahl (z. B. 10) um den Wert manuell zu fixieren.
 FIXED_NUM_ENVS = None
 # Ziel-Timesteps fuer diesen Run
-TRAIN_TOTAL_TIMESTEPS = 5_000_000
+TRAIN_TOTAL_TIMESTEPS = 100_000
 # Nach dem Training automatisch Modellverhalten analysieren.
 RUN_POST_ANALYSIS = True
 # Anzahl Analyse-Episoden (deterministische Policy mit Action-Mask).
@@ -641,6 +641,7 @@ if TRAIN_MODE == "fast_train":
     os.environ["SIEDLER_FAST_TRAIN"] = "1"
     os.environ["SIEDLER_TURBO_FPS"] = "1"
     os.environ["SIEDLER_DISABLE_RUNTIME_PATHING"] = "1"
+    os.environ["SIEDLER_FAST_ASSIGN_PATHING"] = "1"
     os.environ["SIEDLER_USE_SPATIAL"] = "0"
     os.environ["SIEDLER_RUNTIME_STATUS"] = "0"
     os.environ["SIEDLER_SB3_VERBOSE"] = "1"
@@ -652,6 +653,7 @@ else:
     os.environ["SIEDLER_FAST_TRAIN"] = "0"
     os.environ["SIEDLER_TURBO_FPS"] = "0"
     os.environ["SIEDLER_DISABLE_RUNTIME_PATHING"] = "0"
+    os.environ["SIEDLER_FAST_ASSIGN_PATHING"] = "0"
     os.environ["SIEDLER_USE_SPATIAL"] = "1"
     os.environ["SIEDLER_RUNTIME_STATUS"] = "0"
     os.environ["SIEDLER_SB3_VERBOSE"] = "1"
@@ -659,6 +661,10 @@ else:
     os.environ["SIEDLER_PROGRESS_BAR"] = "1"
     os.environ["SIEDLER_TENSORBOARD"] = "1"
     os.environ["SIEDLER_TRAIN_PROFILE"] = TRAIN_PROFILE
+
+# Multi-Step als abgeschlossene Aktions-Timesteps zaehlen
+# (PPO-Timesteps folgen damit abgeschlossenen Actions statt Zwischenphasen).
+os.environ["SIEDLER_COUNT_COMPLETED_ACTION_STEPS"] = "1"
 
 # Fuer diese One-Cell immer explizit setzen (ueberschreibt eventuell alte Notebook-Env-Werte).
 os.environ["SIEDLER_TRAIN_PROFILE"] = TRAIN_PROFILE
@@ -693,7 +699,12 @@ print(
     f"FAST={os.environ.get('SIEDLER_FAST_TRAIN')} "
     f"SPATIAL={os.environ.get('SIEDLER_USE_SPATIAL')} "
     f"PATHING_OFF={os.environ.get('SIEDLER_DISABLE_RUNTIME_PATHING')} "
+    f"FAST_ASSIGN_PATHING={os.environ.get('SIEDLER_FAST_ASSIGN_PATHING')} "
     f"TURBO={os.environ.get('SIEDLER_TURBO_FPS')}"
+)
+print(
+    "Completed-action timesteps: "
+    f"{os.environ.get('SIEDLER_COUNT_COMPLETED_ACTION_STEPS')}"
 )
 print(f"Total timesteps: {int(train_overrides.get('total_timesteps', 0))}")
 print(f"Post analysis enabled: {int(bool(RUN_POST_ANALYSIS))} (episodes={POST_ANALYSIS_EPISODES})")

@@ -9,11 +9,11 @@ from datetime import datetime
 
 import gymnasium as gym
 import torch as th
-from sb3_contrib import MaskablePPO
 from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
 from environment import SiedlerScharfschuetzenEnv
+from macro_maskable_ppo import CompletedActionMaskablePPO
 from multihead_policy import MultiHeadMaskablePolicy, SpatialVectorExtractor
 from training_profiles import get_train_profile
 
@@ -94,6 +94,12 @@ def _get_spatial_size():
     return 128
 
 
+def _count_completed_action_steps():
+    return str(os.environ.get("SIEDLER_COUNT_COMPLETED_ACTION_STEPS", "0")).strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+
+
 def make_env(
     rank: int,
     seed: int = 0,
@@ -148,7 +154,7 @@ def train():
     reward_profile = profile["reward_profile"]
     print(f"Train-Profil: {profile['name']} ({profile['description']})")
 
-    use_spatial_obs = True
+    use_spatial_obs = not os.environ.get("SIEDLER_USE_SPATIAL", "1") in ("0", "false", "no")
     spatial_size = _get_spatial_size()
     env = create_env(
         use_spatial_obs=use_spatial_obs,
@@ -165,6 +171,7 @@ def train():
         print(f"Observation Space: {env.observation_space.shape}")
     device = "cuda" if th.cuda.is_available() else "cpu"
     print(f"Device: {device}")
+    print(f"Completed-action timesteps: {int(_count_completed_action_steps())}")
 
     # Modell erstellen
     head_sizes = env.env_method("get_action_head_sizes")[0]
@@ -187,7 +194,7 @@ def train():
                 "vector_out_dim": 256,
             },
         })
-    model = MaskablePPO(
+    model = CompletedActionMaskablePPO(
         MultiHeadMaskablePolicy,
         env,
         learning_rate=0.0003,
@@ -202,6 +209,7 @@ def train():
         device=device,
         verbose=0,
         tensorboard_log=f"{SAVE_PATH}/tensorboard/",
+        count_completed_actions_only=_count_completed_action_steps(),
     )
 
     # Callbacks

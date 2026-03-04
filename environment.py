@@ -14,6 +14,7 @@ import re
 import json
 import os
 import unicodedata
+from functools import lru_cache
 from enum import Enum
 import gymnasium as gym
 import numpy as np
@@ -1439,6 +1440,49 @@ _MIN_SOLDIER_TALER_COST = min(
     default=50,
 )
 
+_OBS_RESOURCE_CAPS = {
+    RESOURCE_HOLZ: 6000.0,
+    RESOURCE_STEIN: 6000.0,
+    RESOURCE_LEHM: 6000.0,
+    RESOURCE_EISEN: 4000.0,
+    RESOURCE_SCHWEFEL: 4000.0,
+    RESOURCE_HOLZ_ROH: 15000.0,
+    RESOURCE_STEIN_ROH: 15000.0,
+    RESOURCE_LEHM_ROH: 15000.0,
+    RESOURCE_EISEN_ROH: 15000.0,
+    RESOURCE_SCHWEFEL_ROH: 15000.0,
+    RESOURCE_GOLD_ROH: 8000.0,
+    RESOURCE_TALER: 8000.0,
+}
+
+
+@lru_cache(maxsize=8)
+def _get_scharf_taler_sulfur_cost(target_tier: int = 0) -> Tuple[float, float]:
+    """Static cache for Scharfschuetzen costs (Taler, Schwefel)."""
+    candidates: List[Tuple[int, float, float]] = []
+    for name, cfg in soldiers_db.items():
+        if "Scharf" not in str(name):
+            continue
+        cost = cfg.get("cost", {})
+        taler = float(cost.get(RESOURCE_TALER, 1e9))
+        sulfur = float(cost.get(RESOURCE_SCHWEFEL, 1e9))
+        tier = get_building_level(str(name))
+        candidates.append((tier, taler, sulfur))
+    if not candidates:
+        return 250.0, 70.0
+
+    if int(target_tier) > 0:
+        tier_candidates = [(taler, sulfur) for tier, taler, sulfur in candidates if tier == int(target_tier)]
+        if tier_candidates:
+            taler_cost, sulfur_cost = min(tier_candidates, key=lambda x: x[0])
+            return max(1.0, taler_cost), max(1.0, sulfur_cost)
+
+    taler_cost, sulfur_cost = min(
+        ((taler, sulfur) for _, taler, sulfur in candidates),
+        key=lambda x: x[0],
+    )
+    return max(1.0, taler_cost), max(1.0, sulfur_cost)
+
 # =============================================================================
 # SPIELKONSTANTEN
 # =============================================================================
@@ -1682,14 +1726,20 @@ P1_Y_MAX = 25500.0
 # HILFSFUNKTIONEN
 # =============================================================================
 
+@lru_cache(maxsize=8192)
 def get_base_building_name(building_name):
-    if "_" in building_name and building_name.split("_")[-1].isdigit():
-        return "_".join(building_name.split("_")[:-1])
-    return building_name
+    name = str(building_name)
+    head, sep, tail = name.rpartition("_")
+    if sep and tail.isdigit():
+        return head
+    return name
 
+@lru_cache(maxsize=8192)
 def get_building_level(building_name):
-    if "_" in building_name and building_name.split("_")[-1].isdigit():
-        return int(building_name.split("_")[-1])
+    name = str(building_name)
+    _, sep, tail = name.rpartition("_")
+    if sep and tail.isdigit():
+        return int(tail)
     return 1
 
 
@@ -1968,6 +2018,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.demolishable_buildings = [b for b in buildings_db.keys() if "Hauptquartier" not in b]
         self.tech_list = list(technologies.keys())
         self.soldier_types = list(soldiers_db.keys())
+        self._scharf_soldier_types_cached = [s for s in self.soldier_types if "Scharf" in str(s)]
 
         # Action Space berechnen
         self.n_build_actions = len(self.buildable_buildings)
@@ -2978,8 +3029,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             obs.append(self.current_time / self.max_time)
             obs.append((self.max_time - self.current_time) / self.max_time)
 
+            production_rates = self._get_production_rates_for_obs()
             for r in RESOURCE_MAP:
-                obs.append(self._get_production_rate(r) / 10.0)
+                obs.append(production_rates.get(r, 0.0) / 10.0)
             obs.append((self._get_taler_income() * self._get_trade_income_multiplier()) / 100.0)
 
             # WorkTime-System Observations
@@ -3116,6 +3168,39 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             rate *= (1.0 + (bonus_pct / 100.0))
         return rate
 
+    def _get_production_rates_for_obs(self) -> Dict[str, float]:
+        """Liefert alle beobachteten Produktionsraten inkl. Output-Boni (tick-weise gecached)."""
+        cache_key = ("_prod_rates_for_obs",)
+        cached = self._get_can_cache(cache_key)
+        if isinstance(cached, dict):
+            return cached
+
+        output: Dict[str, float] = {r: 0.0 for r in RESOURCE_MAP}
+        if not hasattr(self, "production_system"):
+            self._set_can_cache(cache_key, output)
+            return output
+
+        rates_cache_key = ("_prod_rates_all",)
+        rates = self._get_can_cache(rates_cache_key)
+        if rates is None:
+            efficiency = self.workforce_manager.get_average_efficiency() if hasattr(self, "workforce_manager") else 1.0
+            rates = self.production_system.get_production_rates(efficiency)
+            self._set_can_cache(rates_cache_key, rates)
+
+        for resource in RESOURCE_MAP:
+            res_type = _RESOURCE_TYPE_MAP.get(resource)
+            if not res_type:
+                continue
+            rate = float(rates.get(res_type, 0.0))
+            resource_key = _RESOURCE_KEY_MAP.get(resource)
+            if resource_key:
+                bonus_pct = self._get_resource_output_bonus_pct(resource_key)
+                rate *= (1.0 + (bonus_pct / 100.0))
+            output[resource] = rate
+
+        self._set_can_cache(cache_key, output)
+        return output
+
     def _apply_passive_building_outputs(self, dt: float) -> None:
         """Wendet passives GebÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¤ude-Output an (ohne Mines/Refiner-DoppelzÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¤hlung)."""
         if dt <= 0:
@@ -3156,35 +3241,23 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.resources[res_name] = self.resources.get(res_name, 0) + adjusted
 
     def _get_total_motivation(self) -> float:
-        """Berechnet die Basis-Motivation (ohne Segen, der ist pro Worker-Typ).
-
-        Aus extra2/logic.xml:
-        - MotivationThresholdHappy = 1.5 (sehr glÃƒÆ’Ã‚Â¼cklich)
-        - MotivationThresholdSad = 1.0 (traurig)
-        - MotivationThresholdAngry = 0.7 (wÃƒÆ’Ã‚Â¼tend)
-        - MotivationThresholdLeave = 0.25 (verlÃƒÆ’Ã‚Â¤sst Settlement!)
-        - MotivationAbsoluteMaxMotivation = 3.0
-        """
-        cache_key = ("total_motivation",)
-        cached = self._get_can_cache(cache_key)
+        """Berechnet die Basis-Motivation (ohne Segen, der ist pro Worker-Typ)."""
+        cached = self._get_can_cache("_total_motivation")
         if cached is not None:
             return float(cached)
 
         motivation = self.base_motivation
 
-        # Motivation aus GebÃƒÆ’Ã‚Â¤uden (z.B. Kloster, Schmuck)
+        # Motivation aus Gebaeuden (z.B. Kloster, Schmuck)
         for b_name, count in self.buildings.items():
             effect = buildings_db.get(b_name, {}).get("motivation_effect")
             if effect:
                 motivation += effect * count
 
         # Segen-Bonus jetzt PRO WORKER-TYP (nicht mehr global!)
-        # Wird ÃƒÆ’Ã‚Â¼ber _get_blessed_worker_types() an WorkforceManager ÃƒÆ’Ã‚Â¼bergeben
-
-        # Clamp auf gÃƒÆ’Ã‚Â¼ltige Werte
-        result = max(0.25, min(3.0, motivation))
-        self._set_can_cache(cache_key, float(result))
-        return float(result)
+        result = float(max(0.25, min(3.0, motivation)))
+        self._set_can_cache("_total_motivation", result)
+        return result
 
     def _get_blessed_worker_types(self) -> set:
         """Gibt die Menge aller aktuell gesegneten Worker-Typen zurÃƒÆ’Ã‚Â¼ck.
@@ -3262,21 +3335,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _normalize_resource_for_obs(self, resource: str, value: float) -> float:
         """Skaliert Ressourcen robust in [0, 1] fuer stabileres Training."""
-        caps = {
-            RESOURCE_HOLZ: 6000.0,
-            RESOURCE_STEIN: 6000.0,
-            RESOURCE_LEHM: 6000.0,
-            RESOURCE_EISEN: 4000.0,
-            RESOURCE_SCHWEFEL: 4000.0,
-            RESOURCE_HOLZ_ROH: 15000.0,
-            RESOURCE_STEIN_ROH: 15000.0,
-            RESOURCE_LEHM_ROH: 15000.0,
-            RESOURCE_EISEN_ROH: 15000.0,
-            RESOURCE_SCHWEFEL_ROH: 15000.0,
-            RESOURCE_GOLD_ROH: 8000.0,
-            RESOURCE_TALER: 8000.0,
-        }
-        cap = max(1.0, float(caps.get(resource, 8000.0)))
+        cap = max(1.0, float(_OBS_RESOURCE_CAPS.get(resource, 8000.0)))
         v = max(0.0, float(value))
         return float(min(1.0, np.log1p(v) / np.log1p(cap)))
 
@@ -3289,35 +3348,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _get_scharf_costs(self, target_tier: Optional[int] = None) -> Tuple[float, float]:
         """Liefert Scharfschuetzen-Kosten (Taler, Schwefel), optional tier-spezifisch."""
-        candidates: List[Tuple[int, float, float]] = []
-        for name, cfg in soldiers_db.items():
-            if "Scharf" not in str(name):
-                continue
-            cost = cfg.get("cost", {})
-            taler = float(cost.get(RESOURCE_TALER, 1e9))
-            sulfur = float(cost.get(RESOURCE_SCHWEFEL, 1e9))
-            tier = 1
-            match = re.search(r"_(\d+)$", str(name))
-            if match:
-                try:
-                    tier = max(1, int(match.group(1)))
-                except (TypeError, ValueError):
-                    tier = 1
-            candidates.append((tier, taler, sulfur))
-        if not candidates:
-            return 250.0, 70.0
-
-        if target_tier is not None:
-            tier_candidates = [(taler, sulfur) for tier, taler, sulfur in candidates if tier == int(target_tier)]
-            if tier_candidates:
-                taler_cost, sulfur_cost = min(tier_candidates, key=lambda x: x[0])
-                return max(1.0, taler_cost), max(1.0, sulfur_cost)
-
-        taler_cost, sulfur_cost = min(
-            [(taler, sulfur) for _, taler, sulfur in candidates],
-            key=lambda x: x[0],
-        )
-        return max(1.0, taler_cost), max(1.0, sulfur_cost)
+        tier_key = int(target_tier) if target_tier is not None else 0
+        return _get_scharf_taler_sulfur_cost(tier_key)
 
     def _get_reward_profile_scharf_tier(self, key: str, default: int = 1) -> int:
         raw_value = self.reward_profile.get(key, float(default))
@@ -3349,6 +3381,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return float(rewarded_units) * bonus
 
     def _get_scharf_soldier_types(self) -> List[str]:
+        cached_types = getattr(self, "_scharf_soldier_types_cached", None)
+        if isinstance(cached_types, list):
+            return cached_types
         soldier_types = getattr(self, "soldier_types", None)
         if soldier_types is None:
             soldier_types = list(soldiers_db.keys())
@@ -3667,6 +3702,51 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._can_cache[key] = value
         return value
 
+    def _has_min_population_motivation(self) -> bool:
+        cache_key = ("has_min_population_motivation",)
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return bool(cached)
+        ok = self._get_total_motivation() >= VILLAGE_CENTER_LOCK_THRESHOLD
+        return self._set_can_cache(cache_key, bool(ok))
+
+    def _get_built_base_name_counts(self) -> Dict[str, int]:
+        cache_key = ("built_base_name_counts",)
+        cached = self._get_can_cache(cache_key)
+        if isinstance(cached, dict):
+            return cached
+        counts: Dict[str, int] = {}
+        for building_name, count in self.buildings.items():
+            count_int = int(count or 0)
+            if count_int <= 0:
+                continue
+            base = get_base_building_name(building_name)
+            counts[base] = counts.get(base, 0) + count_int
+        self._set_can_cache(cache_key, counts)
+        return counts
+
+    def _get_deposit_serf_assignment_counts(self) -> Dict[Tuple[str, int, int], int]:
+        cache_key = ("deposit_serf_assignment_counts",)
+        cached = self._get_can_cache(cache_key)
+        if isinstance(cached, dict):
+            return cached
+        counts: Dict[Tuple[str, int, int], int] = {}
+        for serf in self.production_system.serfs:
+            if (
+                serf.work_location != "deposit"
+                or not serf.target_resource
+                or not serf.target_position
+            ):
+                continue
+            key = (
+                str(serf.target_resource.value),
+                int(serf.target_position.x),
+                int(serf.target_position.y),
+            )
+            counts[key] = counts.get(key, 0) + 1
+        self._set_can_cache(cache_key, counts)
+        return counts
+
     def _can_buy_serf(self) -> bool:
         """PrÃƒÆ’Ã‚Â¼ft ob ein Leibeigener gekauft werden kann."""
         return self._can_buy_serf_batch(1)
@@ -3678,7 +3758,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if cached is not None:
             return cached
         # VillageCenterLockThreshold: Unter 0.3 Motivation keine neuen Worker/Serfs!
-        if self._get_total_motivation() < VILLAGE_CENTER_LOCK_THRESHOLD:
+        if not self._has_min_population_motivation():
             return self._set_can_cache(cache_key, False)
         # Genug Taler fÃƒÆ’Ã‚Â¼r alle?
         if self._get_total_resource(RESOURCE_TALER) < SERF_BUY_COST * count:
@@ -3760,11 +3840,15 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return True
 
     def _get_taler_income(self):
+        cache_key = ("taler_income",)
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return float(cached)
         income = 0
         for b_name, count in self.buildings.items():
             if count > 0:
                 income += buildings_db.get(b_name, {}).get("taler_income", 0) * count
-        return income
+        return self._set_can_cache(cache_key, float(income))
 
     def _get_taxable_worker_count(self) -> int:
         return int(len(self.workforce_manager.workers))
@@ -3996,8 +4080,26 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             world_path.append(Position(x=wx, y=wy))
         return world_path
 
+    def _should_use_fast_assignment_pathing(self) -> bool:
+        """
+        Fast-Pathing fuer Trainingsmodus:
+        - In fast_train/disable_runtime_pathing verzichten wir auf teures A* bei Zuweisungen.
+        - Distanz bleibt ueber Luftlinie erhalten, damit Laufzeiten weiterhin plausibel skalieren.
+        """
+        override = os.environ.get("SIEDLER_FAST_ASSIGN_PATHING")
+        if override is not None:
+            return _env_truthy(override)
+        return bool(self.disable_runtime_pathing or self.sim_mode == "fast_train")
+
     def _compute_path(self, start_pos: Position, target_pos: Position) -> Tuple[List[Position], float]:
         """Berechnet Pfad + Distanz zwischen zwei Welt-Positionen."""
+        if self._should_use_fast_assignment_pathing():
+            # Fast-Train: direkter Weg ohne A* (grosse Hotspot-Entlastung).
+            if int(round(start_pos.x)) == int(round(target_pos.x)) and int(round(start_pos.y)) == int(round(target_pos.y)):
+                return [Position(x=target_pos.x, y=target_pos.y)], 0.0
+            dist = float(start_pos.distance_to(target_pos))
+            return [Position(x=target_pos.x, y=target_pos.y)], dist
+
         grid_revision = getattr(self.map_manager.grid, "revision", 0)
         if getattr(self, "_path_cache_revision", None) != grid_revision:
             self._path_cache_revision = grid_revision
@@ -4231,10 +4333,18 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _get_placement_cache_signature(self):
         """Signatur fÃƒÆ’Ã‚Â¼r Bauplatz-Cache (nur gebÃƒÆ’Ã‚Â¤uderelevante ÃƒÆ’Ã¢â‚¬Å¾nderungen)."""
+        cached = self._get_can_cache("_placement_sig")
+        if cached is not None:
+            return cached
         grid_revision = 0
         if hasattr(self, "map_manager") and self.map_manager and hasattr(self.map_manager, "grid"):
             grid_revision = int(getattr(self.map_manager.grid, "revision", 0))
-        return (
+        # Fast-Train: Tree-Harvest kann Grid-Revision sehr haeufig erhoehen und den
+        # Bauplatz-Cache permanent invalidieren. Fuer Training reicht eine stabilere
+        # Signatur, solange blockierende Gebaeude-/Baustellen-Revisionen enthalten sind.
+        if self.sim_mode == "fast_train":
+            grid_revision = 0
+        sig = (
             getattr(self, "_building_block_revision", 0),
             len(self.available_positions),
             len(self.zone_b_positions),
@@ -4242,6 +4352,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             len(self.construction_sites),
             grid_revision,
         )
+        self._set_can_cache("_placement_sig", sig)
+        return sig
 
     def _normalize_building_name(self, value: str) -> str:
         text = str(value)
@@ -4344,8 +4456,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         anchor_positions = self._get_build_anchor_positions(building)
         primary_anchor = anchor_positions[0]
         placements: List[dict] = []
-        reserved: List[Tuple[float, float, str]] = []
+        reserved: List[Tuple[float, float, str, Tuple[float, float, float, float]]] = []
         seen = set()
+        fast_build_search = (self.sim_mode == "fast_train")
 
         def _try_add(px: float, py: float, slot_candidate: bool) -> bool:
             key = (int(round(px)), int(round(py)))
@@ -4361,7 +4474,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     "_slot_candidate": bool(slot_candidate),
                 }
             )
-            reserved.append((key[0], key[1], building))
+            reserved.append((key[0], key[1], building, self._get_building_bounds(key[0], key[1], building)))
             return True
 
         # 1) Erst bekannte Slot-Kandidaten (nahe am PrimÃƒÆ’Ã‚Â¤r-Anker).
@@ -4383,9 +4496,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # 2) Falls nÃƒÆ’Ã‚Â¶tig: dynamische Suche ÃƒÆ’Ã‚Â¼ber das Walkable-Grid auf ganz P1.
         if len(placements) < limit and hasattr(self, "map_manager") and self.map_manager:
             base_name = get_base_building_name(building)
-            search_radius = (max(MAP_SIZE[0], MAP_SIZE[1]) / 2.0) + 2000.0
-            max_results = max(40, limit * 24)
-            for anchor_x, anchor_y in anchor_positions:
+            if fast_build_search:
+                # Fast-Train: engere Suchparameter vermeiden teure Vollkartenscans.
+                search_radius = 7000.0
+                max_results = max(16, limit * 8)
+                anchor_iter = [primary_anchor]
+            else:
+                search_radius = (max(MAP_SIZE[0], MAP_SIZE[1]) / 2.0) + 2000.0
+                max_results = max(40, limit * 24)
+                anchor_iter = anchor_positions
+            for anchor_x, anchor_y in anchor_iter:
                 local_x, local_y = self.map_manager.to_local_coords(anchor_x, anchor_y)
                 dynamic_positions = self.map_manager.grid.find_valid_building_positions(
                     base_name,
@@ -4612,9 +4732,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             else:
                 research_buildings = ["Hochschule"]
         has_research_building = False
+        built_base_counts = self._get_built_base_name_counts()
         for rb in research_buildings:
-            base = re.sub(r'_\d+$', '', rb)
-            if any(self.buildings.get(b, 0) > 0 for b in self.buildings if get_base_building_name(b) == base):
+            base = get_base_building_name(str(rb))
+            if built_base_counts.get(base, 0) > 0:
                 has_research_building = True
                 break
         if not has_research_building:
@@ -4648,7 +4769,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if not s_info:
             return self._set_can_cache(cache_key, False)
         # VillageCenterLockThreshold: Unter 0.3 Motivation keine neuen Soldaten!
-        if self._get_total_motivation() < VILLAGE_CENTER_LOCK_THRESHOLD:
+        if not self._has_min_population_motivation():
             return self._set_can_cache(cache_key, False)
 
         for resource, amount in s_info["cost"].items():
@@ -7666,13 +7787,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         """Maske fuer die 11 Hauptaktionen (build in assign_serf integriert)."""
         cache_key = ("mask_main_actions",)
         cached = self._get_can_cache(cache_key)
-        if isinstance(cached, np.ndarray):
-            return np.asarray(cached, dtype=bool).copy()
+        if cached is not None:
+            return cached.copy()
 
         # MAIN_ACTIONS = [wait, upgrade, research, recruit, buy_serf, dismiss_serf, assign_serf, demolish, bless, tax, alarm]
         n = len(MAIN_ACTIONS)
         mask = np.ones(n, dtype=bool)
-        can_upgrade_any = any(self._can_upgrade(b) for b in self.upgradeable_buildings)
+        can_upgrade_any = any(self.buildings.get(b, 0) > 0 and self._can_upgrade(b) for b in self.upgradeable_buildings)
         has_university = (
             self.buildings.get("Hochschule_1", 0) > 0
             or self.buildings.get("Hochschule_2", 0) > 0
@@ -7683,7 +7804,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.resources.get(RESOURCE_TALER, 0) >= _MIN_SOLDIER_TALER_COST
             and any(self._can_recruit(s) for s in self.soldier_types)
         )
-        can_demolish_any = any(self._can_demolish(b) for b in self.demolishable_buildings)
+        can_demolish_any = any(self.buildings.get(b, 0) > 0 for b in self.demolishable_buildings)
         for i, action_name in enumerate(MAIN_ACTIONS):
             if action_name == "wait":
                 mask[i] = True
@@ -7805,11 +7926,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _mask_position_group(self):
         """Maske fuer Positions-Gruppen (upgrade/demolish/build)."""
+        building_idx = self.pending_selections.get(ActionPhase.BUILDING, 0)
+        cache_key = ("mask_pos_group", building_idx, self.current_flow)
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return cached.copy()
+
         mask = np.zeros(POSITION_GROUP_COUNT, dtype=bool)
-        building = self._get_position_phase_building(self.pending_selections.get(ActionPhase.BUILDING, 0))
+        building = self._get_position_phase_building(building_idx)
         if building:
             if self.current_flow == "assign_serf":
-                count = len(self._get_build_position_candidates(building))
+                count = self._count_free_build_positions(building, limit=MAX_POSITION_SLOTS)
             else:
                 count = len(self._get_building_instance_keys(building))
             if count > 0:
@@ -7820,6 +7947,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         if not mask.any():
             mask[0] = True  # Fallback
+        self._set_can_cache(cache_key, mask)
         return mask
 
     def _mask_position_index(self):
@@ -7829,11 +7957,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         building = self._get_position_phase_building(self.pending_selections.get(ActionPhase.BUILDING, 0))
         if building:
             if self.current_flow == "assign_serf":
-                keys = self._get_build_position_candidates(building)
+                total_count = self._count_free_build_positions(building, limit=MAX_POSITION_SLOTS)
             else:
-                keys = self._get_building_instance_keys(building)
+                total_count = len(self._get_building_instance_keys(building))
             start = max(0, group_idx) * POSITION_GROUP_SIZE
-            available = max(0, min(POSITION_GROUP_SIZE, len(keys) - start))
+            available = max(0, min(POSITION_GROUP_SIZE, total_count - start))
             for i in range(available):
                 mask[i] = True
 
@@ -7918,7 +8046,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         pos_x,
         pos_y,
         building_type,
-        extra_reserved: Optional[List[Tuple[float, float, str]]] = None,
+        extra_reserved: Optional[List[Tuple]] = None,
     ):
         """PrÃƒÆ’Ã‚Â¼ft, ob ein GebÃƒÆ’Ã‚Â¤ude am Standort gebaut werden kann (Terrain + Kollisionen)."""
         base_name = get_base_building_name(building_type)
@@ -7931,21 +8059,30 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         new_bounds = self._get_building_bounds(pos_x, pos_y, building_type)
 
         # Baustellen reservieren FlÃƒÆ’Ã‚Â¤che bereits wÃƒÆ’Ã‚Â¤hrend des Baus.
-        for site in self.construction_sites:
-            site_pos = site.get("position")
-            if not site_pos:
-                continue
-            sx = site_pos.get("x", 0) if isinstance(site_pos, dict) else site_pos[0]
-            sy = site_pos.get("y", 0) if isinstance(site_pos, dict) else site_pos[1]
-            site_building = site.get("building", "")
-            site_bounds = self._get_building_bounds(sx, sy, site_building)
+        site_bounds_list = self._get_can_cache(("construction_site_bounds",))
+        if site_bounds_list is None:
+            site_bounds_list = []
+            for site in self.construction_sites:
+                site_pos = site.get("position")
+                if not site_pos:
+                    continue
+                sx = site_pos.get("x", 0) if isinstance(site_pos, dict) else site_pos[0]
+                sy = site_pos.get("y", 0) if isinstance(site_pos, dict) else site_pos[1]
+                site_building = site.get("building", "")
+                site_bounds_list.append(self._get_building_bounds(sx, sy, site_building))
+            self._set_can_cache(("construction_site_bounds",), site_bounds_list)
+        for site_bounds in site_bounds_list:
             if self._bounds_overlap(new_bounds, site_bounds):
                 return False
 
         # ZusÃƒÆ’Ã‚Â¤tzliche reservierte Kandidaten (fÃƒÆ’Ã‚Â¼r Batch-ZÃƒÆ’Ã‚Â¤hlung).
         if extra_reserved:
-            for rx, ry, r_building in extra_reserved:
-                r_bounds = self._get_building_bounds(rx, ry, r_building)
+            for reserved_entry in extra_reserved:
+                if len(reserved_entry) >= 4 and isinstance(reserved_entry[3], tuple):
+                    r_bounds = reserved_entry[3]
+                else:
+                    rx, ry, r_building = reserved_entry[:3]
+                    r_bounds = self._get_building_bounds(rx, ry, r_building)
                 if self._bounds_overlap(new_bounds, r_bounds):
                     return False
 
@@ -8096,7 +8233,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             return bool(cached)
         if batch_size <= 0:
             return self._set_can_cache(cache_key, False)
-        if any(tree.get("serfs_assigned", 0) >= batch_size for tree in self.tree_list_internal):
+        if self.wood_serfs >= batch_size and any(tree.get("serfs_assigned", 0) >= batch_size for tree in self.tree_list_internal):
             return self._set_can_cache(cache_key, True)
         for cat_idx in range(2, 6):
             for area in CATEGORY_AREA_MAP.get(cat_idx, []):
@@ -8185,15 +8322,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             dep = deposits[slot_idx]
             target_x = int(dep.get("x", 0))
             target_y = int(dep.get("y", 0))
-            assigned = 0
-            for serf in self.production_system.serfs:
-                if (
-                    serf.target_resource
-                    and serf.target_position
-                    and int(serf.target_position.x) == target_x
-                    and int(serf.target_position.y) == target_y
-                ):
-                    assigned += 1
+            resource_type_map = {
+                "Eisen": "iron_raw",
+                "Stein": "stone_raw",
+                "Lehm": "clay_raw",
+                "Schwefel": "sulfur_raw",
+            }
+            target_resource = resource_type_map.get(category)
+            if not target_resource:
+                return False
+            assigned_counts = self._get_deposit_serf_assignment_counts()
+            assigned = int(assigned_counts.get((target_resource, target_x, target_y), 0))
             return assigned >= batch_size
         return False
 
@@ -8249,6 +8388,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
     def _mask_target_category(self):
         """Kategorie-Auswahl: Wohin Leibeigene schicken?"""
         batch_size = self._get_selected_batch_size()
+        cache_key = ("mask_tgt_cat", batch_size)
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return cached.copy()
         available_free = self._get_target_phase_available_free(batch_size)
         mask = np.zeros(len(TARGET_CATEGORIES), dtype=bool)
         mask[0] = False  # Frei als Zielkategorie ist deaktiviert.
@@ -8264,12 +8407,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             for site in self.construction_sites
         )
         mask[7] = available_free > 0 and any(self._can_build(b) for b in self.buildable_buildings)
+        self._set_can_cache(cache_key, mask)
         return mask
 
     def _mask_target_specific(self):
         """Spezifische Auswahl innerhalb der gewÃƒÆ’Ã‚Â¤hlten Target-Kategorie."""
         cat = self.pending_selections.get(ActionPhase.TARGET_CATEGORY, 0)
         batch_size = self._get_selected_batch_size()
+        cache_key = ("mask_tgt_specific", cat, batch_size)
+        cached = self._get_can_cache(cache_key)
+        if cached is not None:
+            return cached.copy()
         available_free = self._get_target_phase_available_free(batch_size)
         mask = np.zeros(self.target_specific_size, dtype=bool)
         if cat == 1:
@@ -8296,6 +8444,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             if cat == 0:
                 return mask
             mask[0] = True
+        self._set_can_cache(cache_key, mask)
         return mask
 
     def _mask_bless_categories(self):

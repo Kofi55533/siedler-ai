@@ -813,6 +813,8 @@ def _validate_runtime_files():
     walkable_candidates = [
         data_dir / "player1_walkable_515.npy",
         data_dir / "player1_walkable.npy",
+        root_dir / "map_extract" / "wintersturm_extracted" / "player1_walkable_515.npy",
+        root_dir / "map_extract" / "wintersturm_extracted" / "player1_walkable.npy",
         root_dir / "player1_walkable_515.npy",
         root_dir / "player1_walkable.npy",
     ]

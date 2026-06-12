@@ -21,7 +21,7 @@ from stable_baselines3.common.type_aliases import MaybeCallback
 from stable_baselines3.common.utils import obs_as_tensor
 from stable_baselines3.common.vec_env import VecEnv
 from sb3_contrib.common.maskable.buffers import MaskableDictRolloutBuffer, MaskableRolloutBuffer
-from sb3_contrib.common.maskable.utils import get_action_masks, is_masking_supported
+from sb3_contrib.common.maskable.utils import EXPECTED_METHOD_NAME, get_action_masks
 from sb3_contrib.ppo_mask.ppo_mask import MaskablePPO
 from gymnasium import spaces
 
@@ -40,6 +40,7 @@ class CompletedActionMaskablePPO(MaskablePPO):
         self.count_completed_actions_only = bool(count_completed_actions_only)
         self._last_rollout_micro_steps = 0
         self._last_rollout_completed_steps = 0
+        self._masking_support_checked = False
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -47,6 +48,22 @@ class CompletedActionMaskablePPO(MaskablePPO):
         if not isinstance(info, dict):
             return True
         return not bool(info.get("multi_step", False))
+
+    @staticmethod
+    def _is_masking_supported_without_pickling(env: VecEnv) -> bool:
+        """
+        sb3-contrib checks VecEnv masking support via get_attr("action_masks").
+        SubprocVecEnv then pickles the bound method and, with stateful envs, the
+        whole env graph. Calling the method in the worker and returning only the
+        mask array avoids pickling runtime callbacks stored on entities.
+        """
+        if isinstance(env, VecEnv):
+            try:
+                env.env_method(EXPECTED_METHOD_NAME)
+                return True
+            except AttributeError:
+                return False
+        return hasattr(env, EXPECTED_METHOD_NAME)
 
     def collect_rollouts(  # type: ignore[override]
         self,
@@ -66,8 +83,10 @@ class CompletedActionMaskablePPO(MaskablePPO):
         action_masks = None
         rollout_buffer.reset()
 
-        if use_masking and not is_masking_supported(env):
-            raise ValueError("Environment does not support action masking. Consider using ActionMasker wrapper")
+        if use_masking and not self._masking_support_checked:
+            if not self._is_masking_supported_without_pickling(env):
+                raise ValueError("Environment does not support action masking. Consider using ActionMasker wrapper")
+            self._masking_support_checked = True
 
         callback.on_rollout_start()
         self._last_rollout_micro_steps = 0
@@ -143,4 +162,3 @@ class CompletedActionMaskablePPO(MaskablePPO):
 
         callback.on_rollout_end()
         return True
-

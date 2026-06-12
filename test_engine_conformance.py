@@ -36,6 +36,7 @@ from environment import (
 )
 from production_system import Refiner, ResourceType
 from worker_simulation import (
+    Camp,
     Farm,
     FORCE_TO_WORK_PENALTY,
     Position,
@@ -877,6 +878,39 @@ def test_worker_pause_paths_use_original_approach_offsets():
     assert worker.assigned_residence is residence
     assert worker.final_destination == Position(1900, 1600)
     assert seen_targets[-1] == (1900, 1600)
+
+
+def test_worker_runtime_callbacks_are_cleared_after_tick_for_subproc_pickle():
+    import pickle
+
+    worker = Worker(
+        worker_type="farmer",
+        position=Position(0, 0),
+        workplace_position=Position(1000, 1000),
+        work_time=1,
+    )
+    worker.state = WorkerState.WORKING
+
+    def local_pathfinder(start, target):
+        return [Position(start.x, start.y), Position(target.x, target.y)]
+
+    def local_spawn_camp(position):
+        return Camp(position=Position(position.x, position.y))
+
+    worker.tick(
+        1.0,
+        farms=[],
+        residences=[],
+        camps=[],
+        pathfinder=local_pathfinder,
+        path_revision=1,
+        spawn_camp_fn=local_spawn_camp,
+    )
+
+    assert getattr(worker, "_pathfinder", None) is None
+    assert getattr(worker, "_path_revision", None) is None
+    assert getattr(worker, "_spawn_camp_fn", None) is None
+    pickle.dumps(worker)
 
 
 def test_workforce_sync_applies_original_pause_building_offsets():

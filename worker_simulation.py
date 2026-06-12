@@ -930,46 +930,53 @@ class Worker:
             camps: Liste aller Camps
             motivation_mod: Motivation-Modifier fÃ¼r Regeneration (1.0 = normal)
         """
-        if not self.has_worktime_system:
-            # Serfs arbeiten ENDLOS ohne Pausen!
-            self.state = WorkerState.WORKING
-            return
+        try:
+            if not self.has_worktime_system:
+                # Serfs arbeiten ENDLOS ohne Pausen!
+                self.state = WorkerState.WORKING
+                return
 
-        if self.state == WorkerState.WORKING:
-            self._tick_working(dt, farms)
+            if self.state == WorkerState.WORKING:
+                self._tick_working(dt, farms)
 
-        elif self.state == WorkerState.WALKING_TO_SUPPLIER:
-            if self._tick_walking(dt, WorkerState.WALKING_FROM_SUPPLIER_TO_WORK):
-                self._start_return_from_supplier()
+            elif self.state == WorkerState.WALKING_TO_SUPPLIER:
+                if self._tick_walking(dt, WorkerState.WALKING_FROM_SUPPLIER_TO_WORK):
+                    self._start_return_from_supplier()
 
-        elif self.state == WorkerState.WALKING_FROM_SUPPLIER_TO_WORK:
-            self._tick_walking(dt, WorkerState.WORKING)
+            elif self.state == WorkerState.WALKING_FROM_SUPPLIER_TO_WORK:
+                self._tick_walking(dt, WorkerState.WORKING)
 
-        elif self.state == WorkerState.WALKING_TO_FARM:
-            self._tick_walking(dt, WorkerState.EATING)
+            elif self.state == WorkerState.WALKING_TO_FARM:
+                self._tick_walking(dt, WorkerState.EATING)
 
-        elif self.state == WorkerState.EATING:
-            self._tick_eating(dt, residences, motivation_mod)
+            elif self.state == WorkerState.EATING:
+                self._tick_eating(dt, residences, motivation_mod)
 
-        elif self.state == WorkerState.WALKING_TO_RESIDENCE:
-            self._tick_walking(dt, WorkerState.RESTING)
+            elif self.state == WorkerState.WALKING_TO_RESIDENCE:
+                self._tick_walking(dt, WorkerState.RESTING)
 
-        elif self.state == WorkerState.RESTING:
-            self._tick_resting(dt, motivation_mod)
+            elif self.state == WorkerState.RESTING:
+                self._tick_resting(dt, motivation_mod)
 
-        elif self.state == WorkerState.WALKING_TO_CAMP:
-            self._tick_walking(dt, WorkerState.CAMPING)
+            elif self.state == WorkerState.WALKING_TO_CAMP:
+                self._tick_walking(dt, WorkerState.CAMPING)
 
-        elif self.state == WorkerState.CAMPING:
-            self._tick_camping(dt, residences, motivation_mod)
+            elif self.state == WorkerState.CAMPING:
+                self._tick_camping(dt, residences, motivation_mod)
 
-        elif self.state == WorkerState.WALKING_TO_WORK:
-            self._tick_walking(dt, WorkerState.WORKING)
+            elif self.state == WorkerState.WALKING_TO_WORK:
+                self._tick_walking(dt, WorkerState.WORKING)
 
-        elif self.state == WorkerState.IDLE:
-            # Idle Worker starten Arbeit
-            self.state = WorkerState.WORKING
-            self.state_timer = 0.0
+            elif self.state == WorkerState.IDLE:
+                # Idle Worker starten Arbeit
+                self.state = WorkerState.WORKING
+                self.state_timer = 0.0
+        finally:
+            # These callbacks are only valid for this tick and may be local
+            # closures/bound methods that SubprocVecEnv cannot pickle.
+            self._pathfinder = None
+            self._path_revision = None
+            self._spawn_camp_fn = None
 
     def _tick_working(self, dt: float, farms: List[Farm]):
         """Arbeits-Phase."""

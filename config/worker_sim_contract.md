@@ -1,6 +1,6 @@
 # Worker Simulation Contract
 
-- Generated: 2026-02-11T20:34:10.403091+00:00
+- Generated: 2026-06-10T22:46:50.869403+00:00
 - Scope: worker/camp/path behavior contract for simulation
 
 ## Global Parameters
@@ -252,82 +252,269 @@
 
 ## Branch Anchors
 
-### 0x004ed50a
-- purpose: TASK_CHANGE_WORK_TIME_CAMP anchor
-- jcc=0, blocks=1, insns=10
+### 0x004a71d5
+- purpose: blocking/placement branch
+- jcc=1, blocks=3, insns=395
+- 0x004a71e2: jne true=0x004a7785 false=0x004a71e8
+  predicate_hint: `0x004a71db: test byte ptr [0x85e170], 1`
 
-### 0x004ed68d
-- purpose: TASK_CHECK_GO_TO_WORK_BUILDING_SUCCESS branch
-- jcc=1, blocks=3, insns=18
-- 0x004ed68d: jo true=0x004ed694 false=0x004ed68f
+### 0x004af71e
+- purpose: worker alarm/flee branch
+- jcc=1, blocks=3, insns=273
+- 0x004af72b: jne true=0x004afaf0 false=0x004af731
+  predicate_hint: `0x004af724: test byte ptr [0x85fc30], 1`
 
-### 0x004ed9e7
-- purpose: TASK_GO_TO_CAMP anchor
-- jcc=0, blocks=1, insns=10
+### 0x004b208c
+- purpose: worker/camp/path selected branch
+- jcc=1, blocks=3, insns=1164
+- 0x004b2099: jne true=0x004b30d8 false=0x004b209f
+  predicate_hint: `0x004b2092: test byte ptr [0x8614f0], 1`
 
-### 0x0062767a
-- purpose: dynamic blocking area / blocked points
-- jcc=2, blocks=4, insns=417
-- 0x0062769a: jg true=0x006276a5 false=0x0062769c
-  predicate_hint: `0x00627694: cmp eax, dword ptr [ecx + 0x3adc]`
-- 0x006276b7: jne true=0x0062769c false=0x006276b9
-  predicate_hint: `0x006276af: cmp dword ptr [0xf583c4], -1`
+### 0x004b7c82
+- purpose: worker alarm/flee branch
+- jcc=1, blocks=3, insns=412
+- 0x004b7c8f: jne true=0x004b825f false=0x004b7c95
+  predicate_hint: `0x004b7c88: test byte ptr [0x862d34], 1`
 
-### 0x00631e3d
-- purpose: path runtime: fine/coarse path
-- jcc=2, blocks=4, insns=102
-- 0x00631e5d: jg true=0x00631e68 false=0x00631e5f
-  predicate_hint: `0x00631e57: cmp eax, dword ptr [ecx + 0x3adc]`
-- 0x00631e7a: jne true=0x00631e5f false=0x00631e7c
-  predicate_hint: `0x00631e72: cmp dword ptr [0xf5cc34], -1`
+### 0x004cb80b
+- purpose: worker/camp/path selected branch
+- jcc=3, blocks=6, insns=122
+- 0x004cb896: jne true=0x004cb852 false=0x004cb898
+  predicate_hint: `0x004cb894: test al, al`
+- 0x004cb927: jne true=0x004cb934 false=0x004cb929
+  predicate_hint: `0x004cb925: test al, al`
 
-### 0x0063201a
-- purpose: path runtime: next waypoint / orientation / pathing used
-- jcc=2, blocks=4, insns=235
-- 0x0063203a: jg true=0x00632045 false=0x0063203c
-  predicate_hint: `0x00632034: cmp eax, dword ptr [ecx + 0x3adc]`
-- 0x00632057: jne true=0x0063203c false=0x00632059
-  predicate_hint: `0x0063204f: cmp dword ptr [0xf5cc30], -1`
+### 0x004cbbbf
+- purpose: worker/camp/path selected branch
+- jcc=1, blocks=3, insns=53
+- 0x004cbbcc: jne true=0x004cbc59 false=0x004cbbd2
+  predicate_hint: `0x004cbbc5: test byte ptr [0x86a824], 1`
 
-### 0x00645c1c
-- purpose: CCampBehavior branch
-- jcc=1, blocks=3, insns=18
-- 0x00645c28: je true=0x00645c34 false=0x00645c2a
-  predicate_hint: `0x00645c24: test byte ptr [ebp + 8], 1`
+### 0x004cf6d6
+- purpose: CWorkerBehavior vtable branch
+- jcc=16, blocks=31, insns=235
+- 0x004cf6e7: je true=0x004cf8eb false=0x004cf6ed
+  predicate_hint: `0x004cf6e6: push edi`
+- 0x004cf6ee: je true=0x004cf872 false=0x004cf6f4
+  predicate_hint: `0x004cf6ed: dec eax`
+- 0x004cf6f5: je true=0x004cf7d3 false=0x004cf6fb
+  predicate_hint: `0x004cf6f4: dec eax`
+- 0x004cf6fc: je true=0x004cf708 false=0x004cf6fe
+  predicate_hint: `0x004cf6fb: dec eax`
+- 0x004cf717: je true=0x004cf790 false=0x004cf719
+  predicate_hint: `0x004cf70e: test al, al`
+- 0x004cf737: jle true=0x004cf73c false=0x004cf739
+  predicate_hint: `0x004cf734: cmp dword ptr [esi + 0x14], eax`
+- 0x004cf74a: jge true=0x004cf74f false=0x004cf74c
+  predicate_hint: `0x004cf747: cmp dword ptr [esi + 0x14], eax`
+- 0x004cf7ae: jle true=0x004cf7b3 false=0x004cf7b0
+  predicate_hint: `0x004cf7ab: cmp dword ptr [esi + 0x14], eax`
+- 0x004cf7c1: jge true=0x004cf7c6 false=0x004cf7c3
+  predicate_hint: `0x004cf7be: cmp dword ptr [esi + 0x14], eax`
+- 0x004cf7e2: je true=0x004cf845 false=0x004cf7e4
+  predicate_hint: `0x004cf7d9: test al, al`
 
-### 0x00645e98
-- purpose: CCamperBehavior branch
-- jcc=1, blocks=3, insns=18
-- 0x00645ea8: je true=0x00645eb4 false=0x00645eaa
-  predicate_hint: `0x00645ea2: mov dword ptr [esi], 0xbbe3c8`
+### 0x004d2925
+- purpose: worker/camp/path selected branch
+- jcc=4, blocks=7, insns=48
+- 0x004d292c: jne true=0x004d2995 false=0x004d292e
+  predicate_hint: `0x004d2928: cmp dword ptr [edi + 0x44], 9`
+- 0x004d2942: jne true=0x004d2995 false=0x004d2944
+  predicate_hint: `0x004d2940: test eax, eax`
+- 0x004d2954: je true=0x004d2994 false=0x004d2956
+  predicate_hint: `0x004d2952: test ebx, ebx`
+- 0x004d2964: je true=0x004d2994 false=0x004d2966
+  predicate_hint: `0x004d2962: test al, al`
 
-### 0x006781a8
-- purpose: worker reattach/distance checks
-- jcc=2, blocks=4, insns=141
-- 0x006781c8: jg true=0x006781d3 false=0x006781ca
-  predicate_hint: `0x006781c2: cmp eax, dword ptr [ecx + 0x3adc]`
-- 0x006781e5: jne true=0x006781ca false=0x006781e7
-  predicate_hint: `0x006781dd: cmp dword ptr [0xf6eaf8], -1`
+### 0x004d34c9
+- purpose: worker/camp/path selected branch
+- jcc=3, blocks=5, insns=53
+- 0x004d34d8: jne true=0x004d34e1 false=0x004d34da
+  predicate_hint: `0x004d34d6: test al, al`
+- 0x004d34ff: jne true=0x004d351d false=0x004d3501
+  predicate_hint: `0x004d34fd: test eax, eax`
 
-### 0x0069c652
-- purpose: CWorkerBehavior branching hub
-- jcc=7, blocks=8, insns=63
-- 0x0069c677: je true=0x0069c6ab false=0x0069c679
-  predicate_hint: `0x0069c675: test ebx, ebx`
-- 0x0069c6c1: jne true=0x0069c6d6 false=0x0069c6c3
-  predicate_hint: `0x0069c6bd: cmp dword ptr [edi + 0x20], -1`
-- 0x0069c6cb: jne true=0x0069c6d0 false=0x0069c6cd
-  predicate_hint: `0x0069c6c3: cmp dword ptr [esi*4 + 0xbe1434], -1`
-- 0x0069c6d4: jl true=0x0069c6bd false=0x0069c6d6
-  predicate_hint: `0x0069c6d1: cmp esi, 6`
+### 0x004da815
+- purpose: pathfinding/runtime waypoint branch
+- jcc=1, blocks=3, insns=219
+- 0x004da822: jne true=0x004dab1f false=0x004da828
+  predicate_hint: `0x004da81b: test byte ptr [0x86e8a8], 1`
 
-### 0x0069ce8f
-- purpose: CWorkerFleeBehavior branching hub
-- jcc=2, blocks=6, insns=52
-- 0x0069ceaf: jle true=0x0069ceb4 false=0x0069ceb1
-  predicate_hint: `0x0069cea9: cmp eax, dword ptr [ecx + 0x3adc]`
-- 0x0069ced1: jne true=0x0069ceb3 false=0x0069ced3
-  predicate_hint: `0x0069cec9: cmp dword ptr [0xf78020], -1`
+### 0x004dab46
+- purpose: pathfinding/runtime waypoint branch
+- jcc=1, blocks=3, insns=128
+- 0x004dab53: jne true=0x004dad0a false=0x004dab59
+  predicate_hint: `0x004dab4c: test byte ptr [0x86e9f0], 1`
+
+### 0x004dad86
+- purpose: pathfinding/runtime waypoint branch
+- jcc=1, blocks=3, insns=92
+- 0x004dad93: jne true=0x004daea1 false=0x004dad99
+  predicate_hint: `0x004dad8c: test byte ptr [0x86eb20], 1`
+
+### 0x004daf1d
+- purpose: path/blocking predicate vtable branch
+- jcc=1, blocks=3, insns=23
+- 0x004daf20: jne true=0x004daf2c false=0x004daf22
+  predicate_hint: `0x004daf1e: mov edi, ecx`
+
+### 0x004daf73
+- purpose: path/blocking predicate vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x004daf80: je true=0x004daf89 false=0x004daf82
+  predicate_hint: `0x004daf7b: test byte ptr [esp + 8], 1`
+
+### 0x004e3324
+- purpose: CWorkerBehavior vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x004e3331: je true=0x004e333a false=0x004e3333
+  predicate_hint: `0x004e332c: test byte ptr [esp + 8], 1`
+
+### 0x004e3340
+- purpose: CWorkerBehavior vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x004e334d: je true=0x004e3356 false=0x004e334f
+  predicate_hint: `0x004e3348: test byte ptr [esp + 8], 1`
+
+### 0x004e5c2c
+- purpose: worker/camp/path selected branch
+- jcc=1, blocks=3, insns=130
+- 0x004e5c39: jne true=0x004e5de9 false=0x004e5c3f
+  predicate_hint: `0x004e5c32: test byte ptr [0x871d88], 1`
+
+### 0x004ffe1f
+- purpose: camp/camper behavior vtable branch
+- jcc=1, blocks=3, insns=23
+- 0x004ffe22: jne true=0x004ffe2e false=0x004ffe24
+  predicate_hint: `0x004ffe20: mov edi, ecx`
+
+### 0x004fff0d
+- purpose: camp/camper behavior vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x004fff1a: je true=0x004fff23 false=0x004fff1c
+  predicate_hint: `0x004fff15: test byte ptr [esp + 8], 1`
+
+### 0x005000d8
+- purpose: camp/camper behavior vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x005000e5: je true=0x005000ee false=0x005000e7
+  predicate_hint: `0x005000e0: test byte ptr [esp + 8], 1`
+
+### 0x00500a1d
+- purpose: camp/camper behavior vtable branch
+- jcc=1, blocks=3, insns=44
+- 0x00500a34: je true=0x00500a80 false=0x00500a36
+  predicate_hint: `0x00500a32: test eax, eax`
+
+### 0x00500c65
+- purpose: camp/camper behavior vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x00500c72: je true=0x00500c7b false=0x00500c74
+  predicate_hint: `0x00500c6d: test byte ptr [esp + 8], 1`
+
+### 0x00500cea
+- purpose: camp/camper behavior vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x00500cf7: je true=0x00500d00 false=0x00500cf9
+  predicate_hint: `0x00500cf2: test byte ptr [esp + 8], 1`
+
+### 0x00508a9b
+- purpose: worker/camp/path selected branch
+- jcc=1, blocks=3, insns=14
+- 0x00508aa8: je true=0x00508ab1 false=0x00508aaa
+  predicate_hint: `0x00508aa3: test byte ptr [esp + 8], 1`
+
+### 0x00516ab2
+- purpose: pathfinding/runtime waypoint branch
+- jcc=1, blocks=3, insns=44
+- 0x00516abf: jne true=0x00516b33 false=0x00516ac1
+  predicate_hint: `0x00516ab8: test byte ptr [0x87e1f8], 1`
+
+### 0x0052b39d
+- purpose: CWorkerBehavior vtable branch
+- jcc=5, blocks=7, insns=101
+- 0x0052b3ce: jle true=0x0052b476 false=0x0052b3d4
+  predicate_hint: `0x0052b3cb: cmp dword ptr [ebp + 8], ebx`
+- 0x0052b425: je true=0x0052b44c false=0x0052b427
+  predicate_hint: `0x0052b424: dec eax`
+- 0x0052b428: jne true=0x0052b46c false=0x0052b42a
+  predicate_hint: `0x0052b427: dec eax`
+- 0x0052b470: jl true=0x0052b3d4 false=0x0052b476
+  predicate_hint: `0x0052b46d: cmp ebx, dword ptr [ebp + 8]`
+
+### 0x0057efde
+- purpose: path/blocking predicate vtable branch
+- jcc=15, blocks=20, insns=235
+- 0x0057efeb: jne true=0x0057eff8 false=0x0057efed
+  predicate_hint: `0x0057efe9: test eax, eax`
+- 0x0057eff2: je true=0x0057f1dc false=0x0057eff8
+  predicate_hint: `0x0057eff0: cmp dword ptr [ecx], eax`
+- 0x0057effe: je true=0x0057f1db false=0x0057f004
+  predicate_hint: `0x0057effc: test esi, esi`
+- 0x0057f026: jge true=0x0057f060 false=0x0057f028
+  predicate_hint: `0x0057f01b: cmp esi, 0xffa60000`
+- 0x0057f05e: jne true=0x0057f043 false=0x0057f060
+  predicate_hint: `0x0057f05b: mov dword ptr [ebp - 0x14], ecx`
+- 0x0057f066: jle true=0x0057f09f false=0x0057f068
+  predicate_hint: `0x0057f060: cmp esi, 0x5a0000`
+- 0x0057f09d: jne true=0x0057f082 false=0x0057f09f
+  predicate_hint: `0x0057f09a: mov dword ptr [ebp - 0x14], ecx`
+- 0x0057f0a5: jge true=0x0057f0d0 false=0x0057f0a7
+  predicate_hint: `0x0057f09f: test esi, esi`
+- 0x0057f124: jge true=0x0057f152 false=0x0057f126
+  predicate_hint: `0x0057f122: test esi, esi`
+- 0x0057f18d: jle true=0x0057f115 false=0x0057f18f
+  predicate_hint: `0x0057f186: cmp dword ptr [ebp - 4], 0x16`
+
+### 0x0057f2e1
+- purpose: path/blocking predicate vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x0057f2ee: je true=0x0057f2f7 false=0x0057f2f0
+  predicate_hint: `0x0057f2e9: test byte ptr [esp + 8], 1`
+
+### 0x0057fe7c
+- purpose: path/blocking predicate vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x0057fe89: je true=0x0057fe92 false=0x0057fe8b
+  predicate_hint: `0x0057fe84: test byte ptr [esp + 8], 1`
+
+### 0x0058051f
+- purpose: path/blocking predicate vtable branch
+- jcc=1, blocks=3, insns=14
+- 0x0058052c: je true=0x00580535 false=0x0058052e
+  predicate_hint: `0x00580527: test byte ptr [esp + 8], 1`
+
+### 0x00582db4
+- purpose: path/blocking predicate vtable branch
+- jcc=8, blocks=12, insns=81
+- 0x00582dd9: jne true=0x00582de2 false=0x00582ddb
+  predicate_hint: `0x00582dd7: mov ecx, esi`
+- 0x00582dfb: je true=0x00582e6b false=0x00582dfd
+  predicate_hint: `0x00582df9: test eax, eax`
+- 0x00582e07: je true=0x00582e3f false=0x00582e09
+  predicate_hint: `0x00582e04: cmp eax, 1`
+- 0x00582e0d: je true=0x00582e45 false=0x00582e0f
+  predicate_hint: `0x00582e09: cmp dword ptr [ebp + 0x10], 1`
+- 0x00582e28: jne true=0x00582e6b false=0x00582e2a
+  predicate_hint: `0x00582e26: test al, al`
+- 0x00582e43: jne true=0x00582e60 false=0x00582e45
+  predicate_hint: `0x00582e3f: cmp dword ptr [ebp + 0x10], 1`
+- 0x00582e5e: jne true=0x00582e6b false=0x00582e60
+  predicate_hint: `0x00582e5c: test al, al`
+
+### 0x00589a1d
+- purpose: path/blocking predicate vtable branch
+- jcc=7, blocks=9, insns=54
+- 0x00589a3f: jg true=0x00589a72 false=0x00589a41
+  predicate_hint: `0x00589a3c: mov dword ptr [ebp - 4], edx`
+- 0x00589a48: jge true=0x00589a55 false=0x00589a4a
+  predicate_hint: `0x00589a45: cmp esi, dword ptr [ebp + 8]`
+- 0x00589a52: jbe true=0x00589a55 false=0x00589a54
+  predicate_hint: `0x00589a4e: cmp edx, dword ptr [ecx + esi*8 + 0xc]`
+- 0x00589a5b: jbe true=0x00589a71 false=0x00589a5d
+  predicate_hint: `0x00589a59: cmp edi, dword ptr [edx]`
+- 0x00589a6f: jle true=0x00589a42 false=0x00589a71
+  predicate_hint: `0x00589a6d: mov eax, esi`
 
 ## Limits
 

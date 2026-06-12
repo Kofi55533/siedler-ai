@@ -1,12 +1,12 @@
 {
   "meta": {
-    "generated_at_utc": "2026-02-11T20:34:10.403091+00:00",
+    "generated_at_utc": "2026-06-10T22:46:50.869403+00:00",
     "sources": {
-      "worker_truth_model": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_truth_model.json",
-      "worker_behavior_logic": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_behavior_logic.json",
-      "camp_worker_conditions": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\camp_worker_conditions.json",
-      "worker_camp_path_branch_matrix": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_camp_path_branch_matrix.json",
-      "all_original_values": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\all_original_values.jsonl"
+      "worker_truth_model": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\tools\\archive\\config\\worker_truth_model.json",
+      "worker_behavior_logic": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\tools\\archive\\config\\worker_behavior_logic.json",
+      "camp_worker_conditions": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\tools\\archive\\config\\camp_worker_conditions.json",
+      "worker_camp_path_branch_matrix": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\tools\\archive\\config\\worker_camp_path_branch_matrix.json",
+      "all_original_values": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\tools\\archive\\config\\all_original_values.jsonl"
     },
     "scope": "worker/camp/path behavior contract for simulation"
   },
@@ -1515,122 +1515,605 @@
     }
   },
   "branch_anchors": {
-    "0x004ed68d": {
-      "purpose": "TASK_CHECK_GO_TO_WORK_BUILDING_SUCCESS branch",
+    "0x004cf6d6": {
+      "purpose": "CWorkerBehavior vtable branch",
+      "stats": {
+        "block_count": 31,
+        "instruction_count": 235,
+        "edge_count": 71,
+        "conditional_branches": 16,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCWorkerBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5043943,
+          "mnemonic": "je",
+          "true_target": 5044459,
+          "false_target": 5043949,
+          "predicate_hint": "0x004cf6e6: push edi"
+        },
+        {
+          "at": 5043950,
+          "mnemonic": "je",
+          "true_target": 5044338,
+          "false_target": 5043956,
+          "predicate_hint": "0x004cf6ed: dec eax"
+        },
+        {
+          "at": 5043957,
+          "mnemonic": "je",
+          "true_target": 5044179,
+          "false_target": 5043963,
+          "predicate_hint": "0x004cf6f4: dec eax"
+        },
+        {
+          "at": 5043964,
+          "mnemonic": "je",
+          "true_target": 5043976,
+          "false_target": 5043966,
+          "predicate_hint": "0x004cf6fb: dec eax"
+        },
+        {
+          "at": 5043991,
+          "mnemonic": "je",
+          "true_target": 5044112,
+          "false_target": 5043993,
+          "predicate_hint": "0x004cf70e: test al, al"
+        },
+        {
+          "at": 5044023,
+          "mnemonic": "jle",
+          "true_target": 5044028,
+          "false_target": 5044025,
+          "predicate_hint": "0x004cf734: cmp dword ptr [esi + 0x14], eax"
+        },
+        {
+          "at": 5044042,
+          "mnemonic": "jge",
+          "true_target": 5044047,
+          "false_target": 5044044,
+          "predicate_hint": "0x004cf747: cmp dword ptr [esi + 0x14], eax"
+        },
+        {
+          "at": 5044142,
+          "mnemonic": "jle",
+          "true_target": 5044147,
+          "false_target": 5044144,
+          "predicate_hint": "0x004cf7ab: cmp dword ptr [esi + 0x14], eax"
+        },
+        {
+          "at": 5044161,
+          "mnemonic": "jge",
+          "true_target": 5044166,
+          "false_target": 5044163,
+          "predicate_hint": "0x004cf7be: cmp dword ptr [esi + 0x14], eax"
+        },
+        {
+          "at": 5044194,
+          "mnemonic": "je",
+          "true_target": 5044293,
+          "false_target": 5044196,
+          "predicate_hint": "0x004cf7d9: test al, al"
+        }
+      ]
+    },
+    "0x0057efde": {
+      "purpose": "path/blocking predicate vtable branch",
+      "stats": {
+        "block_count": 20,
+        "instruction_count": 235,
+        "edge_count": 45,
+        "conditional_branches": 15,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCBlockingStatusPredicate@EGL@@",
+          ".?AVCUnblockedInSectorPredicate@EGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5763051,
+          "mnemonic": "jne",
+          "true_target": 5763064,
+          "false_target": 5763053,
+          "predicate_hint": "0x0057efe9: test eax, eax"
+        },
+        {
+          "at": 5763058,
+          "mnemonic": "je",
+          "true_target": 5763548,
+          "false_target": 5763064,
+          "predicate_hint": "0x0057eff0: cmp dword ptr [ecx], eax"
+        },
+        {
+          "at": 5763070,
+          "mnemonic": "je",
+          "true_target": 5763547,
+          "false_target": 5763076,
+          "predicate_hint": "0x0057effc: test esi, esi"
+        },
+        {
+          "at": 5763110,
+          "mnemonic": "jge",
+          "true_target": 5763168,
+          "false_target": 5763112,
+          "predicate_hint": "0x0057f01b: cmp esi, 0xffa60000"
+        },
+        {
+          "at": 5763166,
+          "mnemonic": "jne",
+          "true_target": 5763139,
+          "false_target": 5763168,
+          "predicate_hint": "0x0057f05b: mov dword ptr [ebp - 0x14], ecx"
+        },
+        {
+          "at": 5763174,
+          "mnemonic": "jle",
+          "true_target": 5763231,
+          "false_target": 5763176,
+          "predicate_hint": "0x0057f060: cmp esi, 0x5a0000"
+        },
+        {
+          "at": 5763229,
+          "mnemonic": "jne",
+          "true_target": 5763202,
+          "false_target": 5763231,
+          "predicate_hint": "0x0057f09a: mov dword ptr [ebp - 0x14], ecx"
+        },
+        {
+          "at": 5763237,
+          "mnemonic": "jge",
+          "true_target": 5763280,
+          "false_target": 5763239,
+          "predicate_hint": "0x0057f09f: test esi, esi"
+        },
+        {
+          "at": 5763364,
+          "mnemonic": "jge",
+          "true_target": 5763410,
+          "false_target": 5763366,
+          "predicate_hint": "0x0057f122: test esi, esi"
+        },
+        {
+          "at": 5763469,
+          "mnemonic": "jle",
+          "true_target": 5763349,
+          "false_target": 5763471,
+          "predicate_hint": "0x0057f186: cmp dword ptr [ebp - 4], 0x16"
+        }
+      ]
+    },
+    "0x00582db4": {
+      "purpose": "path/blocking predicate vtable branch",
+      "stats": {
+        "block_count": 12,
+        "instruction_count": 81,
+        "edge_count": 31,
+        "conditional_branches": 8,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCPath@EGL@@",
+          ".?AVCPath@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5778905,
+          "mnemonic": "jne",
+          "true_target": 5778914,
+          "false_target": 5778907,
+          "predicate_hint": "0x00582dd7: mov ecx, esi"
+        },
+        {
+          "at": 5778939,
+          "mnemonic": "je",
+          "true_target": 5779051,
+          "false_target": 5778941,
+          "predicate_hint": "0x00582df9: test eax, eax"
+        },
+        {
+          "at": 5778951,
+          "mnemonic": "je",
+          "true_target": 5779007,
+          "false_target": 5778953,
+          "predicate_hint": "0x00582e04: cmp eax, 1"
+        },
+        {
+          "at": 5778957,
+          "mnemonic": "je",
+          "true_target": 5779013,
+          "false_target": 5778959,
+          "predicate_hint": "0x00582e09: cmp dword ptr [ebp + 0x10], 1"
+        },
+        {
+          "at": 5778984,
+          "mnemonic": "jne",
+          "true_target": 5779051,
+          "false_target": 5778986,
+          "predicate_hint": "0x00582e26: test al, al"
+        },
+        {
+          "at": 5779011,
+          "mnemonic": "jne",
+          "true_target": 5779040,
+          "false_target": 5779013,
+          "predicate_hint": "0x00582e3f: cmp dword ptr [ebp + 0x10], 1"
+        },
+        {
+          "at": 5779038,
+          "mnemonic": "jne",
+          "true_target": 5779051,
+          "false_target": 5779040,
+          "predicate_hint": "0x00582e5c: test al, al"
+        }
+      ]
+    },
+    "0x00589a1d": {
+      "purpose": "path/blocking predicate vtable branch",
+      "stats": {
+        "block_count": 9,
+        "instruction_count": 54,
+        "edge_count": 14,
+        "conditional_branches": 7,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCAStar64Normal@EGL@@"
+        ],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5806655,
+          "mnemonic": "jg",
+          "true_target": 5806706,
+          "false_target": 5806657,
+          "predicate_hint": "0x00589a3c: mov dword ptr [ebp - 4], edx"
+        },
+        {
+          "at": 5806664,
+          "mnemonic": "jge",
+          "true_target": 5806677,
+          "false_target": 5806666,
+          "predicate_hint": "0x00589a45: cmp esi, dword ptr [ebp + 8]"
+        },
+        {
+          "at": 5806674,
+          "mnemonic": "jbe",
+          "true_target": 5806677,
+          "false_target": 5806676,
+          "predicate_hint": "0x00589a4e: cmp edx, dword ptr [ecx + esi*8 + 0xc]"
+        },
+        {
+          "at": 5806683,
+          "mnemonic": "jbe",
+          "true_target": 5806705,
+          "false_target": 5806685,
+          "predicate_hint": "0x00589a59: cmp edi, dword ptr [edx]"
+        },
+        {
+          "at": 5806703,
+          "mnemonic": "jle",
+          "true_target": 5806658,
+          "false_target": 5806705,
+          "predicate_hint": "0x00589a6d: mov eax, esi"
+        }
+      ]
+    },
+    "0x0052b39d": {
+      "purpose": "CWorkerBehavior vtable branch",
+      "stats": {
+        "block_count": 7,
+        "instruction_count": 101,
+        "edge_count": 23,
+        "conditional_branches": 5,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCCampBehavior@GGL@@",
+          ".?AVCCamperBehavior@GGL@@",
+          ".?AVCWorkerAlarmModeBehavior@GGL@@",
+          ".?AVCWorkerBehavior@GGL@@",
+          ".?AVCWorkerFleeBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5419982,
+          "mnemonic": "jle",
+          "true_target": 5420150,
+          "false_target": 5419988,
+          "predicate_hint": "0x0052b3cb: cmp dword ptr [ebp + 8], ebx"
+        },
+        {
+          "at": 5420069,
+          "mnemonic": "je",
+          "true_target": 5420108,
+          "false_target": 5420071,
+          "predicate_hint": "0x0052b424: dec eax"
+        },
+        {
+          "at": 5420072,
+          "mnemonic": "jne",
+          "true_target": 5420140,
+          "false_target": 5420074,
+          "predicate_hint": "0x0052b427: dec eax"
+        },
+        {
+          "at": 5420144,
+          "mnemonic": "jl",
+          "true_target": 5419988,
+          "false_target": 5420150,
+          "predicate_hint": "0x0052b46d: cmp ebx, dword ptr [ebp + 8]"
+        }
+      ]
+    },
+    "0x004d2925": {
+      "purpose": "worker/camp/path selected branch",
+      "stats": {
+        "block_count": 7,
+        "instruction_count": 48,
+        "edge_count": 15,
+        "conditional_branches": 4,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCWorkerAlarmModeBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5056812,
+          "mnemonic": "jne",
+          "true_target": 5056917,
+          "false_target": 5056814,
+          "predicate_hint": "0x004d2928: cmp dword ptr [edi + 0x44], 9"
+        },
+        {
+          "at": 5056834,
+          "mnemonic": "jne",
+          "true_target": 5056917,
+          "false_target": 5056836,
+          "predicate_hint": "0x004d2940: test eax, eax"
+        },
+        {
+          "at": 5056852,
+          "mnemonic": "je",
+          "true_target": 5056916,
+          "false_target": 5056854,
+          "predicate_hint": "0x004d2952: test ebx, ebx"
+        },
+        {
+          "at": 5056868,
+          "mnemonic": "je",
+          "true_target": 5056916,
+          "false_target": 5056870,
+          "predicate_hint": "0x004d2962: test al, al"
+        }
+      ]
+    },
+    "0x004cb80b": {
+      "purpose": "worker/camp/path selected branch",
+      "stats": {
+        "block_count": 6,
+        "instruction_count": 122,
+        "edge_count": 17,
+        "conditional_branches": 3,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCWorkerFleeBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5027990,
+          "mnemonic": "jne",
+          "true_target": 5027922,
+          "false_target": 5027992,
+          "predicate_hint": "0x004cb894: test al, al"
+        },
+        {
+          "at": 5028135,
+          "mnemonic": "jne",
+          "true_target": 5028148,
+          "false_target": 5028137,
+          "predicate_hint": "0x004cb925: test al, al"
+        }
+      ]
+    },
+    "0x004d34c9": {
+      "purpose": "worker/camp/path selected branch",
+      "stats": {
+        "block_count": 5,
+        "instruction_count": 53,
+        "edge_count": 15,
+        "conditional_branches": 3,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCWorkerAlarmModeBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5059800,
+          "mnemonic": "jne",
+          "true_target": 5059809,
+          "false_target": 5059802,
+          "predicate_hint": "0x004d34d6: test al, al"
+        },
+        {
+          "at": 5059839,
+          "mnemonic": "jne",
+          "true_target": 5059869,
+          "false_target": 5059841,
+          "predicate_hint": "0x004d34fd: test eax, eax"
+        }
+      ]
+    },
+    "0x004b208c": {
+      "purpose": "worker/camp/path selected branch",
       "stats": {
         "block_count": 3,
-        "instruction_count": 18,
-        "edge_count": 4,
+        "instruction_count": 1164,
+        "edge_count": 26,
         "conditional_branches": 1,
         "switch_candidates_indirect_jmp": 0,
         "truncated": false
       },
       "tags": {
         "patterns": [
-          "TASK_CHECK_GO_TO_WORK_BUILDING_SUCCESS"
+          "WorkTimeBase",
+          "WorkTimeThresholdCampFire",
+          "WorkTimeThresholdFarm",
+          "WorkTimeThresholdResidence",
+          "WorkTimeThresholdWork",
+          "WorkerFlightDistance"
         ],
         "classes": [],
         "reason_types": [
+          "caller_of_anchor_path",
           "string_xref"
         ]
       },
       "top_conditions": [
         {
-          "at": 5166733,
-          "mnemonic": "jo",
-          "true_target": 5166740,
-          "false_target": 5166735,
-          "predicate_hint": ""
-        }
-      ]
-    },
-    "0x004ed9e7": {
-      "purpose": "TASK_GO_TO_CAMP anchor",
-      "stats": {
-        "block_count": 1,
-        "instruction_count": 10,
-        "edge_count": 1,
-        "conditional_branches": 0,
-        "switch_candidates_indirect_jmp": 0,
-        "truncated": false
-      },
-      "tags": {
-        "patterns": [
-          "TASK_GO_TO_CAMP"
-        ],
-        "classes": [],
-        "reason_types": [
-          "string_xref"
-        ]
-      },
-      "top_conditions": []
-    },
-    "0x004ed50a": {
-      "purpose": "TASK_CHANGE_WORK_TIME_CAMP anchor",
-      "stats": {
-        "block_count": 1,
-        "instruction_count": 10,
-        "edge_count": 1,
-        "conditional_branches": 0,
-        "switch_candidates_indirect_jmp": 0,
-        "truncated": false
-      },
-      "tags": {
-        "patterns": [
-          "TASK_CHANGE_WORK_TIME_CAMP"
-        ],
-        "classes": [],
-        "reason_types": [
-          "string_xref"
-        ]
-      },
-      "top_conditions": []
-    },
-    "0x006781a8": {
-      "purpose": "worker reattach/distance checks",
-      "stats": {
-        "block_count": 4,
-        "instruction_count": 141,
-        "edge_count": 7,
-        "conditional_branches": 2,
-        "switch_candidates_indirect_jmp": 0,
-        "truncated": false
-      },
-      "tags": {
-        "patterns": [
-          "MaximumDistanceWorkerToFarm",
-          "MaximumDistanceWorkerToResidence",
-          "ReAttachWorkerFrequency"
-        ],
-        "classes": [],
-        "reason_types": [
-          "string_xref"
-        ]
-      },
-      "top_conditions": [
-        {
-          "at": 6783432,
-          "mnemonic": "jg",
-          "true_target": 6783443,
-          "false_target": 6783434,
-          "predicate_hint": "0x006781c2: cmp eax, dword ptr [ecx + 0x3adc]"
-        },
-        {
-          "at": 6783461,
+          "at": 4923545,
           "mnemonic": "jne",
-          "true_target": 6783434,
-          "false_target": 6783463,
-          "predicate_hint": "0x006781dd: cmp dword ptr [0xf6eaf8], -1"
+          "true_target": 4927704,
+          "false_target": 4923551,
+          "predicate_hint": "0x004b2092: test byte ptr [0x8614f0], 1"
         }
       ]
     },
-    "0x0063201a": {
-      "purpose": "path runtime: next waypoint / orientation / pathing used",
+    "0x0057f2e1": {
+      "purpose": "path/blocking predicate vtable branch",
       "stats": {
-        "block_count": 4,
-        "instruction_count": 235,
-        "edge_count": 14,
-        "conditional_branches": 2,
+        "block_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCBlockingStatusPredicate@EGL@@",
+          ".?AVCBuildBlockedOnlyPredicate@?A0xfc60cb98@GGL@@",
+          ".?AVCPotentialCampSitePredicate@GGL@@",
+          ".?AVCUnblockedInLargeSectorPredicate@EGL@@",
+          ".?AVCUnblockedInSectorPredicate@EGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5763822,
+          "mnemonic": "je",
+          "true_target": 5763831,
+          "false_target": 5763824,
+          "predicate_hint": "0x0057f2e9: test byte ptr [esp + 8], 1"
+        }
+      ]
+    },
+    "0x004e3340": {
+      "purpose": "CWorkerBehavior vtable branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCCamperBehavior@GGL@@",
+          ".?AVCWorkerAlarmModeBehavior@GGL@@",
+          ".?AVCWorkerBehavior@GGL@@",
+          ".?AVCWorkerFleeBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5124941,
+          "mnemonic": "je",
+          "true_target": 5124950,
+          "false_target": 5124943,
+          "predicate_hint": "0x004e3348: test byte ptr [esp + 8], 1"
+        }
+      ]
+    },
+    "0x004da815": {
+      "purpose": "pathfinding/runtime waypoint branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 219,
+        "edge_count": 8,
+        "conditional_branches": 1,
         "switch_candidates_indirect_jmp": 0,
         "truncated": false
       },
@@ -1647,28 +2130,144 @@
       },
       "top_conditions": [
         {
-          "at": 6496314,
-          "mnemonic": "jg",
-          "true_target": 6496325,
-          "false_target": 6496316,
-          "predicate_hint": "0x00632034: cmp eax, dword ptr [ecx + 0x3adc]"
-        },
-        {
-          "at": 6496343,
+          "at": 5089314,
           "mnemonic": "jne",
-          "true_target": 6496316,
-          "false_target": 6496345,
-          "predicate_hint": "0x0063204f: cmp dword ptr [0xf5cc30], -1"
+          "true_target": 5090079,
+          "false_target": 5089320,
+          "predicate_hint": "0x004da81b: test byte ptr [0x86e8a8], 1"
         }
       ]
     },
-    "0x00631e3d": {
-      "purpose": "path runtime: fine/coarse path",
+    "0x004e5c2c": {
+      "purpose": "worker/camp/path selected branch",
       "stats": {
-        "block_count": 4,
-        "instruction_count": 102,
-        "edge_count": 12,
-        "conditional_branches": 2,
+        "block_count": 3,
+        "instruction_count": 130,
+        "edge_count": 2,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "MaximumDistanceWorkerToFarm",
+          "MaximumDistanceWorkerToResidence",
+          "ReAttachWorkerFrequency"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5135417,
+          "mnemonic": "jne",
+          "true_target": 5135849,
+          "false_target": 5135423,
+          "predicate_hint": "0x004e5c32: test byte ptr [0x871d88], 1"
+        }
+      ]
+    },
+    "0x004e3324": {
+      "purpose": "CWorkerBehavior vtable branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCWorkerAlarmModeBehaviorProps@GGL@@",
+          ".?AVCWorkerBehaviorProps@GGL@@",
+          ".?AVCWorkerFleeBehaviorProps@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5124913,
+          "mnemonic": "je",
+          "true_target": 5124922,
+          "false_target": 5124915,
+          "predicate_hint": "0x004e332c: test byte ptr [esp + 8], 1"
+        }
+      ]
+    },
+    "0x004a71d5": {
+      "purpose": "blocking/placement branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 395,
+        "edge_count": 14,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "BlockingArea",
+          "NumBlockedPoints"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 4878818,
+          "mnemonic": "jne",
+          "true_target": 4880261,
+          "false_target": 4878824,
+          "predicate_hint": "0x004a71db: test byte ptr [0x85e170], 1"
+        }
+      ]
+    },
+    "0x004dab46": {
+      "purpose": "pathfinding/runtime waypoint branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 128,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "WayPoints",
+          "WaypointsCount"
+        ],
+        "classes": [],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5090131,
+          "mnemonic": "jne",
+          "true_target": 5090570,
+          "false_target": 5090137,
+          "predicate_hint": "0x004dab4c: test byte ptr [0x86e9f0], 1"
+        }
+      ]
+    },
+    "0x004dad86": {
+      "purpose": "pathfinding/runtime waypoint branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 92,
+        "edge_count": 7,
+        "conditional_branches": 1,
         "switch_candidates_indirect_jmp": 0,
         "truncated": false
       },
@@ -1685,35 +2284,149 @@
       },
       "top_conditions": [
         {
-          "at": 6495837,
-          "mnemonic": "jg",
-          "true_target": 6495848,
-          "false_target": 6495839,
-          "predicate_hint": "0x00631e57: cmp eax, dword ptr [ecx + 0x3adc]"
-        },
-        {
-          "at": 6495866,
+          "at": 5090707,
           "mnemonic": "jne",
-          "true_target": 6495839,
-          "false_target": 6495868,
-          "predicate_hint": "0x00631e72: cmp dword ptr [0xf5cc34], -1"
+          "true_target": 5090977,
+          "false_target": 5090713,
+          "predicate_hint": "0x004dad8c: test byte ptr [0x86eb20], 1"
         }
       ]
     },
-    "0x0062767a": {
-      "purpose": "dynamic blocking area / blocked points",
+    "0x00500a1d": {
+      "purpose": "camp/camper behavior vtable branch",
       "stats": {
-        "block_count": 4,
-        "instruction_count": 417,
-        "edge_count": 20,
-        "conditional_branches": 2,
+        "block_count": 3,
+        "instruction_count": 44,
+        "edge_count": 10,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCCampBehavior@GGL@@",
+          ".?AVCCamperBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5245492,
+          "mnemonic": "je",
+          "true_target": 5245568,
+          "false_target": 5245494,
+          "predicate_hint": "0x00500a32: test eax, eax"
+        }
+      ]
+    },
+    "0x004ffe1f": {
+      "purpose": "camp/camper behavior vtable branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 23,
+        "edge_count": 7,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCCampBehavior@GGL@@",
+          ".?AVCCamperBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5242402,
+          "mnemonic": "jne",
+          "true_target": 5242414,
+          "false_target": 5242404,
+          "predicate_hint": "0x004ffe20: mov edi, ecx"
+        }
+      ]
+    },
+    "0x004fff0d": {
+      "purpose": "camp/camper behavior vtable branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCCamperBehaviorProperties@GGL@@",
+          ".?AVCPotentialCampSitePredicate@GGL@@"
+        ],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5242650,
+          "mnemonic": "je",
+          "true_target": 5242659,
+          "false_target": 5242652,
+          "predicate_hint": "0x004fff15: test byte ptr [esp + 8], 1"
+        }
+      ]
+    },
+    "0x004daf73": {
+      "purpose": "path/blocking predicate vtable branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCPath@EGL@@",
+          ".?AVCPath@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5091200,
+          "mnemonic": "je",
+          "true_target": 5091209,
+          "false_target": 5091202,
+          "predicate_hint": "0x004daf7b: test byte ptr [esp + 8], 1"
+        }
+      ]
+    },
+    "0x004b7c82": {
+      "purpose": "worker alarm/flee branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 412,
+        "edge_count": 14,
+        "conditional_branches": 1,
         "switch_candidates_indirect_jmp": 0,
         "truncated": false
       },
       "tags": {
         "patterns": [
-          "BlockingArea",
-          "NumBlockedPoints"
+          "WorkerAlarmMode"
         ],
         "classes": [],
         "reason_types": [
@@ -1722,26 +2435,225 @@
       },
       "top_conditions": [
         {
-          "at": 6452890,
-          "mnemonic": "jg",
-          "true_target": 6452901,
-          "false_target": 6452892,
-          "predicate_hint": "0x00627694: cmp eax, dword ptr [ecx + 0x3adc]"
-        },
-        {
-          "at": 6452919,
+          "at": 4947087,
           "mnemonic": "jne",
-          "true_target": 6452892,
-          "false_target": 6452921,
-          "predicate_hint": "0x006276af: cmp dword ptr [0xf583c4], -1"
+          "true_target": 4948575,
+          "false_target": 4947093,
+          "predicate_hint": "0x004b7c88: test byte ptr [0x862d34], 1"
         }
       ]
     },
-    "0x00645c1c": {
-      "purpose": "CCampBehavior branch",
+    "0x004af71e": {
+      "purpose": "worker alarm/flee branch",
       "stats": {
         "block_count": 3,
-        "instruction_count": 18,
+        "instruction_count": 273,
+        "edge_count": 9,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "WorkerAlarmMode"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 4912939,
+          "mnemonic": "jne",
+          "true_target": 4913904,
+          "false_target": 4912945,
+          "predicate_hint": "0x004af724: test byte ptr [0x85fc30], 1"
+        }
+      ]
+    },
+    "0x004cbbbf": {
+      "purpose": "worker/camp/path selected branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 53,
+        "edge_count": 6,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCWorkerFleeBehavior@GGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5028812,
+          "mnemonic": "jne",
+          "true_target": 5028953,
+          "false_target": 5028818,
+          "predicate_hint": "0x004cbbc5: test byte ptr [0x86a824], 1"
+        }
+      ]
+    },
+    "0x00516ab2": {
+      "purpose": "pathfinding/runtime waypoint branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 44,
+        "edge_count": 5,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [
+          "WayPoints"
+        ],
+        "classes": [],
+        "reason_types": [
+          "string_xref"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5335743,
+          "mnemonic": "jne",
+          "true_target": 5335859,
+          "false_target": 5335745,
+          "predicate_hint": "0x00516ab8: test byte ptr [0x87e1f8], 1"
+        }
+      ]
+    },
+    "0x004daf1d": {
+      "purpose": "path/blocking predicate vtable branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 23,
+        "edge_count": 7,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCPath@EGL@@"
+        ],
+        "reason_types": [
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5091104,
+          "mnemonic": "jne",
+          "true_target": 5091116,
+          "false_target": 5091106,
+          "predicate_hint": "0x004daf1e: mov edi, ecx"
+        }
+      ]
+    },
+    "0x0058051f": {
+      "purpose": "path/blocking predicate vtable branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCUnblockedBuildingAreasPredicate@EGL@@"
+        ],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5768492,
+          "mnemonic": "je",
+          "true_target": 5768501,
+          "false_target": 5768494,
+          "predicate_hint": "0x00580527: test byte ptr [esp + 8], 1"
+        }
+      ]
+    },
+    "0x0057fe7c": {
+      "purpose": "path/blocking predicate vtable branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCUnblockedAreasPredicate@EGL@@"
+        ],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5766793,
+          "mnemonic": "je",
+          "true_target": 5766802,
+          "false_target": 5766795,
+          "predicate_hint": "0x0057fe84: test byte ptr [esp + 8], 1"
+        }
+      ]
+    },
+    "0x00508a9b": {
+      "purpose": "worker/camp/path selected branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
+        "conditional_branches": 1,
+        "switch_candidates_indirect_jmp": 0,
+        "truncated": false
+      },
+      "tags": {
+        "patterns": [],
+        "classes": [
+          ".?AVCCoarsePath@EGL@@"
+        ],
+        "reason_types": [
+          "caller_of_anchor_path",
+          "rtti_vtable_method"
+        ]
+      },
+      "top_conditions": [
+        {
+          "at": 5278376,
+          "mnemonic": "je",
+          "true_target": 5278385,
+          "false_target": 5278378,
+          "predicate_hint": "0x00508aa3: test byte ptr [esp + 8], 1"
+        }
+      ]
+    },
+    "0x00500cea": {
+      "purpose": "camp/camper behavior vtable branch",
+      "stats": {
+        "block_count": 3,
+        "instruction_count": 14,
         "edge_count": 4,
         "conditional_branches": 1,
         "switch_candidates_indirect_jmp": 0,
@@ -1759,20 +2671,20 @@
       },
       "top_conditions": [
         {
-          "at": 6577192,
+          "at": 5246199,
           "mnemonic": "je",
-          "true_target": 6577204,
-          "false_target": 6577194,
-          "predicate_hint": "0x00645c24: test byte ptr [ebp + 8], 1"
+          "true_target": 5246208,
+          "false_target": 5246201,
+          "predicate_hint": "0x00500cf2: test byte ptr [esp + 8], 1"
         }
       ]
     },
-    "0x00645e98": {
-      "purpose": "CCamperBehavior branch",
+    "0x00500c65": {
+      "purpose": "camp/camper behavior vtable branch",
       "stats": {
         "block_count": 3,
-        "instruction_count": 18,
-        "edge_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
         "conditional_branches": 1,
         "switch_candidates_indirect_jmp": 0,
         "truncated": false
@@ -1780,36 +2692,7 @@
       "tags": {
         "patterns": [],
         "classes": [
-          ".?AVCCamperBehavior@GGL@@"
-        ],
-        "reason_types": [
-          "rtti_vtable_method"
-        ]
-      },
-      "top_conditions": [
-        {
-          "at": 6577832,
-          "mnemonic": "je",
-          "true_target": 6577844,
-          "false_target": 6577834,
-          "predicate_hint": "0x00645ea2: mov dword ptr [esi], 0xbbe3c8"
-        }
-      ]
-    },
-    "0x0069c652": {
-      "purpose": "CWorkerBehavior branching hub",
-      "stats": {
-        "block_count": 8,
-        "instruction_count": 63,
-        "edge_count": 22,
-        "conditional_branches": 7,
-        "switch_candidates_indirect_jmp": 0,
-        "truncated": false
-      },
-      "tags": {
-        "patterns": [],
-        "classes": [
-          ".?AVCWorkerBehavior@GGL@@"
+          ".?AVCCampBehaviorProperties@GGL@@"
         ],
         "reason_types": [
           "caller_of_anchor_path",
@@ -1818,49 +2701,28 @@
       },
       "top_conditions": [
         {
-          "at": 6932087,
+          "at": 5246066,
           "mnemonic": "je",
-          "true_target": 6932139,
-          "false_target": 6932089,
-          "predicate_hint": "0x0069c675: test ebx, ebx"
-        },
-        {
-          "at": 6932161,
-          "mnemonic": "jne",
-          "true_target": 6932182,
-          "false_target": 6932163,
-          "predicate_hint": "0x0069c6bd: cmp dword ptr [edi + 0x20], -1"
-        },
-        {
-          "at": 6932171,
-          "mnemonic": "jne",
-          "true_target": 6932176,
-          "false_target": 6932173,
-          "predicate_hint": "0x0069c6c3: cmp dword ptr [esi*4 + 0xbe1434], -1"
-        },
-        {
-          "at": 6932180,
-          "mnemonic": "jl",
-          "true_target": 6932157,
-          "false_target": 6932182,
-          "predicate_hint": "0x0069c6d1: cmp esi, 6"
+          "true_target": 5246075,
+          "false_target": 5246068,
+          "predicate_hint": "0x00500c6d: test byte ptr [esp + 8], 1"
         }
       ]
     },
-    "0x0069ce8f": {
-      "purpose": "CWorkerFleeBehavior branching hub",
+    "0x005000d8": {
+      "purpose": "camp/camper behavior vtable branch",
       "stats": {
-        "block_count": 6,
-        "instruction_count": 52,
-        "edge_count": 10,
-        "conditional_branches": 2,
+        "block_count": 3,
+        "instruction_count": 14,
+        "edge_count": 4,
+        "conditional_branches": 1,
         "switch_candidates_indirect_jmp": 0,
         "truncated": false
       },
       "tags": {
         "patterns": [],
         "classes": [
-          ".?AVCWorkerFleeBehavior@GGL@@"
+          ".?AVCCampWithFreeSlotPredicate@GGL@@"
         ],
         "reason_types": [
           "rtti_vtable_method"
@@ -1868,18 +2730,11 @@
       },
       "top_conditions": [
         {
-          "at": 6934191,
-          "mnemonic": "jle",
-          "true_target": 6934196,
-          "false_target": 6934193,
-          "predicate_hint": "0x0069cea9: cmp eax, dword ptr [ecx + 0x3adc]"
-        },
-        {
-          "at": 6934225,
-          "mnemonic": "jne",
-          "true_target": 6934195,
-          "false_target": 6934227,
-          "predicate_hint": "0x0069cec9: cmp dword ptr [0xf78020], -1"
+          "at": 5243109,
+          "mnemonic": "je",
+          "true_target": 5243118,
+          "false_target": 5243111,
+          "predicate_hint": "0x005000e0: test byte ptr [esp + 8], 1"
         }
       ]
     }

@@ -205,7 +205,17 @@ def create_resource_env(n_envs: int = 1, use_spatial_obs: bool = False, spatial_
 # =============================================================================
 # TRAINING TEST
 # =============================================================================
-def test_training(timesteps: int = 10_000, n_envs: int = 1, use_spatial_obs: bool = False):
+def test_training(
+    timesteps: int = 10_000,
+    n_envs: int = 1,
+    use_spatial_obs: bool = False,
+    progress_bar: bool = True,
+    eval_episodes: int = 3,
+    n_steps: int = 512,
+    batch_size: int = 64,
+    n_epochs: int = 5,
+    net_arch=None,
+):
     """
     Testet das Training mit dem Ressourcen-Reward-System.
 
@@ -246,9 +256,10 @@ def test_training(timesteps: int = 10_000, n_envs: int = 1, use_spatial_obs: boo
         from multihead_policy import MultiHeadMaskablePolicy, SpatialVectorExtractor
         head_sizes = env.env_method("get_action_head_sizes")[0]
         phase_dim = env.get_attr("phase_dim")[0]
+        policy_net_arch = list(net_arch or [512, 256, 256])
 
         policy_kwargs = {
-            "net_arch": [512, 256, 256],
+            "net_arch": policy_net_arch,
             "action_head_sizes": head_sizes,
             "phase_dim": phase_dim,
         }
@@ -266,9 +277,9 @@ def test_training(timesteps: int = 10_000, n_envs: int = 1, use_spatial_obs: boo
             MultiHeadMaskablePolicy,
             env,
             learning_rate=0.0003,
-            n_steps=512,
-            batch_size=64,
-            n_epochs=5,
+            n_steps=n_steps,
+            batch_size=batch_size,
+            n_epochs=n_epochs,
             gamma=0.99,
             ent_coef=0.02,
             policy_kwargs=policy_kwargs,
@@ -281,12 +292,12 @@ def test_training(timesteps: int = 10_000, n_envs: int = 1, use_spatial_obs: boo
             "MlpPolicy",
             env,
             learning_rate=0.0003,
-            n_steps=512,
-            batch_size=64,
-            n_epochs=5,
+            n_steps=n_steps,
+            batch_size=batch_size,
+            n_epochs=n_epochs,
             gamma=0.99,
             ent_coef=0.02,
-            policy_kwargs={"net_arch": [512, 256, 256]},
+            policy_kwargs={"net_arch": list(net_arch or [512, 256, 256])},
             device=device,
             verbose=0,
         )
@@ -303,7 +314,7 @@ def test_training(timesteps: int = 10_000, n_envs: int = 1, use_spatial_obs: boo
     model.learn(
         total_timesteps=timesteps,
         callback=callback,
-        progress_bar=True,
+        progress_bar=progress_bar,
     )
     train_time = time.time() - train_start
 
@@ -320,7 +331,7 @@ def test_training(timesteps: int = 10_000, n_envs: int = 1, use_spatial_obs: boo
     eval_env = ResourceRewardEnv(player_id=1, use_spatial_obs=use_spatial_obs)
     eval_results = []
 
-    for ep in range(3):
+    for ep in range(eval_episodes):
         obs, _ = eval_env.reset()
         done = False
         total_reward = 0
@@ -376,11 +387,11 @@ def test_training(timesteps: int = 10_000, n_envs: int = 1, use_spatial_obs: boo
     print("ZUSAMMENFASSUNG")
     print("=" * 70)
 
-    avg_potential = np.mean([r["potential_scharfschuetzen"] for r in eval_results])
-    avg_taler = np.mean([r["total_taler"] for r in eval_results])
-    avg_schwefel = np.mean([r["total_schwefel"] for r in eval_results])
-    avg_earned_taler = np.mean([r["earned_taler"] for r in eval_results])
-    avg_earned_schwefel = np.mean([r["earned_schwefel"] for r in eval_results])
+    avg_potential = np.mean([r["potential_scharfschuetzen"] for r in eval_results]) if eval_results else 0.0
+    avg_taler = np.mean([r["total_taler"] for r in eval_results]) if eval_results else 0.0
+    avg_schwefel = np.mean([r["total_schwefel"] for r in eval_results]) if eval_results else 0.0
+    avg_earned_taler = np.mean([r["earned_taler"] for r in eval_results]) if eval_results else 0.0
+    avg_earned_schwefel = np.mean([r["earned_schwefel"] for r in eval_results]) if eval_results else 0.0
 
     summary = {
         "timesteps": timesteps,
@@ -401,6 +412,28 @@ def test_training(timesteps: int = 10_000, n_envs: int = 1, use_spatial_obs: boo
     print(f"Durchschnittliche potentielle Scharfschuetzen: {avg_potential:.2f}")
 
     return summary, model
+
+
+test_training.__test__ = False
+
+
+def test_resource_reward_training_smoke():
+    summary, model = test_training(
+        timesteps=32,
+        n_envs=1,
+        use_spatial_obs=False,
+        progress_bar=False,
+        eval_episodes=0,
+        n_steps=16,
+        batch_size=8,
+        n_epochs=1,
+        net_arch=[64, 64],
+    )
+    model.env.close()
+
+    assert summary["timesteps"] == 32
+    assert summary["train_time_seconds"] > 0.0
+    assert summary["steps_per_second"] > 0.0
 
 
 # =============================================================================

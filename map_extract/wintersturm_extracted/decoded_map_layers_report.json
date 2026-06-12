@@ -1,0 +1,34 @@
+{
+  "s5x": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\extra2\\shr\\maps\\User\\(4) EMS Wintersturm.s5x",
+  "stream_offset": 581386,
+  "stream_len": 599182,
+  "height_map": {
+    "shape": [
+      515,
+      515
+    ],
+    "min": 467,
+    "max": 5858
+  },
+  "lowres": {
+    "shape": [
+      131,
+      131
+    ],
+    "unique_values": 41
+  },
+  "tail_header": {
+    "magic_1": 1026855308,
+    "magic_2": 1491089699,
+    "len": 68668,
+    "version": 1
+  },
+  "lowres_header": {
+    "a1": 129,
+    "a2": 129,
+    "b1": 131,
+    "b2": 131,
+    "const1": 24576257,
+    "const2": 24576257
+  }
+}

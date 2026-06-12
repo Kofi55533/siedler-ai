@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "generated_at_utc": "2026-06-11T10:42:43.350740+00:00",
+    "certificate_schema": "siedler5_engine_conformance_v1"
+  },
+  "source_binary": {
+    "path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\bin\\SettlersHoK.exe",
+    "exists": true,
+    "size_bytes": 5038080,
+    "sha256": "414593764e96ca36c56acc27251f7aef61b28d2e0ee1b15fcbb4c73d0fce9f33"
+  },
+  "artifacts": {
+    "full_worker_engine_behavior": {
+      "path": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\full_worker_engine_behavior.json",
+      "exists": true,
+      "size_bytes": 4004444,
+      "sha256": "c0a372e3db3b9c00848ae7421982c7ff369a30533c0772feeb4bcf671a5b826a"
+    },
+    "engine_instruction_cfg": {
+      "path": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\engine_instruction_cfg.json",
+      "exists": true,
+      "size_bytes": 2576189,
+      "sha256": "fa470db9c4c786e72f11c0a3d4e3b8167f276c48fcb19f2045704ee5dc5c44ec"
+    },
+    "worker_camp_path_branch_matrix": {
+      "path": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_camp_path_branch_matrix.json",
+      "exists": true,
+      "size_bytes": 238046,
+      "sha256": "51302c8760df6ab2ad3815a9b511e3945ab09a3d86acec8012584072f11de896"
+    },
+    "worker_sim_contract": {
+      "path": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_sim_contract.json",
+      "exists": true,
+      "size_bytes": 84886,
+      "sha256": "2de47dc8a6c8917675b341cc41c73645782c1c11a9c3951d1251babc59853b17"
+    },
+    "ghidra_worker_decompile_evidence": {
+      "path": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\ghidra_worker_decompile_evidence.json",
+      "exists": true,
+      "size_bytes": 60034,
+      "sha256": "5639b809b745d1cdb868d86c7bcaad62c9d08962080957a01160004550205f4c"
+    },
+    "engine_env_diff_report": {
+      "path": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\engine_env_diff_report.md",
+      "exists": true,
+      "size_bytes": 2466,
+      "sha256": "3501611cd6c80edc0aa214f7cfd5292dd97a8bcc90964706c740d7e1922a22ec"
+    }
+  },
+  "coverage": {
+    "full_worker_engine_behavior": {
+      "source_root": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition",
+      "tasklist_count": 361,
+      "worker_entity_count": 21,
+      "worker_building_count": 48,
+      "reachable_worker_tasklist_count": 231,
+      "unresolved_worker_tasklist_count": 0,
+      "source_file_counts": {
+        "tasklists_effective": 361,
+        "entities_effective": 855,
+        "tasklist_layer_files": 1041,
+        "entity_layer_files": 2255
+      }
+    },
+    "engine_instruction_cfg": {
+      "binary": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\bin\\SettlersHoK.exe",
+      "function_count": 153,
+      "total_blocks": 591,
+      "total_instructions": 8761,
+      "total_conditional_branches": 275,
+      "total_switch_candidates_indirect_jmp": 0
+    },
+    "worker_camp_path_branch_matrix": {
+      "selected_function_count": 130,
+      "anchor_function_count": 52,
+      "selected_with_conditional_branches": 95,
+      "selected_total_conditional_branches": 215,
+      "selected_switch_candidates_indirect_jmp": 0
+    },
+    "worker_sim_contract": {
+      "generated_at_utc": "2026-06-10T22:46:50.869403+00:00",
+      "branch_anchor_count": 32,
+      "worker_profile_count": 18
+    },
+    "ghidra_worker_decompile_evidence": {
+      "program_name": "SettlersHoK.exe",
+      "executable_path": "/C:/Users/marku/OneDrive/Desktop/Gold edition/bin/SettlersHoK.exe",
+      "language_id": "x86:LE:32:default",
+      "compiler_spec_id": "windows",
+      "target_address_count": 130,
+      "matched_target_address_count": 105,
+      "unmatched_target_address_count": 25,
+      "matched_function_count": 104,
+      "decompiled_ok_count": 104,
+      "stores_full_decompiled_code": false
+    },
+    "engine_env_diff_report": {
+      "critical": 0,
+      "warnings": 0
+    }
+  },
+  "proof_status": {
+    "xml_tasklist_extraction": "machine_checked_exact_extract",
+    "runtime_worker_values": "machine_checked_against_extract",
+    "static_binary_cfg": "heuristic_static_disassembly",
+    "ghidra_decompiler_evidence": "available_hashes_and_pcode_histograms",
+    "full_runtime_equivalence": "not_formally_proven",
+    "pathfinding_equivalence": "not_formally_proven"
+  },
+  "formal_equivalence_requirements": [
+    "A compiler/CPU semantic model for the exact x86 binary.",
+    "Verified function boundaries and typed memory layout for all relevant engine objects.",
+    "A decompiled or lifted IR for every task/path/worker function used by the simulation.",
+    "A formal relation between engine state and simulation state.",
+    "Exhaustive or theorem-proved transition equivalence for every reachable state.",
+    "Runtime trace validation for nondeterministic choices, timing, floating point, and OS-dependent pathing."
+  ],
+  "limits": [
+    "Static CFG extraction is evidence, not a mathematical proof of semantic equivalence.",
+    "TaskList/XML extraction is exact for the parsed files, but task execution semantics live in the binary.",
+    "The local simulation pathfinder is not proven equivalent to the engine path solver.",
+    "No complete proprietary high-level decompiler output is stored in this repository."
+  ]
+}

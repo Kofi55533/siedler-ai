@@ -94,7 +94,6 @@ import torch as th
 
 try:
     import gymnasium as gym
-    from sb3_contrib import MaskablePPO
     from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
     from stable_baselines3 import PPO
     from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
@@ -103,7 +102,6 @@ except ImportError:
     print("Installiere AbhÃƒÂ¤ngigkeiten...")
     install_dependencies_robust()
     import gymnasium as gym
-    from sb3_contrib import MaskablePPO
     from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
     from stable_baselines3 import PPO
     from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
@@ -111,6 +109,7 @@ except ImportError:
 
 # Importiere unser Environment
 from environment import SiedlerScharfschuetzenEnv
+from macro_maskable_ppo import CompletedActionMaskablePPO
 from multihead_policy import MultiHeadMaskablePolicy, SpatialVectorExtractor
 from training_profiles import build_training_config, get_train_profile
 
@@ -182,6 +181,13 @@ def _prefer_speed_mode() -> bool:
     return _resolve_sim_mode() == "fast_train"
 
 
+def _count_completed_action_steps() -> bool:
+    """
+    Wenn aktiv, zaehlt PPO-Timesteps nur bei abgeschlossenen Multi-Step-Aktionen.
+    """
+    return _env_truthy(os.environ.get("SIEDLER_COUNT_COMPLETED_ACTION_STEPS", "0"))
+
+
 def _select_net_arch(obs_dim: int):
     if _prefer_speed_mode():
         if obs_dim >= 400:
@@ -219,6 +225,17 @@ def _detect_runtime_info() -> Dict[str, object]:
         "gpu_mem_gb": gpu_mem_gb,
         "cpu_count": cpu_count,
     }
+
+
+def _apply_default_colab_training_mode() -> Dict[str, object]:
+    runtime = _detect_runtime_info()
+    if (
+        runtime.get("is_colab")
+        and not os.environ.get("SIEDLER_SIM_MODE")
+        and not os.environ.get("SIEDLER_FAST_TRAIN")
+    ):
+        os.environ["SIEDLER_SIM_MODE"] = "fast_train"
+    return runtime
 
 
 def _try_mount_google_drive() -> Optional[Path]:
@@ -454,7 +471,7 @@ def _auto_tune_for_colab(
     if disable_auto in {"1", "true", "yes", "on"}:
         return {"enabled": False, "reason": "disabled_by_env"}
 
-    runtime = _detect_runtime_info()
+    runtime = _apply_default_colab_training_mode()
     preset = _infer_colab_preset(runtime)
     explicit_keys = set((explicit_config or {}).keys())
 
@@ -1069,6 +1086,10 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     include_start_resources = float(
         reward_profile.get("terminal_potential_include_start_resources", 0.0)
     ) > 0.0
+    terminal_tier = int(round(float(reward_profile.get("terminal_potential_scharf_tier", 1.0))))
+    terminal_require_path_ready = float(
+        reward_profile.get("terminal_potential_require_path_ready", 1.0)
+    ) > 0.0
     print(
         "Reward-Profil: terminal_dependency_bonus="
         f"{terminal_dependency_bonus}, "
@@ -1080,7 +1101,9 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
     print(
         "Reward-Potential-Quelle: "
         f"{'cumulative_earnings' if potential_cumulative else 'current_stock'} "
-        f"(include_start_resources={include_start_resources})"
+        f"(include_start_resources={include_start_resources}, "
+        f"tier={terminal_tier}, "
+        f"require_path_ready={terminal_require_path_ready})"
     )
     step_delta_potential = float(reward_profile.get("step_delta_potential_bonus", 0.0))
     step_delta_dependency = float(reward_profile.get("step_delta_dependency_bonus", 0.0))
@@ -1110,6 +1133,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         )
     device = "cuda" if th.cuda.is_available() else "cpu"
     print(f"Device: {device}")
+    print(f"Completed-action timesteps: {int(_count_completed_action_steps())}")
     if tuning_info.get("enabled"):
         runtime = tuning_info.get("runtime", {})
         preset = tuning_info.get("preset", {})
@@ -1163,7 +1187,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         "phase_dim": phase_dim,
     })
     policy_cls = MultiHeadMaskablePolicy
-    model_cls = MaskablePPO
+    model_cls = CompletedActionMaskablePPO
 
     if isinstance(env.observation_space, gym.spaces.Dict):
         extractor_dims = _select_extractor_dims()
@@ -1234,6 +1258,8 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
         try:
             print(f"Resume: lade Checkpoint {resume_path}")
             model = model_cls.load(resume_path, env=env, device=device)
+            if hasattr(model, "count_completed_actions_only"):
+                model.count_completed_actions_only = _count_completed_action_steps()
             loaded_steps = int(getattr(model, "num_timesteps", 0) or 0)
             if loaded_steps > 0:
                 resume_steps = max(resume_steps, loaded_steps)
@@ -1259,6 +1285,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
             device=device,
             verbose=_sb3_verbose_level(),
             tensorboard_log=(f"{save_path}/tensorboard/" if tensorboard_enabled else None),
+            count_completed_actions_only=_count_completed_action_steps(),
         )
 
     print("\nTraining startet...")
@@ -1449,6 +1476,8 @@ def export_strategy(
 # =============================================================================
 
 if __name__ == "__main__":
+    _apply_default_colab_training_mode()
+
     probe_only = str(os.environ.get("SIEDLER_PROBE_ENV_ONLY", "")).strip().lower()
     if probe_only in {"1", "true", "yes", "on"}:
         profile_name = get_train_profile()["name"]

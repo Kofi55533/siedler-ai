@@ -1,0 +1,36 @@
+[
+  {
+    "candidate": "baseline_wait",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_step_unlock_progress_metric": 0.16666666666666666,
+    "mean_step_required_buildings_completed": 0.0,
+    "mean_step_required_techs_completed": 0.0,
+    "mean_step_taler_income_per_cycle": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 9.5367431640625e-07
+  },
+  {
+    "candidate": "baseline_random",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_step_unlock_progress_metric": 0.16666666666666666,
+    "mean_step_required_buildings_completed": 0.0,
+    "mean_step_required_techs_completed": 0.0,
+    "mean_step_taler_income_per_cycle": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 4.76837158203125e-07
+  }
+]

@@ -1,0 +1,306 @@
+[
+  {
+    "candidate": "baseline_wait",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "seed": 0,
+    "timesteps": 1,
+    "train_seconds": 1.430511474609375e-06,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "wait"
+    },
+    "effective_config": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "effective_runtime": {
+      "use_spatial_obs": false,
+      "count_completed_actions_only": false,
+      "net_arch": [
+        64
+      ],
+      "policy_mode": "wait"
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 1800.0
+  },
+  {
+    "candidate": "baseline_wait",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "seed": 1,
+    "timesteps": 1,
+    "train_seconds": 9.5367431640625e-07,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "wait"
+    },
+    "effective_config": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "effective_runtime": {
+      "use_spatial_obs": false,
+      "count_completed_actions_only": false,
+      "net_arch": [
+        64
+      ],
+      "policy_mode": "wait"
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 1800.0
+  },
+  {
+    "candidate": "baseline_wait",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "seed": 2,
+    "timesteps": 1,
+    "train_seconds": 4.76837158203125e-07,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "wait"
+    },
+    "effective_config": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "effective_runtime": {
+      "use_spatial_obs": false,
+      "count_completed_actions_only": false,
+      "net_arch": [
+        64
+      ],
+      "policy_mode": "wait"
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 1800.0
+  },
+  {
+    "candidate": "baseline_wait",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "seed": 3,
+    "timesteps": 1,
+    "train_seconds": 4.76837158203125e-07,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "wait"
+    },
+    "effective_config": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "effective_runtime": {
+      "use_spatial_obs": false,
+      "count_completed_actions_only": false,
+      "net_arch": [
+        64
+      ],
+      "policy_mode": "wait"
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 1800.0
+  },
+  {
+    "candidate": "baseline_random",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "seed": 0,
+    "timesteps": 1,
+    "train_seconds": 4.76837158203125e-07,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "random"
+    },
+    "effective_config": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "effective_runtime": {
+      "use_spatial_obs": false,
+      "count_completed_actions_only": false,
+      "net_arch": [
+        64
+      ],
+      "policy_mode": "random"
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 2807.25
+  },
+  {
+    "candidate": "baseline_random",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "seed": 1,
+    "timesteps": 1,
+    "train_seconds": 2.384185791015625e-07,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "random"
+    },
+    "effective_config": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "effective_runtime": {
+      "use_spatial_obs": false,
+      "count_completed_actions_only": false,
+      "net_arch": [
+        64
+      ],
+      "policy_mode": "random"
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 2800.75
+  },
+  {
+    "candidate": "baseline_random",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "seed": 2,
+    "timesteps": 1,
+    "train_seconds": 2.384185791015625e-07,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "random"
+    },
+    "effective_config": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "effective_runtime": {
+      "use_spatial_obs": false,
+      "count_completed_actions_only": false,
+      "net_arch": [
+        64
+      ],
+      "policy_mode": "random"
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 2825.75
+  },
+  {
+    "candidate": "baseline_random",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "seed": 3,
+    "timesteps": 1,
+    "train_seconds": 2.384185791015625e-07,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "random"
+    },
+    "effective_config": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "effective_runtime": {
+      "use_spatial_obs": false,
+      "count_completed_actions_only": false,
+      "net_arch": [
+        64
+      ],
+      "policy_mode": "random"
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 2847.25
+  }
+]

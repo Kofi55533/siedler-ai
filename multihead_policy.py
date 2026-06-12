@@ -83,6 +83,12 @@ class MultiHeadMaskablePolicy(MaskableActorCriticPolicy):
         self.action_nets = nn.ModuleList(
             [nn.Linear(latent_dim, n) for n in self.action_head_sizes]
         )
+        if self.action_space.n > max(self.action_head_sizes):
+            self.cancel_action_index = self.action_space.n - 1
+            self.cancel_action_net = nn.Linear(latent_dim, 1)
+        else:
+            self.cancel_action_index = None
+            self.cancel_action_net = None
         # Keep attribute for compatibility
         self.action_net = self.action_nets[0]
 
@@ -105,6 +111,11 @@ class MultiHeadMaskablePolicy(MaskableActorCriticPolicy):
             idxs = th.nonzero(mask, as_tuple=False).squeeze(1)
             head_logits = head(latent_pi[idxs])
             full[idxs, : head_logits.shape[1]] = head_logits
+        if self.cancel_action_net is not None and self.cancel_action_index is not None:
+            mask = phase_idx != 0
+            if th.any(mask):
+                idxs = th.nonzero(mask, as_tuple=False).squeeze(1)
+                full[idxs, self.cancel_action_index] = self.cancel_action_net(latent_pi[idxs]).squeeze(1)
         return full
 
     def _get_dist_and_value(self, obs: th.Tensor):

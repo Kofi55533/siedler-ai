@@ -1,0 +1,5 @@
+candidate,family,profile_name,runs,mean_terminal_potential_metric,mean_terminal_path_ready,mean_scharf_dependency_progress,mean_scharf_research_progress,mean_scharf_construction_progress,mean_scharfschuetzen,mean_train_seconds
+hyper_goal_default,hyper,curriculum_unlock,1,0.0,0.0,0.5,0.0,0.0,0.0,69.41898608207703
+hyper_goal_explore,hyper,curriculum_unlock,1,0.0,0.0,0.5,0.0,0.0,0.0,76.35109877586365
+hyper_goal_short_horizon,hyper,curriculum_unlock,1,0.0,0.0,0.5,0.0,0.0,0.0,48.30919814109802
+hyper_goal_conservative,hyper,curriculum_unlock,1,0.0,0.0,0.5,0.0,0.0,0.0,78.31671595573425

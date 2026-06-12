@@ -1,0 +1,54 @@
+[
+  {
+    "candidate": "goal_v1",
+    "family": "reward",
+    "profile_name": "goal_v1",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 49.13319134712219
+  },
+  {
+    "candidate": "goal_v1_cumulative",
+    "family": "reward",
+    "profile_name": "goal_v1",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 47.86953067779541
+  },
+  {
+    "candidate": "dense_v2",
+    "family": "reward",
+    "profile_name": "dense_v2",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 47.60328149795532
+  },
+  {
+    "candidate": "curriculum_unlock",
+    "family": "reward",
+    "profile_name": "curriculum_unlock",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 37.769042015075684
+  }
+]

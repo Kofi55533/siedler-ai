@@ -1,0 +1,54 @@
+{
+  "started_at": "2026-03-14 21:48:25",
+  "project_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai",
+  "experiment_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab",
+  "args": {
+    "group": "spec",
+    "timesteps": 32,
+    "eval_episodes": 4,
+    "seeds": [
+      0
+    ],
+    "best_reward_profile": "goal_v1",
+    "candidates": [
+      "custom_unlock_construction_unlock_x2",
+      "custom_unlock_construction_research_focus",
+      "custom_unlock_construction_construction_focus",
+      "custom_unlock_construction_stock_probe",
+      "custom_unlock_construction_path_ready_focus",
+      "custom_unlock_construction_milestone_focus",
+      "custom_unlock_construction_income_focus",
+      "custom_unlock_construction_short_horizon",
+      "custom_economy_bootstrap_unlock_x2",
+      "custom_economy_bootstrap_research_focus",
+      "custom_economy_bootstrap_construction_focus",
+      "custom_economy_bootstrap_stock_probe",
+      "custom_economy_bootstrap_path_ready_focus",
+      "custom_economy_bootstrap_milestone_focus",
+      "custom_economy_bootstrap_income_focus",
+      "custom_economy_bootstrap_short_horizon"
+    ],
+    "candidate_spec": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab\\research\\adaptive_sessions\\adaptive_20260314_213502\\specs\\round2_proxy.json",
+    "max_time_override": 600,
+    "stochastic_eval": true,
+    "output_prefix": "round2_proxy"
+  },
+  "candidates": [
+    "custom_unlock_construction_unlock_x2",
+    "custom_unlock_construction_research_focus",
+    "custom_unlock_construction_construction_focus",
+    "custom_unlock_construction_stock_probe",
+    "custom_unlock_construction_path_ready_focus",
+    "custom_unlock_construction_milestone_focus",
+    "custom_unlock_construction_income_focus",
+    "custom_unlock_construction_short_horizon",
+    "custom_economy_bootstrap_unlock_x2",
+    "custom_economy_bootstrap_research_focus",
+    "custom_economy_bootstrap_construction_focus",
+    "custom_economy_bootstrap_stock_probe",
+    "custom_economy_bootstrap_path_ready_focus",
+    "custom_economy_bootstrap_milestone_focus",
+    "custom_economy_bootstrap_income_focus",
+    "custom_economy_bootstrap_short_horizon"
+  ]
+}

@@ -1,0 +1,2202 @@
+# Ghidra Worker Decompile Evidence
+
+- Program: `SettlersHoK.exe`
+- Executable path: `/C:/Users/marku/OneDrive/Desktop/Gold edition/bin/SettlersHoK.exe`
+- Language: `x86:LE:32:default`
+- Compiler spec: `windows`
+- Generated: `2026-06-10T23:50:00.684340900Z`
+- Target addresses from branch matrix: `130`
+
+This file stores decompiler metadata, P-Code histograms and SHA256 hashes of the generated C output. It intentionally does not inline full decompiled proprietary code.
+
+## Functions
+
+### 0x004cf6c9 `FUN_004cf6c9`
+- target_addresses: `0x004cf6d6`
+- match_mode: `containing`
+- signature: `undefined FUN_004cf6c9(void)`
+- body_address_count: `560`
+- decompile_completed: `true`
+- decompiled_c_sha256: `e1fd60e6bc02ea0e1b9e6649df786a68b3f47c75d4ae59c038f92a806f537d2e`
+- decompiled_c_line_count: `116`
+- pcode_op_count: `387`
+- pcode_top_ops:
+  - `INDIRECT`: 102
+  - `INT_ADD`: 67
+  - `CAST`: 63
+  - `LOAD`: 37
+  - `STORE`: 27
+  - `MULTIEQUAL`: 20
+  - `CALL`: 19
+  - `CBRANCH`: 14
+  - `COPY`: 7
+  - `PTRSUB`: 7
+  - `INT_EQUAL`: 6
+  - `INT_SLESS`: 6
+
+### 0x0057efde `FUN_0057efde`
+- target_addresses: `0x0057efde`
+- match_mode: `entry`
+- signature: `undefined FUN_0057efde(undefined4 param_1, undefined4 param_2, undefined4 param_3)`
+- body_address_count: `512`
+- decompile_completed: `true`
+- decompiled_c_sha256: `7b55aa80171d91ea19f50f7f107bdcf971ffd47c1235eb944c110fbfcbf15ce6`
+- decompiled_c_line_count: `87`
+- pcode_op_count: `131`
+- pcode_top_ops:
+  - `MULTIEQUAL`: 29
+  - `INDIRECT`: 13
+  - `INT_ADD`: 13
+  - `CALL`: 11
+  - `CBRANCH`: 10
+  - `INT_2COMP`: 10
+  - `INT_NOTEQUAL`: 9
+  - `INT_SLESS`: 5
+  - `LOAD`: 5
+  - `INT_MULT`: 4
+  - `INT_ZEXT`: 4
+  - `COPY`: 3
+
+### 0x0058023f `FUN_0058023f`
+- target_addresses: `0x0058024d`
+- match_mode: `containing`
+- signature: `undefined FUN_0058023f(void)`
+- body_address_count: `326`
+- decompile_completed: `true`
+- decompiled_c_sha256: `7554c0c7ad6f43a054b8f0b68f088c30e01c5c1ec3f7fd5303bec61d52be56ac`
+- decompiled_c_line_count: `84`
+- pcode_op_count: `226`
+- pcode_top_ops:
+  - `INT_ADD`: 57
+  - `CAST`: 41
+  - `INDIRECT`: 33
+  - `STORE`: 22
+  - `LOAD`: 20
+  - `COPY`: 15
+  - `CALL`: 10
+  - `MULTIEQUAL`: 9
+  - `CBRANCH`: 5
+  - `INT_MULT`: 4
+  - `INT_SLESS`: 4
+  - `INT_SUB`: 2
+
+### 0x00523905 `FUN_00523905`
+- target_addresses: `0x0052390a`
+- match_mode: `containing`
+- signature: `undefined FUN_00523905(undefined4 param_1)`
+- body_address_count: `266`
+- decompile_completed: `true`
+- decompiled_c_sha256: `1edd6d8cd958d75a6b84215be32bfe7bd34f194b786d80f4c9a042abc2f57979`
+- decompiled_c_line_count: `62`
+- pcode_op_count: `198`
+- pcode_top_ops:
+  - `INDIRECT`: 53
+  - `LOAD`: 38
+  - `CAST`: 27
+  - `INT_ADD`: 25
+  - `CALLIND`: 13
+  - `CALL`: 9
+  - `MULTIEQUAL`: 8
+  - `CBRANCH`: 7
+  - `INT_NOTEQUAL`: 6
+  - `COPY`: 5
+  - `PTRSUB`: 2
+  - `BRANCH`: 1
+- referenced_strings:
+  - `0x0077afec:NetworkProblem`
+
+### 0x00582dae `FUN_00582dae`
+- target_addresses: `0x00582db4`
+- match_mode: `containing`
+- signature: `undefined FUN_00582dae(undefined4 param_1, undefined4 param_2, undefined4 param_3)`
+- body_address_count: `196`
+- decompile_completed: `true`
+- decompiled_c_sha256: `0a434d5d078b02b73db718a6d8440dae78cfac70f8830972a1892384cf54d235`
+- decompiled_c_line_count: `56`
+- pcode_op_count: `74`
+- pcode_top_ops:
+  - `INDIRECT`: 16
+  - `CALL`: 12
+  - `INT_ADD`: 8
+  - `CBRANCH`: 7
+  - `RETURN`: 5
+  - `INT_NOTEQUAL`: 4
+  - `LOAD`: 4
+  - `CAST`: 3
+  - `INT_EQUAL`: 3
+  - `INT_MULT`: 3
+  - `MULTIEQUAL`: 2
+  - `PTRADD`: 2
+
+### 0x00508b37 `FUN_00508b37`
+- target_addresses: `0x00508b37`
+- match_mode: `entry`
+- signature: `undefined FUN_00508b37(void)`
+- body_address_count: `304`
+- decompile_completed: `true`
+- decompiled_c_sha256: `60605b9fafb854c0ea00dc831ca8984a703008ac946c07e6993b3b63557dd825`
+- decompiled_c_line_count: `62`
+- pcode_op_count: `199`
+- pcode_top_ops:
+  - `INDIRECT`: 79
+  - `MULTIEQUAL`: 28
+  - `INT_ADD`: 19
+  - `CAST`: 13
+  - `CALL`: 12
+  - `LOAD`: 12
+  - `PTRSUB`: 8
+  - `CBRANCH`: 6
+  - `INT_EQUAL`: 5
+  - `COPY`: 4
+  - `INT_MULT`: 4
+  - `BRANCH`: 2
+
+### 0x0049c28a `FUN_0049c28a`
+- target_addresses: `0x0049c2a4`
+- match_mode: `containing`
+- signature: `undefined FUN_0049c28a(void)`
+- body_address_count: `324`
+- decompile_completed: `true`
+- decompiled_c_sha256: `46c99732c2461c394284c7ed5364589fecf44427042339d240f327f1b9f778a0`
+- decompiled_c_line_count: `71`
+- pcode_op_count: `160`
+- pcode_top_ops:
+  - `INDIRECT`: 44
+  - `INT_ADD`: 21
+  - `CAST`: 18
+  - `CALL`: 12
+  - `LOAD`: 12
+  - `CBRANCH`: 9
+  - `COPY`: 9
+  - `INT_NOTEQUAL`: 8
+  - `STORE`: 8
+  - `MULTIEQUAL`: 6
+  - `PTRADD`: 3
+  - `BRANCH`: 2
+
+### 0x0057fed8 `FUN_0057fed8`
+- target_addresses: `0x0057fee2, 0x0057fed8`
+- match_mode: `entry`
+- signature: `undefined FUN_0057fed8(undefined4 param_1, undefined4 param_2)`
+- body_address_count: `139`
+- decompile_completed: `true`
+- decompiled_c_sha256: `b2e822b0d26c3bcd1424fcf3e872a0076f20e34c589d4931ca24db4fa09e2529`
+- decompiled_c_line_count: `38`
+- pcode_op_count: `62`
+- pcode_top_ops:
+  - `MULTIEQUAL`: 11
+  - `INDIRECT`: 9
+  - `INT_ADD`: 7
+  - `CAST`: 6
+  - `CBRANCH`: 5
+  - `COPY`: 4
+  - `LOAD`: 4
+  - `CALL`: 3
+  - `PTRSUB`: 3
+  - `BRANCH`: 2
+  - `INT_NOTEQUAL`: 2
+  - `RETURN`: 2
+
+### 0x00589a1d `FUN_00589a1d`
+- target_addresses: `0x00589a1d`
+- match_mode: `entry`
+- signature: `undefined FUN_00589a1d(undefined4 param_1)`
+- body_address_count: `102`
+- decompile_completed: `true`
+- decompiled_c_sha256: `38c1220c10583cd1892ba6978f4b066827939b59c91e8fdb7c1f6120832db21f`
+- decompiled_c_line_count: `35`
+- pcode_op_count: `63`
+- pcode_top_ops:
+  - `INT_ADD`: 10
+  - `INT_MULT`: 10
+  - `PTRADD`: 10
+  - `LOAD`: 8
+  - `CBRANCH`: 5
+  - `STORE`: 4
+  - `CAST`: 3
+  - `COPY`: 3
+  - `MULTIEQUAL`: 3
+  - `INT_SLESSEQUAL`: 2
+  - `INT_LESS`: 1
+  - `INT_LESSEQUAL`: 1
+
+### 0x0052b39d `FUN_0052b39d`
+- target_addresses: `0x0052b39d`
+- match_mode: `entry`
+- signature: `undefined FUN_0052b39d(undefined4 param_1)`
+- body_address_count: `232`
+- decompile_completed: `true`
+- decompiled_c_sha256: `ddc7e39dffecd6be2d57c555ce3bb06f062bd002d296e78a4e8b94135822506e`
+- decompiled_c_line_count: `42`
+- pcode_op_count: `172`
+- pcode_top_ops:
+  - `INDIRECT`: 78
+  - `LOAD`: 20
+  - `MULTIEQUAL`: 16
+  - `CAST`: 12
+  - `INT_ADD`: 11
+  - `CALLIND`: 10
+  - `PTRSUB`: 10
+  - `CBRANCH`: 4
+  - `COPY`: 3
+  - `CALL`: 2
+  - `INT_EQUAL`: 2
+  - `INT_SLESS`: 2
+
+### 0x00577edf `FUN_00577edf`
+- target_addresses: `0x00577edf`
+- match_mode: `entry`
+- signature: `undefined FUN_00577edf(undefined4 param_1, undefined4 param_2)`
+- body_address_count: `171`
+- decompile_completed: `true`
+- decompiled_c_sha256: `6a766c50e12e4b4e3dcdc89eb79b897d4f5d4f37dc9be289080b814737ab0d4a`
+- decompiled_c_line_count: `48`
+- pcode_op_count: `110`
+- pcode_top_ops:
+  - `INDIRECT`: 27
+  - `COPY`: 18
+  - `MULTIEQUAL`: 14
+  - `CAST`: 9
+  - `PTRADD`: 7
+  - `INT_ADD`: 5
+  - `LOAD`: 5
+  - `STORE`: 5
+  - `CALL`: 4
+  - `CBRANCH`: 4
+  - `INT_MULT`: 3
+  - `INT_SLESS`: 2
+
+### 0x005232f2 `FUN_005232f2`
+- target_addresses: `0x005232f2`
+- match_mode: `entry`
+- signature: `undefined FUN_005232f2(undefined4 param_1, undefined4 param_2)`
+- body_address_count: `115`
+- decompile_completed: `true`
+- decompiled_c_sha256: `966d3388dd8c20e2aec6dd8a09aa06bef188682c64ffc45706b2e66009775360`
+- decompiled_c_line_count: `32`
+- pcode_op_count: `53`
+- pcode_top_ops:
+  - `INDIRECT`: 11
+  - `CAST`: 5
+  - `INT_ADD`: 5
+  - `CBRANCH`: 4
+  - `COPY`: 4
+  - `CALL`: 3
+  - `INT_EQUAL`: 3
+  - `INT_NOTEQUAL`: 3
+  - `LOAD`: 3
+  - `MULTIEQUAL`: 3
+  - `PTRSUB`: 2
+  - `RETURN`: 2
+
+### 0x004cfc87 `FUN_004cfc87`
+- target_addresses: `0x004cfc94`
+- match_mode: `containing`
+- signature: `undefined FUN_004cfc87(void)`
+- body_address_count: `132`
+- decompile_completed: `true`
+- decompiled_c_sha256: `2afec0a57f14a5f1e530034c68eabb152055fb240839883a89eafe6e7e50e689`
+- decompiled_c_line_count: `28`
+- pcode_op_count: `45`
+- pcode_top_ops:
+  - `INDIRECT`: 10
+  - `CALL`: 8
+  - `CAST`: 5
+  - `CBRANCH`: 4
+  - `INT_ADD`: 4
+  - `LOAD`: 4
+  - `COPY`: 3
+  - `INT_NOTEQUAL`: 3
+  - `CALLIND`: 1
+  - `INT_EQUAL`: 1
+  - `RETURN`: 1
+  - `STORE`: 1
+
+### 0x004cb80b `FUN_004cb80b`
+- target_addresses: `0x004cb80b`
+- match_mode: `entry`
+- signature: `undefined FUN_004cb80b(undefined4 param_1)`
+- body_address_count: `304`
+- decompile_completed: `true`
+- decompiled_c_sha256: `e469b8f442d888e57d6f896925ea01fece07ee7f33180283abfca56515132a67`
+- decompiled_c_line_count: `54`
+- pcode_op_count: `221`
+- pcode_top_ops:
+  - `INDIRECT`: 110
+  - `CAST`: 23
+  - `INT_ADD`: 16
+  - `LOAD`: 15
+  - `MULTIEQUAL`: 11
+  - `CALL`: 9
+  - `COPY`: 8
+  - `STORE`: 8
+  - `PTRSUB`: 5
+  - `CBRANCH`: 2
+  - `FLOAT2FLOAT`: 2
+  - `FLOAT_ADD`: 2
+
+### 0x004d34bc `FUN_004d34bc`
+- target_addresses: `0x004d34c9`
+- match_mode: `containing`
+- signature: `undefined FUN_004d34bc(void)`
+- body_address_count: `113`
+- decompile_completed: `true`
+- decompiled_c_sha256: `5f8a463f6b7328ea9b59c4e11c1cc3d614c67f92bef97432fe01e16870da0783`
+- decompiled_c_line_count: `28`
+- pcode_op_count: `56`
+- pcode_top_ops:
+  - `CAST`: 11
+  - `INDIRECT`: 10
+  - `INT_ADD`: 9
+  - `LOAD`: 7
+  - `CALL`: 5
+  - `STORE`: 3
+  - `CALLIND`: 2
+  - `CBRANCH`: 2
+  - `COPY`: 2
+  - `INT_EQUAL`: 2
+  - `MULTIEQUAL`: 1
+  - `PTRSUB`: 1
+
+### 0x005803c1 `FUN_005803c1`
+- target_addresses: `0x005803cf`
+- match_mode: `containing`
+- signature: `undefined FUN_005803c1(void)`
+- body_address_count: `264`
+- decompile_completed: `true`
+- decompiled_c_sha256: `1a6030fafbe3e0a35737dd17614573e6a4e4fde8b4b28cad2ec6aeb9e393fce7`
+- decompiled_c_line_count: `52`
+- pcode_op_count: `136`
+- pcode_top_ops:
+  - `INT_ADD`: 34
+  - `INDIRECT`: 25
+  - `CAST`: 24
+  - `LOAD`: 15
+  - `STORE`: 13
+  - `CALL`: 11
+  - `COPY`: 3
+  - `PTRADD`: 3
+  - `CBRANCH`: 2
+  - `INT_NOTEQUAL`: 2
+  - `MULTIEQUAL`: 2
+  - `PTRSUB`: 1
+
+### 0x0058bbce `FUN_0058bbce`
+- target_addresses: `0x0058bbce`
+- match_mode: `entry`
+- signature: `undefined FUN_0058bbce(undefined4 param_1, undefined4 param_2)`
+- body_address_count: `161`
+- decompile_completed: `true`
+- decompiled_c_sha256: `335bf691634fa6fc330b65166401eb0b8d367b3571a61b6e036339d4f04434cb`
+- decompiled_c_line_count: `31`
+- pcode_op_count: `61`
+- pcode_top_ops:
+  - `LOAD`: 10
+  - `INT_ADD`: 9
+  - `CAST`: 7
+  - `INDIRECT`: 6
+  - `INT_MULT`: 4
+  - `CALL`: 3
+  - `CBRANCH`: 3
+  - `FLOAT_MULT`: 2
+  - `INT2FLOAT`: 2
+  - `INT_LEFT`: 2
+  - `INT_NOTEQUAL`: 2
+  - `MULTIEQUAL`: 2
+
+### 0x004cfaca `FUN_004cfaca`
+- target_addresses: `0x004cfacf`
+- match_mode: `containing`
+- signature: `undefined FUN_004cfaca(void)`
+- body_address_count: `178`
+- decompile_completed: `true`
+- decompiled_c_sha256: `7ea5938a5d29963d24591a5d90afdf253f2e6bc42c5dbb49615adfaf596fb50f`
+- decompiled_c_line_count: `41`
+- pcode_op_count: `52`
+- pcode_top_ops:
+  - `CALL`: 8
+  - `CAST`: 7
+  - `INT_ADD`: 6
+  - `LOAD`: 6
+  - `INDIRECT`: 4
+  - `CBRANCH`: 3
+  - `COPY`: 3
+  - `FLOAT2FLOAT`: 2
+  - `FLOAT_LESS`: 2
+  - `FLOAT_NAN`: 2
+  - `INT_EQUAL`: 2
+  - `PTRSUB`: 2
+
+### 0x004cfbfd `FUN_004cfbfd`
+- target_addresses: `0x004cfc0a`
+- match_mode: `containing`
+- signature: `undefined FUN_004cfbfd(void)`
+- body_address_count: `138`
+- decompile_completed: `true`
+- decompiled_c_sha256: `1dc6da4fc1a9712d62a9802fa92d4d6f2b76bd9bef16da0a60db7af7966171e8`
+- decompiled_c_line_count: `37`
+- pcode_op_count: `49`
+- pcode_top_ops:
+  - `INDIRECT`: 14
+  - `CALL`: 9
+  - `COPY`: 6
+  - `CAST`: 4
+  - `CBRANCH`: 3
+  - `INT_ADD`: 3
+  - `LOAD`: 3
+  - `INT_NOTEQUAL`: 2
+  - `CALLIND`: 1
+  - `INT_EQUAL`: 1
+  - `MULTIEQUAL`: 1
+  - `RETURN`: 1
+
+### 0x004cfb7c `FUN_004cfb7c`
+- target_addresses: `0x004cfb89`
+- match_mode: `containing`
+- signature: `undefined FUN_004cfb7c(void)`
+- body_address_count: `129`
+- decompile_completed: `true`
+- decompiled_c_sha256: `8369e6eb0b6e03f8c6217dc043fbe9676dc55fe65b2df40c8fb6981c7351f7ef`
+- decompiled_c_line_count: `32`
+- pcode_op_count: `77`
+- pcode_top_ops:
+  - `CAST`: 16
+  - `INT_ADD`: 16
+  - `INDIRECT`: 12
+  - `LOAD`: 10
+  - `STORE`: 7
+  - `CALL`: 3
+  - `CBRANCH`: 3
+  - `COPY`: 3
+  - `CALLIND`: 1
+  - `FLOAT_LESS`: 1
+  - `INT_EQUAL`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004cbb28 `FUN_004cbb28`
+- target_addresses: `0x004cbb29`
+- match_mode: `containing`
+- signature: `undefined FUN_004cbb28(undefined4 param_1)`
+- body_address_count: `89`
+- decompile_completed: `true`
+- decompiled_c_sha256: `27de3a65f4af22b9404bb2235b7e7ade509da1bff3f179241ea5684f2ad0d666`
+- decompiled_c_line_count: `23`
+- pcode_op_count: `27`
+- pcode_top_ops:
+  - `CALL`: 5
+  - `CAST`: 4
+  - `LOAD`: 4
+  - `CBRANCH`: 3
+  - `INT_ADD`: 3
+  - `INT_NOTEQUAL`: 3
+  - `INDIRECT`: 2
+  - `CALLIND`: 1
+  - `COPY`: 1
+  - `RETURN`: 1
+
+### 0x00579631 `FUN_00579631`
+- target_addresses: `0x00579631`
+- match_mode: `entry`
+- signature: `undefined FUN_00579631(undefined4 param_1, undefined4 param_2)`
+- body_address_count: `113`
+- decompile_completed: `true`
+- decompiled_c_sha256: `f24199968e72c434ad12bb32597f32858511953c8e30f3299d40c4a0ad2d6eb9`
+- decompiled_c_line_count: `25`
+- pcode_op_count: `23`
+- pcode_top_ops:
+  - `INDIRECT`: 9
+  - `CALL`: 6
+  - `CBRANCH`: 2
+  - `INT_NOTEQUAL`: 2
+  - `PTRSUB`: 2
+  - `COPY`: 1
+  - `RETURN`: 1
+
+### 0x0050256d `FUN_0050256d`
+- target_addresses: `0x0050256d`
+- match_mode: `entry`
+- signature: `undefined FUN_0050256d(undefined4 param_1)`
+- body_address_count: `106`
+- decompile_completed: `true`
+- decompiled_c_sha256: `78fb074b734140c74fcf7c1e3da5f923041a06fbe52592bfc4963a667f95b0e4`
+- decompiled_c_line_count: `23`
+- pcode_op_count: `24`
+- pcode_top_ops:
+  - `CALL`: 7
+  - `INDIRECT`: 7
+  - `COPY`: 3
+  - `CBRANCH`: 2
+  - `INT_NOTEQUAL`: 2
+  - `MULTIEQUAL`: 2
+  - `RETURN`: 1
+
+### 0x004d0055 `FUN_004d0055`
+- target_addresses: `0x004d0062`
+- match_mode: `containing`
+- signature: `undefined FUN_004d0055(void)`
+- body_address_count: `129`
+- decompile_completed: `true`
+- decompiled_c_sha256: `7b48be40e028cfac679d4775bdf5014ebbf6a4052221dccc0c58ca7e7987feb9`
+- decompiled_c_line_count: `42`
+- pcode_op_count: `71`
+- pcode_top_ops:
+  - `INDIRECT`: 13
+  - `INT_ADD`: 12
+  - `CAST`: 11
+  - `LOAD`: 7
+  - `CALL`: 5
+  - `COPY`: 5
+  - `STORE`: 5
+  - `BRANCH`: 2
+  - `CBRANCH`: 2
+  - `INT_EQUAL`: 2
+  - `CALLIND`: 1
+  - `INT_SLESS`: 1
+
+### 0x005001fe `FUN_005001fe`
+- target_addresses: `0x00500212`
+- match_mode: `containing`
+- signature: `undefined FUN_005001fe(void)`
+- body_address_count: `100`
+- decompile_completed: `true`
+- decompiled_c_sha256: `d1406af3c35dd117a7474a368cb8d4a23057e2b73399a6c8165c2b977e2b1b0c`
+- decompiled_c_line_count: `28`
+- pcode_op_count: `66`
+- pcode_top_ops:
+  - `INDIRECT`: 15
+  - `INT_ADD`: 11
+  - `CAST`: 10
+  - `LOAD`: 9
+  - `COPY`: 5
+  - `STORE`: 4
+  - `CALLIND`: 2
+  - `CBRANCH`: 2
+  - `INT_EQUAL`: 2
+  - `MULTIEQUAL`: 2
+  - `CALL`: 1
+  - `PTRADD`: 1
+
+### 0x00551b7b `FUN_00551b7b`
+- target_addresses: `0x00551b7b`
+- match_mode: `entry`
+- signature: `undefined FUN_00551b7b(undefined4 param_1, undefined4 param_2, undefined4 param_3)`
+- body_address_count: `60`
+- decompile_completed: `true`
+- decompiled_c_sha256: `d2d8d17a47773c2c34ac37a4a0722134afb197934023646480736a64933db8d9`
+- decompiled_c_line_count: `17`
+- pcode_op_count: `12`
+- pcode_top_ops:
+  - `CALL`: 3
+  - `CBRANCH`: 2
+  - `INDIRECT`: 2
+  - `INT_NOTEQUAL`: 2
+  - `COPY`: 1
+  - `PTRSUB`: 1
+  - `RETURN`: 1
+
+### 0x0057f2e1 `FUN_0057f2e1`
+- target_addresses: `0x0057f2e1`
+- match_mode: `entry`
+- signature: `undefined FUN_0057f2e1(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `b99ef6ef451d419ce8f58247eb76e259b05da35320ff22b668f13cb3c356d6cc`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004e3340 `FUN_004e3340`
+- target_addresses: `0x004e3340`
+- match_mode: `entry`
+- signature: `undefined FUN_004e3340(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `7fbd49765ef10b1e87eb10f67b41bccbf8eda53ba08561972e8667e0fe6951aa`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004da815 `FUN_004da815`
+- target_addresses: `0x004da815`
+- match_mode: `entry`
+- signature: `undefined FUN_004da815(void)`
+- body_address_count: `785`
+- decompile_completed: `true`
+- decompiled_c_sha256: `ff2a57425e5e749425a3569c824908546ec3d60f8ee642473352b28a796c865c`
+- decompiled_c_line_count: `229`
+- pcode_op_count: `662`
+- pcode_top_ops:
+  - `INDIRECT`: 191
+  - `COPY`: 176
+  - `MULTIEQUAL`: 143
+  - `PTRSUB`: 36
+  - `PTRADD`: 26
+  - `CBRANCH`: 14
+  - `BRANCH`: 13
+  - `INT_ADD`: 13
+  - `INT_NOTEQUAL`: 13
+  - `LOAD`: 13
+  - `STORE`: 13
+  - `CALL`: 6
+- referenced_strings:
+  - `0x00774478:CurrentTurn`
+  - `0x0076248c:SpeedFactor`
+  - `0x00774468:NextWayPoint`
+  - `0x00774450:NextWaypointOrientation`
+  - `0x00774444:LastTurnPos`
+  - `0x00774430:LastTurnOrientation`
+  - `0x00774420:IsPathingUsed`
+  - `0x00774410:IsMoveFinished`
+  - `0x00774400:ResumeModelID`
+  - `0x007743f4:PauseMode`
+  - `0x007743e8:WasMoving`
+  - `0x007743d8:IsObstructed`
+
+### 0x004e5c2c `FUN_004e5c2c`
+- target_addresses: `0x004e5c2c`
+- match_mode: `entry`
+- signature: `undefined FUN_004e5c2c(void)`
+- body_address_count: `452`
+- decompile_completed: `true`
+- decompiled_c_sha256: `c469adaac36010bba6d2322b76cfaa2c35502969f646f60a24f7032e6af35d23`
+- decompiled_c_line_count: `144`
+- pcode_op_count: `238`
+- pcode_top_ops:
+  - `COPY`: 110
+  - `MULTIEQUAL`: 38
+  - `PTRSUB`: 22
+  - `PTRADD`: 14
+  - `CBRANCH`: 8
+  - `BRANCH`: 7
+  - `INDIRECT`: 7
+  - `INT_ADD`: 7
+  - `INT_NOTEQUAL`: 7
+  - `LOAD`: 7
+  - `STORE`: 7
+  - `INT_AND`: 1
+- referenced_strings:
+  - `0x0077572c:AttractionFrequency`
+  - `0x0077571c:PaydayFrequency`
+  - `0x00775708:EntityTypeBanTime`
+  - `0x007756f0:ReAttachWorkerFrequency`
+  - `0x007756dc:PlayerMoneyDispo`
+  - `0x007756c0:MaximumDistanceWorkerToFarm`
+  - `0x0077569c:MaximumDistanceWorkerToResidence`
+
+### 0x004e3324 `FUN_004e3324`
+- target_addresses: `0x004e3324`
+- match_mode: `entry`
+- signature: `undefined FUN_004e3324(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `7b6f3c1cee623b1eb29cb76edf31fe21d78d62fc71af352ae461ddfd06a6e000`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004a71d5 `FUN_004a71d5`
+- target_addresses: `0x004a71d5`
+- match_mode: `entry`
+- signature: `undefined FUN_004a71d5(void)`
+- body_address_count: `1463`
+- decompile_completed: `true`
+- decompiled_c_sha256: `cec6557302385a9b7cf2b4afbac9ed1292617dd321678444bc33ac2849621caf`
+- decompiled_c_line_count: `416`
+- pcode_op_count: `1266`
+- pcode_top_ops:
+  - `INDIRECT`: 398
+  - `COPY`: 327
+  - `MULTIEQUAL`: 254
+  - `PTRSUB`: 70
+  - `PTRADD`: 50
+  - `CBRANCH`: 26
+  - `BRANCH`: 25
+  - `INT_ADD`: 25
+  - `INT_NOTEQUAL`: 25
+  - `LOAD`: 25
+  - `STORE`: 25
+  - `CALL`: 12
+- referenced_strings:
+  - `0x0076ab50:Class`
+  - `0x0076e2f4:Category`
+  - `0x0076e5dc:ApproachPos`
+  - `0x0076e5d0:ApproachR`
+  - `0x0076e334:Blocked1`
+  - `0x0076e328:Blocked2`
+  - `0x0076e5c0:BlockingArea`
+  - `0x0076e5ac:NumBlockedPoints`
+  - `0x0076e59c:SnapTolerance`
+  - `0x0076e590:CanFloat`
+  - `0x0076e584:CanDrown`
+  - `0x0076e574:MapFileDontSave`
+  - `0x0076e560:NeedsPlayer`
+  - `0x0076e550:ForceNoPlayer`
+  - `0x0076e544:MaxHealth`
+  - `0x0076e53c:Models`
+  - `0x0076e528:AdjustWalkAnimSpeed`
+  - `0x0076e51c:Exploration`
+  - `0x0076e508:ExperiencePoints`
+  - `0x0076e500:Visible`
+  - `0x0076e4f0:AccessCategory`
+  - `0x0076e4e0:DoNotExecute`
+  - `0x0076e4cc:DeleteWhenBuiltOn`
+  - `0x0076e4b8:DividesTwoSectors`
+
+### 0x004dab46 `FUN_004dab46`
+- target_addresses: `0x004dab46`
+- match_mode: `entry`
+- signature: `undefined FUN_004dab46(void)`
+- body_address_count: `459`
+- decompile_completed: `true`
+- decompiled_c_sha256: `54f206aa24ed5b9865d29618b1bda6f9ba5bb3fdd34994662d4efb7c2d0fb1a2`
+- decompiled_c_line_count: `138`
+- pcode_op_count: `361`
+- pcode_top_ops:
+  - `COPY`: 103
+  - `INDIRECT`: 90
+  - `MULTIEQUAL`: 83
+  - `PTRSUB`: 22
+  - `PTRADD`: 14
+  - `CBRANCH`: 8
+  - `BRANCH`: 7
+  - `INT_ADD`: 7
+  - `INT_NOTEQUAL`: 7
+  - `LOAD`: 7
+  - `STORE`: 7
+  - `CALL`: 2
+- referenced_strings:
+  - `0x007744c4:GoalDistance`
+  - `0x007744b4:WaypointsCount`
+  - `0x007744a8:CacheCount`
+  - `0x0077449c:CacheTail`
+  - `0x00774490:CacheItem`
+  - `0x00774484:GoalCached`
+
+### 0x004dad86 `FUN_004dad86`
+- target_addresses: `0x004dad86`
+- match_mode: `entry`
+- signature: `undefined FUN_004dad86(void)`
+- body_address_count: `290`
+- decompile_completed: `true`
+- decompiled_c_sha256: `81f36ce6af376fd4506bef54d49749f21dfe69155aad51118e8f4e7b4e636f9a`
+- decompiled_c_line_count: `89`
+- pcode_op_count: `249`
+- pcode_top_ops:
+  - `INDIRECT`: 73
+  - `COPY`: 62
+  - `MULTIEQUAL`: 48
+  - `PTRSUB`: 13
+  - `PTRADD`: 10
+  - `CBRANCH`: 6
+  - `BRANCH`: 5
+  - `CALL`: 5
+  - `INT_ADD`: 5
+  - `INT_NOTEQUAL`: 5
+  - `LOAD`: 5
+  - `STORE`: 5
+- referenced_strings:
+  - `0x0077451c:FinePath`
+  - `0x00774510:CoarsePath`
+  - `0x007744fc:FineWayPointIndex`
+  - `0x007744e8:MovedFineWaypoints`
+
+### 0x00500a10 `FUN_00500a10`
+- target_addresses: `0x00500a1d`
+- match_mode: `containing`
+- signature: `undefined FUN_00500a10(void)`
+- body_address_count: `127`
+- decompile_completed: `true`
+- decompiled_c_sha256: `5a1ff270e2da56112a0f92da5b68f438dac5422cf05df699704212f8898b78c7`
+- decompiled_c_line_count: `27`
+- pcode_op_count: `41`
+- pcode_top_ops:
+  - `INDIRECT`: 10
+  - `CALL`: 8
+  - `CAST`: 6
+  - `INT_ADD`: 5
+  - `LOAD`: 5
+  - `COPY`: 2
+  - `CALLIND`: 1
+  - `CBRANCH`: 1
+  - `INT_NOTEQUAL`: 1
+  - `RETURN`: 1
+  - `STORE`: 1
+
+### 0x004fff0d `FUN_004fff0d`
+- target_addresses: `0x004fff0d`
+- match_mode: `entry`
+- signature: `undefined FUN_004fff0d(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `35d43b3ebdbc118b25a4c5cf1a69bfe2c46ea5ba67fc24277f6665c8d0281d0f`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004b7c82 `FUN_004b7c82`
+- target_addresses: `0x004b7c82`
+- match_mode: `entry`
+- signature: `undefined FUN_004b7c82(void)`
+- body_address_count: `1508`
+- decompile_completed: `true`
+- decompiled_c_sha256: `8803682886ad4c67968fdb0787a82f78e854ec3ea2a6bef6a76160a7d2f3e748`
+- decompiled_c_line_count: `429`
+- pcode_op_count: `1533`
+- pcode_top_ops:
+  - `INDIRECT`: 499
+  - `MULTIEQUAL`: 365
+  - `COPY`: 346
+  - `PTRSUB`: 74
+  - `PTRADD`: 56
+  - `CBRANCH`: 29
+  - `BRANCH`: 28
+  - `INT_ADD`: 28
+  - `INT_NOTEQUAL`: 28
+  - `LOAD`: 28
+  - `STORE`: 28
+  - `CALL`: 12
+- referenced_strings:
+  - `0x0076e770:PlayerID`
+  - `0x0076fe34:PlayerNameStringTableKey`
+  - `0x0076fe20:PlayerNameStringRaw`
+  - `0x0076fe14:Resources`
+  - `0x0076fe04:TaxAmountFactor`
+  - `0x0076fdf8:TaxLevel`
+  - `0x0076fde0:CurrentMaxMotivation`
+  - `0x0076fdc8:DurationOfWeatherChange`
+  - `0x0076fdb0:NumberOfBuyableHeros`
+  - `0x0076fda0:WorkerAlarmMode`
+  - `0x0076f004:AlarmRechargeTime`
+  - `0x0076fd90:PlayerGameState`
+  - `0x0076fd78:PlayerHasLeftGameFlag`
+  - `0x0076fd58:PlayerGameStateChangeGameTurn`
+  - `0x0076fd44:PlayerIsHumanFlag`
+  - `0x0076fd34:PlayerColorR`
+  - `0x0076fd24:PlayerColorG`
+  - `0x0076fd14:PlayerColorB`
+  - `0x0076fa9c:Tributes`
+  - `0x0076fa94:Quests`
+  - `0x0076fd08:Statistics`
+  - `0x0076fcf8:DiplomacyData`
+  - `0x0076fce4:TechnologyStates`
+  - `0x0076fcd8:SerfManager`
+
+### 0x004af71e `FUN_004af71e`
+- target_addresses: `0x004af71e`
+- match_mode: `entry`
+- signature: `undefined FUN_004af71e(void)`
+- body_address_count: `985`
+- decompile_completed: `true`
+- decompiled_c_sha256: `91d061c3e5d56ea971ff1895783ce57a8705c1d55e56968b286e583dea47ce50`
+- decompiled_c_line_count: `293`
+- pcode_op_count: `918`
+- pcode_top_ops:
+  - `INDIRECT`: 272
+  - `COPY`: 227
+  - `MULTIEQUAL`: 222
+  - `PTRSUB`: 48
+  - `PTRADD`: 34
+  - `CBRANCH`: 18
+  - `BRANCH`: 17
+  - `INT_ADD`: 17
+  - `INT_NOTEQUAL`: 17
+  - `LOAD`: 17
+  - `STORE`: 17
+  - `CALL`: 7
+- referenced_strings:
+  - `0x0076eed8:ApproachPosition`
+  - `0x0076eec8:LeavePosition`
+  - `0x0076eebc:IsActive`
+  - `0x0076eeac:IsRegistered`
+  - `0x0076ee9c:IsBeingUpgraded`
+  - `0x0076ee88:IsOvertimeActive`
+  - `0x0076ee78:MaxNumWorkers`
+  - `0x0076ee64:CurrentTechnology`
+  - `0x0076ee50:LatestAttackTurn`
+  - `0x0076ee38:ConstructionProgress`
+  - `0x0076ee28:RepairProgress`
+  - `0x0076ee18:UpgradeProgress`
+  - `0x0076ee00:WorkerAlarmModeActive`
+  - `0x0076ede8:MostRecentDepartureTurn`
+  - `0x0076edd0:OvertimeRechargeTime`
+  - `0x0076edc8:Slots`
+
+### 0x004cbbbf `FUN_004cbbbf`
+- target_addresses: `0x004cbbbf`
+- match_mode: `entry`
+- signature: `undefined FUN_004cbbbf(void)`
+- body_address_count: `161`
+- decompile_completed: `true`
+- decompiled_c_sha256: `9cdf2a05c86235b797303085e0615180982fd8025b3a889317ee289b248dd960`
+- decompiled_c_line_count: `47`
+- pcode_op_count: `141`
+- pcode_top_ops:
+  - `INDIRECT`: 52
+  - `COPY`: 31
+  - `MULTIEQUAL`: 27
+  - `PTRSUB`: 5
+  - `CALL`: 4
+  - `PTRADD`: 4
+  - `CBRANCH`: 3
+  - `BRANCH`: 2
+  - `INT_ADD`: 2
+  - `INT_NOTEQUAL`: 2
+  - `LOAD`: 2
+  - `STORE`: 2
+- referenced_strings:
+  - `0x00772a6c:FlightTaskList`
+
+### 0x00516ab2 `FUN_00516ab2`
+- target_addresses: `0x00516ab2`
+- match_mode: `entry`
+- signature: `undefined FUN_00516ab2(void)`
+- body_address_count: `136`
+- decompile_completed: `true`
+- decompiled_c_sha256: `1fd1da2c2e5a935f746cbc6f7078874803e0271f4e05389d1792ee14be967894`
+- decompiled_c_line_count: `39`
+- pcode_op_count: `89`
+- pcode_top_ops:
+  - `INDIRECT`: 31
+  - `COPY`: 25
+  - `MULTIEQUAL`: 14
+  - `CALL`: 3
+  - `PTRSUB`: 3
+  - `CBRANCH`: 2
+  - `PTRADD`: 2
+  - `BRANCH`: 1
+  - `INT_ADD`: 1
+  - `INT_AND`: 1
+  - `INT_EQUAL`: 1
+  - `INT_NOTEQUAL`: 1
+- referenced_strings:
+  - `0x007744dc:WayPoints`
+
+### 0x0058051f `FUN_0058051f`
+- target_addresses: `0x0058051f`
+- match_mode: `entry`
+- signature: `undefined FUN_0058051f(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `98b939847e1cb62d30d82a17dac6c9896115596dea9a57270fbf302d2858a7c7`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x0057fe7c `FUN_0057fe7c`
+- target_addresses: `0x0057fe7c`
+- match_mode: `entry`
+- signature: `undefined FUN_0057fe7c(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `6d5afdb52cbb89c10f84ebd5d53dfcef8e71bf3973c82d304fedf22b06c65634`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x00508a9b `FUN_00508a9b`
+- target_addresses: `0x00508a9b`
+- match_mode: `entry`
+- signature: `undefined FUN_00508a9b(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `f25f061e59bac5a7f54fed1bc81991f7681557826f0a7419d9a1ea788b26a2e2`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x00500cea `FUN_00500cea`
+- target_addresses: `0x00500cea`
+- match_mode: `entry`
+- signature: `undefined FUN_00500cea(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `5a8d09b3cd635265337e86879357f1f17c26651957ffa695e2a597302ea65601`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x00500c65 `FUN_00500c65`
+- target_addresses: `0x00500c65`
+- match_mode: `entry`
+- signature: `undefined FUN_00500c65(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `2c17ba414b7e87adff5866fa7180ba895353be4c0a49564e5ea516b481788307`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x005000d8 `FUN_005000d8`
+- target_addresses: `0x005000d8`
+- match_mode: `entry`
+- signature: `undefined FUN_005000d8(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `ddcf63058efbac141bec23c6af0868a859fc03cbe4705757e1373a1643a0b793`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004e3278 `FUN_004e3278`
+- target_addresses: `0x004e3278`
+- match_mode: `entry`
+- signature: `undefined FUN_004e3278(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `8ffc8bfec0c431a615e619e1198aa84ba5922d36f7c610fee316224d07e76456`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004daf73 `FUN_004daf73`
+- target_addresses: `0x004daf73`
+- match_mode: `entry`
+- signature: `undefined FUN_004daf73(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `516b863265e7412f22e84664472287e26be93c9d336b96c8b0258d44864bfbdf`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004b208c `FUN_004b208c`
+- target_addresses: `0x004b208c`
+- match_mode: `entry`
+- signature: `undefined FUN_004b208c(void)`
+- body_address_count: `4179`
+- decompile_completed: `true`
+- decompiled_c_sha256: `b3aed8bfac8fe70ac53436c6d1dcdfe01e8023dd8bf4fcd7177de6588b9a0575`
+- decompiled_c_line_count: `1244`
+- pcode_op_count: `4074`
+- pcode_top_ops:
+  - `INDIRECT`: 1205
+  - `MULTIEQUAL`: 992
+  - `COPY`: 988
+  - `PTRSUB`: 228
+  - `PTRADD`: 158
+  - `CBRANCH`: 80
+  - `BRANCH`: 79
+  - `INT_ADD`: 79
+  - `INT_NOTEQUAL`: 79
+  - `LOAD`: 79
+  - `STORE`: 79
+  - `CALL`: 24
+- referenced_strings:
+  - `0x0076f7fc:CompensationOnBuildingSale`
+  - `0x0076f7ec:BuildingUpgrade`
+  - `0x0076f7dc:SettlerUpgrade`
+  - `0x0076f7cc:TaxationLevel`
+  - `0x0076f7bc:TradeResource`
+  - `0x0076f7ac:BlessCategory`
+  - `0x0076f780:BuildingUnderConstructionExplorationFactor`
+  - `0x0076f760:BuildingPlacementSnapDistance`
+  - `0x0076f744:BuildingClosedHealthFactor`
+  - `0x0076f71c:WeatherExplorationBuildingRainFactor`
+  - `0x0076f6f8:WeatherExplorationSettlerRainFactor`
+  - `0x0076f6dc:WeatherMoveSpeedRainFactor`
+  - `0x0076f6b4:WeatherExplorationBuildingSnowFactor`
+  - `0x0076f690:WeatherExplorationSettlerSnowFactor`
+  - `0x0076f674:WeatherMoveSpeedSnowFactor`
+  - `0x0076f658:WeatherMissChanceChangeRain`
+  - `0x0076f63c:WeatherMissChanceChangeSnow`
+  - `0x0076f62c:AttackMoveRange`
+  - `0x0076f620:TaxAmount`
+  - `0x0076f614:TaxPenalty`
+  - `0x0076f604:InitialTaxLevel`
+  - `0x0076f5f4:BlessingCost`
+  - `0x0076f5e4:BlessingBonus`
+  - `0x0076f5d0:ForceToWorkPenalty`
+
+### 0x004a7e8d `FUN_004a7e8d`
+- target_addresses: `0x004a7e8d`
+- match_mode: `entry`
+- signature: `undefined FUN_004a7e8d(void)`
+- body_address_count: `1408`
+- decompile_completed: `true`
+- decompiled_c_sha256: `03acf3b6fac83d4fdcfef7a442471b9b1c2646fe67bcf82466481bbedc5f0fa8`
+- decompiled_c_line_count: `387`
+- pcode_op_count: `1441`
+- pcode_top_ops:
+  - `INDIRECT`: 568
+  - `COPY`: 310
+  - `MULTIEQUAL`: 286
+  - `PTRSUB`: 57
+  - `PTRADD`: 48
+  - `CBRANCH`: 25
+  - `BRANCH`: 24
+  - `INT_ADD`: 24
+  - `INT_NOTEQUAL`: 24
+  - `LOAD`: 24
+  - `STORE`: 24
+  - `CALL`: 22
+- referenced_strings:
+  - `0x0076e714:HeadSet`
+  - `0x0076e704:BuildFactor`
+  - `0x0076e6f4:RepairFactor`
+  - `0x0076e6e8:ArmorClass`
+  - `0x0076e6dc:ArmorAmount`
+  - `0x0076e6d0:DodgeChance`
+  - `0x0076e6c0:IdleTaskList`
+  - `0x0076e6b8:Upgrade`
+  - `0x0076e6a4:ModifyExploration`
+  - `0x0076e694:ModifyHitpoints`
+  - `0x0076e688:ModifySpeed`
+  - `0x0076e678:ModifyDamage`
+  - `0x0076e66c:ModifyArmor`
+  - `0x0076e660:ModifyDodge`
+  - `0x0076e650:ModifyMaxRange`
+  - `0x0076e640:ModifyMinRange`
+  - `0x0076e62c:ModifyDamageBonus`
+  - `0x0076e618:ModifyGroupLimit`
+  - `0x0076e608:AttractionSlots`
+  - `0x0076e5fc:Fearless`
+  - `0x0076e5f0:Convertible`
+
+### 0x0051254c `FUN_0051254c`
+- target_addresses: `0x0051254c`
+- match_mode: `entry`
+- signature: `undefined FUN_0051254c(void)`
+- body_address_count: `480`
+- decompile_completed: `true`
+- decompiled_c_sha256: `67eb0568d80f067f6395565da7368fd1900d874a989e3c1de4090b4c61bf5ccf`
+- decompiled_c_line_count: `143`
+- pcode_op_count: `475`
+- pcode_top_ops:
+  - `INDIRECT`: 169
+  - `MULTIEQUAL`: 105
+  - `COPY`: 103
+  - `PTRSUB`: 22
+  - `PTRADD`: 16
+  - `CBRANCH`: 9
+  - `BRANCH`: 8
+  - `INT_ADD`: 8
+  - `INT_NOTEQUAL`: 8
+  - `LOAD`: 8
+  - `STORE`: 8
+  - `CALL`: 6
+- referenced_strings:
+  - `0x00776318:TerritoryRadius`
+  - `0x007790d4:WanderRangeMin`
+  - `0x007790c4:WanderRangeMax`
+  - `0x007790b4:DefaultTaskList`
+  - `0x007790a8:ShyRange`
+  - `0x00779090:MaxBuildingPollution`
+  - `0x00779080:FleeTaskList`
+
+### 0x004b8a24 `FUN_004b8a24`
+- target_addresses: `0x004b8a24`
+- match_mode: `entry`
+- signature: `undefined FUN_004b8a24(void)`
+- body_address_count: `487`
+- decompile_completed: `true`
+- decompiled_c_sha256: `35a84cd0767393c7fc2191dafcb4a718f706d7b3e97dbadd95f6f957d59ce0d0`
+- decompiled_c_line_count: `137`
+- pcode_op_count: `565`
+- pcode_top_ops:
+  - `INDIRECT`: 261
+  - `MULTIEQUAL`: 105
+  - `COPY`: 100
+  - `PTRSUB`: 18
+  - `PTRADD`: 16
+  - `CALL`: 11
+  - `CBRANCH`: 9
+  - `BRANCH`: 8
+  - `INT_ADD`: 8
+  - `INT_NOTEQUAL`: 8
+  - `LOAD`: 8
+  - `STORE`: 8
+- referenced_strings:
+  - `0x0076ffb0:Center`
+  - `0x0076ffa8:Radius`
+  - `0x0076ff9c:LineStart`
+  - `0x0076ff94:LineEnd`
+  - `0x0076ff84:ExtractTaskList`
+  - `0x0076ff7c:Model1`
+  - `0x0076ff74:Model2`
+
+### 0x004c7e84 `FUN_004c7e84`
+- target_addresses: `0x004c7e91`
+- match_mode: `containing`
+- signature: `undefined FUN_004c7e84(void)`
+- body_address_count: `280`
+- decompile_completed: `true`
+- decompiled_c_sha256: `93cc2cbab4039d51b94b035662bdc5be285b6b64e4c7fb15a7812451e41b7015`
+- decompiled_c_line_count: `49`
+- pcode_op_count: `166`
+- pcode_top_ops:
+  - `INDIRECT`: 51
+  - `INT_ADD`: 35
+  - `CAST`: 25
+  - `LOAD`: 15
+  - `CALL`: 13
+  - `STORE`: 13
+  - `COPY`: 5
+  - `MULTIEQUAL`: 2
+  - `PTRADD`: 2
+  - `BRANCH`: 1
+  - `CBRANCH`: 1
+  - `INT_EQUAL`: 1
+
+### 0x004fa7ec `FUN_004fa7ec`
+- target_addresses: `0x004fa7ec`
+- match_mode: `entry`
+- signature: `undefined FUN_004fa7ec(void)`
+- body_address_count: `304`
+- decompile_completed: `true`
+- decompiled_c_sha256: `e1cd906a6e0e80396c2abc883adf09bd63ca97cbf9708e656233840551b653b6`
+- decompiled_c_line_count: `89`
+- pcode_op_count: `350`
+- pcode_top_ops:
+  - `INDIRECT`: 160
+  - `MULTIEQUAL`: 66
+  - `COPY`: 58
+  - `PTRSUB`: 12
+  - `PTRADD`: 10
+  - `CALL`: 8
+  - `CBRANCH`: 6
+  - `BRANCH`: 5
+  - `INT_ADD`: 5
+  - `INT_NOTEQUAL`: 5
+  - `LOAD`: 5
+  - `STORE`: 5
+- referenced_strings:
+  - `0x00777018:ResourceEntity`
+  - `0x007706f0:ResourceAmount`
+  - `0x00777008:SummerEffect`
+  - `0x00776ff8:WinterEffect`
+
+### 0x00516b3a `FUN_00516b3a`
+- target_addresses: `0x00516b3a`
+- match_mode: `entry`
+- signature: `undefined FUN_00516b3a(void)`
+- body_address_count: `227`
+- decompile_completed: `true`
+- decompiled_c_sha256: `68949aeab69765ee0446661efed0c75224cae0abde6b3d1eb2a6f96f0e107b6d`
+- decompiled_c_line_count: `74`
+- pcode_op_count: `136`
+- pcode_top_ops:
+  - `COPY`: 50
+  - `INDIRECT`: 23
+  - `MULTIEQUAL`: 22
+  - `PTRSUB`: 9
+  - `PTRADD`: 6
+  - `CBRANCH`: 4
+  - `BRANCH`: 3
+  - `INT_ADD`: 3
+  - `INT_NOTEQUAL`: 3
+  - `LOAD`: 3
+  - `STORE`: 3
+  - `CALL`: 2
+- referenced_strings:
+  - `0x00770658:EntityID`
+  - `0x0076e770:PlayerID`
+
+### 0x004ae78f `FUN_004ae78f`
+- target_addresses: `0x004ae78f`
+- match_mode: `entry`
+- signature: `undefined FUN_004ae78f(void)`
+- body_address_count: `246`
+- decompile_completed: `true`
+- decompiled_c_sha256: `857b5dcc3984c68274873618c0a21d02eb982f7b7dc847a0bf3dba624b914059`
+- decompiled_c_line_count: `72`
+- pcode_op_count: `210`
+- pcode_top_ops:
+  - `INDIRECT`: 75
+  - `COPY`: 52
+  - `MULTIEQUAL`: 40
+  - `PTRSUB`: 7
+  - `PTRADD`: 6
+  - `CALL`: 4
+  - `CBRANCH`: 4
+  - `BRANCH`: 3
+  - `CAST`: 3
+  - `INT_ADD`: 3
+  - `INT_NOTEQUAL`: 3
+  - `LOAD`: 3
+- referenced_strings:
+  - `0x0076ec9c:TerrainPos1`
+  - `0x0076ec90:TerrainPos2`
+
+### 0x004b9179 `FUN_004b9179`
+- target_addresses: `0x004b9179`
+- match_mode: `entry`
+- signature: `undefined FUN_004b9179(void)`
+- body_address_count: `164`
+- decompile_completed: `true`
+- decompiled_c_sha256: `07147d931bdc6aa1f454660fd43a7b7b32934eef76352ff84a95dfab64a4d652`
+- decompiled_c_line_count: `47`
+- pcode_op_count: `141`
+- pcode_top_ops:
+  - `INDIRECT`: 52
+  - `COPY`: 31
+  - `MULTIEQUAL`: 27
+  - `PTRSUB`: 5
+  - `CALL`: 4
+  - `PTRADD`: 4
+  - `CBRANCH`: 3
+  - `BRANCH`: 2
+  - `INT_ADD`: 2
+  - `INT_NOTEQUAL`: 2
+  - `LOAD`: 2
+  - `STORE`: 2
+- referenced_strings:
+  - `0x0076f970:BuildingType`
+
+### 0x00508db6 `FUN_00508db6`
+- target_addresses: `0x00508dbc`
+- match_mode: `containing`
+- signature: `undefined FUN_00508db6(undefined4 param_1)`
+- body_address_count: `72`
+- decompile_completed: `true`
+- decompiled_c_sha256: `e1ff3c1fea92103908db54b666bd9e81e429d881ce8ef5c36c5eefeda866c9da`
+- decompiled_c_line_count: `25`
+- pcode_op_count: `23`
+- pcode_top_ops:
+  - `CALL`: 3
+  - `CAST`: 3
+  - `LOAD`: 3
+  - `STORE`: 3
+  - `INT_ADD`: 2
+  - `PTRADD`: 2
+  - `BRANCH`: 1
+  - `CBRANCH`: 1
+  - `COPY`: 1
+  - `INT_SLESS`: 1
+  - `MULTIEQUAL`: 1
+  - `PTRSUB`: 1
+
+### 0x0057fe98 `FUN_0057fe98`
+- target_addresses: `0x0057fe98`
+- match_mode: `entry`
+- signature: `undefined FUN_0057fe98(undefined4 param_1)`
+- body_address_count: `64`
+- decompile_completed: `true`
+- decompiled_c_sha256: `7fa3fdbaa294c7a7b869453c90f81060bac6dbbbe73fd12f40e1a8d122a7a411`
+- decompiled_c_line_count: `22`
+- pcode_op_count: `22`
+- pcode_top_ops:
+  - `CALL`: 4
+  - `INDIRECT`: 4
+  - `CAST`: 3
+  - `INT_ADD`: 3
+  - `LOAD`: 2
+  - `BRANCH`: 1
+  - `CBRANCH`: 1
+  - `INT_LESS`: 1
+  - `PTRSUB`: 1
+  - `RETURN`: 1
+  - `STORE`: 1
+
+### 0x004d0123 `FUN_004d0123`
+- target_addresses: `0x004d0130`
+- match_mode: `containing`
+- signature: `undefined FUN_004d0123(void)`
+- body_address_count: `87`
+- decompile_completed: `true`
+- decompiled_c_sha256: `d38f23391192f97e3550b78649da80d6d78e0c2ce36b003998e0dce1d1232281`
+- decompiled_c_line_count: `25`
+- pcode_op_count: `46`
+- pcode_top_ops:
+  - `CAST`: 9
+  - `INT_ADD`: 9
+  - `INDIRECT`: 8
+  - `LOAD`: 5
+  - `STORE`: 4
+  - `CALL`: 3
+  - `COPY`: 3
+  - `CALLIND`: 1
+  - `CBRANCH`: 1
+  - `INT_EQUAL`: 1
+  - `PTRSUB`: 1
+  - `RETURN`: 1
+
+### 0x004d00d6 `FUN_004d00d6`
+- target_addresses: `0x004d00e2`
+- match_mode: `containing`
+- signature: `undefined FUN_004d00d6(void)`
+- body_address_count: `77`
+- decompile_completed: `true`
+- decompiled_c_sha256: `3537e5c1bc0de1f6cdd2dfc7435de57caa3aee6b3e6c0460921d5803bb127072`
+- decompiled_c_line_count: `22`
+- pcode_op_count: `36`
+- pcode_top_ops:
+  - `INDIRECT`: 7
+  - `CAST`: 6
+  - `INT_ADD`: 6
+  - `CALL`: 3
+  - `COPY`: 3
+  - `LOAD`: 3
+  - `STORE`: 3
+  - `CALLIND`: 1
+  - `CBRANCH`: 1
+  - `INT_EQUAL`: 1
+  - `PTRSUB`: 1
+  - `RETURN`: 1
+
+### 0x004cfa6f `FUN_004cfa6f`
+- target_addresses: `0x004cfa6f`
+- match_mode: `entry`
+- signature: `undefined FUN_004cfa6f(void)`
+- body_address_count: `28`
+- decompile_completed: `true`
+- decompiled_c_sha256: `5d39a740a344b1a7cc9dd175996cbed88b0486596df4e99e7ca84596fcdee3d5`
+- decompiled_c_line_count: `14`
+- pcode_op_count: `9`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `CAST`: 1
+  - `CBRANCH`: 1
+  - `COPY`: 1
+  - `INT_ADD`: 1
+  - `INT_EQUAL`: 1
+  - `LOAD`: 1
+  - `RETURN`: 1
+
+### 0x00553468 `FUN_00553468`
+- target_addresses: `0x00553468`
+- match_mode: `entry`
+- signature: `undefined FUN_00553468(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `078e555af12acbfbe859d24d059a461ac2fa5064ff3107d70d2b5a44f6f8fea5`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x005516e5 `FUN_005516e5`
+- target_addresses: `0x005516e5`
+- match_mode: `entry`
+- signature: `undefined FUN_005516e5(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `e6ec68da5ce8726e71865a9a7388febb5e5f2ed7b05ca5448be8d47259a3faf1`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x0055128b `FUN_0055128b`
+- target_addresses: `0x0055128b`
+- match_mode: `entry`
+- signature: `undefined FUN_0055128b(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `f91313a11c39a31aa7973111460f8849f6d9b4af3d4ad3b77557ba6cc2d9b864`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x00509d91 `FUN_00509d91`
+- target_addresses: `0x00509d91`
+- match_mode: `entry`
+- signature: `undefined FUN_00509d91(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `1a2b4eff1d2f2d0246e335e7a69e6a9771823f0c9b594e832523393415d2bfa2`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004eab0b `FUN_004eab0b`
+- target_addresses: `0x004eab0b`
+- match_mode: `entry`
+- signature: `undefined FUN_004eab0b(void)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `6bbe2c86ce4bb6ef45b80b7c274884f422109db6b934826b4ec55da0d9264255`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004dc8ec `FUN_004dc8ec`
+- target_addresses: `0x004dc8ec`
+- match_mode: `entry`
+- signature: `undefined FUN_004dc8ec(void)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `79fc4b54ced4bd6903064b46fed867fba1b2f3e1a271fb9a815e890003334550`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x004daf9f `FUN_004daf9f`
+- target_addresses: `0x004daf9f`
+- match_mode: `entry`
+- signature: `undefined FUN_004daf9f(undefined1 param_1)`
+- body_address_count: `27`
+- decompile_completed: `true`
+- decompiled_c_sha256: `977ceec9611644833a4bd16fe344f0f8f330fe8611d650c8792c54049b0a4841`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `7`
+- pcode_top_ops:
+  - `CALL`: 2
+  - `RETURN`: 2
+  - `CBRANCH`: 1
+  - `INT_AND`: 1
+  - `INT_NOTEQUAL`: 1
+
+### 0x00570fd5 `FUN_00570fd5`
+- target_addresses: `0x00570fd5`
+- match_mode: `entry`
+- signature: `undefined FUN_00570fd5(void)`
+- body_address_count: `22`
+- decompile_completed: `true`
+- decompiled_c_sha256: `086d3eaa383e6722b55b7b80ef2e775c26771ef4f8b0a51ff33f2f9a466825a2`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `14`
+- pcode_top_ops:
+  - `CAST`: 3
+  - `INT_ADD`: 3
+  - `LOAD`: 2
+  - `CALL`: 1
+  - `CBRANCH`: 1
+  - `COPY`: 1
+  - `INT_EQUAL`: 1
+  - `RETURN`: 1
+  - `STORE`: 1
+
+### 0x0055332e `FUN_0055332e`
+- target_addresses: `0x00553339`
+- match_mode: `containing`
+- signature: `undefined FUN_0055332e(void)`
+- body_address_count: `60`
+- decompile_completed: `true`
+- decompiled_c_sha256: `fe8cf5d7286f4ce8dbb798adbeee99d4bbe835f1d51bf9284b1b73f9d9add7a6`
+- decompiled_c_line_count: `19`
+- pcode_op_count: `27`
+- pcode_top_ops:
+  - `INDIRECT`: 6
+  - `STORE`: 5
+  - `CAST`: 3
+  - `INT_ADD`: 3
+  - `CALL`: 2
+  - `COPY`: 2
+  - `PTRADD`: 2
+  - `PTRSUB`: 2
+  - `LOAD`: 1
+  - `RETURN`: 1
+
+### 0x00550fe5 `FUN_00550fe5`
+- target_addresses: `0x00550ff0`
+- match_mode: `containing`
+- signature: `undefined FUN_00550fe5(void)`
+- body_address_count: `56`
+- decompile_completed: `true`
+- decompiled_c_sha256: `c63942387883b9c64ff7c3bb1156383d26e390a5eb31f088461d84573a34b901`
+- decompiled_c_line_count: `18`
+- pcode_op_count: `25`
+- pcode_top_ops:
+  - `INDIRECT`: 6
+  - `STORE`: 4
+  - `CAST`: 3
+  - `INT_ADD`: 3
+  - `CALL`: 2
+  - `COPY`: 2
+  - `PTRSUB`: 2
+  - `LOAD`: 1
+  - `PTRADD`: 1
+  - `RETURN`: 1
+
+### 0x004d41db `FUN_004d41db`
+- target_addresses: `0x004d41db`
+- match_mode: `entry`
+- signature: `undefined FUN_004d41db(void)`
+- body_address_count: `29`
+- decompile_completed: `true`
+- decompiled_c_sha256: `97ed745b06fc5190fd39322abb8da62bd04393d1de233356dc61f478867165b8`
+- decompiled_c_line_count: `14`
+- pcode_op_count: `9`
+- pcode_top_ops:
+  - `STORE`: 3
+  - `PTRADD`: 2
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004cc9c4 `FUN_004cc9c4`
+- target_addresses: `0x004cc9c4`
+- match_mode: `entry`
+- signature: `undefined FUN_004cc9c4(void)`
+- body_address_count: `123`
+- decompile_completed: `true`
+- decompiled_c_sha256: `24b6d80be8b6a255d1ed95708043a6a9e14c7d3a6d1d62d7633c27ddf1287680`
+- decompiled_c_line_count: `39`
+- pcode_op_count: `59`
+- pcode_top_ops:
+  - `STORE`: 28
+  - `PTRADD`: 27
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004cc46b `FUN_004cc46b`
+- target_addresses: `0x004cc478`
+- match_mode: `containing`
+- signature: `undefined FUN_004cc46b(void)`
+- body_address_count: `84`
+- decompile_completed: `true`
+- decompiled_c_sha256: `a327bb3023ca10e1ddc21054924ba99c8ef31599e1929d44d459812c47f765fa`
+- decompiled_c_line_count: `21`
+- pcode_op_count: `29`
+- pcode_top_ops:
+  - `INDIRECT`: 9
+  - `CALL`: 6
+  - `INT_ADD`: 5
+  - `CAST`: 3
+  - `COPY`: 2
+  - `STORE`: 2
+  - `LOAD`: 1
+  - `RETURN`: 1
+
+### 0x00500c13 `FUN_00500c13`
+- target_addresses: `0x00500c1e`
+- match_mode: `containing`
+- signature: `undefined FUN_00500c13(void)`
+- body_address_count: `66`
+- decompile_completed: `true`
+- decompiled_c_sha256: `d684f4d9de14ee9783276dcf18b499edf3cd7793ce9b7b29f09ad0eeaf68edbe`
+- decompiled_c_line_count: `20`
+- pcode_op_count: `22`
+- pcode_top_ops:
+  - `STORE`: 6
+  - `PTRADD`: 5
+  - `COPY`: 3
+  - `INDIRECT`: 3
+  - `CALL`: 2
+  - `PTRSUB`: 2
+  - `RETURN`: 1
+
+### 0x0057fa63 `FUN_0057fa63`
+- target_addresses: `0x0057fa63`
+- match_mode: `entry`
+- signature: `undefined FUN_0057fa63(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4)`
+- body_address_count: `29`
+- decompile_completed: `true`
+- decompiled_c_sha256: `afeb83f9da86e963656b8cadd9735265d17771811eda2c3da935309062f8447c`
+- decompiled_c_line_count: `9`
+- pcode_op_count: `2`
+- pcode_top_ops:
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004d02f3 `FUN_004d02f3`
+- target_addresses: `0x004d02f3`
+- match_mode: `entry`
+- signature: `undefined FUN_004d02f3(undefined4 param_1)`
+- body_address_count: `26`
+- decompile_completed: `true`
+- decompiled_c_sha256: `1c9c7a4e353fb1a0125271fe91c6187b5bb2649db75c859045f671cd6ab618a7`
+- decompiled_c_line_count: `12`
+- pcode_op_count: `8`
+- pcode_top_ops:
+  - `CAST`: 2
+  - `LOAD`: 2
+  - `CALL`: 1
+  - `CALLIND`: 1
+  - `INT_ADD`: 1
+  - `RETURN`: 1
+
+### 0x00500c81 `FUN_00500c81`
+- target_addresses: `0x00500c81`
+- match_mode: `entry`
+- signature: `undefined FUN_00500c81(void)`
+- body_address_count: `39`
+- decompile_completed: `true`
+- decompiled_c_sha256: `86cc27b7181c2c2d4f5ab9bad52b79d2657b3613a257a08ffbd931e3fdc8dc8d`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `12`
+- pcode_top_ops:
+  - `PTRSUB`: 4
+  - `STORE`: 4
+  - `PTRADD`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004ffee5 `FUN_004ffee5`
+- target_addresses: `0x004ffee5`
+- match_mode: `entry`
+- signature: `undefined FUN_004ffee5(void)`
+- body_address_count: `32`
+- decompile_completed: `true`
+- decompiled_c_sha256: `b7e2ae9aa6ae648eec74d9f74cbe33cfcd1df228dcec734640f800d39401a071`
+- decompiled_c_line_count: `14`
+- pcode_op_count: `9`
+- pcode_top_ops:
+  - `STORE`: 3
+  - `PTRADD`: 2
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004d2e3f `FUN_004d2e3f`
+- target_addresses: `0x004d2e3f`
+- match_mode: `entry`
+- signature: `undefined FUN_004d2e3f(void)`
+- body_address_count: `29`
+- decompile_completed: `true`
+- decompiled_c_sha256: `86bc5df267ba267b483e21ae40d80324ba295b4020c6bb64e52a06e3318d7574`
+- decompiled_c_line_count: `14`
+- pcode_op_count: `9`
+- pcode_top_ops:
+  - `STORE`: 3
+  - `PTRADD`: 2
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004cba77 `FUN_004cba77`
+- target_addresses: `0x004cba77`
+- match_mode: `entry`
+- signature: `undefined FUN_004cba77(void)`
+- body_address_count: `29`
+- decompile_completed: `true`
+- decompiled_c_sha256: `21021f272ddec4aa07503dedbf25598e0a151b5f10fd7c3dceb37777b4cbb29f`
+- decompiled_c_line_count: `14`
+- pcode_op_count: `9`
+- pcode_top_ops:
+  - `STORE`: 3
+  - `PTRADD`: 2
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x00500d06 `FUN_00500d06`
+- target_addresses: `0x00500d06`
+- match_mode: `entry`
+- signature: `undefined FUN_00500d06(void)`
+- body_address_count: `25`
+- decompile_completed: `true`
+- decompiled_c_sha256: `ad187609c9c2913eea4436ddb6b76265dfe2bccf3eeb10c63156322bde662058`
+- decompiled_c_line_count: `13`
+- pcode_op_count: `6`
+- pcode_top_ops:
+  - `PTRSUB`: 2
+  - `STORE`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004e32d2 `FUN_004e32d2`
+- target_addresses: `0x004e32d2`
+- match_mode: `entry`
+- signature: `undefined FUN_004e32d2(void)`
+- body_address_count: `74`
+- decompile_completed: `true`
+- decompiled_c_sha256: `16434746461a340eb201602f67899d52f26224b065935c7774bb9db792f956ad`
+- decompiled_c_line_count: `26`
+- pcode_op_count: `43`
+- pcode_top_ops:
+  - `STORE`: 15
+  - `CAST`: 10
+  - `PTRADD`: 10
+  - `INT_ADD`: 4
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004dbbb4 `FUN_004dbbb4`
+- target_addresses: `0x004dbbb4`
+- match_mode: `entry`
+- signature: `undefined FUN_004dbbb4(void)`
+- body_address_count: `70`
+- decompile_completed: `true`
+- decompiled_c_sha256: `f349ae77e0ecf90ea6840b1a20322da5b683ceec3d3e55b622b49eaca6636f39`
+- decompiled_c_line_count: `24`
+- pcode_op_count: `29`
+- pcode_top_ops:
+  - `STORE`: 13
+  - `PTRADD`: 12
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004f2a63 `FUN_004f2a63`
+- target_addresses: `0x004f2a63`
+- match_mode: `entry`
+- signature: `undefined FUN_004f2a63(void)`
+- body_address_count: `49`
+- decompile_completed: `true`
+- decompiled_c_sha256: `099fd54f7970ba952b97ad091018b3c1f1302b3d9ec41abc9fc203f7f949118d`
+- decompiled_c_line_count: `19`
+- pcode_op_count: `19`
+- pcode_top_ops:
+  - `STORE`: 8
+  - `PTRADD`: 7
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004fe0eb `FUN_004fe0eb`
+- target_addresses: `0x004fe0eb`
+- match_mode: `entry`
+- signature: `undefined FUN_004fe0eb(void)`
+- body_address_count: `47`
+- decompile_completed: `true`
+- decompiled_c_sha256: `8dc7bde12eaad7192c132245f6ca5836af6c9158b02c557137199dc63cd22c79`
+- decompiled_c_line_count: `19`
+- pcode_op_count: `19`
+- pcode_top_ops:
+  - `STORE`: 8
+  - `PTRADD`: 7
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x00513221 `FUN_00513221`
+- target_addresses: `0x00513221`
+- match_mode: `entry`
+- signature: `undefined FUN_00513221(void)`
+- body_address_count: `50`
+- decompile_completed: `true`
+- decompiled_c_sha256: `8d3064746027ecffa9ac1ee6eb6bacd56f712247b3c55ca26229a1c32463d9d8`
+- decompiled_c_line_count: `18`
+- pcode_op_count: `17`
+- pcode_top_ops:
+  - `STORE`: 7
+  - `PTRADD`: 6
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004fc624 `FUN_004fc624`
+- target_addresses: `0x004fc624`
+- match_mode: `entry`
+- signature: `undefined FUN_004fc624(void)`
+- body_address_count: `44`
+- decompile_completed: `true`
+- decompiled_c_sha256: `c9bc419bce89a217db32ccef326d40607bf0c13c74e2de25950ace60c67630f2`
+- decompiled_c_line_count: `17`
+- pcode_op_count: `15`
+- pcode_top_ops:
+  - `STORE`: 6
+  - `PTRADD`: 5
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004f0942 `FUN_004f0942`
+- target_addresses: `0x004f0942`
+- match_mode: `entry`
+- signature: `undefined FUN_004f0942(void)`
+- body_address_count: `48`
+- decompile_completed: `true`
+- decompiled_c_sha256: `01a3f430c60f7ce4d20051e1f5f739dc764a8a03e495482090c803e2aeea2093`
+- decompiled_c_line_count: `18`
+- pcode_op_count: `17`
+- pcode_top_ops:
+  - `STORE`: 7
+  - `PTRADD`: 6
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004e5ee1 `FUN_004e5ee1`
+- target_addresses: `0x004e5ee1`
+- match_mode: `entry`
+- signature: `undefined FUN_004e5ee1(void)`
+- body_address_count: `44`
+- decompile_completed: `true`
+- decompiled_c_sha256: `9d52ee3834710e165172619f1790f93fe8e9a9b730aebf3592dcd3e304541020`
+- decompiled_c_line_count: `18`
+- pcode_op_count: `17`
+- pcode_top_ops:
+  - `STORE`: 7
+  - `PTRADD`: 6
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004db298 `FUN_004db298`
+- target_addresses: `0x004db298`
+- match_mode: `entry`
+- signature: `undefined FUN_004db298(void)`
+- body_address_count: `43`
+- decompile_completed: `true`
+- decompiled_c_sha256: `8ce39a5ae2d1b7f0174be6f8d04a2da1436912de275155e48fbcb9232940d234`
+- decompiled_c_line_count: `17`
+- pcode_op_count: `15`
+- pcode_top_ops:
+  - `STORE`: 6
+  - `PTRADD`: 5
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004d6b26 `FUN_004d6b26`
+- target_addresses: `0x004d6b26`
+- match_mode: `entry`
+- signature: `undefined FUN_004d6b26(void)`
+- body_address_count: `36`
+- decompile_completed: `true`
+- decompiled_c_sha256: `4af3f6a3c20507556b6440961c5d90af5379e7193bc6b214369f361fe8daabe0`
+- decompiled_c_line_count: `16`
+- pcode_op_count: `13`
+- pcode_top_ops:
+  - `STORE`: 5
+  - `PTRADD`: 4
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x0050122b `FUN_0050122b`
+- target_addresses: `0x0050122b`
+- match_mode: `entry`
+- signature: `undefined FUN_0050122b(void)`
+- body_address_count: `34`
+- decompile_completed: `true`
+- decompiled_c_sha256: `34e1979cfb1ab2a6fae78488d021664d5d599bb4c9a2148b24fd2883a4f9b34c`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `11`
+- pcode_top_ops:
+  - `STORE`: 4
+  - `PTRADD`: 3
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004fd227 `FUN_004fd227`
+- target_addresses: `0x004fd227`
+- match_mode: `entry`
+- signature: `undefined FUN_004fd227(void)`
+- body_address_count: `34`
+- decompile_completed: `true`
+- decompiled_c_sha256: `d9a1235dbf7d57a6986cdfeccb6bd88eef30ebf8450bf1042f9c4c194efad033`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `11`
+- pcode_top_ops:
+  - `STORE`: 4
+  - `PTRADD`: 3
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004f32ef `FUN_004f32ef`
+- target_addresses: `0x004f32ef`
+- match_mode: `entry`
+- signature: `undefined FUN_004f32ef(void)`
+- body_address_count: `34`
+- decompile_completed: `true`
+- decompiled_c_sha256: `1eaae91c66b903f12a1c503decc14cdc538b769385643fb08cfd2ec64e2c7f75`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `11`
+- pcode_top_ops:
+  - `STORE`: 4
+  - `PTRADD`: 3
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004d4208 `FUN_004d4208`
+- target_addresses: `0x004d4208`
+- match_mode: `entry`
+- signature: `undefined FUN_004d4208(void)`
+- body_address_count: `33`
+- decompile_completed: `true`
+- decompiled_c_sha256: `0f38d9c90ed52de45e141b00c91dc7242de68fd461b00867542c3ea3b93fc4ee`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `11`
+- pcode_top_ops:
+  - `STORE`: 4
+  - `PTRADD`: 3
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004fe926 `FUN_004fe926`
+- target_addresses: `0x004fe926`
+- match_mode: `entry`
+- signature: `undefined FUN_004fe926(void)`
+- body_address_count: `29`
+- decompile_completed: `true`
+- decompiled_c_sha256: `f52b6f201fe8573863ef3aa980c2783373615112f7b49e6ed91edb46a5e98923`
+- decompiled_c_line_count: `14`
+- pcode_op_count: `9`
+- pcode_top_ops:
+  - `STORE`: 3
+  - `PTRADD`: 2
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x004e3f31 `FUN_004e3f31`
+- target_addresses: `0x004e3f31`
+- match_mode: `entry`
+- signature: `undefined FUN_004e3f31(void)`
+- body_address_count: `29`
+- decompile_completed: `true`
+- decompiled_c_sha256: `80b3adc09b32d5cfc9b2899470b3ea06d5c5ad23735d0060319f4013cd2e5058`
+- decompiled_c_line_count: `14`
+- pcode_op_count: `9`
+- pcode_top_ops:
+  - `STORE`: 3
+  - `PTRADD`: 2
+  - `PTRSUB`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x0057fa9f `FUN_0057fa9f`
+- target_addresses: `0x0057fa9f`
+- match_mode: `entry`
+- signature: `undefined FUN_0057fa9f(void)`
+- body_address_count: `19`
+- decompile_completed: `true`
+- decompiled_c_sha256: `ce9d4050d06cfbf214f9202927308116168a40f8414718b49e4b71bb30153606`
+- decompiled_c_line_count: `14`
+- pcode_op_count: `8`
+- pcode_top_ops:
+  - `CAST`: 2
+  - `INT_ADD`: 2
+  - `STORE`: 2
+  - `CALL`: 1
+  - `RETURN`: 1
+
+### 0x00509d77 `FUN_00509d77`
+- target_addresses: `0x00509d77`
+- match_mode: `entry`
+- signature: `undefined FUN_00509d77(void)`
+- body_address_count: `18`
+- decompile_completed: `true`
+- decompiled_c_sha256: `002aa945d828818827b47df70217b7adf3d765e5126e13303dc7e69d72775a36`
+- decompiled_c_line_count: `12`
+- pcode_op_count: `4`
+- pcode_top_ops:
+  - `CALL`: 1
+  - `PTRSUB`: 1
+  - `RETURN`: 1
+  - `STORE`: 1
+
+### 0x004eaaf1 `FUN_004eaaf1`
+- target_addresses: `0x004eaaf1`
+- match_mode: `entry`
+- signature: `undefined FUN_004eaaf1(void)`
+- body_address_count: `18`
+- decompile_completed: `true`
+- decompiled_c_sha256: `d0eda523219431ff895f5a97f39ac457a5e0201353648bf709a12658d636023a`
+- decompiled_c_line_count: `12`
+- pcode_op_count: `4`
+- pcode_top_ops:
+  - `CALL`: 1
+  - `PTRSUB`: 1
+  - `RETURN`: 1
+  - `STORE`: 1
+
+### 0x004dc8d2 `FUN_004dc8d2`
+- target_addresses: `0x004dc8d2`
+- match_mode: `entry`
+- signature: `undefined FUN_004dc8d2(void)`
+- body_address_count: `18`
+- decompile_completed: `true`
+- decompiled_c_sha256: `fbd712e9661bfadf0b295b1b1019fe30447de05418ee110d4672c71119ffd518`
+- decompiled_c_line_count: `12`
+- pcode_op_count: `4`
+- pcode_top_ops:
+  - `CALL`: 1
+  - `PTRSUB`: 1
+  - `RETURN`: 1
+  - `STORE`: 1
+
+### 0x004da5e9 `CHtmlEditView`
+- target_addresses: `0x004da5e9`
+- match_mode: `entry`
+- signature: `undefined __thiscall CHtmlEditView(CHtmlEditView * this)`
+- body_address_count: `18`
+- decompile_completed: `true`
+- decompiled_c_sha256: `f39f2ccd5c916b431a61a89022fe8bc7c6e39f5aae1aa9e45732d16ded354583`
+- decompiled_c_line_count: `15`
+- pcode_op_count: `6`
+- pcode_top_ops:
+  - `CALL`: 1
+  - `CAST`: 1
+  - `COPY`: 1
+  - `PTRSUB`: 1
+  - `RETURN`: 1
+  - `STORE`: 1
+

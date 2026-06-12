@@ -1,0 +1,2639 @@
+diff --git a/colab_training.py b/colab_training.py
+index b11d959..7500d48 100644
+--- a/colab_training.py
++++ b/colab_training.py
+@@ -94,7 +94,6 @@ import torch as th
+ 
+ try:
+     import gymnasium as gym
+-    from sb3_contrib import MaskablePPO
+     from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
+     from stable_baselines3 import PPO
+     from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
+@@ -103,7 +102,6 @@ except ImportError:
+     print("Installiere AbhÃƒÆ’Ã‚Â¤ngigkeiten...")
+     install_dependencies_robust()
+     import gymnasium as gym
+-    from sb3_contrib import MaskablePPO
+     from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
+     from stable_baselines3 import PPO
+     from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
+@@ -111,6 +109,7 @@ except ImportError:
+ 
+ # Importiere unser Environment
+ from environment import SiedlerScharfschuetzenEnv
++from macro_maskable_ppo import CompletedActionMaskablePPO
+ from multihead_policy import MultiHeadMaskablePolicy, SpatialVectorExtractor
+ from training_profiles import build_training_config, get_train_profile
+ 
+@@ -182,6 +181,13 @@ def _prefer_speed_mode() -> bool:
+     return _resolve_sim_mode() == "fast_train"
+ 
+ 
++def _count_completed_action_steps() -> bool:
++    """
++    Wenn aktiv, zaehlt PPO-Timesteps nur bei abgeschlossenen Multi-Step-Aktionen.
++    """
++    return _env_truthy(os.environ.get("SIEDLER_COUNT_COMPLETED_ACTION_STEPS", "0"))
++
++
+ def _select_net_arch(obs_dim: int):
+     if _prefer_speed_mode():
+         if obs_dim >= 400:
+@@ -1069,6 +1075,10 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
+     include_start_resources = float(
+         reward_profile.get("terminal_potential_include_start_resources", 0.0)
+     ) > 0.0
++    terminal_tier = int(round(float(reward_profile.get("terminal_potential_scharf_tier", 1.0))))
++    terminal_require_path_ready = float(
++        reward_profile.get("terminal_potential_require_path_ready", 1.0)
++    ) > 0.0
+     print(
+         "Reward-Profil: terminal_dependency_bonus="
+         f"{terminal_dependency_bonus}, "
+@@ -1080,7 +1090,9 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
+     print(
+         "Reward-Potential-Quelle: "
+         f"{'cumulative_earnings' if potential_cumulative else 'current_stock'} "
+-        f"(include_start_resources={include_start_resources})"
++        f"(include_start_resources={include_start_resources}, "
++        f"tier={terminal_tier}, "
++        f"require_path_ready={terminal_require_path_ready})"
+     )
+     step_delta_potential = float(reward_profile.get("step_delta_potential_bonus", 0.0))
+     step_delta_dependency = float(reward_profile.get("step_delta_dependency_bonus", 0.0))
+@@ -1110,6 +1122,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
+         )
+     device = "cuda" if th.cuda.is_available() else "cpu"
+     print(f"Device: {device}")
++    print(f"Completed-action timesteps: {int(_count_completed_action_steps())}")
+     if tuning_info.get("enabled"):
+         runtime = tuning_info.get("runtime", {})
+         preset = tuning_info.get("preset", {})
+@@ -1163,7 +1176,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
+         "phase_dim": phase_dim,
+     })
+     policy_cls = MultiHeadMaskablePolicy
+-    model_cls = MaskablePPO
++    model_cls = CompletedActionMaskablePPO
+ 
+     if isinstance(env.observation_space, gym.spaces.Dict):
+         extractor_dims = _select_extractor_dims()
+@@ -1234,6 +1247,8 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
+         try:
+             print(f"Resume: lade Checkpoint {resume_path}")
+             model = model_cls.load(resume_path, env=env, device=device)
++            if hasattr(model, "count_completed_actions_only"):
++                model.count_completed_actions_only = _count_completed_action_steps()
+             loaded_steps = int(getattr(model, "num_timesteps", 0) or 0)
+             if loaded_steps > 0:
+                 resume_steps = max(resume_steps, loaded_steps)
+@@ -1259,6 +1274,7 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
+             device=device,
+             verbose=_sb3_verbose_level(),
+             tensorboard_log=(f"{save_path}/tensorboard/" if tensorboard_enabled else None),
++            count_completed_actions_only=_count_completed_action_steps(),
+         )
+ 
+     print("\nTraining startet...")
+diff --git a/environment.py b/environment.py
+index a384540..1463934 100644
+--- a/environment.py
++++ b/environment.py
+@@ -1488,7 +1488,7 @@ def _get_scharf_taler_sulfur_cost(target_tier: int = 0) -> Tuple[float, float]:
+ # =============================================================================
+ 
+ TIME_STEP = 1
+-INCOME_CYCLE = 40
++INCOME_CYCLE = 120  # PaydayFrequency=120s (aus PlayerAttraction.xml)
+ TOTAL_SIM_TIME = 1800  # 30 Minuten
+ MAX_POSSIBLE_LEIBEIGENE = 400
+ # TL_SERF_BUILD.xml: ein Hammerschlag besteht aus 400ms + 1000ms.
+@@ -1916,6 +1916,18 @@ def _select_resource_trees(resources_data: Dict[str, Any], base_dir: str) -> Lis
+ 
+ 
+ DEFAULT_REWARD_PROFILE = {
++    # Terminal objective components.
++    "terminal_dependency_bonus": 0.0,
++    "terminal_recruitable_bonus": 0.0,
++    "terminal_potential_bonus_per_unit": 0.0,
++    "terminal_potential_use_cumulative_earnings": 0.0,
++    "terminal_potential_include_start_resources": 0.0,
++    "terminal_potential_scharf_tier": 1.0,
++    # If enabled, terminal potential only counts once the Scharfschuetzen path
++    # (requirements + motivation gate) is unlocked.
++    "terminal_potential_require_path_ready": 1.0,
++    # Optional terminal bonus once the path itself is unlocked.
++    "terminal_path_ready_bonus": 0.0,
+     # Dense shaping on state deltas (off by default to preserve sparse behavior).
+     "step_delta_potential_bonus": 0.0,
+     # Event bonus when cumulative resource potential crosses the next whole-unit threshold.
+@@ -1931,6 +1943,15 @@ DEFAULT_REWARD_PROFILE = {
+     # Reward per newly reached taxable worker (episode high-water mark).
+     "step_worker_growth_bonus": 0.0,
+     "step_unlock_recruitable_bonus": 0.0,
++    # Reward for crossing evenly spaced unlock-progress milestones.
++    "step_unlock_milestone_bonus": 0.0,
++    "step_unlock_milestone_count": 10.0,
++    # One-time path and requirement completion events.
++    "step_path_ready_bonus": 0.0,
++    "step_required_building_complete_bonus": 0.0,
++    "step_required_tech_complete_bonus": 0.0,
++    # Economy shaping on income growth.
++    "step_delta_taler_income_bonus": 0.0,
+     "step_time_penalty": 0.0,
+     # Event rewards for serf economy growth (episode high-water marks).
+     "action_buy_serf_growth_bonus": 0.0,
+@@ -1998,10 +2019,15 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         self._last_step_potential_metric = 0.0
+         self._last_step_potential_units = 0
+         self._last_step_unlock_progress = 0.0
++        self._last_unlock_milestone_level = 0
+         self._best_step_taxable_workers = 0.0
+         self._last_scharf_research_progress = 0.0
+         self._last_scharf_construction_progress = 0.0
+         self._last_scharf_recruitable = False
++        self._last_scharf_path_ready = False
++        self._last_scharf_required_buildings_completed = 0
++        self._last_scharf_required_techs_completed = 0
++        self._last_taler_income_per_cycle = 0.0
+         self._terminal_start_total_taler = 0.0
+         self._terminal_start_total_schwefel = 0.0
+         self._terminal_prev_total_taler = 0.0
+@@ -2010,6 +2036,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         self._terminal_cumulative_schwefel_earned = 0.0
+         self._best_total_leibeigene = 0
+         self._pending_spawned_unassigned_serfs = 0
++        self._construction_freed_serfs = 0  # Serfs die gerade ein Gebaeude fertiggestellt haben
+         self._scharf_required_buildings, self._scharf_required_techs = self._get_scharf_requirements()
+ 
+         # GebÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¤ude-Listen fÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼r Actions
+@@ -2203,7 +2230,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+ 
+         # Observation Space (ERWEITERT mit WorkTime-System)
+         n_resource_obs = len(RESOURCE_NAMES)
+-        n_worker_obs = len(RESOURCE_MAP) + 2
++        n_worker_obs = len(RESOURCE_MAP) + 4  # +2 fuer pending_spawned + construction_freed
+         n_building_obs = len(self.buildable_buildings) * 2
+         n_upgrade_obs = len(self.upgradeable_buildings)
+         n_tech_obs = len(self.tech_list) * 2
+@@ -2739,6 +2766,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         self._best_total_leibeigene = int(self.total_leibeigene)
+         # Start-Serfs sind keine "neu gekauften" Serfs -> keine initialen Pending-Tokens.
+         self._pending_spawned_unassigned_serfs = 0
++        self._construction_freed_serfs = 0
++        self._first_worker_building_time = None  # Zahltag startet erst nach erstem Workergebaeude
+         hq_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
+         for i in range(self.total_leibeigene):
+             serf = Serf(
+@@ -2789,6 +2818,22 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+             construction_progress=current_construction_progress,
+         )
+         self._last_scharf_recruitable = self._start_scharf_recruitable
++        self._last_unlock_milestone_level = self._get_unlock_milestone_level(
++            self._last_step_unlock_progress
++        )
++        self._last_scharf_path_ready = self._is_scharf_path_ready(
++            target_tier=self._get_reward_profile_scharf_tier(
++                "step_potential_scharf_tier",
++                default=1,
++            )
++        )
++        self._last_scharf_required_buildings_completed = (
++            self._get_scharf_required_buildings_completed_count()
++        )
++        self._last_scharf_required_techs_completed = (
++            self._get_scharf_required_techs_completed_count()
++        )
++        self._last_taler_income_per_cycle = float(self._get_taler_income_per_cycle())
+ 
+         use_step_cumulative = float(
+             self.reward_profile.get("step_potential_use_cumulative_earnings", 1.0)
+@@ -3000,6 +3045,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                 obs.append(self.resource_workers.get(r, 0) / 50.0)
+             obs.append(self.free_leibeigene / 100.0)
+             obs.append(self.total_leibeigene / 100.0)
++            obs.append(max(0, int(getattr(self, "_pending_spawned_unassigned_serfs", 0))) / 100.0)
++            obs.append(max(0, int(getattr(self, "_construction_freed_serfs", 0))) / 100.0)
+ 
+             construction_counts = {}
+             if self.construction_queue:
+@@ -3483,6 +3530,20 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+ 
+         return float(max(0.0, min(1.0, score / max(1, len(required_buildings)))))
+ 
++    def _get_scharf_required_buildings_completed_count(self) -> int:
++        required_buildings = self._scharf_required_buildings or set()
++        if not required_buildings:
++            return 0
++        return int(
++            sum(1 for building in required_buildings if self.buildings.get(building, 0) >= 1)
++        )
++
++    def _get_scharf_required_techs_completed_count(self) -> int:
++        required_techs = self._scharf_required_techs or set()
++        if not required_techs:
++            return 0
++        return int(sum(1 for tech in required_techs if tech in self.researched_techs))
++
+     def _reset_terminal_cumulative_tracker(self) -> None:
+         """Initialisiert Tracking fuer kumulierte Episode-Einnahmen (Taler/Schwefel)."""
+         self._terminal_start_total_taler = float(self._get_total_resource(RESOURCE_TALER))
+@@ -3557,6 +3618,65 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+ 
+         return float(max(0.0, min(1.0, best_progress)))
+ 
++    def _is_scharf_path_ready(self, target_tier: Optional[int] = None) -> bool:
++        """
++        True, sobald mindestens ein Scharfschuetzen-Tier ohne Ressourcenpruefung
++        freigeschaltet ist (Gebaeude/Techs + Motivation).
++        """
++        if not self._has_min_population_motivation():
++            return False
++
++        for soldier in self._get_scharf_soldier_types():
++            if target_tier is not None and get_building_level(str(soldier)) != int(target_tier):
++                continue
++
++            requirements_met = True
++            for req in soldiers_db.get(soldier, {}).get("requirements", []):
++                if req in buildings_db and self.buildings.get(req, 0) < 1:
++                    requirements_met = False
++                    break
++                if req in technologies and req not in self.researched_techs:
++                    requirements_met = False
++                    break
++
++            if requirements_met:
++                return True
++
++        return False
++
++    def _get_scharf_terminal_potential(self) -> float:
++        """
++        Endziel-Metrik fuer Training:
++        Wie viele Scharfschuetzen koennten aus dem finalen Zustand rekrutiert
++        werden, optional nur wenn der Rekrutierungs-Pfad freigeschaltet ist.
++        """
++        use_cumulative = float(
++            self.reward_profile.get("terminal_potential_use_cumulative_earnings", 0.0)
++        ) > 0.0
++        include_start_resources = float(
++            self.reward_profile.get("terminal_potential_include_start_resources", 0.0)
++        ) > 0.0
++        target_tier = self._get_reward_profile_scharf_tier(
++            "terminal_potential_scharf_tier",
++            default=1,
++        )
++        require_path_ready = float(
++            self.reward_profile.get("terminal_potential_require_path_ready", 1.0)
++        ) > 0.0
++
++        if require_path_ready and not self._is_scharf_path_ready(target_tier=target_tier):
++            return 0.0
++
++        if use_cumulative:
++            return float(
++                self._get_scharf_cumulative_resource_potential(
++                    include_start_resources=include_start_resources,
++                    target_tier=target_tier,
++                )
++            )
++
++        return float(self._get_scharf_resource_potential(target_tier=target_tier))
++
+     def _get_step_unlock_progress_metric(
+         self,
+         dependency_progress: float,
+@@ -3583,6 +3703,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         ) / total_weight
+         return float(max(0.0, min(1.0, metric)))
+ 
++    def _get_unlock_milestone_level(self, progress: float) -> int:
++        milestone_count = max(
++            1,
++            int(round(float(self.reward_profile.get("step_unlock_milestone_count", 10.0)))),
++        )
++        clipped = float(max(0.0, min(1.0, progress)))
++        if clipped >= 1.0:
++            return int(milestone_count)
++        return int(np.floor(clipped * float(milestone_count)))
++
+     def _is_scharf_recruitable_now(self) -> bool:
+         for soldier in self._get_scharf_soldier_types():
+             if self._can_recruit(soldier):
+@@ -3757,9 +3887,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         cached = self._get_can_cache(cache_key)
+         if cached is not None:
+             return cached
+-        # VillageCenterLockThreshold: Unter 0.3 Motivation keine neuen Worker/Serfs!
+-        if not self._has_min_population_motivation():
+-            return self._set_can_cache(cache_key, False)
+         # Genug Taler fÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼r alle?
+         if self._get_total_resource(RESOURCE_TALER) < SERF_BUY_COST * count:
+             return self._set_can_cache(cache_key, False)
+@@ -5072,7 +5199,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                 assigned += 1
+ 
+         self.wood_serfs += assigned
+-        self.free_leibeigene -= assigned
++        self._consume_free_serfs(assigned)
+         self.resource_workers[RESOURCE_HOLZ_ROH] = self.resource_workers.get(RESOURCE_HOLZ_ROH, 0) + assigned
+ 
+     def _recall_wood_batch(self, batch_size: int):
+@@ -5180,7 +5307,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+ 
+         zone_data["serfs_assigned"] += assigned
+         self.wood_serfs += assigned
+-        self.free_leibeigene -= assigned
++        self._consume_free_serfs(assigned)
+         self.resource_workers[RESOURCE_HOLZ_ROH] = self.resource_workers.get(RESOURCE_HOLZ_ROH, 0) + assigned
+ 
+     def _can_assign_wood_tree_batch(
+@@ -5238,7 +5365,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                     self.wood_zone_categories[zone_name].get("serfs_assigned", 0) + assigned
+                 )
+             self.wood_serfs += assigned
+-            self.free_leibeigene -= assigned
++            self._consume_free_serfs(assigned)
+             self.resource_workers[RESOURCE_HOLZ_ROH] = self.resource_workers.get(RESOURCE_HOLZ_ROH, 0) + assigned
+         return assigned
+ 
+@@ -5737,7 +5864,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                     assigned += 1
+             if assigned:
+                 self.shaft_categories[category]["serfs_assigned"] = self.shaft_categories[category].get("serfs_assigned", 0) + assigned
+-                self.free_leibeigene -= assigned
++                self._consume_free_serfs(assigned)
+                 raw_name = {
+                     "Eisen": RESOURCE_EISEN_ROH,
+                     "Stein": RESOURCE_STEIN_ROH,
+@@ -5776,7 +5903,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                     assigned += 1
+             if assigned:
+                 self.deposit_categories[category]["serfs_assigned"] = self.deposit_categories[category].get("serfs_assigned", 0) + assigned
+-                self.free_leibeigene -= assigned
++                self._consume_free_serfs(assigned)
+                 raw_name = {
+                     "Eisen": RESOURCE_EISEN_ROH,
+                     "Stein": RESOURCE_STEIN_ROH,
+@@ -6049,7 +6176,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                 assigned += 1
+ 
+         cat_data["serfs_assigned"] += assigned
+-        self.free_leibeigene -= assigned
++        self._consume_free_serfs(assigned)
+         raw_name_map = {
+             "Eisen": RESOURCE_EISEN_ROH,
+             "Stein": RESOURCE_STEIN_ROH,
+@@ -6268,7 +6395,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                 assigned += 1
+ 
+         shaft_data["serfs_assigned"] = shaft_data.get("serfs_assigned", 0) + assigned
+-        self.free_leibeigene -= assigned
++        self._consume_free_serfs(assigned)
+         raw_name_map = {
+             "Eisen": RESOURCE_EISEN_ROH,
+             "Stein": RESOURCE_STEIN_ROH,
+@@ -6365,7 +6492,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+ 
+         mine_data = self.mine_categories[mine_type]
+         mine_data["serfs_assigned"] += assigned
+-        self.free_leibeigene -= assigned
++        self._consume_free_serfs(assigned)
+         if resource_name:
+             self.resource_workers[resource_name] = self.resource_workers.get(resource_name, 0) + assigned
+ 
+@@ -6455,7 +6582,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                 assigned += 1
+ 
+         target_site["serfs_assigned"] += assigned
+-        self.free_leibeigene -= assigned
++        self._consume_free_serfs(assigned)
+ 
+     def _can_recall_build_batch(self, batch_size: int) -> bool:
+         """PrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼ft ob batch_size Serfs von Baustellen zurÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼ckgerufen werden kÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¶nnen."""
+@@ -6491,6 +6618,20 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                 serf.stop()
+                 released += 1
+         self.free_leibeigene += released
++        self._construction_freed_serfs = max(0, getattr(self, "_construction_freed_serfs", 0)) + released
++
++    def _consume_free_serfs(self, n: int):
++        """Reduziert free_leibeigene und aktualisiert Herkunfts-Tracking-Counter.
++        Prioritaet: zuerst pending_spawned, dann construction_freed, dann idle."""
++        self.free_leibeigene -= n
++        remaining = n
++        # Zuerst "neu gekaufte" Serfs verbrauchen
++        consume_spawned = min(remaining, max(0, int(getattr(self, "_pending_spawned_unassigned_serfs", 0))))
++        self._pending_spawned_unassigned_serfs = max(0, self._pending_spawned_unassigned_serfs - consume_spawned)
++        remaining -= consume_spawned
++        # Dann "von Bau befreite" Serfs verbrauchen
++        consume_construction = min(remaining, max(0, int(getattr(self, "_construction_freed_serfs", 0))))
++        self._construction_freed_serfs = max(0, self._construction_freed_serfs - consume_construction)
+ 
+     def _get_active_construction_sites(self) -> int:
+         """Gibt Anzahl aktiver Baustellen zurÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼ck."""
+@@ -6648,8 +6789,28 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+             research_progress=research_progress_now,
+             construction_progress=construction_progress_now,
+         )
++        step_unlock_milestone_level_now = self._get_unlock_milestone_level(step_unlock_progress_now)
+         step_delta_progress = step_unlock_progress_now - float(self._last_step_unlock_progress)
+         step_unlock_recruitable = bool(recruitable_now and (not self._last_scharf_recruitable))
++        path_ready_now = self._is_scharf_path_ready(target_tier=step_potential_tier)
++        step_path_ready = bool(path_ready_now and (not self._last_scharf_path_ready))
++        required_buildings_completed_now = self._get_scharf_required_buildings_completed_count()
++        required_techs_completed_now = self._get_scharf_required_techs_completed_count()
++        step_new_required_buildings = max(
++            0,
++            int(required_buildings_completed_now) - int(self._last_scharf_required_buildings_completed),
++        )
++        step_new_required_techs = max(
++            0,
++            int(required_techs_completed_now) - int(self._last_scharf_required_techs_completed),
++        )
++        step_new_unlock_milestones = max(
++            0,
++            int(step_unlock_milestone_level_now) - int(self._last_unlock_milestone_level),
++        )
++        step_delta_taler_income = float(taler_income_per_cycle_now) - float(
++            self._last_taler_income_per_cycle
++        )
+ 
+         step_positive_only = float(self.reward_profile.get("step_delta_positive_only", 1.0)) > 0.0
+         if step_positive_only:
+@@ -6659,6 +6820,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+             step_delta_research = max(0.0, step_delta_research)
+             step_delta_construction = max(0.0, step_delta_construction)
+             step_worker_growth = max(0.0, step_worker_growth)
++            step_delta_taler_income = max(0.0, step_delta_taler_income)
+ 
+         step_reward = 0.0
+         step_reward += step_delta_potential * float(self.reward_profile.get("step_delta_potential_bonus", 0.0))
+@@ -6666,12 +6828,26 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+             self.reward_profile.get("step_new_resource_potential_unit_bonus", 0.0)
+         )
+         step_reward += step_delta_progress * float(self.reward_profile.get("step_delta_progress_bonus", 0.0))
++        step_reward += float(step_new_unlock_milestones) * float(
++            self.reward_profile.get("step_unlock_milestone_bonus", 0.0)
++        )
+         step_reward += step_delta_dependency * float(self.reward_profile.get("step_delta_dependency_bonus", 0.0))
+         step_reward += step_delta_research * float(self.reward_profile.get("step_delta_research_bonus", 0.0))
+         step_reward += step_delta_construction * float(self.reward_profile.get("step_delta_construction_bonus", 0.0))
++        step_reward += float(step_new_required_buildings) * float(
++            self.reward_profile.get("step_required_building_complete_bonus", 0.0)
++        )
++        step_reward += float(step_new_required_techs) * float(
++            self.reward_profile.get("step_required_tech_complete_bonus", 0.0)
++        )
+         step_reward += step_worker_growth * float(
+             self.reward_profile.get("step_worker_growth_bonus", 0.0)
+         )
++        step_reward += step_delta_taler_income * float(
++            self.reward_profile.get("step_delta_taler_income_bonus", 0.0)
++        )
++        if step_path_ready:
++            step_reward += float(self.reward_profile.get("step_path_ready_bonus", 0.0))
+         if step_unlock_recruitable:
+             step_reward += float(self.reward_profile.get("step_unlock_recruitable_bonus", 0.0))
+         step_reward -= abs(float(self.reward_profile.get("step_time_penalty", 0.0)))
+@@ -6688,13 +6864,21 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         info["step_new_potential_units"] = int(step_new_potential_units)
+         info["step_taxable_workers"] = float(taxable_workers_now)
+         info["step_taler_income_per_cycle"] = float(taler_income_per_cycle_now)
++        info["step_delta_taler_income"] = float(step_delta_taler_income)
+         info["step_delta_potential"] = float(step_delta_potential)
+         info["step_unlock_progress_metric"] = float(step_unlock_progress_now)
++        info["step_unlock_milestone_level"] = int(step_unlock_milestone_level_now)
++        info["step_new_unlock_milestones"] = int(step_new_unlock_milestones)
+         info["step_delta_unlock_progress"] = float(step_delta_progress)
+         info["step_delta_dependency"] = float(step_delta_dependency)
+         info["step_delta_research"] = float(step_delta_research)
+         info["step_delta_construction"] = float(step_delta_construction)
++        info["step_required_buildings_completed"] = int(required_buildings_completed_now)
++        info["step_required_techs_completed"] = int(required_techs_completed_now)
++        info["step_new_required_buildings"] = int(step_new_required_buildings)
++        info["step_new_required_techs"] = int(step_new_required_techs)
+         info["step_worker_growth"] = float(step_worker_growth)
++        info["step_path_ready"] = bool(step_path_ready)
+         info["step_unlock_recruitable"] = bool(step_unlock_recruitable)
+         info["step_reward"] = float(step_reward)
+         info["pending_spawned_unassigned_serfs"] = int(
+@@ -6709,10 +6893,61 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         self._last_scharf_research_progress = research_progress_now
+         self._last_scharf_construction_progress = construction_progress_now
+         self._last_step_unlock_progress = step_unlock_progress_now
++        self._last_unlock_milestone_level = int(step_unlock_milestone_level_now)
+         self._last_scharf_recruitable = recruitable_now
++        self._last_scharf_path_ready = bool(path_ready_now)
++        self._last_scharf_required_buildings_completed = int(required_buildings_completed_now)
++        self._last_scharf_required_techs_completed = int(required_techs_completed_now)
++        self._last_taler_income_per_cycle = float(taler_income_per_cycle_now)
+ 
+         terminated = self.current_time >= self.max_time
+-        # Terminal reward logic intentionally disabled.
++        terminal_potential_reward = 0.0
++        terminal_path_ready = False
++        terminal_potential_source = "disabled"
++        terminal_potential_tier = self._get_reward_profile_scharf_tier(
++            "terminal_potential_scharf_tier",
++            default=1,
++        )
++        terminal_include_start_resources = float(
++            self.reward_profile.get("terminal_potential_include_start_resources", 0.0)
++        ) > 0.0
++        terminal_require_path_ready = float(
++            self.reward_profile.get("terminal_potential_require_path_ready", 1.0)
++        ) > 0.0
++        terminal_use_cumulative = float(
++            self.reward_profile.get("terminal_potential_use_cumulative_earnings", 0.0)
++        ) > 0.0
++
++        if terminated:
++            terminal_potential_source = (
++                "cumulative_earnings" if terminal_use_cumulative else "current_stock"
++            )
++            terminal_path_ready = self._is_scharf_path_ready(target_tier=terminal_potential_tier)
++            terminal_potential_metric = self._get_scharf_terminal_potential()
++            terminal_reward = 0.0
++            terminal_reward += float(dependency_progress_now) * float(
++                self.reward_profile.get("terminal_dependency_bonus", 0.0)
++            )
++            if terminal_path_ready:
++                terminal_reward += float(self.reward_profile.get("terminal_path_ready_bonus", 0.0))
++            if recruitable_now:
++                terminal_reward += float(self.reward_profile.get("terminal_recruitable_bonus", 0.0))
++            terminal_reward += float(terminal_potential_metric) * float(
++                self.reward_profile.get("terminal_potential_bonus_per_unit", 0.0)
++            )
++            reward += terminal_reward
++            terminal_potential_reward = float(terminal_reward)
++        else:
++            terminal_potential_metric = 0.0
++
++        info["terminal_path_ready"] = bool(terminal_path_ready)
++        info["terminal_potential_metric"] = float(terminal_potential_metric)
++        info["terminal_potential_reward"] = float(terminal_potential_reward)
++        info["terminal_potential_source"] = str(terminal_potential_source)
++        info["terminal_potential_scharf_tier"] = int(terminal_potential_tier)
++        info["terminal_potential_include_start_resources"] = bool(terminal_include_start_resources)
++        info["terminal_potential_require_path_ready"] = bool(terminal_require_path_ready)
++        info["terminal_reward_applied"] = bool(terminated)
+         return self._get_observation(), reward, terminated, False, info
+ 
+     def _resolve_area(self, category, specific):
+@@ -7024,6 +7259,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+ 
+         self._building_serfs_count = building_count
+ 
++        # Clamp Herkunfts-Counter auf free_leibeigene (verhindert Drift)
++        free = max(0, int(getattr(self, "free_leibeigene", 0)))
++        self._pending_spawned_unassigned_serfs = max(
++            0, min(int(getattr(self, "_pending_spawned_unassigned_serfs", 0)), free)
++        )
++        self._construction_freed_serfs = max(
++            0, min(int(getattr(self, "_construction_freed_serfs", 0)),
++                   free - self._pending_spawned_unassigned_serfs)
++        )
++
+     def _build_and_assign(self, source_area, quantity, building, build_position: Optional[dict] = None):
+         """Baut Gebaeude und weist Leibeigene direkt der neuen Baustelle zu."""
+         if not self._can_build(building):
+@@ -7936,7 +8181,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         building = self._get_position_phase_building(building_idx)
+         if building:
+             if self.current_flow == "assign_serf":
+-                count = self._count_free_build_positions(building, limit=MAX_POSITION_SLOTS)
++                # _get_build_position_candidates nutzen: korrekte Mine/DZ-Slots
++                count = len(self._get_build_position_candidates(building))
+             else:
+                 count = len(self._get_building_instance_keys(building))
+             if count > 0:
+@@ -7957,7 +8203,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         building = self._get_position_phase_building(self.pending_selections.get(ActionPhase.BUILDING, 0))
+         if building:
+             if self.current_flow == "assign_serf":
+-                total_count = self._count_free_build_positions(building, limit=MAX_POSITION_SLOTS)
++                # _get_build_position_candidates nutzen: korrekte Mine/DZ-Slots
++                total_count = len(self._get_build_position_candidates(building))
+             else:
+                 total_count = len(self._get_building_instance_keys(building))
+             start = max(0, group_idx) * POSITION_GROUP_SIZE
+@@ -8889,6 +9136,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+             0,
+             int(getattr(self, "_pending_spawned_unassigned_serfs", 0)) - 1,
+         )
++        self._construction_freed_serfs = max(
++            0,
++            int(getattr(self, "_construction_freed_serfs", 0)) - 1,
++        )
+ 
+         # Einen idle Serf entfernen (vereinfacht)
+         for i, serf in enumerate(self.production_system.serfs):
+@@ -9174,7 +9425,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+ 
+         # Steuer-Einkommen (aus extra2/logic.xml)
+         # RegularTax = fester Betrag PRO WORKER (nicht Multiplikator!)
+-        if self.current_time % INCOME_CYCLE == 0:
++        if (self._first_worker_building_time is not None
++                and self.current_time > self._first_worker_building_time
++                and (self.current_time - self._first_worker_building_time) % INCOME_CYCLE == 0):
+             tax_info = TAX_LEVELS.get(self.current_tax_level, TAX_LEVELS[2])
+             # ZÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¤hle alle arbeitenden Worker
+             total_workers = len(self.workforce_manager.workers)
+@@ -9224,6 +9477,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+                     self._on_building_completed(building, pos, pos_key=pos_key)
+                     # Serfs werden frei
+                     self._release_serfs_from_site(site)
++                    self._serf_areas_dirty = True  # Recount nach Baufertigstellung
+                     completed_sites.append(i)
+ 
+         for i in reversed(completed_sites):
+@@ -9367,6 +9621,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
+         level = get_building_level(building)
+         self._mark_infrastructure_dirty()
+ 
++        # Zahltag-Timer: startet beim ersten Workergebaeude (nicht bei HQ/DZ)
++        if (self._first_worker_building_time is None
++                and buildings_db.get(building, {}).get("max_workers", 0) > 0):
++            self._first_worker_building_time = self.current_time
++
+         if position is None:
+             position = self.hq_position
+ 
+diff --git a/play_game.py b/play_game.py
+index f5e960e..049da35 100644
+--- a/play_game.py
++++ b/play_game.py
+@@ -8,6 +8,8 @@ Ausfuehren:  python play_game.py
+ 
+ import os
+ import sys
++import queue as _q
++import threading as _thr
+ 
+ # Vollstaendige Simulation (kein fast_train) fuer realistisches Spielgefuehl
+ os.environ.setdefault("SIEDLER_FAST_TRAIN", "0")
+@@ -15,18 +17,192 @@ os.environ.setdefault("SIEDLER_DISABLE_RUNTIME_PATHING", "0")
+ os.environ.setdefault("SIEDLER_USE_SPATIAL", "0")
+ os.environ.setdefault("SIEDLER_TRAIN_PROFILE", "legacy")
+ 
++# ANSI-Farben aktivieren (Windows braucht einmaligen os.system-Aufruf)
++if os.name == "nt":
++    os.system("")
++
++# Farb-Konstanten
++_R = "\033[0m"          # Reset
++_BOLD = "\033[1m"
++_DIM = "\033[2m"
++
++# Karten-Farben
++_C = {
++    "t": "\033[32m",      # Holz/Baeume    = gruen
++    "i": "\033[90m",      # Eisen-Stollen  (Minenbauslot, 4000cap) = grau
++    "e": "\033[37m",      # Eisen-Vork.    (serf-only, kein Bau)  = silber
++    "I": "\033[1;37m",    # Eisen-Mine     = hell-silber
++    "s": "\033[97m",      # Stein-Stollen  (Minenbauslot)  = weiss
++    "q": "\033[97m",      # Stein-Vork.    (serf-only)     = weiss
++    "S": "\033[1;97m",    # Stein-Mine     = hell-weiss
++    "l": "\033[33m",      # Lehm-Stollen   (Minenbauslot)  = braun
++    "a": "\033[33m",      # Lehm-Vork.     (serf-only)     = braun
++    "L": "\033[1;33m",    # Lehm-Mine      = hell-braun
++    "f": "\033[93m",      # Schwefel-Stollen (Minenbauslot) = gelb
++    "g": "\033[93m",      # Schwefel-Vork.   (serf-only)   = gelb
++    "V": "\033[1;93m",    # Schwefel-Mine  = hell-gelb
++    "H": "\033[1;91m",    # HQ             = rot+fett
++    "D": "\033[1;96m",    # DZ             = hell-cyan
++    "d": "\033[36m",      # freier DZ      = cyan
++    "w": "\033[95m",      # Arbeiter       = magenta
++    "p": "\033[1;95m",    # Leibeigener    = hell-magenta (fett)
++    "b": "\033[1;33m",    # Baustelle      = gelb-fett (in Bau)
++    ".": "\033[90m",      # Hintergrund    = dunkelgrau
++}
++_C_BLDG = "\033[94m"    # sonstige Gebaeude = blau
++
++# UI-Farben
++_HEAD  = "\033[1;33m"   # Header-Farbe     = gelb-fett
++_KEY   = "\033[1;36m"   # Key-Labels       = cyan-fett
++_OK    = "\033[32m"     # verfuegbar       = gruen
++_GRAY  = "\033[90m"     # deaktiviert      = grau
++_WARN  = "\033[91m"     # Warnung          = rot
++_HL    = "\033[1;103m\033[30m"  # Highlight = gelber Hintergrund + schwarz
++
+ 
+ def _clear():
+     os.system("cls" if os.name == "nt" else "clear")
+ 
+ 
++# --- Graphischer Live-View (Tkinter, Background-Thread, auto-refresh) ----
++
++_render_module = None   # Gecachter Render-Modul-Import
++_lv_base       = None   # Gecachtes Terrain-Bild (aendert sich nie)
++_lv_queue: "_q.Queue | None" = None
++_lv_thread: "_thr.Thread | None" = None
++_lv_enabled    = False  # Ob das Live-View-Fenster aktiv ist
++
++
++def _get_render_module():
++    """Laedt render_replay_mp4 ueber sys.path â€” zuverlaessiger als spec-Import."""
++    global _render_module
++    if _render_module is not None:
++        return _render_module
++    archive_dir = os.path.join(
++        os.path.dirname(os.path.abspath(__file__)),
++        "tools", "archive",
++    )
++    orig = sys.path[:]
++    try:
++        sys.path.insert(0, archive_dir)
++        import render_replay_mp4 as _m
++        _render_module = _m
++        return _m
++    finally:
++        sys.path[:] = orig
++
++
++def _live_view_thread_func(q: "_q.Queue"):
++    """Tkinter-Fenster im Daemon-Thread: pollt Queue und zeigt neuste Frames."""
++    try:
++        import tkinter as tk
++        from PIL import Image as _PIL, ImageTk
++    except ImportError:
++        return
++
++    root = tk.Tk()
++    root.title("Siedler AI â€” Live View")
++    root.configure(bg="#111")
++    root.attributes("-topmost", True)   # Fenster immer im Vordergrund
++    # Rechts oben positionieren (damit Terminal links sichtbar bleibt)
++    sw = root.winfo_screenwidth()
++    root.geometry(f"900x620+{max(0, sw - 920)}+0")
++    lbl = tk.Label(root, bg="#111")
++    lbl.pack(fill=tk.BOTH, expand=True)
++    _ref = [None]
++
++    def poll():
++        latest = None
++        try:
++            while True:
++                latest = q.get_nowait()
++        except _q.Empty:
++            pass
++        if latest is not None:
++            img = _PIL.fromarray(latest)
++            img.thumbnail((1400, 900))
++            photo = ImageTk.PhotoImage(img)
++            lbl.config(image=photo)
++            _ref[0] = photo  # GC-Schutz
++        root.after(250, poll)
++
++    root.after(150, poll)
++    try:
++        root.mainloop()
++    except Exception:
++        pass
++
++
++def _ensure_live_view():
++    """Startet Live-View-Thread falls nicht aktiv, gibt Queue zurueck."""
++    global _lv_queue, _lv_thread
++    if _lv_thread and _lv_thread.is_alive():
++        return _lv_queue
++    _lv_queue = _q.Queue(maxsize=2)
++    t = _thr.Thread(target=_live_view_thread_func, args=(_lv_queue,), daemon=True)
++    t.start()
++    _lv_thread = t
++    return _lv_queue
++
++
++def update_live_view(env, label: str = ""):
++    """
++    Rendert aktuellen State und schickt Frame an Live-View-Fenster.
++    Wird nach jedem Step automatisch aufgerufen wenn _lv_enabled=True.
++    """
++    global _lv_base
++    if not _lv_enabled:
++        return
++    if not hasattr(env, "map_manager"):
++        return
++    try:
++        m = _get_render_module()
++        if _lv_base is None:
++            _lv_base = m._make_base_image(env, None)  # Terrain wird gecacht
++        frame = m._draw_frame(
++            env, _lv_base,
++            step_idx=0, total_steps=1,
++            draw_paths=True, max_paths=800,
++            action_label=label or f"t={int(env.current_time)}s",
++            label_entities=True,
++            show_worker_states=True,
++            show_worker_targets=True,
++            show_refiner_trips=True,
++        )
++        q = _ensure_live_view()
++        try:
++            q.put_nowait(frame)
++        except _q.Full:
++            pass  # langsamer Viewer â†’ Frame droppen
++    except Exception:
++        pass  # Live-View-Fehler sollen Spiel nie unterbrechen
++
++
++def toggle_live_view(env):
++    """Schaltet Live-View ein/aus. Gibt neue Status-Nachricht zurueck."""
++    global _lv_enabled, _lv_base
++    _lv_enabled = not _lv_enabled
++    if _lv_enabled:
++        _lv_base = None  # Terrain bei Neustart neu generieren
++        update_live_view(env, "Live-View gestartet")
++        return f"{_OK}Live-View aktiviert{_R} (aktualisiert nach jedem Step)"
++    else:
++        return f"{_GRAY}Live-View deaktiviert{_R}"
++
++
+ def _format_res(resources: dict) -> str:
+-    important = ["Holz", "Stein", "Lehm", "Eisen", "Schwefel", "Taler"]
++    # Roh- UND verarbeitete Ressourcen anzeigen
++    pairs = [
++        ("Holz", "HolzRoh"), ("Stein", "SteinRoh"),
++        ("Lehm", "LehmRoh"), ("Eisen", "EisenRoh"),
++        ("Schwefel", "SchwefelRoh"), ("Taler", "GoldRoh"),
++    ]
+     parts = []
+-    for k in important:
+-        v = resources.get(k, 0)
++    for refined, raw in pairs:
++        v = resources.get(refined, 0) + resources.get(raw, 0)
+         if v > 0:
+-            parts.append(f"{k}:{int(v)}")
++            label = refined if refined != "Taler" else "Taler"
++            parts.append(f"{label}:{int(v)}")
+     return "  ".join(parts) if parts else "(keine)"
+ 
+ 
+@@ -53,60 +229,124 @@ def _format_soldiers(soldiers: dict, scharfschuetzen: int) -> str:
+ 
+ 
+ def _format_research(current_researches: list, researched_techs: set) -> str:
++    parts = []
+     if current_researches:
+-        active = ", ".join(f"{r[0]}({r[1]:.0f}s)" for r in current_researches[:3])
+-        return f"Aktiv: {active}"
+-    return f"Fertig: {len(researched_techs)} Techs"
++        parts.append("Aktiv: " + ", ".join(f"{r[0]}({r[1]:.0f}s)" for r in current_researches[:3]))
++    if researched_techs:
++        parts.append("Fertig: " + ", ".join(sorted(researched_techs)))
++    return "  |  ".join(parts) if parts else "(keine)"
+ 
+ 
+ def show_state(env):
+-    """Zeigt aktuellen Game-State."""
+-    width = 62
+-    bar = "=" * width
++    """Zeigt aktuellen Game-State kompakt (4-7 Zeilen)."""
++    W = 68
++    bar = f"{_HEAD}{'=' * W}{_R}"
++    sep = f"{_GRAY}{'-' * W}{_R}"
++
++    # Zeile 1: Zeitstempel + Kennzahlen
++    zeit  = int(env.current_time)
++    mot   = getattr(env, "base_motivation", 0) * 100
++    tax   = getattr(env, "current_tax_level", 2)
++    faith = int(getattr(env, "faith", 0))
++    alarm = getattr(env, "alarm_active", False)
++    alarm_str = f"  {_WARN}[ALARM]{_R}" if alarm else ""
++
++    # Zahltag-Countdown (startet erst nach erstem Workergebaeude)
++    try:
++        from environment import INCOME_CYCLE as _IC
++        _fwt = getattr(env, "_first_worker_building_time", None)
++        if _fwt is None:
++            zahltag_str = f"  {_GRAY}Zahltag:--{_R}"
++        else:
++            _elapsed = env.current_time - _fwt
++            _ctdwn = int(_IC - (_elapsed % _IC))
++            if _ctdwn == _IC:
++                _ctdwn = 0
++            zahltag_str = f"  {_KEY}Zahltag{_R}:{_ctdwn}s"
++    except Exception:
++        zahltag_str = ""
+ 
+     print(bar)
+-    print(f"  SIEDLER AI | Zeit: {int(env.current_time)}s/{env.max_time}s"
+-          f" | Motivation: {getattr(env, 'base_motivation', 0)*100:.0f}%"
+-          f" | Steuer: {getattr(env, 'current_tax_level', 2)}")
++    print(f" {_BOLD}SIEDLER AI{_R}  "
++          f"{_KEY}t{_R}:{zeit}/{env.max_time}s  "
++          f"{_KEY}Mot{_R}:{mot:.0f}%  "
++          f"{_KEY}Steu{_R}:{tax}  "
++          f"{_KEY}Glb{_R}:{faith}"
++          f"{zahltag_str}"
++          f"{alarm_str}")
+     print(bar)
+ 
+-    # Ressourcen
+-    print(f"RESSOURCEN:  {_format_res(env.resources)}")
+-
+-    # Leibeigene
+-    total = getattr(env, "total_leibeigene", 0)
+-    free = getattr(env, "free_leibeigene", 0)
+-    print(f"LEIBEIGENE:  {total} gesamt, {free} frei"
+-          f"  |  Glaube: {int(getattr(env, 'faith', 0))}")
+-
+-    # Gebaeude
+-    print(f"GEBAEUDE:    {_format_buildings(env.buildings)}")
+-
+-    # Forschung
+-    cr = getattr(env, "current_researches", [])
+-    rt = getattr(env, "researched_techs", set())
+-    print(f"FORSCHUNG:   {_format_research(cr, rt)}")
++    # Zeile 2: Ressourcen + Leibeigene in einer Zeile
++    res_str = _format_res(env.resources)
++    total   = getattr(env, "total_leibeigene", 0)
++    free    = getattr(env, "free_leibeigene", 0)
++    assigned = total - free
++    rw = getattr(env, "resource_workers", {})
++    rw_str = " ".join(
++        f"{k.replace('Roh','').replace('RohRoh','Roh')}:{int(v)}"
++        for k, v in rw.items() if v > 0
++    )
++    lei_detail = f" {_GRAY}[{rw_str}]{_R}" if rw_str else ""
++    # Freie Leibeigene nach Herkunft aufschlÃ¼sseln
++    n_neu  = max(0, int(getattr(env, "_pending_spawned_unassigned_serfs", 0)))
++    n_bau  = max(0, int(getattr(env, "_construction_freed_serfs", 0)))
++    n_idle = max(0, free - n_neu - n_bau)
++    parts = []
++    if n_neu  > 0: parts.append(f"{_OK}{n_neu} neu{_R}")
++    if n_bau  > 0: parts.append(f"\033[36m{n_bau} von Bau{_R}")
++    if n_idle > 0: parts.append(f"{_GRAY}{n_idle} idle{_R}")
++    free_detail = f" ({', '.join(parts)})" if parts else ""
++    # Dorfzentrum-Kapazitaet und buy_serf Diagnose
++    try:
++        vc_cap = env._get_total_village_capacity()
++        taler  = int(env._get_total_resource("Taler") + env._get_total_resource("GoldRoh"))
++        mot    = env._get_total_motivation()
++        from environment import SERF_BUY_COST, soldiers_db
++        # DZ-Kap zaehlt ALLE Bewohner: Leibeigene + Worker + Soldaten (mit population_cost)
++        n_workers_dz = len(getattr(env, "workforce_manager", None).workers) if hasattr(env, "workforce_manager") else 0
++        n_soldiers_dz = sum(
++            cnt * soldiers_db.get(stype, {}).get("population_cost", 1)
++            for stype, cnt in getattr(env, "soldiers", {}).items()
++        ) + getattr(env, "scharfschuetzen", 0)
++        dz_used = total + n_workers_dz + n_soldiers_dz
++        cap_str = f"  {_KEY}DZ-Kap{_R}:{dz_used}/{vc_cap}"
++        # Blockade-Hinweis
++        if dz_used >= vc_cap:
++            cap_str += f" {_WARN}[VOLL]{_R}"
++        elif taler < SERF_BUY_COST:
++            cap_str += f" {_WARN}[Taler<{SERF_BUY_COST}]{_R}"
++    except Exception:
++        cap_str = ""
++    print(f" {_KEY}RES{_R} {res_str}   "
++          f"{_KEY}LEI{_R} {_OK}{free}{_R}/{total} frei{free_detail}{lei_detail}{cap_str}")
++
++    # Zeile 3: Gebaeude
++    print(f" {_KEY}GEB{_R} {_format_buildings(env.buildings)}")
++
++    # Zeile 4: Militaer
++    soldiers = getattr(env, "soldiers", {})
++    scharf   = getattr(env, "scharfschuetzen", 0)
++    print(f" {_KEY}MIL{_R} {_format_soldiers(soldiers, scharf)}")
+ 
+-    # Baustellen
++    # Optional: Baustellen / Upgrades / Forschung (nur wenn aktiv)
+     sites = getattr(env, "construction_sites", [])
++    uq    = getattr(env, "upgrade_queue", [])
++    cr    = getattr(env, "current_researches", [])
++    rt    = getattr(env, "researched_techs", set())
+     if sites:
+-        site_str = ", ".join(
+-            f"{s.get('building', '?')}({s.get('remaining_work', 0):.0f}h)"
++        site_str = "  ".join(
++            f"{s.get('building','?')}({s.get('remaining_work',0):.0f}s)"
+             for s in sites[:4]
+-        )
+-        if len(sites) > 4:
+-            site_str += f" +{len(sites)-4}"
+-        print(f"BAUSTELLEN:  {site_str}")
+-
+-    # Militaer
+-    soldiers = getattr(env, "soldiers", {})
+-    scharf = getattr(env, "scharfschuetzen", 0)
+-    print(f"MILITAER:    {_format_soldiers(soldiers, scharf)}")
++        ) + (f" +{len(sites)-4}" if len(sites) > 4 else "")
++        print(f" {_KEY}BAU{_R} {site_str}")
++    if uq:
++        print(f" {_KEY}UPG{_R} " + "  ".join(f"{item[1]}({item[2]:.0f}s)" for item in uq[:4]))
++    if cr:
++        active_str = "  ".join(f"{r[0]}({r[1]:.0f}s)" for r in cr[:3])
++        done_str   = (f"  Fertig:{','.join(sorted(rt))}") if rt else ""
++        print(f" {_KEY}FOR{_R} {active_str}{done_str}")
+ 
+-    # Alarm
+-    alarm = getattr(env, "alarm_active", False)
+-    if alarm:
+-        print(f"  !!! ALARM AKTIV !!!")
++    print(sep)
+ 
+ 
+ def get_action_names(env) -> list:
+@@ -118,6 +358,13 @@ def get_action_names(env) -> list:
+         SOURCE_CATEGORIES, TARGET_CATEGORIES, TAX_LEVELS, BLESS_CATEGORIES,
+     )
+ 
++    MAIN_NAMES_DE = {
++        "wait": "Warten", "upgrade": "Upgraden", "research": "Forschen",
++        "recruit": "Rekrutieren", "buy_serf": "Leibeig. kaufen",
++        "dismiss_serf": "Leibeig. entlassen", "assign_serf": "Leibeig. zuweisen",
++        "demolish": "Abreissen", "bless": "Segnen", "tax": "Steuer", "alarm": "Alarm",
++    }
++
+     phase = env.current_phase
+     mask = env.action_masks()
+ 
+@@ -130,18 +377,41 @@ def get_action_names(env) -> list:
+     if phase == ActionPhase.MAIN:
+         for i, name in enumerate(MAIN_ACTIONS):
+             enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
+-            options.append((i, name, enabled))
++            options.append((i, MAIN_NAMES_DE.get(name, name), enabled))
+ 
+     elif phase == ActionPhase.BUILDING:
++        from environment import buildings_db
+         flow = getattr(env, "current_flow", None)
+         if flow == "upgrade":
+             blist = env.upgradeable_buildings
+         else:
+             blist = env.demolishable_buildings
++        bpm = getattr(env, "building_position_map", {})
+         for i in range(n):
+-            name = blist[i] if i < len(blist) else f"Gebaeude_{i}"
++            bname = blist[i] if i < len(blist) else f"Gebaeude_{i}"
+             enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
+-            options.append((i, name, enabled))
++            # Kosten anzeigen
++            binfo = buildings_db.get(bname, {})
++            if flow == "upgrade":
++                cost = binfo.get("upgrade_cost", {})
++                t = binfo.get("upgrade_time", 0)
++            else:
++                cost = binfo.get("cost", {})
++                t = binfo.get("build_time", 0)
++            cost_str = " ".join(f"{k}:{int(v)}" for k, v in cost.items()) if cost else ""
++            # Position(en) aus building_position_map
++            matching = [(k, v) for k, v in bpm.items()
++                        if k == bname or k.startswith(bname + "_")]
++            if matching:
++                pos_parts = [f"({int(v['x'])},{int(v['y'])})" for _, v in matching[:3]]
++                pos_str = " " + " ".join(pos_parts)
++            else:
++                pos_str = ""
++            if cost_str:
++                label = f"{bname}{pos_str}  [{cost_str} {t:.0f}s]"
++            else:
++                label = f"{bname}{pos_str}"
++            options.append((i, label, enabled))
+ 
+     elif phase == ActionPhase.TECH_BUILDING:
+         for i, bname in enumerate(RESEARCH_BUILDINGS):
+@@ -190,16 +460,162 @@ def get_action_names(env) -> list:
+             options.append((i, name, enabled))
+ 
+     elif phase in (ActionPhase.SOURCE_SPECIFIC, ActionPhase.TARGET_SPECIFIC):
+-        # Zeige einfach Indizes der aktiven Optionen
+-        for i in range(n):
+-            enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
+-            options.append((i, f"Option {i}", enabled))
++        tgt_cat = env.pending_selections.get(ActionPhase.TARGET_CATEGORY, -1)
++
++        # Aktive Kategorie bestimmen
++        if phase == ActionPhase.SOURCE_SPECIFIC:
++            sel_cat = env.pending_selections.get(ActionPhase.SOURCE_CATEGORY, -1)
++        else:
++            sel_cat = tgt_cat
++
++        if phase == ActionPhase.TARGET_SPECIFIC and sel_cat == 7:
++            # Neubau: TARGET_SPECIFIC = Gebaeude auswaehlen (index â†’ buildable_buildings)
++            from environment import buildings_db
++            blist = env.buildable_buildings
++            for i in range(n):
++                enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
++                bname = blist[i] if i < len(blist) else f"Gebaeude_{i}"
++                binfo = buildings_db.get(bname, {})
++                cost = binfo.get("cost", {})
++                t = binfo.get("build_time", 0)
++                cost_str = " ".join(f"{k}:{int(v)}" for k, v in cost.items()) if cost else ""
++                label = f"{bname}  [{cost_str} {t:.0f}s]" if cost_str else bname
++                options.append((i, label, enabled))
++
++        elif sel_cat == 0:
++            # Frei-Pool: nur Index 0 â€” free_leibeigene ist immer aktuell (serf_areas kann veraltet sein)
++            enabled = bool(phase_mask[0]) if len(phase_mask) > 0 else False
++            free_count = getattr(env, "free_leibeigene", 0)
++            n_neu  = max(0, int(getattr(env, "_pending_spawned_unassigned_serfs", 0)))
++            n_bau  = max(0, int(getattr(env, "_construction_freed_serfs", 0)))
++            n_idle = max(0, free_count - n_neu - n_bau)
++            detail_parts = []
++            if n_neu  > 0: detail_parts.append(f"{n_neu} neu")
++            if n_bau  > 0: detail_parts.append(f"{n_bau} von Bau")
++            if n_idle > 0: detail_parts.append(f"{n_idle} idle")
++            detail = f" [{', '.join(detail_parts)}]" if detail_parts else ""
++            options.append((0, f"Frei-Pool ({free_count} verfuegbar{detail})", enabled))
++
++        elif sel_cat == 1:
++            # Holz: index â†’ tree_list_internal[i]
++            trees = getattr(env, "tree_list_internal", [])
++            for i in range(min(n, len(trees))):
++                enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
++                if not enabled:
++                    continue  # nur verfuegbare Baeume zeigen
++                t = trees[i]
++                rem = int(t.get("resource_remaining", t.get("remaining_wood", 0)))
++                assigned = int(t.get("serfs_assigned", 0))
++                tx, ty = int(t.get("x", 0)), int(t.get("y", 0))
++                options.append((i, f"Baum{i} @({tx},{ty}) [{rem}Holz {assigned}L]", enabled))
++
++        elif sel_cat == 6:
++            # Baustelle: index â†’ construction_sites[i]
++            sites = getattr(env, "construction_sites", [])
++            for i, site in enumerate(sites[:n]):
++                enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
++                bname = site.get("building", f"Baustelle_{i}")
++                rem = site.get("remaining_work", 0)
++                s_assigned = site.get("serfs_assigned", 0)
++                options.append((i, f"{bname} ({rem:.0f}s verbl., {s_assigned}L)", enabled))
++            if not sites:
++                options.append((0, "(keine Baustellen)", False))
++
++        elif sel_cat in (2, 3, 4, 5):
++            # Mineralien: index = Position in CATEGORY_AREA_MAP[cat] â€” NICHT in serf_areas!
++            from environment import CATEGORY_AREA_MAP
++            SERF_AREA_DE = {
++                "SHAFT_IRON_1":   "Eisen-Vork.1",   "SHAFT_IRON_2":   "Eisen-Vork.2",
++                "SHAFT_IRON_3":   "Eisen-Vork.3",   "SHAFT_STONE_1":  "Stein-Vork.1",
++                "SHAFT_STONE_2":  "Stein-Vork.2",   "SHAFT_STONE_3":  "Stein-Vork.3",
++                "SHAFT_CLAY_1":   "Lehm-Vork.1",    "SHAFT_CLAY_2":   "Lehm-Vork.2",
++                "SHAFT_CLAY_3":   "Lehm-Vork.3",    "SHAFT_SULFUR_1": "Schwefel-Vork.1",
++                "SHAFT_SULFUR_2": "Schwefel-Vork.2", "SHAFT_SULFUR_3": "Schwefel-Vork.3",
++                "DEPOSIT_IRON_1":   "Eisen-Mine.1",   "DEPOSIT_IRON_2":   "Eisen-Mine.2",
++                "DEPOSIT_STONE_1":  "Stein-Mine.1",   "DEPOSIT_STONE_2":  "Stein-Mine.2",
++                "DEPOSIT_CLAY_1":   "Lehm-Mine.1",
++                "DEPOSIT_SULFUR_1": "Schwefel-Mine.1", "DEPOSIT_SULFUR_2": "Schwefel-Mine.2",
++            }
++            _DE_EN = {"Eisen": "IRON", "Stein": "STONE", "Lehm": "CLAY", "Schwefel": "SULFUR"}
++            # Koordinaten aufbauen
++            _coords: dict = {}
++            for _cat, _cd in getattr(env, "shaft_categories", {}).items():
++                _en = _DE_EN.get(_cat, _cat.upper())
++                for _idx, _sh in enumerate(_cd.get("shafts", []), start=1):
++                    _coords[f"SHAFT_{_en}_{_idx}"] = (int(_sh.get("x", 0)), int(_sh.get("y", 0)))
++                    _coords[f"SHAFT_{_en}_{_idx}_rem"] = int(_sh.get("remaining", 0))
++            for _cat, _cd in getattr(env, "deposit_categories", {}).items():
++                _en = _DE_EN.get(_cat, _cat.upper())
++                for _idx, _dp in enumerate(_cd.get("deposits", []), start=1):
++                    _coords[f"DEPOSIT_{_en}_{_idx}"] = (int(_dp.get("x", 0)), int(_dp.get("y", 0)))
++                    _coords[f"DEPOSIT_{_en}_{_idx}_rem"] = int(_dp.get("remaining", 0))
++            # Serf-counts aus serf_areas
++            serf_areas = getattr(env, "serf_areas", {})
++            serf_count = {area.name: data.get("count", 0) for area, data in serf_areas.items()}
++
++            cat_areas = CATEGORY_AREA_MAP.get(sel_cat, [])
++            for i, area in enumerate(cat_areas):
++                enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
++                akey  = area.name
++                aname = SERF_AREA_DE.get(akey, akey)
++                cnt   = serf_count.get(akey, 0)
++                coord = _coords.get(akey)
++                rem   = _coords.get(akey + "_rem", "?")
++                pos_str = f" @({coord[0]},{coord[1]})" if coord else ""
++                options.append((i, f"{aname} ({cnt}L, {rem} verbl.){pos_str}", enabled))
++
++        else:
++            # Unbekannte Kategorie: alle Optionen zeigen
++            for i in range(n):
++                enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
++                options.append((i, f"Option {i}", enabled))
+ 
+     elif phase in (ActionPhase.POSITION_GROUP, ActionPhase.POSITION_INDEX):
+-        label = "Gruppe" if phase == ActionPhase.POSITION_GROUP else "Position"
+-        for i in range(n):
+-            enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
+-            options.append((i, f"{label} {i}", enabled))
++        # Versuche echte Positions-Namen zu zeigen
++        from environment import POSITION_GROUP_SIZE
++        try:
++            building_idx = env.pending_selections.get(ActionPhase.BUILDING, 0)
++            building = env._get_position_phase_building(building_idx)
++            if building and env.current_flow == "assign_serf":
++                candidates = env._get_build_position_candidates(building)
++            elif building:
++                keys = env._get_building_instance_keys(building)
++                candidates = [{"x": 0, "y": 0, "_key": k} for k in keys]
++            else:
++                candidates = []
++        except Exception:
++            candidates = []
++
++        if phase == ActionPhase.POSITION_GROUP:
++            for i in range(n):
++                enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
++                start = i * POSITION_GROUP_SIZE
++                end = min(start + POSITION_GROUP_SIZE, len(candidates))
++                if candidates and start < len(candidates):
++                    c = candidates[start]
++                    if "_key" in c:
++                        label = c["_key"]
++                    else:
++                        label = f"({int(c['x'])},{int(c['y'])})"
++                    if end - start > 1:
++                        label += f" ..+{end-start-1}"
++                else:
++                    label = f"Gruppe {i}"
++                options.append((i, label, enabled))
++        else:  # POSITION_INDEX
++            group_idx = env.pending_selections.get(ActionPhase.POSITION_GROUP, 0)
++            for i in range(n):
++                enabled = bool(phase_mask[i]) if i < len(phase_mask) else False
++                global_idx = group_idx * POSITION_GROUP_SIZE + i
++                if candidates and global_idx < len(candidates):
++                    c = candidates[global_idx]
++                    if "_key" in c:
++                        label = c["_key"]
++                    else:
++                        label = f"Pos {i}: ({int(c['x'])},{int(c['y'])})"
++                else:
++                    label = f"Position {i}"
++                options.append((i, label, enabled))
+ 
+     elif phase == ActionPhase.CATEGORY:
+         for i, cat in BLESS_CATEGORIES.items():
+@@ -235,43 +651,373 @@ def show_actions(env):
+     from environment import ActionPhase
+ 
+     phase = env.current_phase
+-    flow = getattr(env, "current_flow", None)
+-
+-    width = 62
+-    print("-" * width)
++    flow  = getattr(env, "current_flow", None)
+ 
++    W = 64
+     phase_label = phase.value.upper()
+-    flow_label = f"  (Aktion: {flow})" if flow and phase != ActionPhase.MAIN else ""
+-    print(f"PHASE: {phase_label}{flow_label}")
+-    print("-" * width)
++    flow_label  = f"  {_GRAY}({flow}){_R}" if flow and phase != ActionPhase.MAIN else ""
++    print(f"  {_KEY}PHASE:{_R} {_BOLD}{phase_label}{_R}{flow_label}")
++    print(f"{_GRAY}{'-' * W}{_R}")
+ 
+     options = get_action_names(env)
+-    enabled_options = [(i, name) for i, name, ok in options if ok]
++    enabled_options  = [(i, name) for i, name, ok in options if ok]
+     disabled_options = [(i, name) for i, name, ok in options if not ok]
+ 
+     if not enabled_options:
+-        print("  (keine Aktionen verfuegbar â€” environment-Fehler?)")
++        print(f"  {_WARN}(keine Aktionen verfuegbar){_R}")
+         return
+ 
+-    # Verfuegbare Aktionen in 2 Spalten
+-    print("  Verfuegbar:")
+-    col_w = 28
++    # Verfuegbare Aktionen in 2 Spalten (farbig gruen)
++    col_w = 30
+     for j in range(0, len(enabled_options), 2):
+-        left_i, left_n = enabled_options[j]
+-        left_str = f"  [{left_i:>2}] {left_n}"
++        li, ln = enabled_options[j]
++        left_str = f"  {_OK}[{li:>2}]{_R} {ln}"
++        # Sichtbare Laenge ohne ANSI-Codes fuer Ausrichtung berechnen
++        visible_left = f"  [{li:>2}] {ln}"
++        pad = col_w - len(visible_left)
+         if j + 1 < len(enabled_options):
+-            right_i, right_n = enabled_options[j + 1]
+-            right_str = f"[{right_i:>2}] {right_n}"
+-            print(f"{left_str:<{col_w+4}}  {right_str}")
++            ri, rn = enabled_options[j + 1]
++            right_str = f"{_OK}[{ri:>2}]{_R} {rn}"
++            print(f"{left_str}{' ' * max(1, pad)}  {right_str}")
+         else:
+             print(left_str)
+ 
+-    # Deaktivierte Aktionen kompakt
+-    if disabled_options and len(disabled_options) <= 15:
+-        disabled_str = "  ".join(f"[{i}]" for i, _ in disabled_options[:10])
+-        print(f"\n  Gesperrt: {disabled_str}")
++    # Deaktivierte Aktionen kompakt grau
++    if disabled_options and len(disabled_options) <= 20:
++        dis_str = "  ".join(f"{_GRAY}[{i}]{_R}" for i, _ in disabled_options[:12])
++        print(f"\n  Gesperrt: {dis_str}")
++
++    print(f"{_GRAY}{'-' * W}{_R}")
++
++
++def get_map_highlights(env) -> list:
++    """
++    Gibt Liste von (x, y, label) World-Koordinaten zurueck, die auf der Karte
++    hervorgehoben werden sollen â€” je nach aktueller Aktions-Phase.
++    label ist 1 Zeichen (Aktions-Index 0-9 = '0'-'9', 10+ = 'A','B',...).
++    """
++    from environment import ActionPhase, CATEGORY_AREA_MAP
+ 
+-    print("-" * width)
++    def _lbl(i):
++        return str(i) if i < 10 else chr(ord('A') + i - 10)
++
++    def _mask_ok(phase_mask, i):
++        return bool(phase_mask[i]) if i < len(phase_mask) else False
++
++    highlights = []
++    phase = env.current_phase
++
++    try:
++        n = env.action_spaces[phase].n
++        mask = env.action_masks()
++        phase_mask = mask[:n]
++    except Exception:
++        return []
++
++    # â”€â”€ POSITION_GROUP / POSITION_INDEX: Baupositionen mit Aktionsnummer â”€â”€â”€â”€
++    if phase in (ActionPhase.POSITION_GROUP, ActionPhase.POSITION_INDEX):
++        from environment import POSITION_GROUP_SIZE
++        try:
++            building_idx = env.pending_selections.get(ActionPhase.BUILDING, 0)
++            building = env._get_position_phase_building(building_idx)
++            if building:
++                candidates = env._get_build_position_candidates(building)
++                if phase == ActionPhase.POSITION_GROUP:
++                    for i in range(n):
++                        if not _mask_ok(phase_mask, i):
++                            continue
++                        start = i * POSITION_GROUP_SIZE
++                        if start < len(candidates):
++                            c = candidates[start]
++                            highlights.append((float(c["x"]), float(c["y"]), _lbl(i)))
++                else:  # POSITION_INDEX
++                    group_idx = env.pending_selections.get(ActionPhase.POSITION_GROUP, 0)
++                    start = group_idx * POSITION_GROUP_SIZE
++                    for i in range(n):
++                        if not _mask_ok(phase_mask, i):
++                            continue
++                        ci = start + i
++                        if ci < len(candidates):
++                            c = candidates[ci]
++                            highlights.append((float(c["x"]), float(c["y"]), _lbl(i)))
++        except Exception:
++            pass
++
++    # â”€â”€ BUILDING: Upgrade/Abreissen â†’ vorhandene Gebaeude mit Aktionsnummer â”€
++    elif phase == ActionPhase.BUILDING:
++        flow = getattr(env, "current_flow", None)
++        if flow in ("upgrade", "demolish"):
++            blist = getattr(env, "upgradeable_buildings" if flow == "upgrade"
++                            else "demolishable_buildings", [])
++            bpm = getattr(env, "building_position_map", {})
++            for i in range(n):
++                if not _mask_ok(phase_mask, i):
++                    continue
++                bname = blist[i] if i < len(blist) else None
++                if not bname:
++                    continue
++                for k, pos in bpm.items():
++                    if k == bname or k.startswith(bname + "_"):
++                        highlights.append((float(pos["x"]), float(pos["y"]), _lbl(i)))
++                        break
++
++    # â”€â”€ TECH_BUILDING: Forschungsgebaeude auf Karte zeigen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++    elif phase == ActionPhase.TECH_BUILDING:
++        from environment import RESEARCH_BUILDINGS
++        bpm = getattr(env, "building_position_map", {})
++        for i, bname in enumerate(RESEARCH_BUILDINGS):
++            if i >= n or not _mask_ok(phase_mask, i):
++                continue
++            base = bname.split("_")[0]
++            for k, pos in bpm.items():
++                if k.startswith(base):
++                    highlights.append((float(pos["x"]), float(pos["y"]), _lbl(i)))
++                    break
++
++    # â”€â”€ SOURCE_SPECIFIC / TARGET_SPECIFIC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
++    elif phase in (ActionPhase.SOURCE_SPECIFIC, ActionPhase.TARGET_SPECIFIC):
++        sel_cat = env.pending_selections.get(
++            ActionPhase.SOURCE_CATEGORY if phase == ActionPhase.SOURCE_SPECIFIC
++            else ActionPhase.TARGET_CATEGORY, -1)
++
++        if phase == ActionPhase.TARGET_SPECIFIC and sel_cat == 7:
++            # Neubau Schritt 2: Gebaeude gewaehlt â†’ Baupositionen zeigen
++            tgt_spec = env.pending_selections.get(ActionPhase.TARGET_SPECIFIC, -1)
++            if tgt_spec >= 0:
++                try:
++                    blist = env.buildable_buildings
++                    if tgt_spec < len(blist):
++                        for c in env._get_build_position_candidates(blist[tgt_spec]):
++                            highlights.append((float(c["x"]), float(c["y"]), "!"))
++                except Exception:
++                    pass
++            else:
++                # Gebaeude-Auswahl: Baupositionen aller verfuegbaren Gebaeude
++                blist = getattr(env, "buildable_buildings", [])
++                for i in range(min(n, len(blist))):
++                    if not _mask_ok(phase_mask, i):
++                        continue
++                    try:
++                        cands = env._get_build_position_candidates(blist[i])
++                        for c in cands[:1]:
++                            highlights.append((float(c["x"]), float(c["y"]), _lbl(i)))
++                    except Exception:
++                        pass
++
++        elif sel_cat == 1:
++            # Holz: Baum-Positionen
++            trees = getattr(env, "tree_list_internal", [])
++            for i in range(min(n, len(trees))):
++                if not _mask_ok(phase_mask, i):
++                    continue
++                t = trees[i]
++                highlights.append((float(t.get("x", 0)), float(t.get("y", 0)), _lbl(i)))
++
++        elif sel_cat == 6:
++            # Baustellen
++            sites = getattr(env, "construction_sites", [])
++            for i, site in enumerate(sites[:n]):
++                if not _mask_ok(phase_mask, i):
++                    continue
++                sx = site.get("x") or site.get("pos_x")
++                sy = site.get("y") or site.get("pos_y")
++                if sx is None:
++                    bpos = env.building_position_map.get(site.get("building", ""))
++                    if bpos:
++                        sx, sy = bpos["x"], bpos["y"]
++                if sx is not None:
++                    highlights.append((float(sx), float(sy), _lbl(i)))
++
++        elif sel_cat in (2, 3, 4, 5):
++            # Mineralien: Stollen + Minen mit Aktionsnummer
++            _DE_EN = {"Eisen": "IRON", "Stein": "STONE", "Lehm": "CLAY", "Schwefel": "SULFUR"}
++            _coords: dict = {}
++            for _cat, _cd in getattr(env, "shaft_categories", {}).items():
++                _en = _DE_EN.get(_cat, _cat.upper())
++                for _idx, _sh in enumerate(_cd.get("shafts", []), start=1):
++                    _coords[f"SHAFT_{_en}_{_idx}"] = (float(_sh.get("x", 0)), float(_sh.get("y", 0)))
++            for _cat, _cd in getattr(env, "deposit_categories", {}).items():
++                _en = _DE_EN.get(_cat, _cat.upper())
++                for _idx, _dp in enumerate(_cd.get("deposits", []), start=1):
++                    _coords[f"DEPOSIT_{_en}_{_idx}"] = (float(_dp.get("x", 0)), float(_dp.get("y", 0)))
++            cat_areas = CATEGORY_AREA_MAP.get(sel_cat, [])
++            for i, area in enumerate(cat_areas):
++                if not _mask_ok(phase_mask, i):
++                    continue
++                coord = _coords.get(area.name)
++                if coord:
++                    highlights.append((coord[0], coord[1], _lbl(i)))
++
++    return highlights
++
++
++def show_map(env, compact=False, highlights=None):
++    """Zeigt ASCII-Karte mit Gebaeuden, Baeumen und Arbeitern."""
++    # Feste Weltgrenzen aus dem Walkable-Grid (754Ã—747 Pixel, Scale 33.5/33.8, Offset 25240/0)
++    # â†’ Welt ist exakt quadratisch (25259 Ã— 25249 World-Units)
++    WORLD_MIN_X, WORLD_MAX_X = 25240.0, 25240.0 + 754 * 33.5   # â‰ˆ 50499
++    WORLD_MIN_Y, WORLD_MAX_Y = 0.0,     747 * 33.8               # â‰ˆ 25249
++    range_x = WORLD_MAX_X - WORLD_MIN_X
++    range_y = WORLD_MAX_Y - WORLD_MIN_Y
++
++    # Groesse: Welt ist quadratisch â†’ MAP_W = MAP_H * 2.0 (Terminal-Chars 2:1)
++    MAP_H = 20 if compact else 50
++    MAP_W = int(MAP_H * (range_x / range_y) * 2.0)  # â‰ˆ 40 kompakt / 100 voll
++
++    # Zeichen-Prioritaet: hoehere Zahl ueberschreibt niedrigere
++    points = []  # (x, y, char, priority)
++
++    # Baeume (noch vorhanden)
++    for tree in env.tree_list_internal:
++        if tree.get("remaining_wood", 1) > 0:
++            points.append((float(tree["x"]), float(tree["y"]), "t", 1))
++
++    # Arbeiter (workforce_manager: Holzfaeller, Minenarbeiter etc.)
++    wm = getattr(env, "workforce_manager", None)
++    if wm:
++        for w in getattr(wm, "workers", []):
++            pos = getattr(w, "position", None)
++            if pos is not None:
++                points.append((float(pos.x), float(pos.y), "w", 2))
++
++    # Leibeigene (production_system.serfs: laufen zu Ressourcen/Baustellen)
++    ps = getattr(env, "production_system", None)
++    if ps:
++        for serf in getattr(ps, "serfs", []):
++            pos = getattr(serf, "position", None)
++            if pos is not None:
++                points.append((float(pos.x), float(pos.y), "p", 2))
++
++    # Unbebaute DZ-Slots ('d')
++    for slot in getattr(env, "dz_slots", []):
++        if slot.get("status") != "built":
++            points.append((float(slot["x"]), float(slot["y"]), "d", 2))
++
++    # Vorkommen / Mine-BauplÃ¤tze (kleine Buchstaben = noch nicht gebaut)
++    mine_positions = getattr(env, "mine_positions", {})
++    vork_chars = {"Eisenmine": "i", "Steinmine": "s", "Lehmmine": "l", "Schwefelmine": "f"}
++    for mtype, slot_list in mine_positions.items():
++        ch = vork_chars.get(mtype, "v")
++        for mpos in slot_list:
++            points.append((float(mpos["x"]), float(mpos["y"]), ch, 2))
++
++    # Stollen (Schaechte) aus map_config
++    try:
++        from map_config_wintersturm import PLAYER_1_MINE_SHAFTS
++        shaft_chars = {"Eisenmine": "e", "Steinmine": "q", "Lehmmine": "a", "Schwefelmine": "g"}
++        for mtype, shafts in PLAYER_1_MINE_SHAFTS.items():
++            ch = shaft_chars.get(mtype, "x")
++            for shaft in shafts:
++                points.append((float(shaft["x"]), float(shaft["y"]), ch, 2))
++    except Exception:
++        pass
++
++    # Gebaute Minen (Grossbuchstaben = fertig gebaut)
++    mine_chars = {"Steinmine": "S", "Eisenmine": "I", "Lehmmine": "L", "Schwefelmine": "V"}
++    for mine_type, mine_list in env.built_mines.items():
++        ch = mine_chars.get(mine_type, "M")
++        for mpos in mine_list:
++            points.append((float(mpos["x"]), float(mpos["y"]), ch, 4))
++
++    # Baustellen ('b' = in Bau, noch nicht fertig)
++    for site in getattr(env, "construction_sites", []):
++        sx = site.get("x") or site.get("pos_x")
++        sy = site.get("y") or site.get("pos_y")
++        if sx is None:
++            # Versuche Position aus building_position_map
++            bname = site.get("building", "")
++            bpos = env.building_position_map.get(bname)
++            if bpos:
++                sx, sy = bpos["x"], bpos["y"]
++        if sx is not None and sy is not None:
++            points.append((float(sx), float(sy), "b", 3))
++
++    # Gebaeude aus building_position_map (fertig gebaut)
++    bldg_chars = {
++        "Hauptquartier": "H", "Dorfzentrum": "D", "Wohnhaus": "W",
++        "Holzfaeller": "F", "Saegewerk": "Z", "Hochschule": "O",
++        "Schmiede": "C", "Kloster": "K", "Waffenschmiede": "A",
++        "Steinbruch": "B", "Lehmgrube": "G", "Eisenhuette": "E",
++        "Schwefelhuette": "X", "Kaserne": "R", "Schiesstand": "U",
++        "Speicher": "P", "Dorfschule": "Y", "Muehle": "N",
++        "Taverne": "T", "Krankenhaus": "J", "Markt": "Q",
++    }
++    for key, pos in env.building_position_map.items():
++        btype = key.split("_")[0]
++        ch = bldg_chars.get(btype, btype[0].upper())
++        priority = 6 if btype in ("Hauptquartier", "Dorfzentrum") else 5
++        points.append((float(pos["x"]), float(pos["y"]), ch, priority))
++
++    # Feste Bounds â€” kein auto-detect, damit Karte immer gleich aussieht
++    min_x, max_x = WORLD_MIN_X, WORLD_MAX_X
++    min_y, max_y = WORLD_MIN_Y, WORLD_MAX_Y
++
++    # Grid befuellen
++    grid = [["." for _ in range(MAP_W)] for _ in range(MAP_H)]
++
++    # Sortiert nach Prioritaet (niedrig zuerst, hoch ueberschreibt)
++    points.sort(key=lambda p: p[3])
++    for x, y, ch, _pri in points:
++        col = int((x - min_x) / range_x * (MAP_W - 1))
++        row = int((y - min_y) / range_y * (MAP_H - 1))
++        col = max(0, min(MAP_W - 1, col))
++        row = max(0, min(MAP_H - 1, row))
++        grid[row][col] = ch
++
++    # Highlight-Zellen berechnen: dict (row,col) â†’ label-char
++    hl_cells: dict = {}
++    if highlights:
++        for hl in highlights:
++            hx, hy, lbl = hl if len(hl) == 3 else (*hl, "!")
++            col = int((hx - min_x) / range_x * (MAP_W - 1))
++            row = int((hy - min_y) / range_y * (MAP_H - 1))
++            col = max(0, min(MAP_W - 1, col))
++            row = max(0, min(MAP_H - 1, row))
++            if (row, col) not in hl_cells:  # erstes Label gewinnt
++                hl_cells[(row, col)] = lbl
++
++    # Ausgabe mit Farben
++    border_color = _GRAY
++    print(f"{border_color}+{'-' * MAP_W}+{_R}")
++    for r_idx, row in enumerate(grid):
++        colored = ""
++        for c_idx, ch in enumerate(row):
++            if (r_idx, c_idx) in hl_cells:
++                # Hervorgehobene Zelle: Aktionsnummer auf gelbem Hintergrund
++                colored += _HL + hl_cells[(r_idx, c_idx)] + _R
++            else:
++                color = _C.get(ch, _C_BLDG)
++                colored += color + ch + _R
++        print(f"{border_color}|{_R}{colored}{border_color}|{_R}")
++    print(f"{border_color}+{'-' * MAP_W}+{_R}")
++
++    # Legende kompakt
++    trees_alive = sum(1 for t in env.tree_list_internal if t.get("remaining_wood", 1) > 0)
++    n_workers   = len(getattr(wm, "workers", [])) if wm else 0
++    n_serfs     = len(getattr(ps, "serfs", [])) if ps else 0
++    mines_built = sum(len(v) for v in env.built_mines.values())
++    n_bldg      = len(env.building_position_map)
++    n_sites     = len(getattr(env, "construction_sites", []))
++    hl_hint     = f"  {_HL}0{_R}=Aktionsnr." if hl_cells else ""
++    leg_parts = [
++        f"{_C['H']}H{_R}=HQ", f"{_C['D']}D{_R}=DZ",
++        f"{_C_BLDG}*{_R}=Geb", f"{_C['b']}b{_R}=Bau",
++        f"{_C['t']}t{_R}=Holz", f"{_C['w']}w{_R}=Arb", f"{_C['p']}p{_R}=Lei",
++        f"{_C['i']}i{_R}=Ei-Stln", f"{_C['e']}e{_R}=Ei-Vork",
++        f"{_C['s']}s{_R}=St-Stln", f"{_C['q']}q{_R}=St-Vork",
++        f"{_C['l']}l{_R}=Le-Stln", f"{_C['f']}f{_R}=Sw-Stln",
++        f"{_GRAY}[{trees_alive}B {n_workers}A {n_serfs}L {mines_built}M {n_bldg}G]{_R}",
++    ]
++    print("  " + "  ".join(leg_parts) + hl_hint)
++
++
++def _wintersturm_start(env):
++    """Spielmodus startet mit 0 Leibeigenen â€” muessen erst gekauft werden."""
++    env.total_leibeigene = 0
++    env.free_leibeigene = 0
++    for area in env.serf_areas:
++        env.serf_areas[area]["count"] = 0
++    env.production_system.serfs.clear()
+ 
+ 
+ def play():
+@@ -281,6 +1027,7 @@ def play():
+ 
+     env = SiedlerScharfschuetzenEnv(player_id=1, use_spatial_obs=False)
+     obs, _ = env.reset(seed=0)
++    _wintersturm_start(env)
+ 
+     total_reward = 0.0
+     step_count = 0
+@@ -295,17 +1042,22 @@ def play():
+ 
+         # Letztes Ergebnis anzeigen
+         if step_count > 0:
+-            print(f"\n  Letzter Step #{step_count}: [{last_action_name}]"
+-                  f"  Reward: {last_info.get('step_reward', 0):.4f}"
+-                  f"  Gesamt: {total_reward:.3f}")
++            rw_val = last_info.get("step_reward", 0)
++            rw_color = _OK if rw_val >= 0 else _WARN
++            print(f"  {_GRAY}Step #{step_count}:{_R} {_KEY}{last_action_name}{_R}"
++                  f"  {rw_color}{rw_val:+.4f}{_R}  Gesamt:{total_reward:.3f}")
+             if last_info.get("blocked_invalid_action"):
+-                print("  !!! Ungueltige Aktion â€” wurde ignoriert !!!")
++                print(f"  {_WARN}!!! Ungueltige Aktion â€” ignoriert !!!{_R}")
+ 
++        show_map(env, compact=True, highlights=get_map_highlights(env))
+         show_actions(env)
+ 
+         # Eingabe
+         try:
+-            raw = input("Aktion (Nummer oder 'q'=Beenden 'r'=Reset 'w'=Warten): ").strip()
++            lv_hint = f"{_OK}v=Bild[AN]{_R}" if _lv_enabled else f"{_GRAY}v=Bild[aus]{_R}"
++            raw = input(
++                f"\n  {_BOLD}Aktion{_R} (Nr  {_GRAY}q=Ende  r=Reset  w=Warten  m=Karte{_R}  {lv_hint}): "
++            ).strip()
+         except (EOFError, KeyboardInterrupt):
+             print("\nBeendet.")
+             break
+@@ -314,8 +1066,19 @@ def play():
+             print(f"\nSpiel beendet nach {step_count} Steps. Gesamt-Reward: {total_reward:.3f}")
+             break
+ 
++        if raw.lower() == "m":
++            show_map(env, compact=False, highlights=get_map_highlights(env))
++            input("Enter druecken...")
++            continue
++
++        if raw.lower() == "v":
++            msg = toggle_live_view(env)
++            print(f"  {msg}")
++            continue
++
+         if raw.lower() == "r":
+             obs, _ = env.reset()
++            _wintersturm_start(env)
+             total_reward = 0.0
+             step_count = 0
+             last_info = {}
+@@ -343,7 +1106,7 @@ def play():
+             continue
+ 
+         # Schritt ausfuehren
+-        from environment import MAIN_ACTIONS
++        from environment import MAIN_ACTIONS, ActionPhase
+         options = get_action_names(env)
+         action_name = next((name for i, name, _ in options if i == action), str(action))
+         if env.current_phase.value == "main":
+@@ -356,6 +1119,26 @@ def play():
+         step_count += 1
+         last_info = info
+ 
++        # Auto-Skip: Wenn naechste Phase nur 1 Option hat, automatisch waehlen
++        while info.get("multi_step") and env.current_phase in (
++            ActionPhase.POSITION_GROUP, ActionPhase.POSITION_INDEX
++        ):
++            auto_mask = env.action_masks()
++            auto_n = env.action_spaces[env.current_phase].n
++            enabled = [i for i in range(auto_n) if auto_mask[i]]
++            if len(enabled) == 1:
++                auto_a = enabled[0]
++                print(f"  [Auto] {env.current_phase.value}: nur Option {auto_a} verfuegbar â€” automatisch gewaehlt")
++                obs, reward, terminated, truncated, info = env.step(auto_a)
++                total_reward += reward
++                step_count += 1
++                last_info = info
++            else:
++                break  # Mehrere Optionen -> User muss waehlen
++
++        # Live-View nach jedem abgeschlossenen Schritt aktualisieren
++        update_live_view(env, last_action_name)
++
+         # Multi-Step: weiter ohne _clear wenn noch in Sub-Phase
+         if info.get("multi_step"):
+             continue
+@@ -373,11 +1156,335 @@ def play():
+             if again != "j":
+                 break
+             obs, _ = env.reset()
++            _wintersturm_start(env)
+             total_reward = 0.0
+             step_count = 0
+             last_info = {}
+             last_action_name = "â€”"
+ 
+ 
++
++# ---------------------------------------------------------------------------
++# ANSI-Code-Stripper fuer Tkinter-Textwidget
++# ---------------------------------------------------------------------------
++import re as _re
++_ANSI_RE = _re.compile(r"\033\[[0-9;]*m")
++
++def _strip_ansi(text: str) -> str:
++    return _ANSI_RE.sub("", text)
++
++
++# ---------------------------------------------------------------------------
++# Vollstaendige Tkinter-UI: Karte links, State+Aktionen rechts, Input unten
++# ---------------------------------------------------------------------------
++def play_ui():
++    """Spiel mit integrierter Tkinter-GUI (Karte + Befehle in einem Fenster)."""
++    import io
++    import tkinter as tk
++    from tkinter import font as tkfont
++    try:
++        from PIL import Image as _PIL, ImageTk
++    except ImportError:
++        print("Pillow nicht installiert â€” fallback auf Terminal-Modus.")
++        play()
++        return
++
++    # --- Queues fuer Thread-Kommunikation ---
++    _map_q   = _q.Queue(maxsize=2)   # map-frames (numpy) vom Game-Thread â†’ UI
++    _text_q  = _q.Queue(maxsize=4)   # state-text vom Game-Thread â†’ UI
++    _input_q = _q.Queue(maxsize=1)   # Eingabe vom UI â†’ Game-Thread
++
++    # --- Tkinter-Fenster aufbauen ---
++    root = tk.Tk()
++    root.title("Siedler AI â€” Interaktiv")
++    root.configure(bg="#111")
++    root.geometry("1400x780+0+0")
++    root.resizable(True, True)
++
++    # Linke Haelfte: Karte
++    map_frame = tk.Frame(root, bg="#111")
++    map_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
++    map_lbl = tk.Label(map_frame, bg="#111")
++    map_lbl.pack(fill=tk.BOTH, expand=True)
++    _map_ref = [None]
++
++    # Rechte Haelfte: State + Aktionen + Input
++    right_frame = tk.Frame(root, bg="#1a1a1a", width=480)
++    right_frame.pack(side=tk.RIGHT, fill=tk.BOTH)
++    right_frame.pack_propagate(False)
++
++    mono = tkfont.Font(family="Consolas", size=9)
++
++    text_box = tk.Text(
++        right_frame, bg="#1a1a1a", fg="#d4d4d4",
++        font=mono, wrap=tk.WORD, state=tk.DISABLED,
++        borderwidth=0, highlightthickness=0,
++        selectbackground="#333",
++    )
++    scroll = tk.Scrollbar(right_frame, command=text_box.yview, bg="#333")
++    text_box.configure(yscrollcommand=scroll.set)
++    scroll.pack(side=tk.RIGHT, fill=tk.Y)
++    text_box.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
++
++    # Eingabe-Zeile
++    input_frame = tk.Frame(right_frame, bg="#222")
++    input_frame.pack(side=tk.BOTTOM, fill=tk.X)
++    tk.Label(input_frame, text=">", bg="#222", fg="#0f0",
++             font=mono).pack(side=tk.LEFT, padx=4)
++    entry = tk.Entry(input_frame, bg="#111", fg="#0f0", font=mono,
++                     insertbackground="#0f0", borderwidth=0)
++    entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2, pady=4)
++    entry.focus_set()
++
++    hint_lbl = tk.Label(input_frame, text="Nr | q=Ende | r=Reset | w=Wait",
++                        bg="#222", fg="#555", font=("Consolas", 8))
++    hint_lbl.pack(side=tk.RIGHT, padx=6)
++
++    def _submit(_event=None):
++        cmd = entry.get().strip()
++        entry.delete(0, tk.END)
++        if cmd:
++            try:
++                _input_q.put_nowait(cmd)
++            except _q.Full:
++                pass
++
++    entry.bind("<Return>", _submit)
++
++    # --- Farb-Tags fuer Tkinter-Text ---
++    text_box.tag_configure("green",  foreground="#4ec94e")
++    text_box.tag_configure("red",    foreground="#f55")
++    text_box.tag_configure("yellow", foreground="#e8c43a")
++    text_box.tag_configure("cyan",   foreground="#5dd")
++    text_box.tag_configure("gray",   foreground="#666")
++    text_box.tag_configure("bold",   font=tkfont.Font(family="Consolas", size=9, weight="bold"))
++    text_box.tag_configure("head",   foreground="#e8c43a",
++                           font=tkfont.Font(family="Consolas", size=9, weight="bold"))
++
++    def _update_text(raw: str):
++        """Setzt Text im State-Panel (ANSI-Codes werden entfernt)."""
++        plain = _strip_ansi(raw)
++        text_box.configure(state=tk.NORMAL)
++        text_box.delete("1.0", tk.END)
++        text_box.insert(tk.END, plain)
++        text_box.configure(state=tk.DISABLED)
++        text_box.see(tk.END)
++
++    def _update_map(frame):
++        """Zeigt neuen Karten-Frame im linken Panel."""
++        img = _PIL.fromarray(frame)
++        w = map_frame.winfo_width() or 900
++        h = map_frame.winfo_height() or 720
++        img.thumbnail((w, h), _PIL.LANCZOS)
++        photo = ImageTk.PhotoImage(img)
++        map_lbl.config(image=photo)
++        _map_ref[0] = photo
++
++    def _poll():
++        """Pollt beide Queues und aktualisiert UI (laeuft im Tkinter-Thread)."""
++        try:
++            while True:
++                frame = _map_q.get_nowait()
++                _update_map(frame)
++        except _q.Empty:
++            pass
++        try:
++            while True:
++                txt = _text_q.get_nowait()
++                _update_text(txt)
++        except _q.Empty:
++            pass
++        root.after(120, _poll)
++
++    root.after(120, _poll)
++
++    # --- Game-Thread ---
++    def _game_loop():
++        from environment import SiedlerScharfschuetzenEnv, MAIN_ACTIONS, ActionPhase
++        import io as _io
++
++        env = SiedlerScharfschuetzenEnv(player_id=1, use_spatial_obs=False)
++        env.reset(seed=0)
++        _wintersturm_start(env)
++
++        total_reward = 0.0
++        step_count   = 0
++        last_info    = {}
++        last_action_name = "â€”"
++
++        def _render_state() -> str:
++            """Faengt show_state + show_actions als String ab."""
++            buf = _io.StringIO()
++            old = sys.stdout
++            sys.stdout = buf
++            try:
++                show_state(env)
++                if step_count > 0:
++                    rw = last_info.get("step_reward", 0)
++                    sign = "+" if rw >= 0 else ""
++                    print(f"\nStep #{step_count}: {last_action_name}  {sign}{rw:.4f}  "
++                          f"Gesamt:{total_reward:.3f}")
++                    if last_info.get("blocked_invalid_action"):
++                        print("!!! Ungueltige Aktion â€” ignoriert !!!")
++                print("")
++                show_actions(env)
++                print("\nEingabe: Nr | q=Ende | r=Reset | w=Warten")
++            finally:
++                sys.stdout = old
++            return buf.getvalue()
++
++        def _render_map_frame():
++            """Rendert Karten-Frame mit Phase-Highlights und schickt ihn an Map-Queue."""
++            try:
++                from PIL import Image as _PILI, ImageDraw as _PILID, ImageFont as _PILIF
++                import pathfinding as _pf
++                m = _get_render_module()
++                global _lv_base
++                if _lv_base is None:
++                    _lv_base = m._make_base_image(env, None)
++                frame = m._draw_frame(
++                    env, _lv_base, step_idx=0, total_steps=1,
++                    draw_paths=True, max_paths=800,
++                    action_label=f"t={int(env.current_time)}s",
++                    label_entities=True,
++                    show_worker_states=True,
++                    show_worker_targets=True,
++                    show_refiner_trips=True,
++                )
++                # Phase-Highlights einzeichnen
++                highlights = get_map_highlights(env)
++                if highlights:
++                    img = _PILI.fromarray(frame, mode="RGB")
++                    draw = _PILID.Draw(img, mode="RGBA")
++                    font = _PILIF.load_default()
++                    grid_h = env.map_manager.grid.height
++                    grid_w = env.map_manager.grid.width
++                    for hx, hy, lbl in highlights:
++                        lx, ly = env.map_manager.to_local_coords(hx, hy)
++                        px = int(round(lx / _pf.SCALE_X))
++                        py = int(round(ly / _pf.SCALE_Y))
++                        px = max(0, min(grid_w - 1, px))
++                        py = max(0, min(grid_h - 1, py))
++                        r = 5
++                        draw.ellipse((px - r, py - r, px + r, py + r),
++                                     fill=(255, 220, 0, 200), outline=(0, 0, 0, 180))
++                        draw.text((px - 3, py - 4), lbl,
++                                  fill=(0, 0, 0, 255), font=font)
++                    import numpy as _np
++                    frame = _np.array(img)
++                try:
++                    _map_q.put_nowait(frame)
++                except _q.Full:
++                    pass
++            except Exception:
++                pass
++
++        # Initialen State + Karte zeigen
++        try:
++            _text_q.put_nowait(_render_state())
++        except _q.Full:
++            pass
++        _render_map_frame()
++
++        while True:
++            # Auf Eingabe warten
++            raw = _input_q.get()
++
++            if raw.lower() == "q":
++                root.after(0, root.destroy)
++                break
++
++            if raw.lower() == "r":
++                env.reset()
++                _wintersturm_start(env)
++                total_reward = 0.0
++                step_count = 0
++                last_info = {}
++                last_action_name = "â€”"
++                _lv_base = None
++                _render_map_frame()
++                try:
++                    _text_q.put_nowait(_render_state())
++                except _q.Full:
++                    pass
++                continue
++
++            if raw.lower() == "w":
++                action = 0
++            else:
++                try:
++                    action = int(raw)
++                except ValueError:
++                    try:
++                        _text_q.put_nowait(_render_state() + "\n!!! Ungueltige Eingabe !!!")
++                    except _q.Full:
++                        pass
++                    continue
++
++            import numpy as np
++            mask = env.action_masks()
++            n = env.action_spaces[env.current_phase].n
++            if action < 0 or action >= n or not mask[action]:
++                try:
++                    _text_q.put_nowait(_render_state() + f"\n!!! Aktion {action} nicht verfuegbar !!!")
++                except _q.Full:
++                    pass
++                continue
++
++            # Aktionsname bestimmen
++            options = get_action_names(env)
++            action_name = next((name for i, name, _ in options if i == action), str(action))
++            if env.current_phase.value == "main":
++                last_action_name = action_name
++            else:
++                last_action_name = f"{env.current_flow} > {action_name}"
++
++            obs, reward, terminated, truncated, info = env.step(action)
++            total_reward += reward
++            step_count += 1
++            last_info = info
++
++            # Auto-Skip
++            while info.get("multi_step") and env.current_phase in (
++                ActionPhase.POSITION_GROUP, ActionPhase.POSITION_INDEX
++            ):
++                auto_mask = env.action_masks()
++                auto_n = env.action_spaces[env.current_phase].n
++                enabled = [i for i in range(auto_n) if auto_mask[i]]
++                if len(enabled) == 1:
++                    obs, reward, terminated, truncated, info = env.step(enabled[0])
++                    total_reward += reward
++                    step_count += 1
++                    last_info = info
++                else:
++                    break
++
++            _render_map_frame()
++
++            if terminated or truncated:
++                end_txt = (f"\n{'='*50}\nEPISODE BEENDET nach {step_count} Steps\n"
++                           f"Gesamt-Reward: {total_reward:.3f}\n"
++                           f"Scharfschuetzen: {env.scharfschuetzen}\n{'='*50}\n"
++                           f"Eingabe 'r' fuer neue Episode, 'q' zum Beenden.")
++                try:
++                    _text_q.put_nowait(end_txt)
++                except _q.Full:
++                    pass
++                continue
++
++            try:
++                _text_q.put_nowait(_render_state())
++            except _q.Full:
++                pass
++
++    game_thr = _thr.Thread(target=_game_loop, daemon=True)
++    game_thr.start()
++
++    try:
++        root.mainloop()
++    except KeyboardInterrupt:
++        pass
++
++
+ if __name__ == "__main__":
+-    play()
++    play_ui()
+diff --git a/train_100k.py b/train_100k.py
+index 7ca11a3..873cfbd 100644
+--- a/train_100k.py
++++ b/train_100k.py
+@@ -15,7 +15,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+ from environment import SiedlerScharfschuetzenEnv
+ from macro_maskable_ppo import CompletedActionMaskablePPO
+ from multihead_policy import MultiHeadMaskablePolicy, SpatialVectorExtractor
+-from training_profiles import get_train_profile
++from training_profiles import build_training_config
+ 
+ # Pfad fÃ¼r Modelle
+ SAVE_PATH = "./siedler_training_100k"
+@@ -150,7 +150,17 @@ def train():
+     print(f"Start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+     print(f"Save Path: {SAVE_PATH}")
+     print("=" * 70)
+-    profile = get_train_profile()
++    base_config = {
++        "learning_rate": 0.0003,
++        "n_steps": 2048,
++        "batch_size": 64,
++        "n_epochs": 10,
++        "gamma": 0.99,
++        "gae_lambda": 0.95,
++        "clip_range": 0.2,
++        "ent_coef": 0.02,
++    }
++    config, profile = build_training_config(base_config)
+     reward_profile = profile["reward_profile"]
+     print(f"Train-Profil: {profile['name']} ({profile['description']})")
+ 
+@@ -172,6 +182,15 @@ def train():
+     device = "cuda" if th.cuda.is_available() else "cpu"
+     print(f"Device: {device}")
+     print(f"Completed-action timesteps: {int(_count_completed_action_steps())}")
++    print(
++        "PPO: "
++        f"lr={config['learning_rate']} "
++        f"gamma={config['gamma']} "
++        f"n_steps={config['n_steps']} "
++        f"batch={config['batch_size']} "
++        f"epochs={config['n_epochs']} "
++        f"ent={config['ent_coef']}"
++    )
+ 
+     # Modell erstellen
+     head_sizes = env.env_method("get_action_head_sizes")[0]
+@@ -197,14 +216,14 @@ def train():
+     model = CompletedActionMaskablePPO(
+         MultiHeadMaskablePolicy,
+         env,
+-        learning_rate=0.0003,
+-        n_steps=2048,
+-        batch_size=64,
+-        n_epochs=10,
+-        gamma=0.99,
+-        gae_lambda=0.95,
+-        clip_range=0.2,
+-        ent_coef=0.02,  # Mehr Exploration
++        learning_rate=config["learning_rate"],
++        n_steps=config["n_steps"],
++        batch_size=config["batch_size"],
++        n_epochs=config["n_epochs"],
++        gamma=config["gamma"],
++        gae_lambda=config["gae_lambda"],
++        clip_range=config["clip_range"],
++        ent_coef=config["ent_coef"],
+         policy_kwargs=policy_kwargs,
+         device=device,
+         verbose=0,
+diff --git a/train_quick_test.py b/train_quick_test.py
+index a0c3992..776f5b4 100644
+--- a/train_quick_test.py
++++ b/train_quick_test.py
+@@ -15,7 +15,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+ 
+ from environment import SiedlerScharfschuetzenEnv
+ from multihead_policy import MultiHeadMaskablePolicy, SpatialVectorExtractor
+-from training_profiles import get_train_profile
++from training_profiles import build_training_config
+ 
+ 
+ class ProgressCallback(BaseCallback):
+@@ -124,7 +124,15 @@ def quick_test():
+     print("=" * 60)
+     print("SIEDLER AI - SCHNELLER TRAININGS-TEST")
+     print("=" * 60)
+-    profile = get_train_profile()
++    base_config = {
++        "learning_rate": 0.0003,
++        "n_steps": 512,
++        "batch_size": 64,
++        "n_epochs": 5,
++        "gamma": 0.99,
++        "ent_coef": 0.01,
++    }
++    config, profile = build_training_config(base_config)
+     reward_profile = profile["reward_profile"]
+     print(f"Train-Profil: {profile['name']} ({profile['description']})")
+ 
+@@ -145,6 +153,15 @@ def quick_test():
+         print(f"Observation Space: {env.observation_space.shape}")
+     device = "cuda" if th.cuda.is_available() else "cpu"
+     print(f"Device: {device}")
++    print(
++        "PPO: "
++        f"lr={config['learning_rate']} "
++        f"gamma={config['gamma']} "
++        f"n_steps={config['n_steps']} "
++        f"batch={config['batch_size']} "
++        f"epochs={config['n_epochs']} "
++        f"ent={config['ent_coef']}"
++    )
+ 
+     # Modell erstellen
+     head_sizes = env.env_method("get_action_head_sizes")[0]
+@@ -170,12 +187,12 @@ def quick_test():
+     model = MaskablePPO(
+         MultiHeadMaskablePolicy,
+         env,
+-        learning_rate=0.0003,
+-        n_steps=512,
+-        batch_size=64,
+-        n_epochs=5,
+-        gamma=0.99,
+-        ent_coef=0.01,
++        learning_rate=config["learning_rate"],
++        n_steps=config["n_steps"],
++        batch_size=config["batch_size"],
++        n_epochs=config["n_epochs"],
++        gamma=config["gamma"],
++        ent_coef=config["ent_coef"],
+         policy_kwargs=policy_kwargs,
+         device=device,
+         verbose=0,
+diff --git a/training_profiles.py b/training_profiles.py
+index 2c8f6ec..bcce84a 100644
+--- a/training_profiles.py
++++ b/training_profiles.py
+@@ -7,7 +7,7 @@ import copy
+ import os
+ from typing import Dict, Optional, Tuple
+ 
+-DEFAULT_TRAIN_PROFILE = "sparse"
++DEFAULT_TRAIN_PROFILE = "goal_v1"
+ 
+ 
+ TRAIN_PROFILES = {
+@@ -25,57 +25,225 @@ TRAIN_PROFILES = {
+         },
+     },
+     "balanced": {
+-        "description": "Empfohlen fuer stabiles Colab-Training.",
++        "description": "Stabiles Training mit zielnaher, aber noch relativ dichter Belohnung.",
+         "config_overrides": {
+             "learning_rate": 0.00025,
+-            "gamma": 0.997,
++            "gamma": 0.999,
+             "ent_coef": 0.015,
+-            "batch_size": 128,
++            "batch_size": 256,
++            "n_epochs": 4,
++        },
++        "reward_profile": {
++            "terminal_dependency_bonus": 0.5,
++            "terminal_recruitable_bonus": 2.0,
++            "terminal_potential_bonus_per_unit": 8.0,
++            "terminal_potential_use_cumulative_earnings": 0.0,
++            "terminal_potential_include_start_resources": 0.0,
++            "terminal_potential_scharf_tier": 1.0,
++            "terminal_potential_require_path_ready": 1.0,
++            "step_potential_use_cumulative_earnings": 0.0,
++            "step_potential_include_start_resources": 0.0,
++            "step_potential_scharf_tier": 1.0,
++            "step_delta_potential_bonus": 0.4,
++            "step_new_resource_potential_unit_bonus": 0.75,
++            "step_delta_progress_bonus": 0.2,
++            "step_delta_dependency_bonus": 0.1,
++            "step_delta_research_bonus": 0.1,
++            "step_delta_construction_bonus": 0.1,
++            "step_worker_growth_bonus": 0.015,
++            "step_unlock_recruitable_bonus": 2.0,
++            "step_time_penalty": 0.001,
++            "action_buy_serf_growth_bonus": 0.01,
++            "action_assign_spawned_serf_bonus": 0.005,
+         },
+-        "reward_profile": {},
+     },
+     "aggressive": {
+-        "description": "Schnellere Exploration mit dichterem Reward.",
++        "description": "Mehr Exploration und dichteres Shaping fuer fruehe Unlock-Fortschritte.",
+         "config_overrides": {
+             "learning_rate": 0.00035,
+-            "gamma": 0.995,
++            "gamma": 0.999,
+             "ent_coef": 0.02,
++            "batch_size": 256,
++            "n_epochs": 4,
++        },
++        "reward_profile": {
++            "terminal_dependency_bonus": 0.75,
++            "terminal_recruitable_bonus": 3.0,
++            "terminal_potential_bonus_per_unit": 6.0,
++            "terminal_potential_use_cumulative_earnings": 0.0,
++            "terminal_potential_include_start_resources": 0.0,
++            "terminal_potential_scharf_tier": 1.0,
++            "terminal_potential_require_path_ready": 1.0,
++            "step_potential_use_cumulative_earnings": 0.0,
++            "step_potential_include_start_resources": 0.0,
++            "step_potential_scharf_tier": 1.0,
++            "step_delta_potential_bonus": 0.5,
++            "step_new_resource_potential_unit_bonus": 1.0,
++            "step_delta_progress_bonus": 0.35,
++            "step_delta_dependency_bonus": 0.2,
++            "step_delta_research_bonus": 0.2,
++            "step_delta_construction_bonus": 0.2,
++            "step_worker_growth_bonus": 0.02,
++            "step_unlock_recruitable_bonus": 3.0,
++            "step_time_penalty": 0.001,
++            "action_buy_serf_growth_bonus": 0.015,
++            "action_assign_spawned_serf_bonus": 0.0075,
+         },
+-        "reward_profile": {},
+     },
+     "sparse": {
+-        "description": "Nahe am Endziel mit wenig dichten Shaping-Rewards.",
++        "description": "Fast nur das Endziel: finales rekrutierbares Scharfschuetzen-Potential.",
+         "config_overrides": {
+             "learning_rate": 0.0002,
+             "gamma": 0.999,
+-            "ent_coef": 0.02,
+-            "batch_size": 128,
++            "ent_coef": 0.015,
++            "batch_size": 256,
++            "n_epochs": 4,
++        },
++        "reward_profile": {
++            "terminal_potential_bonus_per_unit": 10.0,
++            "terminal_potential_use_cumulative_earnings": 0.0,
++            "terminal_potential_include_start_resources": 0.0,
++            "terminal_potential_scharf_tier": 1.0,
++            "terminal_potential_require_path_ready": 1.0,
+         },
+-        "reward_profile": {},
+     },
+     "dense_v2": {
+-        "description": "Event-Reward fuer Potential + Steuerbasis/Taler-Income-Wachstum.",
++        "description": "Dichteres Current-Stock-Shaping fuer Scharfschuetzen-Potential.",
+         "config_overrides": {
+             "learning_rate": 0.00025,
+-            "gamma": 0.997,
++            "gamma": 0.999,
+             "ent_coef": 0.015,
+-            "batch_size": 128,
++            "batch_size": 256,
++            "n_epochs": 4,
+         },
+         "reward_profile": {
+-            # +1 Reward je neuem Highscore bei potenziell rekrutierbaren T2-Scharfschuetzen.
++            "terminal_dependency_bonus": 0.5,
++            "terminal_recruitable_bonus": 2.0,
++            "terminal_potential_bonus_per_unit": 8.0,
++            "terminal_potential_use_cumulative_earnings": 0.0,
++            "terminal_potential_include_start_resources": 0.0,
++            "terminal_potential_scharf_tier": 1.0,
++            "terminal_potential_require_path_ready": 1.0,
+             "step_new_resource_potential_unit_bonus": 1.0,
+-            "step_potential_scharf_tier": 2.0,
+-            "step_worker_growth_bonus": 1.0,
++            "step_delta_potential_bonus": 0.5,
++            "step_potential_use_cumulative_earnings": 0.0,
++            "step_potential_include_start_resources": 0.0,
++            "step_potential_scharf_tier": 1.0,
++            "step_worker_growth_bonus": 0.02,
++            "step_unlock_recruitable_bonus": 2.0,
++            "step_time_penalty": 0.001,
++        },
++    },
++    "curriculum_unlock": {
++        "description": "Phase 1: Wirtschaft stabilisieren und Scharfschuetzen-Pfad freischalten.",
++        "config_overrides": {
++            "learning_rate": 0.00025,
++            "gamma": 0.999,
++            "ent_coef": 0.02,
++            "batch_size": 256,
++            "n_epochs": 4,
++        },
++        "reward_profile": {
++            "terminal_dependency_bonus": 1.0,
++            "terminal_recruitable_bonus": 4.0,
++            "terminal_potential_bonus_per_unit": 2.0,
++            "terminal_potential_use_cumulative_earnings": 0.0,
++            "terminal_potential_include_start_resources": 0.0,
++            "terminal_potential_scharf_tier": 1.0,
++            "terminal_potential_require_path_ready": 1.0,
++            "step_potential_use_cumulative_earnings": 0.0,
++            "step_potential_include_start_resources": 0.0,
++            "step_potential_scharf_tier": 1.0,
++            "step_delta_potential_bonus": 0.15,
++            "step_delta_progress_bonus": 0.6,
++            "step_delta_dependency_bonus": 0.4,
++            "step_delta_research_bonus": 0.4,
++            "step_delta_construction_bonus": 0.4,
++            "step_worker_growth_bonus": 0.03,
++            "step_unlock_recruitable_bonus": 5.0,
++            "step_time_penalty": 0.00075,
++            "action_buy_serf_growth_bonus": 0.025,
++            "action_assign_spawned_serf_bonus": 0.01,
++        },
++    },
++    "curriculum_stockpile": {
++        "description": "Phase 2: Nach dem Unlock Taler/Schwefel fuer viele Scharfschuetzen ansparen.",
++        "config_overrides": {
++            "learning_rate": 0.0002,
++            "gamma": 0.999,
++            "ent_coef": 0.012,
++            "batch_size": 256,
++            "n_epochs": 4,
++        },
++        "reward_profile": {
++            "terminal_dependency_bonus": 0.5,
++            "terminal_recruitable_bonus": 3.0,
++            "terminal_potential_bonus_per_unit": 10.0,
++            "terminal_potential_use_cumulative_earnings": 0.0,
++            "terminal_potential_include_start_resources": 0.0,
++            "terminal_potential_scharf_tier": 1.0,
++            "terminal_potential_require_path_ready": 1.0,
++            "step_potential_use_cumulative_earnings": 0.0,
++            "step_potential_include_start_resources": 0.0,
++            "step_potential_scharf_tier": 1.0,
++            "step_delta_potential_bonus": 0.6,
++            "step_new_resource_potential_unit_bonus": 1.0,
++            "step_delta_progress_bonus": 0.15,
++            "step_delta_dependency_bonus": 0.05,
++            "step_delta_research_bonus": 0.05,
++            "step_delta_construction_bonus": 0.05,
++            "step_worker_growth_bonus": 0.01,
++            "step_unlock_recruitable_bonus": 2.0,
++            "step_time_penalty": 0.001,
++            "action_buy_serf_growth_bonus": 0.01,
++            "action_assign_spawned_serf_bonus": 0.005,
++        },
++    },
++    "goal_v1": {
++        "description": "Empfohlen: maximiert das finale Potential sofort rekrutierbarer Scharfschuetzen.",
++        "config_overrides": {
++            "learning_rate": 0.0002,
++            "gamma": 0.999,
++            "ent_coef": 0.01,
++            "batch_size": 256,
++            "n_epochs": 4,
++        },
++        "reward_profile": {
++            "terminal_dependency_bonus": 0.25,
++            "terminal_recruitable_bonus": 2.0,
++            "terminal_potential_bonus_per_unit": 12.0,
++            "terminal_potential_use_cumulative_earnings": 0.0,
++            "terminal_potential_include_start_resources": 0.0,
++            "terminal_potential_scharf_tier": 1.0,
++            "terminal_potential_require_path_ready": 1.0,
++            "step_potential_use_cumulative_earnings": 0.0,
++            "step_potential_include_start_resources": 0.0,
++            "step_potential_scharf_tier": 1.0,
++            "step_delta_potential_bonus": 0.25,
++            "step_new_resource_potential_unit_bonus": 0.5,
++            "step_delta_progress_bonus": 0.08,
++            "step_delta_dependency_bonus": 0.04,
++            "step_delta_research_bonus": 0.04,
++            "step_delta_construction_bonus": 0.04,
++            "step_worker_growth_bonus": 0.008,
++            "step_unlock_recruitable_bonus": 1.5,
++            "step_time_penalty": 0.001,
++            "action_buy_serf_growth_bonus": 0.005,
++            "action_assign_spawned_serf_bonus": 0.0025,
+         },
+     },
+ }
+ 
+ PROFILE_ALIASES = {
+     "default": DEFAULT_TRAIN_PROFILE,
++    "recommended": DEFAULT_TRAIN_PROFILE,
++    "goal": "goal_v1",
+     "stable": "balanced",
+     "colab": "sparse",
+     "fast": "aggressive",
+     "dense": "dense_v2",
++    "unlock": "curriculum_unlock",
++    "stockpile": "curriculum_stockpile",
+ }
+ 
+ 
+diff --git a/worker_simulation.py b/worker_simulation.py
+index 8f17eba..52fadfc 100644
+--- a/worker_simulation.py
++++ b/worker_simulation.py
+@@ -483,8 +483,15 @@ class Residence:
+ 
+ @dataclass
+ class Camp:
+-    """Camp fÃƒÂ¼r Notfall-Pausen (nur +10% WorkTime)."""
++    """Dynamisch gespawntes Notfall-Camp (wie XD_Camp_Internal im Spiel).
++    Bis zu CAMP_MAX_SLOTS Worker teilen sich ein Camp.
++    Verschwindet CAMP_REMOVE_DELAY Sekunden nach dem letzten Worker."""
+     position: Position
++    current_occupants: int = 0      # Aktuelle Worker im Camp
++    idle_time: float = 0.0          # Sekunden seit letztem Occupant (fuer Remove-Delay)
++
++CAMP_MAX_SLOTS: int = 8            # XD_Camp_Internal hat 8 Slots
++CAMP_REMOVE_DELAY: float = 10.0    # Sekunden bis Camp verschwindet (aus Spieldaten)
+ 
+ 
+ @dataclass
+@@ -521,13 +528,17 @@ class Worker:
+     def tick(self, dt: float, farms: List[Farm], residences: List[Residence], camps: List[Camp],
+              motivation_mod: float = 1.0, speed_bonus: int = 0,
+              pathfinder: Optional[Callable[[Position, Position], List[Position]]] = None,
+-             path_revision: Optional[int] = None):
++             path_revision: Optional[int] = None,
++             spawn_camp_fn=None, camper_range: float = None):
+         # Speed-Bonus als Instanzvariable speichern fÃƒÂ¼r _tick_walking
+         self._speed_bonus = speed_bonus
+         self._last_camps = camps
+         self._pathfinder = pathfinder
+         self._path_revision = path_revision
+         self._motivation_mod = motivation_mod
++        self._spawn_camp_fn = spawn_camp_fn
++        if camper_range is not None:
++            self._camper_range = camper_range
+         """
+         Simuliert einen Zeitschritt.
+ 
+@@ -651,6 +662,12 @@ class Worker:
+             regen_rate = self.params.work_time_change_camp * motivation_mod
+             self.work_time += regen_rate * (max_val - self.work_time)
+ 
++            # Camp-Slot freigeben
++            assigned = getattr(self, "_assigned_camp", None)
++            if assigned is not None:
++                assigned.current_occupants = max(0, assigned.current_occupants - 1)
++                self._assigned_camp = None
++
+             # Camp ersetzt fehlende Phase(n)
+             next_state = self.camp_next_state or "work"
+             self.camp_next_state = None
+@@ -831,15 +848,39 @@ class Worker:
+             self._go_to_camp()
+ 
+     def _go_to_camp(self):
+-        """Geht zum Camp (Notfall-Pause mit nur +10%)."""
++        """Geht zum naechsten Camp oder spawnt ein neues am Arbeitsplatz."""
+         camps = getattr(self, "_last_camps", None) or []
+-        fallback = self.workplace_position
+-        target = fallback
+-        if camps:
+-            nearest = min(camps, key=lambda c: self.position.distance_to(c.position))
+-            if self.position.distance_to(nearest.position) < self.position.distance_to(fallback):
+-                target = nearest.position
+-        self._set_target(target)
++        camper_range = getattr(self, "_camper_range", CAMPER_RANGE)
++
++        # Bestehendes Camp mit freiem Slot suchen (innerhalb Camper-Range)
++        best_camp = None
++        best_dist = float("inf")
++        for camp in camps:
++            dist = self.position.distance_to(camp.position)
++            if dist <= camper_range and camp.current_occupants < CAMP_MAX_SLOTS:
++                if dist < best_dist:
++                    best_dist = dist
++                    best_camp = camp
++
++        if best_camp is not None:
++            best_camp.current_occupants += 1
++            self._assigned_camp = best_camp
++            self._set_target(best_camp.position)
++        else:
++            # Neues Camp am Arbeitsplatz spawnen (wie im echten Spiel)
++            spawn_fn = getattr(self, "_spawn_camp_fn", None)
++            new_camp = None
++            if spawn_fn is not None:
++                new_camp = spawn_fn(self.workplace_position)
++            if new_camp is not None:
++                new_camp.current_occupants += 1
++                self._assigned_camp = new_camp
++                self._set_target(new_camp.position)
++            else:
++                # Fallback: direkt zum Arbeitsplatz (kein Camp-Objekt verfuegbar)
++                self._assigned_camp = None
++                self._set_target(self.workplace_position)
++
+         self.state = WorkerState.WALKING_TO_CAMP
+ 
+     def _return_to_work(self):
+@@ -1010,6 +1051,26 @@ class WorkforceManager:
+         active_workplaces: Set[(x,y)] von aktiven Arbeitsplatz-Positionen.
+         """
+         self._update_farm_worker_flags()
++
++        # Dynamische Camps: Remove-Delay ticken, leere Camps entfernen
++        active_camps: List[Camp] = []
++        for camp in self.camps:
++            if camp.current_occupants > 0:
++                camp.idle_time = 0.0
++                active_camps.append(camp)
++            else:
++                camp.idle_time += dt
++                if camp.idle_time < CAMP_REMOVE_DELAY:
++                    active_camps.append(camp)
++                # sonst: Camp verschwindet (wie im echten Spiel nach 10s)
++        self.camps = active_camps
++
++        def _spawn_camp(position: Position) -> Camp:
++            """Spawnt neues Camp an gegebener Position (wie XD_Camp_Internal)."""
++            camp = Camp(position=Position(x=position.x, y=position.y))
++            self.camps.append(camp)
++            return camp
++
+         survivors: List[Worker] = []
+         for worker in self.workers:
+             if active_workplaces is not None and worker.worker_type != "serf":
+@@ -1027,11 +1088,15 @@ class WorkforceManager:
+                               worker.worker_type in self.blessed_worker_types)
+                 if is_blessed:
+                     effective_motivation += self.blessing_bonus
++            # Camper-Range je Worker-Typ (Coiner=2000, alle anderen=5000)
++            camper_range = float(WORKER_CAMPER_RANGE.get(worker.worker_type, CAMPER_RANGE))
+             worker.tick(dt, self.farms, self.residences, self.camps,
+                        motivation_mod=effective_motivation,
+                        speed_bonus=self.speed_bonus,
+                        pathfinder=pathfinder,
+-                       path_revision=path_revision)
++                       path_revision=path_revision,
++                       spawn_camp_fn=_spawn_camp,
++                       camper_range=camper_range)
+             survivors.append(worker)
+         self.workers = survivors
+ 
+
+[stderr]
+warning: in the working copy of 'colab_training.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'environment.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'train_100k.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'train_quick_test.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'training_profiles.py', LF will be replaced by CRLF the next time Git touches it

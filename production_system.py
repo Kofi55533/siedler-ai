@@ -213,7 +213,7 @@ class Refiner:
     path_distance: Optional[float] = None  # Optionaler A* Pfad (Wegstrecke)
     efficiency_override: Optional[float] = None
 
-    def get_cycle_time(self, speed_bonus: int = 0) -> float:
+    def get_cycle_time(self, speed_bonus: int = 0, speed_multiplier: float = 1.0) -> float:
         """
         Berechnet Zykluszeit fuer einen Transport-Zyklus.
 
@@ -222,12 +222,13 @@ class Refiner:
         distance = self.path_distance
         if distance is None:
             distance = self.position.distance_to(self.supplier_position)
-        worker_speed = max(1, self.worker_speed + speed_bonus)
+        worker_speed = max(1.0, (self.worker_speed + speed_bonus) * max(0.01, float(speed_multiplier)))
         walk_time = (distance * 2) / worker_speed  # Hin und zurueck
         work_time = self.work_wait_until if self.work_wait_until else 0.0
         return walk_time + work_time
 
-    def get_production_rate(self, worker_efficiency: float, speed_bonus: int = 0) -> float:
+    def get_production_rate(self, worker_efficiency: float, speed_bonus: int = 0,
+                            speed_multiplier: float = 1.0) -> float:
         """
         Berechnet Produktionsrate pro Sekunde.
 
@@ -237,19 +238,24 @@ class Refiner:
         if self.current_workers == 0:
             return 0.0
 
-        cycle_time = self.get_cycle_time(speed_bonus=speed_bonus)
+        cycle_time = self.get_cycle_time(speed_bonus=speed_bonus, speed_multiplier=speed_multiplier)
         if cycle_time <= 0:
             return 0.0
 
         return (self.current_workers * self.transport_amount * self.refines_per_cycle * worker_efficiency) / cycle_time
 
-    def get_input_consumption_rate(self, worker_efficiency: float, speed_bonus: int = 0) -> float:
+    def get_input_consumption_rate(self, worker_efficiency: float, speed_bonus: int = 0,
+                                   speed_multiplier: float = 1.0) -> float:
         """
         Berechnet Input-Verbrauch pro Sekunde.
 
         InitialFactor gibt das Verhaeltnis an (z.B. 4 = 4:1)
         """
-        production = self.get_production_rate(worker_efficiency, speed_bonus=speed_bonus)
+        production = self.get_production_rate(
+            worker_efficiency,
+            speed_bonus=speed_bonus,
+            speed_multiplier=speed_multiplier,
+        )
         return production * self.initial_factor
 
 
@@ -298,6 +304,8 @@ class Serf:
     waypoint: Optional[Position] = None
     path_revision: int = -1
     path_blocked: bool = False
+    speed_bonus: int = 0
+    speed_multiplier: float = 1.0
 
     def tick(self, dt: float,
              pathfinder: Optional[Callable[[Position, Position], List[Position]]] = None,
@@ -337,7 +345,7 @@ class Serf:
             self.state = SerfState.IDLE
             return None
 
-        remaining = self.speed * dt
+        remaining = self._effective_speed() * dt
         epsilon = 1e-6
 
         # Verbraucht die komplette Bewegungsdistanz im Tick (wichtig bei dt=1s).
@@ -419,7 +427,7 @@ class Serf:
             self.state = SerfState.IDLE
             return None
 
-        remaining = self.speed * dt
+        remaining = self._effective_speed() * dt
         epsilon = 1e-6
 
         # Verbraucht die komplette Bewegungsdistanz im Tick (wichtig bei dt=1s).
@@ -498,6 +506,17 @@ class Serf:
     def is_building(self) -> bool:
         """Prüft ob Serf gerade baut."""
         return self.state in (SerfState.WALKING_TO_BUILD, SerfState.BUILDING)
+
+    def set_speed_context(self, speed_bonus: int = 0, speed_multiplier: float = 1.0):
+        """Setzt Bewegungsboni fuer Projektionen und laufende Bewegung."""
+        self.speed_bonus = int(speed_bonus)
+        try:
+            self.speed_multiplier = max(0.01, float(speed_multiplier))
+        except (TypeError, ValueError):
+            self.speed_multiplier = 1.0
+
+    def _effective_speed(self) -> float:
+        return max(1.0, (self.speed + self.speed_bonus) * self.speed_multiplier)
 
     def _set_target(self, target: Position, path: Optional[List[Position]] = None):
         """Setzt Zielposition und optionalen Pfad."""
@@ -605,7 +624,7 @@ class Serf:
             # Fallback: Luftlinie
             distance = self.position.distance_to(self.target_position)
 
-        return distance / self.speed
+        return distance / self._effective_speed()
 
     def get_time_until_first_extraction(self) -> float:
         """Berechnet Zeit bis zur ersten Extraktion (Laufzeit + Extraktionsdelay)."""
@@ -691,10 +710,12 @@ class ProductionSystem:
         efficiency = 1.0
         efficiency_by_type = None
         speed_bonus = 0
+        speed_multiplier = 1.0
         if self.workforce_manager:
             efficiency = self.workforce_manager.get_average_efficiency()
             efficiency_by_type = self.workforce_manager.get_efficiency_by_type()
             speed_bonus = self.workforce_manager.speed_bonus
+            speed_multiplier = getattr(self.workforce_manager, "speed_multiplier", 1.0)
 
         # Aktive Mine-Typen einmal vorberechnen (verhindert O(N*M) in _tick_refiners)
         active_mine_types = frozenset(
@@ -708,13 +729,26 @@ class ProductionSystem:
             self.resources[resource] += amount
 
         # Refiner produzieren
-        refiner_production = self._tick_refiners(dt, efficiency, efficiency_by_type, speed_bonus, active_mine_types)
+        refiner_production = self._tick_refiners(
+            dt,
+            efficiency,
+            efficiency_by_type,
+            speed_bonus,
+            active_mine_types,
+            speed_multiplier=speed_multiplier,
+        )
         for resource, amount in refiner_production.items():
             produced[resource] += amount
             self.resources[resource] += amount
 
         # Serfs extrahieren
-        serf_production, serf_events = self._tick_serfs(dt, pathfinder=pathfinder, path_revision=path_revision)
+        serf_production, serf_events = self._tick_serfs(
+            dt,
+            pathfinder=pathfinder,
+            path_revision=path_revision,
+            speed_bonus=speed_bonus,
+            speed_multiplier=speed_multiplier,
+        )
         for resource, amount in serf_production.items():
             produced[resource] += amount
             self.resources[resource] += amount
@@ -739,7 +773,8 @@ class ProductionSystem:
     def _tick_refiners(self, dt: float, efficiency: float,
                        efficiency_by_type: Optional[Dict[str, float]] = None,
                        speed_bonus: int = 0,
-                       active_mine_types: Optional[frozenset] = None) -> Dict[ResourceType, float]:
+                       active_mine_types: Optional[frozenset] = None,
+                       speed_multiplier: float = 1.0) -> Dict[ResourceType, float]:
         """Tick fuer alle Refiner."""
         production: Dict[ResourceType, float] = defaultdict(float)
 
@@ -767,10 +802,18 @@ class ProductionSystem:
                     continue  # Ohne aktive Mine kein Refiner-Output
 
                 # Zusatz-Produzent - kein Input-Verbrauch, aber nur mit aktiver Mine
-                production[refiner.resource_type] += refiner.get_production_rate(eff, speed_bonus=speed_bonus) * dt
+                production[refiner.resource_type] += refiner.get_production_rate(
+                    eff,
+                    speed_bonus=speed_bonus,
+                    speed_multiplier=speed_multiplier,
+                ) * dt
             else:
                 # Verschiedene Input/Output Ressourcen - normaler Verbrauch
-                input_rate = refiner.get_input_consumption_rate(eff, speed_bonus=speed_bonus)
+                input_rate = refiner.get_input_consumption_rate(
+                    eff,
+                    speed_bonus=speed_bonus,
+                    speed_multiplier=speed_multiplier,
+                )
                 input_needed = input_rate * dt
 
                 available = self.resources.get(refiner.input_resource, 0)
@@ -783,18 +826,25 @@ class ProductionSystem:
 
                 # Input verbrauchen und Output produzieren
                 self.resources[refiner.input_resource] -= input_needed
-                production[refiner.resource_type] += refiner.get_production_rate(eff, speed_bonus=speed_bonus) * dt * ratio
+                production[refiner.resource_type] += refiner.get_production_rate(
+                    eff,
+                    speed_bonus=speed_bonus,
+                    speed_multiplier=speed_multiplier,
+                ) * dt * ratio
 
         return production
 
     def _tick_serfs(self, dt: float,
                     pathfinder: Optional[Callable[[Position, Position], List[Position]]] = None,
-                    path_revision: Optional[int] = None) -> Tuple[Dict[ResourceType, float], List[dict]]:
+                    path_revision: Optional[int] = None,
+                    speed_bonus: int = 0,
+                    speed_multiplier: float = 1.0) -> Tuple[Dict[ResourceType, float], List[dict]]:
         """Tick für alle Serfs."""
         production: Dict[ResourceType, float] = {}
         events: List[dict] = []
 
         for serf in self.serfs:
+            serf.set_speed_context(speed_bonus=speed_bonus, speed_multiplier=speed_multiplier)
             result = serf.tick(dt, pathfinder=pathfinder, path_revision=path_revision)
             if result:
                 resource, amount = result
@@ -888,12 +938,14 @@ class ProductionSystem:
 
     def get_production_rates(self, efficiency: float = 1.0,
                              efficiency_by_type: Optional[Dict[str, float]] = None,
-                             speed_bonus: int = 0) -> Dict[ResourceType, float]:
+                             speed_bonus: int = 0,
+                             speed_multiplier: float = 1.0) -> Dict[ResourceType, float]:
         """Gibt Produktionsraten pro Sekunde für alle Ressourcen zurück."""
         rates = {r: 0.0 for r in ResourceType}
         if efficiency_by_type is None and self.workforce_manager:
             efficiency_by_type = self.workforce_manager.get_efficiency_by_type()
             speed_bonus = self.workforce_manager.speed_bonus
+            speed_multiplier = getattr(self.workforce_manager, "speed_multiplier", 1.0)
 
         for mine in self.mines.values():
             if mine.efficiency_override is not None:
@@ -916,7 +968,11 @@ class ProductionSystem:
                 eff = refiner.efficiency_override
             else:
                 eff = efficiency if efficiency_by_type is None else efficiency_by_type.get(refiner.worker_type, 0.0)
-            rate = refiner.get_production_rate(eff, speed_bonus=speed_bonus)
+            rate = refiner.get_production_rate(
+                eff,
+                speed_bonus=speed_bonus,
+                speed_multiplier=speed_multiplier,
+            )
             rates[refiner.resource_type] += rate
 
         # Serfs (nur wenn sie tatsächlich extrahieren, nicht beim Laufen)
@@ -932,29 +988,46 @@ class ProductionSystem:
 
     def get_consumption_rates(self, efficiency: float = 1.0,
                               efficiency_by_type: Optional[Dict[str, float]] = None,
-                              speed_bonus: int = 0) -> Dict[ResourceType, float]:
+                              speed_bonus: int = 0,
+                              speed_multiplier: float = 1.0) -> Dict[ResourceType, float]:
         """Gibt Verbrauchsraten pro Sekunde für alle Ressourcen zurück."""
         rates = {r: 0.0 for r in ResourceType}
         if efficiency_by_type is None and self.workforce_manager:
             efficiency_by_type = self.workforce_manager.get_efficiency_by_type()
             speed_bonus = self.workforce_manager.speed_bonus
+            speed_multiplier = getattr(self.workforce_manager, "speed_multiplier", 1.0)
 
         for refiner in self.refiners.values():
             # Kein Verbrauch wenn Input == Output (siehe _tick_refiners)
             if refiner.input_resource == refiner.resource_type:
                 continue
             eff = efficiency if efficiency_by_type is None else efficiency_by_type.get(refiner.worker_type, 0.0)
-            rate = refiner.get_input_consumption_rate(eff, speed_bonus=speed_bonus)
+            rate = refiner.get_input_consumption_rate(
+                eff,
+                speed_bonus=speed_bonus,
+                speed_multiplier=speed_multiplier,
+            )
             rates[refiner.input_resource] += rate
 
         return rates
 
     def get_net_rates(self, efficiency: float = 1.0,
                       efficiency_by_type: Optional[Dict[str, float]] = None,
-                      speed_bonus: int = 0) -> Dict[ResourceType, float]:
+                      speed_bonus: int = 0,
+                      speed_multiplier: float = 1.0) -> Dict[ResourceType, float]:
         """Gibt Netto-Raten (Produktion - Verbrauch) zurück."""
-        production = self.get_production_rates(efficiency, efficiency_by_type, speed_bonus)
-        consumption = self.get_consumption_rates(efficiency, efficiency_by_type, speed_bonus)
+        production = self.get_production_rates(
+            efficiency,
+            efficiency_by_type,
+            speed_bonus,
+            speed_multiplier,
+        )
+        consumption = self.get_consumption_rates(
+            efficiency,
+            efficiency_by_type,
+            speed_bonus,
+            speed_multiplier,
+        )
 
         net = {}
         for resource in ResourceType:

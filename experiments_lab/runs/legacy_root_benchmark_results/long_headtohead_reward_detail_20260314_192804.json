@@ -1,0 +1,56 @@
+[
+  {
+    "candidate": "goal_v1",
+    "family": "reward",
+    "profile_name": "goal_v1",
+    "seed": 0,
+    "timesteps": 32768,
+    "train_seconds": 315.38917994499207,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "effective_config": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 3600.0
+  },
+  {
+    "candidate": "curriculum_unlock",
+    "family": "reward",
+    "profile_name": "curriculum_unlock",
+    "seed": 0,
+    "timesteps": 32768,
+    "train_seconds": 293.40430307388306,
+    "reward_overrides": {},
+    "config_overrides": {},
+    "effective_config": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 256,
+      "n_epochs": 4,
+      "gamma": 0.999,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.02
+    },
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_episode_length": 3600.0
+  }
+]

@@ -1,0 +1,15 @@
+candidate,family,profile_name,runs,mean_terminal_potential_metric,mean_terminal_path_ready,mean_scharf_dependency_progress,mean_scharf_research_progress,mean_scharf_construction_progress,mean_step_unlock_progress_metric,mean_step_required_buildings_completed,mean_step_required_techs_completed,mean_step_taler_income_per_cycle,mean_scharfschuetzen,mean_train_seconds
+custom_unlock_balanced,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,8.889046430587769
+custom_path_ready_bounty,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.767135381698608
+custom_requirement_milestones,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.511537551879883
+custom_income_bridge,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.79035496711731
+custom_short_unlock_curriculum,adaptive_reward,curriculum_unlock,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,5.459995746612549
+custom_short_requirement_sprint,adaptive_reward,curriculum_unlock,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,5.842797517776489
+custom_dual_phase_stock_after_path,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.736794710159302
+custom_unlock_research,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.5185136795043945
+custom_unlock_construction,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.420378923416138
+custom_dependency_heavy,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,5.153358221054077
+custom_economy_bootstrap,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.442795276641846
+custom_hybrid_current,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.998881578445435
+custom_hybrid_cumulative,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.726568937301636
+custom_force_progress,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.16666666666666666,0.0,0.0,0.0,0.0,4.95061993598938

@@ -1,0 +1,27 @@
+{
+  "base_path": "map_extract\\wintersturm_extracted\\walkable_map_515.npy",
+  "patch_path": "config\\wintersturm_map_data_from_log.json\\walkable_patch_515_255_45.npy",
+  "grid_shape": [
+    515,
+    515
+  ],
+  "patch_origin": {
+    "gx0": 255,
+    "gy0": 45
+  },
+  "patch_shape": [
+    74,
+    28
+  ],
+  "changed_cells": 726,
+  "changed_to_walkable": 528,
+  "changed_to_blocked": 198,
+  "changed_bbox": {
+    "x_min": 255,
+    "x_max": 282,
+    "y_min": 45,
+    "y_max": 118
+  },
+  "walkable_ratio_before": 0.5390328965972288,
+  "walkable_ratio_after": 0.5402771231972853
+}

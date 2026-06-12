@@ -245,7 +245,67 @@
           "supplier_category": "SulfurSupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": 700
+      },
+      "blocked2": {
+        "x": 300,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": 800
+      },
+      "terrain_pos2": {
+        "x": 400,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": -600,
+        "y": 0
+      },
+      "door_pos": {
+        "x": -30,
+        "y": 0
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 800,
+        "height": 1400
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -100,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": 800
+          },
+          "orientation": 290
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": 800
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 20,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_alchemist2": {
@@ -269,7 +329,67 @@
           "supplier_category": "SulfurSupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": 700
+      },
+      "blocked2": {
+        "x": 300,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": 800
+      },
+      "terrain_pos2": {
+        "x": 400,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": -600,
+        "y": 0
+      },
+      "door_pos": {
+        "x": -30,
+        "y": 0
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 800,
+        "height": 1400
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -100,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": 800
+          },
+          "orientation": 290
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": 800
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 20,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_archery1": {
@@ -296,7 +416,81 @@
         }
       },
       "behaviors": [],
-      "exploration": 30
+      "blocked1": {
+        "x": -600,
+        "y": 800
+      },
+      "blocked2": {
+        "x": 700,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 900
+      },
+      "terrain_pos2": {
+        "x": 800,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": -670,
+        "y": 600
+      },
+      "door_pos": {
+        "x": -600,
+        "y": 600
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1300,
+        "height": 1500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 600,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 700
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 900
+          },
+          "orientation": 290
+        },
+        {
+          "position": {
+            "x": 400,
+            "y": 900
+          },
+          "orientation": 290
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_archery2": {
       "name": "pb_archery2",
@@ -312,7 +506,81 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 30
+      "blocked1": {
+        "x": -600,
+        "y": 800
+      },
+      "blocked2": {
+        "x": 700,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 900
+      },
+      "terrain_pos2": {
+        "x": 800,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": -670,
+        "y": 600
+      },
+      "door_pos": {
+        "x": -600,
+        "y": 600
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1300,
+        "height": 1500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 600,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 700
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 900
+          },
+          "orientation": 290
+        },
+        {
+          "position": {
+            "x": 400,
+            "y": 900
+          },
+          "orientation": 290
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_bank1": {
       "name": "pb_bank1",
@@ -345,7 +613,95 @@
           "supplier_category": "GoldSupplier"
         }
       ],
+      "blocked1": {
+        "x": -400,
+        "y": 400
+      },
+      "blocked2": {
+        "x": 500,
+        "y": -400
+      },
+      "terrain_pos1": {
+        "x": -500,
+        "y": 500
+      },
+      "terrain_pos2": {
+        "x": 600,
+        "y": -500
+      },
+      "approach_pos": {
+        "x": -500,
+        "y": 0
+      },
+      "door_pos": {
+        "x": 0,
+        "y": 0
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 900,
+        "height": 800
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -500,
+            "y": 400
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 300,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": -500
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_bank2": {
@@ -369,7 +725,95 @@
           "supplier_category": "GoldSupplier"
         }
       ],
+      "blocked1": {
+        "x": -400,
+        "y": 400
+      },
+      "blocked2": {
+        "x": 500,
+        "y": -400
+      },
+      "terrain_pos1": {
+        "x": -500,
+        "y": 500
+      },
+      "terrain_pos2": {
+        "x": 600,
+        "y": -500
+      },
+      "approach_pos": {
+        "x": -500,
+        "y": 0
+      },
+      "door_pos": {
+        "x": 0,
+        "y": 0
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 900,
+        "height": 800
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -500,
+            "y": 400
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 300,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": -500
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_barracks1": {
@@ -397,7 +841,81 @@
         }
       },
       "behaviors": [],
-      "exploration": 30
+      "blocked1": {
+        "x": -700,
+        "y": 700
+      },
+      "blocked2": {
+        "x": 700,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -800,
+        "y": 800
+      },
+      "terrain_pos2": {
+        "x": 800,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": -800,
+        "y": -300
+      },
+      "door_pos": {
+        "x": -700,
+        "y": -350
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1400,
+        "height": 1400
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 200,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": -300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": 300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 800
+          },
+          "orientation": 290
+        },
+        {
+          "position": {
+            "x": 300,
+            "y": 800
+          },
+          "orientation": 290
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_barracks2": {
       "name": "pb_barracks2",
@@ -414,7 +932,81 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 30
+      "blocked1": {
+        "x": -700,
+        "y": 700
+      },
+      "blocked2": {
+        "x": 700,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -800,
+        "y": 800
+      },
+      "terrain_pos2": {
+        "x": 800,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": -800,
+        "y": -300
+      },
+      "door_pos": {
+        "x": -700,
+        "y": -350
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1400,
+        "height": 1400
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 200,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": -300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": 300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 800
+          },
+          "orientation": 290
+        },
+        {
+          "position": {
+            "x": 300,
+            "y": 800
+          },
+          "orientation": 290
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_beautification01": {
       "name": "pb_beautification01",
@@ -435,7 +1027,46 @@
           "motivation_effect": 0.04
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification02": {
       "name": "pb_beautification02",
@@ -456,7 +1087,46 @@
           "motivation_effect": 0.04
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -150,
+        "y": 150
+      },
+      "blocked2": {
+        "x": 150,
+        "y": -150
+      },
+      "terrain_pos1": {
+        "x": -250,
+        "y": 250
+      },
+      "terrain_pos2": {
+        "x": 250,
+        "y": -250
+      },
+      "approach_pos": {
+        "x": -250,
+        "y": 250
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 300,
+        "height": 300
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -250,
+            "y": 250
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification03": {
       "name": "pb_beautification03",
@@ -477,7 +1147,46 @@
           "motivation_effect": 0.06
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification04": {
       "name": "pb_beautification04",
@@ -498,7 +1207,46 @@
           "motivation_effect": 0.02
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification05": {
       "name": "pb_beautification05",
@@ -519,7 +1267,46 @@
           "motivation_effect": 0.05
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification06": {
       "name": "pb_beautification06",
@@ -540,7 +1327,46 @@
           "motivation_effect": 0.02
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification07": {
       "name": "pb_beautification07",
@@ -561,7 +1387,46 @@
           "motivation_effect": 0.05
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification08": {
       "name": "pb_beautification08",
@@ -582,7 +1447,46 @@
           "motivation_effect": 0.05
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification09": {
       "name": "pb_beautification09",
@@ -603,7 +1507,46 @@
           "motivation_effect": 0.02
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification10": {
       "name": "pb_beautification10",
@@ -624,7 +1567,46 @@
           "motivation_effect": 0.06
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification11": {
       "name": "pb_beautification11",
@@ -645,7 +1627,46 @@
           "motivation_effect": 0.06
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_beautification12": {
       "name": "pb_beautification12",
@@ -666,7 +1687,46 @@
           "motivation_effect": 0.04
         }
       ],
-      "exploration": 12
+      "blocked1": {
+        "x": -50,
+        "y": 50
+      },
+      "blocked2": {
+        "x": 50,
+        "y": -50
+      },
+      "terrain_pos1": {
+        "x": -150,
+        "y": 150
+      },
+      "terrain_pos2": {
+        "x": 150,
+        "y": -150
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 10,
+        "y": 10
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 100,
+        "height": 100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -150,
+            "y": 150
+          },
+          "orientation": 1
+        }
+      ],
+      "exploration": 12,
+      "build_on": ""
     },
     "pb_blacksmith1": {
       "name": "pb_blacksmith1",
@@ -699,7 +1759,67 @@
           "supplier_category": "IronSupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": 300
+      },
+      "blocked2": {
+        "x": 400,
+        "y": -400
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": 400
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": -500
+      },
+      "approach_pos": {
+        "x": 0,
+        "y": -500
+      },
+      "door_pos": {
+        "x": 70,
+        "y": 100
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 900,
+        "height": 700
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 300,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_blacksmith2": {
@@ -730,7 +1850,67 @@
           "supplier_category": "IronSupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": 300
+      },
+      "blocked2": {
+        "x": 400,
+        "y": -400
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": 400
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": -500
+      },
+      "approach_pos": {
+        "x": 0,
+        "y": -500
+      },
+      "door_pos": {
+        "x": 70,
+        "y": 100
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 900,
+        "height": 700
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 300,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_blacksmith3": {
@@ -754,7 +1934,67 @@
           "supplier_category": "IronSupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": 300
+      },
+      "blocked2": {
+        "x": 400,
+        "y": -400
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": 400
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": -500
+      },
+      "approach_pos": {
+        "x": 0,
+        "y": -500
+      },
+      "door_pos": {
+        "x": 70,
+        "y": 100
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 900,
+        "height": 700
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 300,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_brickworks1": {
@@ -788,7 +2028,67 @@
           "supplier_category": "ClaySupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": 460
+      },
+      "blocked2": {
+        "x": 250,
+        "y": -550
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": 560
+      },
+      "terrain_pos2": {
+        "x": 350,
+        "y": -650
+      },
+      "approach_pos": {
+        "x": -600,
+        "y": 0
+      },
+      "door_pos": {
+        "x": 200,
+        "y": 100
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 750,
+        "height": 1010
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": -300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 300
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_brickworks2": {
@@ -812,7 +2112,67 @@
           "supplier_category": "ClaySupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": 460
+      },
+      "blocked2": {
+        "x": 250,
+        "y": -550
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": 560
+      },
+      "terrain_pos2": {
+        "x": 350,
+        "y": -650
+      },
+      "approach_pos": {
+        "x": -600,
+        "y": 100
+      },
+      "door_pos": {
+        "x": 200,
+        "y": 100
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 750,
+        "height": 1010
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": -300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 300
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_claymine1": {
@@ -843,7 +2203,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -370,
+        "y": 520
+      },
+      "blocked2": {
+        "x": 850,
+        "y": -450
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": 700,
+        "y": -600
+      },
+      "door_pos": {
+        "x": 680,
+        "y": 450
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1220,
+        "height": 970
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 1000,
+            "y": 200
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 1000,
+            "y": 0
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 1000,
+            "y": -100
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 700
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 30,
+      "build_on": "XD_ClayPit1",
       "defender_capacity": 10
     },
     "pb_claymine2": {
@@ -874,7 +2288,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -370,
+        "y": 520
+      },
+      "blocked2": {
+        "x": 850,
+        "y": -450
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": 710,
+        "y": -600
+      },
+      "door_pos": {
+        "x": 680,
+        "y": 450
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1220,
+        "height": 970
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 1000,
+            "y": 200
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 1000,
+            "y": 0
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 1000,
+            "y": -100
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 700
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 30,
+      "build_on": "XD_ClayPit1",
       "defender_capacity": 10
     },
     "pb_claymine3": {
@@ -898,7 +2366,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -370,
+        "y": 520
+      },
+      "blocked2": {
+        "x": 850,
+        "y": -450
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": 710,
+        "y": -600
+      },
+      "door_pos": {
+        "x": 680,
+        "y": 450
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1220,
+        "height": 970
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 1000,
+            "y": 200
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 1000,
+            "y": 0
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 1000,
+            "y": -100
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 700
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 30,
+      "build_on": "XD_ClayPit1",
       "defender_capacity": 10
     },
     "pb_darktower1": {
@@ -924,7 +2446,67 @@
         }
       },
       "behaviors": [],
-      "exploration": 33
+      "blocked1": {
+        "x": -100,
+        "y": 100
+      },
+      "blocked2": {
+        "x": 100,
+        "y": -100
+      },
+      "terrain_pos1": {
+        "x": -200,
+        "y": 200
+      },
+      "terrain_pos2": {
+        "x": 200,
+        "y": -200
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 200
+      },
+      "door_pos": {
+        "x": -50,
+        "y": -250
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 200,
+        "height": 200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 100,
+            "y": -200
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": 200
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 33,
+      "build_on": ""
     },
     "pb_darktower2": {
       "name": "pb_darktower2",
@@ -947,7 +2529,67 @@
         }
       },
       "behaviors": [],
-      "exploration": 33
+      "blocked1": {
+        "x": -100,
+        "y": 100
+      },
+      "blocked2": {
+        "x": 100,
+        "y": -100
+      },
+      "terrain_pos1": {
+        "x": -200,
+        "y": 200
+      },
+      "terrain_pos2": {
+        "x": 200,
+        "y": -200
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 200
+      },
+      "door_pos": {
+        "x": -50,
+        "y": -250
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 200,
+        "height": 200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 100,
+            "y": -200
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": 200
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 33,
+      "build_on": ""
     },
     "pb_darktower2_ballista": {
       "name": "pb_darktower2_ballista",
@@ -965,7 +2607,17 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 30
+      "blocked1": null,
+      "blocked2": null,
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": null,
+      "builder_slots": [],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_darktower3": {
       "name": "pb_darktower3",
@@ -981,7 +2633,67 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 33
+      "blocked1": {
+        "x": -100,
+        "y": 100
+      },
+      "blocked2": {
+        "x": 100,
+        "y": -100
+      },
+      "terrain_pos1": {
+        "x": -200,
+        "y": 200
+      },
+      "terrain_pos2": {
+        "x": 200,
+        "y": -200
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 200
+      },
+      "door_pos": {
+        "x": -50,
+        "y": -250
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 200,
+        "height": 200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 100,
+            "y": -200
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": 200
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 33,
+      "build_on": ""
     },
     "pb_darktower3_cannon": {
       "name": "pb_darktower3_cannon",
@@ -999,7 +2711,17 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 30
+      "blocked1": null,
+      "blocked2": null,
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": null,
+      "builder_slots": [],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_farm1": {
       "name": "pb_farm1",
@@ -1025,7 +2747,70 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -300,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 300,
+        "y": -400
+      },
+      "terrain_pos1": {
+        "x": -400,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 400,
+        "y": -500
+      },
+      "approach_pos": {
+        "x": -400,
+        "y": 300
+      },
+      "door_pos": {
+        "x": -10,
+        "y": 267
+      },
+      "leave_pos": {
+        "x": -400,
+        "y": 200
+      },
+      "footprint": {
+        "width": 600,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -400,
+            "y": 500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -500
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "eat_capacity": 8,
       "defender_capacity": 10
     },
@@ -1050,7 +2835,70 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -300,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 300,
+        "y": -400
+      },
+      "terrain_pos1": {
+        "x": -400,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 400,
+        "y": -500
+      },
+      "approach_pos": {
+        "x": -400,
+        "y": 300
+      },
+      "door_pos": {
+        "x": -10,
+        "y": 267
+      },
+      "leave_pos": {
+        "x": -400,
+        "y": 200
+      },
+      "footprint": {
+        "width": 600,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -400,
+            "y": 500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -500
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "eat_capacity": 10,
       "defender_capacity": 10
     },
@@ -1068,7 +2916,70 @@
       "worker_type": "PU_Farmer",
       "upgrade": null,
       "behaviors": [],
+      "blocked1": {
+        "x": -300,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 300,
+        "y": -400
+      },
+      "terrain_pos1": {
+        "x": -400,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 400,
+        "y": -500
+      },
+      "approach_pos": {
+        "x": -400,
+        "y": 300
+      },
+      "door_pos": {
+        "x": -10,
+        "y": 267
+      },
+      "leave_pos": {
+        "x": -400,
+        "y": 200
+      },
+      "footprint": {
+        "width": 600,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -400,
+            "y": 500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -500
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "eat_capacity": 12,
       "defender_capacity": 10
     },
@@ -1103,7 +3014,81 @@
           ]
         }
       ],
-      "exploration": 30
+      "blocked1": {
+        "x": -700,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 800,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -800,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 900,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": 600,
+        "y": -800
+      },
+      "door_pos": {
+        "x": 600,
+        "y": -100
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1500,
+        "height": 1300
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 600,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_foundry2": {
       "name": "pb_foundry2",
@@ -1128,7 +3113,81 @@
           ]
         }
       ],
-      "exploration": 30
+      "blocked1": {
+        "x": -700,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 800,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -800,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 900,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": 600,
+        "y": -800
+      },
+      "door_pos": {
+        "x": 600,
+        "y": -100
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1500,
+        "height": 1300
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 600,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_genericmine": {
       "name": "pb_genericmine",
@@ -1144,7 +3203,17 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": null,
+      "blocked2": null,
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": null,
+      "builder_slots": [],
+      "exploration": 20,
+      "build_on": "XD_ClayPit1"
     },
     "pb_headquarters1": {
       "name": "pb_headquarters1",
@@ -1179,7 +3248,98 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -600,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -600
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 700,
+        "y": -700
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 40
+      },
+      "door_pos": {
+        "x": 200,
+        "y": 50
+      },
+      "leave_pos": {
+        "x": -700,
+        "y": -100
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 50,
+      "build_on": "",
       "defender_capacity": 200
     },
     "pb_headquarters2": {
@@ -1212,7 +3372,98 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -600,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -600
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 700,
+        "y": -700
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 40
+      },
+      "door_pos": {
+        "x": 200,
+        "y": 50
+      },
+      "leave_pos": {
+        "x": -700,
+        "y": -100
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 50,
+      "build_on": "",
       "defender_capacity": 300
     },
     "pb_headquarters3": {
@@ -1237,7 +3488,98 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
+      "blocked1": {
+        "x": -600,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -600
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 700,
+        "y": -700
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 40
+      },
+      "door_pos": {
+        "x": 200,
+        "y": 50
+      },
+      "leave_pos": {
+        "x": -700,
+        "y": -100
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 50,
+      "build_on": "",
       "defender_capacity": 400
     },
     "pb_ironmine1": {
@@ -1268,7 +3610,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -370,
+        "y": 720
+      },
+      "blocked2": {
+        "x": 550,
+        "y": -350
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": -500,
+        "y": 500
+      },
+      "door_pos": {
+        "x": -80,
+        "y": 520
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 920,
+        "height": 1070
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 700,
+            "y": 400
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 700,
+            "y": 300
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": 900
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 30,
+      "build_on": "XD_IronPit1",
       "defender_capacity": 10
     },
     "pb_ironmine2": {
@@ -1299,7 +3695,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -370,
+        "y": 720
+      },
+      "blocked2": {
+        "x": 550,
+        "y": -350
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": -500,
+        "y": 500
+      },
+      "door_pos": {
+        "x": -80,
+        "y": 520
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 920,
+        "height": 1070
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 700,
+            "y": 400
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 700,
+            "y": 300
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": 900
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 30,
+      "build_on": "XD_IronPit1",
       "defender_capacity": 10
     },
     "pb_ironmine3": {
@@ -1323,7 +3773,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -370,
+        "y": 720
+      },
+      "blocked2": {
+        "x": 550,
+        "y": -350
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": -500,
+        "y": 500
+      },
+      "door_pos": {
+        "x": -80,
+        "y": 520
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 920,
+        "height": 1070
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 700,
+            "y": 400
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 700,
+            "y": 300
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": 900
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 30,
+      "build_on": "XD_IronPit1",
       "defender_capacity": 10
     },
     "pb_market1": {
@@ -1355,7 +3859,70 @@
         }
       },
       "behaviors": [],
-      "exploration": 30
+      "blocked1": {
+        "x": -600,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -600
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 700,
+        "y": -700
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": -100
+      },
+      "door_pos": {
+        "x": 200,
+        "y": 400
+      },
+      "leave_pos": {
+        "x": -700,
+        "y": -200
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 500,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -400
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 700
+          },
+          "orientation": 315
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_market2": {
       "name": "pb_market2",
@@ -1377,7 +3944,70 @@
       "worker_type": "PU_Trader",
       "upgrade": null,
       "behaviors": [],
+      "blocked1": {
+        "x": -600,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -600
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 700,
+        "y": -700
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": -100
+      },
+      "door_pos": {
+        "x": 200,
+        "y": 400
+      },
+      "leave_pos": {
+        "x": -700,
+        "y": -200
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 500,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -400
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 700
+          },
+          "orientation": 315
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_monastery1": {
@@ -1410,7 +4040,95 @@
           "motivation_effect": 0.08
         }
       ],
+      "blocked1": {
+        "x": -600,
+        "y": 700
+      },
+      "blocked2": {
+        "x": 700,
+        "y": -800
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 800
+      },
+      "terrain_pos2": {
+        "x": 800,
+        "y": -900
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 200
+      },
+      "door_pos": {
+        "x": -480,
+        "y": 195
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1300,
+        "height": 1500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -700,
+            "y": 600
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 400
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 800
+          },
+          "orientation": 290
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -900
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 20
     },
     "pb_monastery2": {
@@ -1440,7 +4158,95 @@
           "motivation_effect": 0.1
         }
       ],
+      "blocked1": {
+        "x": -600,
+        "y": 700
+      },
+      "blocked2": {
+        "x": 700,
+        "y": -800
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 800
+      },
+      "terrain_pos2": {
+        "x": 800,
+        "y": -900
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 200
+      },
+      "door_pos": {
+        "x": -480,
+        "y": 195
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1300,
+        "height": 1500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -700,
+            "y": 600
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 400
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 800
+          },
+          "orientation": 290
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -900
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 20
     },
     "pb_monastery3": {
@@ -1462,7 +4268,95 @@
           "motivation_effect": 0.15
         }
       ],
+      "blocked1": {
+        "x": -600,
+        "y": 700
+      },
+      "blocked2": {
+        "x": 700,
+        "y": -800
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 800
+      },
+      "terrain_pos2": {
+        "x": 800,
+        "y": -900
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 200
+      },
+      "door_pos": {
+        "x": -480,
+        "y": 195
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1300,
+        "height": 1500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -700,
+            "y": 600
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 400
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 800
+          },
+          "orientation": 290
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -900
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 20
     },
     "pb_outpost1": {
@@ -1497,7 +4391,98 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -600,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -600
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 700,
+        "y": -700
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 100
+      },
+      "door_pos": {
+        "x": -500,
+        "y": 0
+      },
+      "leave_pos": {
+        "x": -700,
+        "y": 100
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 50,
+      "build_on": "",
       "defender_capacity": 200
     },
     "pb_outpost2": {
@@ -1531,7 +4516,98 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -600,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -600
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 700,
+        "y": -700
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 100
+      },
+      "door_pos": {
+        "x": -500,
+        "y": 0
+      },
+      "leave_pos": {
+        "x": -700,
+        "y": 100
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 50,
+      "build_on": "",
       "defender_capacity": 300
     },
     "pb_outpost3": {
@@ -1557,7 +4633,98 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
+      "blocked1": {
+        "x": -600,
+        "y": 600
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -600
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 700
+      },
+      "terrain_pos2": {
+        "x": 700,
+        "y": -700
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 100
+      },
+      "door_pos": {
+        "x": -500,
+        "y": 0
+      },
+      "leave_pos": {
+        "x": -700,
+        "y": 100
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 50,
+      "build_on": "",
       "defender_capacity": 400
     },
     "pb_powerplant1": {
@@ -1577,7 +4744,67 @@
       "worker_type": "PU_Engineer",
       "upgrade": null,
       "behaviors": [],
+      "blocked1": {
+        "x": -300,
+        "y": 300
+      },
+      "blocked2": {
+        "x": 200,
+        "y": -200
+      },
+      "terrain_pos1": {
+        "x": -400,
+        "y": 400
+      },
+      "terrain_pos2": {
+        "x": 300,
+        "y": -300
+      },
+      "approach_pos": {
+        "x": -400,
+        "y": 100
+      },
+      "door_pos": {
+        "x": -200,
+        "y": 100
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 500,
+        "height": 500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 200,
+            "y": -400
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -400
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_residence1": {
@@ -1604,7 +4831,70 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -200,
+        "y": 200
+      },
+      "blocked2": {
+        "x": 200,
+        "y": -300
+      },
+      "terrain_pos1": {
+        "x": -300,
+        "y": 300
+      },
+      "terrain_pos2": {
+        "x": 300,
+        "y": -400
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": -400
+      },
+      "door_pos": {
+        "x": -25,
+        "y": -160
+      },
+      "leave_pos": {
+        "x": 0,
+        "y": -400
+      },
+      "footprint": {
+        "width": 400,
+        "height": 500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 200,
+            "y": -400
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -400
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 20,
+      "build_on": "",
       "live_capacity": 6,
       "defender_capacity": 10
     },
@@ -1629,7 +4919,70 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -200,
+        "y": 200
+      },
+      "blocked2": {
+        "x": 200,
+        "y": -300
+      },
+      "terrain_pos1": {
+        "x": -300,
+        "y": 300
+      },
+      "terrain_pos2": {
+        "x": 300,
+        "y": -400
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": -400
+      },
+      "door_pos": {
+        "x": -25,
+        "y": -160
+      },
+      "leave_pos": {
+        "x": 0,
+        "y": -400
+      },
+      "footprint": {
+        "width": 400,
+        "height": 500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 200,
+            "y": -400
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -400
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 20,
+      "build_on": "",
       "live_capacity": 9,
       "defender_capacity": 20
     },
@@ -1647,7 +5000,70 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
+      "blocked1": {
+        "x": -200,
+        "y": 200
+      },
+      "blocked2": {
+        "x": 200,
+        "y": -300
+      },
+      "terrain_pos1": {
+        "x": -300,
+        "y": 300
+      },
+      "terrain_pos2": {
+        "x": 300,
+        "y": -400
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": -400
+      },
+      "door_pos": {
+        "x": -25,
+        "y": -160
+      },
+      "leave_pos": {
+        "x": 0,
+        "y": -400
+      },
+      "footprint": {
+        "width": 400,
+        "height": 500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 200,
+            "y": -400
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -400
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 20,
+      "build_on": "",
       "live_capacity": 12,
       "defender_capacity": 30
     },
@@ -1682,7 +5098,81 @@
           "supplier_category": "WoodSupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": 800
+      },
+      "blocked2": {
+        "x": 400,
+        "y": -800
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": 900
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": -900
+      },
+      "approach_pos": {
+        "x": 100,
+        "y": 900
+      },
+      "door_pos": {
+        "x": 100,
+        "y": 600
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 900,
+        "height": 1600
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 300,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": -300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 600
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_sawmill2": {
@@ -1706,7 +5196,81 @@
           "supplier_category": "WoodSupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": 800
+      },
+      "blocked2": {
+        "x": 400,
+        "y": -800
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": 900
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": -900
+      },
+      "approach_pos": {
+        "x": 100,
+        "y": 900
+      },
+      "door_pos": {
+        "x": 100,
+        "y": 600
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 900,
+        "height": 1600
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 300,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -900
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": -300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 600
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_stable1": {
@@ -1733,7 +5297,95 @@
         }
       },
       "behaviors": [],
-      "exploration": 30
+      "blocked1": {
+        "x": -800,
+        "y": 900
+      },
+      "blocked2": {
+        "x": 800,
+        "y": -900
+      },
+      "terrain_pos1": {
+        "x": -900,
+        "y": 1000
+      },
+      "terrain_pos2": {
+        "x": 900,
+        "y": -1000
+      },
+      "approach_pos": {
+        "x": -900,
+        "y": 100
+      },
+      "door_pos": {
+        "x": -350,
+        "y": 400
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1600,
+        "height": 1800
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 600,
+            "y": -1000
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -1000
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -1000
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -1000
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -900,
+            "y": -700
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -900,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -900,
+            "y": 300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -900,
+            "y": 800
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_stable2": {
       "name": "pb_stable2",
@@ -1749,7 +5401,95 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 30
+      "blocked1": {
+        "x": -800,
+        "y": 900
+      },
+      "blocked2": {
+        "x": 800,
+        "y": -900
+      },
+      "terrain_pos1": {
+        "x": -900,
+        "y": 1000
+      },
+      "terrain_pos2": {
+        "x": 900,
+        "y": -1000
+      },
+      "approach_pos": {
+        "x": -900,
+        "y": 100
+      },
+      "door_pos": {
+        "x": -350,
+        "y": 400
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1600,
+        "height": 1800
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 600,
+            "y": -1000
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -1000
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -1000
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": -1000
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -900,
+            "y": -700
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -900,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -900,
+            "y": 300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -900,
+            "y": 800
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_stonemason1": {
       "name": "pb_stonemason1",
@@ -1782,7 +5522,67 @@
           "supplier_category": "StoneSupplier"
         }
       ],
+      "blocked1": {
+        "x": -400,
+        "y": 500
+      },
+      "blocked2": {
+        "x": 400,
+        "y": -500
+      },
+      "terrain_pos1": {
+        "x": -500,
+        "y": 600
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": -600
+      },
+      "approach_pos": {
+        "x": -500,
+        "y": -250
+      },
+      "door_pos": {
+        "x": 250,
+        "y": -250
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 800,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 300,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 400
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_stonemason2": {
@@ -1806,7 +5606,67 @@
           "supplier_category": "StoneSupplier"
         }
       ],
+      "blocked1": {
+        "x": -400,
+        "y": 500
+      },
+      "blocked2": {
+        "x": 400,
+        "y": -500
+      },
+      "terrain_pos1": {
+        "x": -500,
+        "y": 600
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": -600
+      },
+      "approach_pos": {
+        "x": -500,
+        "y": -250
+      },
+      "door_pos": {
+        "x": 250,
+        "y": -250
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 800,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 300,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": 400
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_stonemine1": {
@@ -1837,7 +5697,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -400,
+        "y": 500
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -500
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": -500,
+        "y": -300
+      },
+      "door_pos": {
+        "x": 580,
+        "y": -300
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1000,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -500,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": -300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 400,
+            "y": -600
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 15,
+      "build_on": "XD_StonePit1",
       "defender_capacity": 10
     },
     "pb_stonemine2": {
@@ -1868,7 +5782,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -400,
+        "y": 500
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -500
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": -500,
+        "y": -300
+      },
+      "door_pos": {
+        "x": 580,
+        "y": -300
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1000,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -500,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": -300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 400,
+            "y": -600
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 15,
+      "build_on": "XD_StonePit1",
       "defender_capacity": 10
     },
     "pb_stonemine3": {
@@ -1892,7 +5860,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -400,
+        "y": 500
+      },
+      "blocked2": {
+        "x": 600,
+        "y": -500
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": -500,
+        "y": -300
+      },
+      "door_pos": {
+        "x": 580,
+        "y": -300
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1000,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -500,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": -300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 400,
+            "y": -600
+          },
+          "orientation": 90
+        }
+      ],
       "exploration": 15,
+      "build_on": "XD_StonePit1",
       "defender_capacity": 10
     },
     "pb_sulfurmine1": {
@@ -1923,7 +5945,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -370,
+        "y": 620
+      },
+      "blocked2": {
+        "x": 550,
+        "y": -350
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": 700,
+        "y": 550
+      },
+      "door_pos": {
+        "x": 550,
+        "y": 540
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 920,
+        "height": 970
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 700,
+            "y": 400
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 700,
+            "y": 100
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": 800
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 30,
+      "build_on": "XD_SulfurPit1",
       "defender_capacity": 10
     },
     "pb_sulfurmine2": {
@@ -1954,7 +6030,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -370,
+        "y": 620
+      },
+      "blocked2": {
+        "x": 550,
+        "y": -350
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": 700,
+        "y": 550
+      },
+      "door_pos": {
+        "x": 550,
+        "y": 540
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 920,
+        "height": 970
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 700,
+            "y": 400
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 700,
+            "y": 100
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": 800
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 30,
+      "build_on": "XD_SulfurPit1",
       "defender_capacity": 10
     },
     "pb_sulfurmine3": {
@@ -1978,7 +6108,61 @@
           "resource_type": ""
         }
       ],
+      "blocked1": {
+        "x": -370,
+        "y": 620
+      },
+      "blocked2": {
+        "x": 550,
+        "y": -350
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": 700,
+        "y": 550
+      },
+      "door_pos": {
+        "x": 550,
+        "y": 540
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 920,
+        "height": 970
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 700,
+            "y": 400
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 700,
+            "y": 100
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": -500
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -300,
+            "y": 800
+          },
+          "orientation": 290
+        }
+      ],
       "exploration": 30,
+      "build_on": "XD_SulfurPit1",
       "defender_capacity": 10
     },
     "pb_tower1": {
@@ -2004,7 +6188,67 @@
         }
       },
       "behaviors": [],
-      "exploration": 33
+      "blocked1": {
+        "x": -100,
+        "y": 100
+      },
+      "blocked2": {
+        "x": 100,
+        "y": -100
+      },
+      "terrain_pos1": {
+        "x": -200,
+        "y": 200
+      },
+      "terrain_pos2": {
+        "x": 200,
+        "y": -200
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 200
+      },
+      "door_pos": {
+        "x": -50,
+        "y": -250
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 200,
+        "height": 200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 100,
+            "y": -200
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": 200
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 33,
+      "build_on": ""
     },
     "pb_tower2": {
       "name": "pb_tower2",
@@ -2027,7 +6271,67 @@
         }
       },
       "behaviors": [],
-      "exploration": 33
+      "blocked1": {
+        "x": -100,
+        "y": 100
+      },
+      "blocked2": {
+        "x": 100,
+        "y": -100
+      },
+      "terrain_pos1": {
+        "x": -200,
+        "y": 200
+      },
+      "terrain_pos2": {
+        "x": 200,
+        "y": -200
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 200
+      },
+      "door_pos": {
+        "x": -50,
+        "y": -250
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 200,
+        "height": 200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 100,
+            "y": -200
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": 200
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 33,
+      "build_on": ""
     },
     "pb_tower2_ballista": {
       "name": "pb_tower2_ballista",
@@ -2045,7 +6349,17 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 30
+      "blocked1": null,
+      "blocked2": null,
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": null,
+      "builder_slots": [],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_tower3": {
       "name": "pb_tower3",
@@ -2061,7 +6375,67 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 33
+      "blocked1": {
+        "x": -100,
+        "y": 100
+      },
+      "blocked2": {
+        "x": 100,
+        "y": -100
+      },
+      "terrain_pos1": {
+        "x": -200,
+        "y": 200
+      },
+      "terrain_pos2": {
+        "x": 200,
+        "y": -200
+      },
+      "approach_pos": {
+        "x": -100,
+        "y": 200
+      },
+      "door_pos": {
+        "x": -50,
+        "y": -250
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 200,
+        "height": 200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 100,
+            "y": -200
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": 200
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -100
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": 100
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 33,
+      "build_on": ""
     },
     "pb_tower3_cannon": {
       "name": "pb_tower3_cannon",
@@ -2079,7 +6453,17 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 30
+      "blocked1": null,
+      "blocked2": null,
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": null,
+      "builder_slots": [],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_university1": {
       "name": "pb_university1",
@@ -2106,7 +6490,81 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -600,
+        "y": 800
+      },
+      "blocked2": {
+        "x": 700,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 900
+      },
+      "terrain_pos2": {
+        "x": 800,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 0
+      },
+      "door_pos": {
+        "x": 420,
+        "y": 0
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1300,
+        "height": 1500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 500,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 400,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 700
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 400
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_university2": {
@@ -2123,7 +6581,81 @@
       "worker_type": "PU_Scholar",
       "upgrade": null,
       "behaviors": [],
+      "blocked1": {
+        "x": -600,
+        "y": 800
+      },
+      "blocked2": {
+        "x": 700,
+        "y": -700
+      },
+      "terrain_pos1": {
+        "x": -700,
+        "y": 900
+      },
+      "terrain_pos2": {
+        "x": 800,
+        "y": -800
+      },
+      "approach_pos": {
+        "x": -700,
+        "y": 0
+      },
+      "door_pos": {
+        "x": 420,
+        "y": 0
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 1300,
+        "height": 1500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 500,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 400,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -800
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 700
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -700,
+            "y": 400
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_villagecenter1": {
@@ -2151,7 +6683,78 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -700,
+        "y": -500
+      },
+      "blocked2": {
+        "x": 500,
+        "y": 600
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": -400,
+        "y": -600
+      },
+      "door_pos": {
+        "x": -400,
+        "y": 180
+      },
+      "leave_pos": {
+        "x": -500,
+        "y": -600
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": 600,
+            "y": -100
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 600,
+            "y": -300
+          },
+          "orientation": 180
+        }
+      ],
       "exploration": 40,
+      "build_on": "XD_VillageCenter",
       "defender_capacity": 10
     },
     "pb_villagecenter2": {
@@ -2176,7 +6779,78 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -700,
+        "y": -500
+      },
+      "blocked2": {
+        "x": 500,
+        "y": 600
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": -400,
+        "y": -600
+      },
+      "door_pos": {
+        "x": -400,
+        "y": 180
+      },
+      "leave_pos": {
+        "x": -500,
+        "y": -600
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": 600,
+            "y": -100
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 600,
+            "y": -300
+          },
+          "orientation": 180
+        }
+      ],
       "exploration": 40,
+      "build_on": "XD_VillageCenter",
       "defender_capacity": 10
     },
     "pb_villagecenter3": {
@@ -2193,7 +6867,78 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
+      "blocked1": {
+        "x": -700,
+        "y": -500
+      },
+      "blocked2": {
+        "x": 500,
+        "y": 600
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": {
+        "x": -400,
+        "y": -600
+      },
+      "door_pos": {
+        "x": -400,
+        "y": 180
+      },
+      "leave_pos": {
+        "x": -500,
+        "y": -600
+      },
+      "footprint": {
+        "width": 1200,
+        "height": 1100
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": -200
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -800,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": 600,
+            "y": -100
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 600,
+            "y": -300
+          },
+          "orientation": 180
+        }
+      ],
       "exploration": 40,
+      "build_on": "XD_VillageCenter",
       "defender_capacity": 10
     },
     "pb_weathermachine": {
@@ -2210,7 +6955,46 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": {
+        "x": -200,
+        "y": 200
+      },
+      "blocked2": {
+        "x": 200,
+        "y": -200
+      },
+      "terrain_pos1": {
+        "x": -300,
+        "y": 300
+      },
+      "terrain_pos2": {
+        "x": 300,
+        "y": -300
+      },
+      "approach_pos": {
+        "x": 0,
+        "y": 300
+      },
+      "door_pos": {
+        "x": 100,
+        "y": 50
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 400,
+        "height": 400
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 0,
+            "y": 300
+          },
+          "orientation": 320
+        }
+      ],
+      "exploration": 20,
+      "build_on": ""
     },
     "pb_weathermachine_activated": {
       "name": "pb_weathermachine_activated",
@@ -2226,7 +7010,60 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": {
+        "x": -340,
+        "y": 350
+      },
+      "blocked2": {
+        "x": 350,
+        "y": -340
+      },
+      "terrain_pos1": {
+        "x": -470,
+        "y": 470
+      },
+      "terrain_pos2": {
+        "x": 470,
+        "y": -470
+      },
+      "approach_pos": {
+        "x": -530,
+        "y": 130
+      },
+      "door_pos": {
+        "x": 100,
+        "y": 50
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 690,
+        "height": 690
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -515,
+            "y": 460
+          },
+          "orientation": 320
+        },
+        {
+          "position": {
+            "x": -500,
+            "y": -480
+          },
+          "orientation": 45
+        },
+        {
+          "position": {
+            "x": 140,
+            "y": -570
+          },
+          "orientation": 120
+        }
+      ],
+      "exploration": 20,
+      "build_on": ""
     },
     "pb_weathertower1": {
       "name": "pb_weathertower1",
@@ -2242,7 +7079,67 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": {
+        "x": -200,
+        "y": 200
+      },
+      "blocked2": {
+        "x": 200,
+        "y": -200
+      },
+      "terrain_pos1": {
+        "x": -300,
+        "y": 300
+      },
+      "terrain_pos2": {
+        "x": 300,
+        "y": -300
+      },
+      "approach_pos": {
+        "x": 0,
+        "y": 300
+      },
+      "door_pos": {
+        "x": 100,
+        "y": 50
+      },
+      "leave_pos": null,
+      "footprint": {
+        "width": 400,
+        "height": 400
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -300,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -100,
+            "y": 300
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": -300
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": 300
+          },
+          "orientation": 270
+        }
+      ],
+      "exploration": 20,
+      "build_on": ""
     },
     "pb_bridge1": {
       "name": "pb_bridge1",
@@ -2261,7 +7158,55 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": {
+        "x": -1600,
+        "y": -400
+      },
+      "blocked2": {
+        "x": 1600,
+        "y": 400
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": {
+        "width": 3200,
+        "height": 800
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 1740,
+            "y": -170
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 1740,
+            "y": 220
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": -1740,
+            "y": -170
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -1740,
+            "y": 220
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 20,
+      "build_on": "XD_Bridge1"
     },
     "pb_bridge2": {
       "name": "pb_bridge2",
@@ -2276,7 +7221,55 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": {
+        "x": -400,
+        "y": -1600
+      },
+      "blocked2": {
+        "x": 400,
+        "y": 1600
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": {
+        "width": 800,
+        "height": 3200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -200,
+            "y": 1720
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": 1720
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": -200,
+            "y": -1720
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -1720
+          },
+          "orientation": 90
+        }
+      ],
+      "exploration": 20,
+      "build_on": "XD_Bridge2"
     },
     "pb_bridge3": {
       "name": "pb_bridge3",
@@ -2295,7 +7288,55 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": {
+        "x": -2400,
+        "y": -300
+      },
+      "blocked2": {
+        "x": 2400,
+        "y": 200
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": {
+        "width": 4800,
+        "height": 500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 2510,
+            "y": 120
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": 2510,
+            "y": -280
+          },
+          "orientation": 180
+        },
+        {
+          "position": {
+            "x": -2510,
+            "y": 120
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -2510,
+            "y": -280
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 20,
+      "build_on": "XD_Bridge3"
     },
     "pb_bridge4": {
       "name": "pb_bridge4",
@@ -2314,7 +7355,55 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": {
+        "x": -300,
+        "y": -2400
+      },
+      "blocked2": {
+        "x": 200,
+        "y": 2400
+      },
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": {
+        "width": 500,
+        "height": 4800
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 120,
+            "y": 2600
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": -120,
+            "y": 2600
+          },
+          "orientation": 270
+        },
+        {
+          "position": {
+            "x": 120,
+            "y": -2600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -120,
+            "y": -2600
+          },
+          "orientation": 90
+        }
+      ],
+      "exploration": 20,
+      "build_on": "XD_Bridge4"
     },
     "pb_drawbridgeclosed1": {
       "name": "pb_drawbridgeclosed1",
@@ -2333,7 +7422,47 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": {
+        "x": -925,
+        "y": -300
+      },
+      "blocked2": {
+        "x": 925,
+        "y": 200
+      },
+      "terrain_pos1": {
+        "x": -10,
+        "y": 10
+      },
+      "terrain_pos2": {
+        "x": 10,
+        "y": -10
+      },
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": {
+        "width": 1850,
+        "height": 500
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 1000,
+            "y": 300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -1600,
+            "y": -400
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 20,
+      "build_on": ""
     },
     "pb_drawbridgeclosed2": {
       "name": "pb_drawbridgeclosed2",
@@ -2352,7 +7481,47 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": {
+        "x": -300,
+        "y": -925
+      },
+      "blocked2": {
+        "x": 200,
+        "y": 925
+      },
+      "terrain_pos1": {
+        "x": -10,
+        "y": 10
+      },
+      "terrain_pos2": {
+        "x": 10,
+        "y": -10
+      },
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": {
+        "width": 500,
+        "height": 1850
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 300,
+            "y": 1000
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -400,
+            "y": -1600
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 20,
+      "build_on": ""
     },
     "pb_genericbridge": {
       "name": "pb_genericbridge",
@@ -2369,7 +7538,17 @@
       "worker_type": "",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 20
+      "blocked1": null,
+      "blocked2": null,
+      "terrain_pos1": null,
+      "terrain_pos2": null,
+      "approach_pos": null,
+      "door_pos": null,
+      "leave_pos": null,
+      "footprint": null,
+      "builder_slots": [],
+      "exploration": 20,
+      "build_on": "XD_Bridge1"
     },
     "pb_gunsmithworkshop1": {
       "name": "pb_gunsmithworkshop1",
@@ -2402,7 +7581,70 @@
           "supplier_category": "SulfurSupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": -500
+      },
+      "blocked2": {
+        "x": 500,
+        "y": 500
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": -600
+      },
+      "terrain_pos2": {
+        "x": 600,
+        "y": 600
+      },
+      "approach_pos": {
+        "x": -600,
+        "y": 100
+      },
+      "door_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "leave_pos": {
+        "x": -600,
+        "y": 0
+      },
+      "footprint": {
+        "width": 1000,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_gunsmithworkshop2": {
@@ -2426,7 +7668,70 @@
           "supplier_category": "SulfurSupplier"
         }
       ],
+      "blocked1": {
+        "x": -500,
+        "y": -500
+      },
+      "blocked2": {
+        "x": 500,
+        "y": 500
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": -600
+      },
+      "terrain_pos2": {
+        "x": 600,
+        "y": 600
+      },
+      "approach_pos": {
+        "x": -600,
+        "y": 100
+      },
+      "door_pos": {
+        "x": -100,
+        "y": 100
+      },
+      "leave_pos": {
+        "x": -600,
+        "y": 0
+      },
+      "footprint": {
+        "width": 1000,
+        "height": 1000
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 400,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 100,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 300
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 500
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "defender_capacity": 10
     },
     "pb_masterbuilderworkshop": {
@@ -2445,7 +7750,70 @@
       "worker_type": "PU_MasterBuilder",
       "upgrade": null,
       "behaviors": [],
-      "exploration": 30
+      "blocked1": {
+        "x": -500,
+        "y": -500
+      },
+      "blocked2": {
+        "x": 400,
+        "y": 300
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": -600
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": 400
+      },
+      "approach_pos": {
+        "x": 100,
+        "y": -600
+      },
+      "door_pos": {
+        "x": 50,
+        "y": -200
+      },
+      "leave_pos": {
+        "x": 0,
+        "y": -600
+      },
+      "footprint": {
+        "width": 900,
+        "height": 800
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": -100,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 200,
+            "y": -600
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 0
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 200
+          },
+          "orientation": 0
+        }
+      ],
+      "exploration": 30,
+      "build_on": ""
     },
     "pb_tavern1": {
       "name": "pb_tavern1",
@@ -2474,7 +7842,70 @@
         }
       },
       "behaviors": [],
+      "blocked1": {
+        "x": -500,
+        "y": -600
+      },
+      "blocked2": {
+        "x": 400,
+        "y": 600
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": -700
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": 700
+      },
+      "approach_pos": {
+        "x": -600,
+        "y": -400
+      },
+      "door_pos": {
+        "x": 100,
+        "y": -400
+      },
+      "leave_pos": {
+        "x": -600,
+        "y": -500
+      },
+      "footprint": {
+        "width": 900,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 0,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 300,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 200
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "eat_capacity": 4,
       "defender_capacity": 10
     },
@@ -2498,7 +7929,70 @@
       "worker_type": "PU_Farmer",
       "upgrade": null,
       "behaviors": [],
+      "blocked1": {
+        "x": -500,
+        "y": -600
+      },
+      "blocked2": {
+        "x": 400,
+        "y": 600
+      },
+      "terrain_pos1": {
+        "x": -600,
+        "y": -700
+      },
+      "terrain_pos2": {
+        "x": 500,
+        "y": 700
+      },
+      "approach_pos": {
+        "x": -600,
+        "y": -400
+      },
+      "door_pos": {
+        "x": 100,
+        "y": -400
+      },
+      "leave_pos": {
+        "x": -600,
+        "y": -500
+      },
+      "footprint": {
+        "width": 900,
+        "height": 1200
+      },
+      "builder_slots": [
+        {
+          "position": {
+            "x": 0,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": 300,
+            "y": -700
+          },
+          "orientation": 90
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 500
+          },
+          "orientation": 0
+        },
+        {
+          "position": {
+            "x": -600,
+            "y": 200
+          },
+          "orientation": 0
+        }
+      ],
       "exploration": 30,
+      "build_on": "",
       "eat_capacity": 6,
       "defender_capacity": 10
     }
@@ -2517,7 +8011,8 @@
           "value": "GT_Alchemy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_archery": {
       "name": "b_archery",
@@ -2532,7 +8027,8 @@
           "value": "GT_StandingArmy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_bank": {
       "name": "b_bank",
@@ -2547,7 +8043,8 @@
           "value": "GT_Printing"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_barracks": {
       "name": "b_barracks",
@@ -2562,7 +8059,8 @@
           "value": "GT_Mercenaries"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification01": {
       "name": "b_beautification01",
@@ -2577,7 +8075,8 @@
           "value": "GT_StandingArmy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification02": {
       "name": "b_beautification02",
@@ -2592,7 +8091,8 @@
           "value": "GT_Trading"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification03": {
       "name": "b_beautification03",
@@ -2607,7 +8107,8 @@
           "value": "GT_Strategies"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification04": {
       "name": "b_beautification04",
@@ -2622,7 +8123,8 @@
           "value": "GT_Mercenaries"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification05": {
       "name": "b_beautification05",
@@ -2637,7 +8139,8 @@
           "value": "GT_Tactics"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification06": {
       "name": "b_beautification06",
@@ -2652,7 +8155,8 @@
           "value": "GT_Literacy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification07": {
       "name": "b_beautification07",
@@ -2667,7 +8171,8 @@
           "value": "GT_Printing"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification08": {
       "name": "b_beautification08",
@@ -2682,7 +8187,8 @@
           "value": "GT_ChainBlock"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification09": {
       "name": "b_beautification09",
@@ -2697,7 +8203,8 @@
           "value": "GT_Construction"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification10": {
       "name": "b_beautification10",
@@ -2712,7 +8219,8 @@
           "value": "GT_Library"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification11": {
       "name": "b_beautification11",
@@ -2727,7 +8235,8 @@
           "value": "GT_Architecture"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_beautification12": {
       "name": "b_beautification12",
@@ -2742,7 +8251,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_blacksmith": {
       "name": "b_blacksmith",
@@ -2755,7 +8265,8 @@
           "value": "GT_Alchemy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_brickworks": {
       "name": "b_brickworks",
@@ -2770,7 +8281,8 @@
           "value": "GT_Construction"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_claymine": {
       "name": "b_claymine",
@@ -2780,7 +8292,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_farm": {
       "name": "b_farm",
@@ -2790,7 +8303,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_foundry": {
       "name": "b_foundry",
@@ -2805,7 +8319,8 @@
           "value": "GT_Metallurgy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_headquarter": {
       "name": "b_headquarter",
@@ -2815,7 +8330,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_ironmine": {
       "name": "b_ironmine",
@@ -2825,7 +8341,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_market": {
       "name": "b_market",
@@ -2840,7 +8357,8 @@
           "value": "GT_Literacy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_monastery": {
       "name": "b_monastery",
@@ -2855,7 +8373,8 @@
           "value": "GT_Literacy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_outpost": {
       "name": "b_outpost",
@@ -2868,7 +8387,8 @@
           "value": "GT_Trading"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_powerplant": {
       "name": "b_powerplant",
@@ -2883,7 +8403,8 @@
           "value": "T_ChangeWeather"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_residence": {
       "name": "b_residence",
@@ -2893,7 +8414,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_sawmill": {
       "name": "b_sawmill",
@@ -2908,7 +8430,8 @@
           "value": "GT_Construction"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_stables": {
       "name": "b_stables",
@@ -2923,7 +8446,8 @@
           "value": "GT_Tactics"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_stonemason": {
       "name": "b_stonemason",
@@ -2938,7 +8462,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_stonemine": {
       "name": "b_stonemine",
@@ -2948,7 +8473,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_sulfurmine": {
       "name": "b_sulfurmine",
@@ -2958,7 +8484,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_tower": {
       "name": "b_tower",
@@ -2973,7 +8500,8 @@
           "value": "GT_Construction"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_university": {
       "name": "b_university",
@@ -2983,7 +8511,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_village": {
       "name": "b_village",
@@ -2993,7 +8522,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_weathermachine": {
       "name": "b_weathermachine",
@@ -3008,7 +8538,8 @@
           "value": "T_WeatherForecast"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_alchemy": {
       "name": "gt_alchemy",
@@ -3019,7 +8550,8 @@
         "sulfur": 150
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_alloying": {
       "name": "gt_alloying",
@@ -3045,7 +8577,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_architecture": {
       "name": "gt_architecture",
@@ -3066,7 +8599,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_banking": {
       "name": "gt_banking",
@@ -3091,7 +8625,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_beautification": {
       "name": "gt_beautification",
@@ -3101,7 +8636,8 @@
         "gold": 1000
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_chainblock": {
       "name": "gt_chainblock",
@@ -3127,7 +8663,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_chemistry": {
       "name": "gt_chemistry",
@@ -3148,7 +8685,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_construction": {
       "name": "gt_construction",
@@ -3159,7 +8697,8 @@
         "clay": 150
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_gearwheel": {
       "name": "gt_gearwheel",
@@ -3185,7 +8724,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_gilds": {
       "name": "gt_gilds",
@@ -3205,7 +8745,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_laws": {
       "name": "gt_laws",
@@ -3231,7 +8772,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_library": {
       "name": "gt_library",
@@ -3252,7 +8794,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_literacy": {
       "name": "gt_literacy",
@@ -3263,7 +8806,8 @@
         "wood": 150
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_mercenaries": {
       "name": "gt_mercenaries",
@@ -3274,7 +8818,8 @@
         "wood": 150
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_metallurgy": {
       "name": "gt_metallurgy",
@@ -3300,7 +8845,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_printing": {
       "name": "gt_printing",
@@ -3326,7 +8872,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_standingarmy": {
       "name": "gt_standingarmy",
@@ -3352,7 +8899,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_strategies": {
       "name": "gt_strategies",
@@ -3373,7 +8921,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_tactics": {
       "name": "gt_tactics",
@@ -3399,7 +8948,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_taxation": {
       "name": "gt_taxation",
@@ -3409,7 +8959,8 @@
         "gold": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_trading": {
       "name": "gt_trading",
@@ -3434,7 +8985,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "mu_cannon1": {
       "name": "mu_cannon1",
@@ -3444,7 +8996,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_cannon2": {
       "name": "mu_cannon2",
@@ -3454,7 +9007,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_cannon3": {
       "name": "mu_cannon3",
@@ -3470,7 +9024,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_cannon4": {
       "name": "mu_cannon4",
@@ -3486,7 +9041,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leaderbow": {
       "name": "mu_leaderbow",
@@ -3496,7 +9052,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leaderbow3": {
       "name": "mu_leaderbow3",
@@ -3506,7 +9063,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leaderheavycavalry": {
       "name": "mu_leaderheavycavalry",
@@ -3516,7 +9074,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leaderlightcavalry": {
       "name": "mu_leaderlightcavalry",
@@ -3526,7 +9085,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leaderspear": {
       "name": "mu_leaderspear",
@@ -3536,7 +9096,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leaderspear2": {
       "name": "mu_leaderspear2",
@@ -3546,7 +9107,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leaderspear3": {
       "name": "mu_leaderspear3",
@@ -3556,7 +9118,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leaderspear4": {
       "name": "mu_leaderspear4",
@@ -3566,7 +9129,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leadersword": {
       "name": "mu_leadersword",
@@ -3576,7 +9140,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leadersword2": {
       "name": "mu_leadersword2",
@@ -3586,7 +9151,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leadersword3": {
       "name": "mu_leadersword3",
@@ -3596,7 +9162,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leadersword4": {
       "name": "mu_leadersword4",
@@ -3606,7 +9173,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_serf": {
       "name": "mu_serf",
@@ -3616,7 +9184,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_adjusttaxes": {
       "name": "t_adjusttaxes",
@@ -3631,7 +9200,8 @@
           "value": "GT_Literacy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_betterchassis": {
       "name": "t_betterchassis",
@@ -3648,7 +9218,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_bettertrainingarchery": {
       "name": "t_bettertrainingarchery",
@@ -3665,7 +9236,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_bettertrainingbarracks": {
       "name": "t_bettertrainingbarracks",
@@ -3682,7 +9254,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_blesssettlers1": {
       "name": "t_blesssettlers1",
@@ -3692,7 +9265,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_blesssettlers2": {
       "name": "t_blesssettlers2",
@@ -3702,7 +9276,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_blesssettlers3": {
       "name": "t_blesssettlers3",
@@ -3723,7 +9298,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_blesssettlers4": {
       "name": "t_blesssettlers4",
@@ -3744,7 +9320,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_blesssettlers5": {
       "name": "t_blesssettlers5",
@@ -3760,7 +9337,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_blisteringcannonballs": {
       "name": "t_blisteringcannonballs",
@@ -3781,7 +9359,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_bodkinarrow": {
       "name": "t_bodkinarrow",
@@ -3802,7 +9381,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_bookkeeping": {
       "name": "t_bookkeeping",
@@ -3822,7 +9402,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_chainbardingarmor": {
       "name": "t_chainbardingarmor",
@@ -3832,7 +9413,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_chainmailarmor": {
       "name": "t_chainmailarmor",
@@ -3858,7 +9440,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_changeweather": {
       "name": "t_changeweather",
@@ -3879,7 +9462,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_cityguard": {
       "name": "t_cityguard",
@@ -3889,7 +9473,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_coinage": {
       "name": "t_coinage",
@@ -3910,7 +9495,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_cropcycle": {
       "name": "t_cropcycle",
@@ -3920,7 +9506,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_debenture": {
       "name": "t_debenture",
@@ -3941,7 +9528,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_enablemilitia": {
       "name": "t_enablemilitia",
@@ -3956,7 +9544,8 @@
           "value": "GT_Mercenaries"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_enhancedgunpowder": {
       "name": "t_enhancedgunpowder",
@@ -3973,7 +9562,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_fletching": {
       "name": "t_fletching",
@@ -3990,7 +9580,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_ironcasting": {
       "name": "t_ironcasting",
@@ -4016,7 +9607,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_leatherarcherarmor": {
       "name": "t_leatherarcherarmor",
@@ -4037,7 +9629,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_leatherbaringarmor": {
       "name": "t_leatherbaringarmor",
@@ -4047,7 +9640,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_leathermailarmor": {
       "name": "t_leathermailarmor",
@@ -4074,7 +9668,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_lightbricks": {
       "name": "t_lightbricks",
@@ -4092,7 +9687,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_loom": {
       "name": "t_loom",
@@ -4114,7 +9710,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_makerain": {
       "name": "t_makerain",
@@ -4128,7 +9725,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_makesnow": {
       "name": "t_makesnow",
@@ -4142,7 +9740,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_makesummer": {
       "name": "t_makesummer",
@@ -4156,7 +9755,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_marketclay": {
       "name": "t_marketclay",
@@ -4164,7 +9764,8 @@
       "time": 25,
       "cost": {},
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_marketgold": {
       "name": "t_marketgold",
@@ -4172,7 +9773,8 @@
       "time": 25,
       "cost": {},
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_marketiron": {
       "name": "t_marketiron",
@@ -4180,7 +9782,8 @@
       "time": 25,
       "cost": {},
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_marketstone": {
       "name": "t_marketstone",
@@ -4188,7 +9791,8 @@
       "time": 25,
       "cost": {},
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_marketsulfur": {
       "name": "t_marketsulfur",
@@ -4196,7 +9800,8 @@
       "time": 25,
       "cost": {},
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_marketwood": {
       "name": "t_marketwood",
@@ -4204,7 +9809,8 @@
       "time": 25,
       "cost": {},
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_masonry": {
       "name": "t_masonry",
@@ -4221,7 +9827,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_masterofsmithery": {
       "name": "t_masterofsmithery",
@@ -4243,7 +9850,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_minimapnormalview": {
       "name": "t_minimapnormalview",
@@ -4260,7 +9868,8 @@
           "value": "GT_Tactics"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_minimapresouceview": {
       "name": "t_minimapresouceview",
@@ -4273,7 +9882,8 @@
           "value": "GT_Alchemy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_minimaptacticview": {
       "name": "t_minimaptacticview",
@@ -4286,7 +9896,8 @@
           "value": "GT_Tactics"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_onlinehelp": {
       "name": "t_onlinehelp",
@@ -4296,7 +9907,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_paddedarcherarmor": {
       "name": "t_paddedarcherarmor",
@@ -4322,7 +9934,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_paddedbardingarmor": {
       "name": "t_paddedbardingarmor",
@@ -4332,7 +9945,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_pickaxe": {
       "name": "t_pickaxe",
@@ -4342,7 +9956,8 @@
         "clay": 800
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_platebardingarmor": {
       "name": "t_platebardingarmor",
@@ -4352,7 +9967,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_platemailarmor": {
       "name": "t_platemailarmor",
@@ -4368,7 +9984,8 @@
           "value": "T_ChainMailArmor"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_scale": {
       "name": "t_scale",
@@ -4390,7 +10007,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_shoeing": {
       "name": "t_shoeing",
@@ -4407,7 +10025,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_shoes": {
       "name": "t_shoes",
@@ -4423,7 +10042,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_softarcherarmor": {
       "name": "t_softarcherarmor",
@@ -4450,7 +10070,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_spinningwheel": {
       "name": "t_spinningwheel",
@@ -4460,7 +10081,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_supertechnology": {
       "name": "t_supertechnology",
@@ -4470,7 +10092,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_townguard": {
       "name": "t_townguard",
@@ -4496,7 +10119,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_tracking": {
       "name": "t_tracking",
@@ -4506,7 +10130,8 @@
         "gold": 500
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_turnery": {
       "name": "t_turnery",
@@ -4527,7 +10152,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_upgradebow1": {
       "name": "t_upgradebow1",
@@ -4549,7 +10175,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_upgradebow2": {
       "name": "t_upgradebow2",
@@ -4570,7 +10197,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_upgradebow3": {
       "name": "t_upgradebow3",
@@ -4596,7 +10224,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_upgradeheavycavalry1": {
       "name": "t_upgradeheavycavalry1",
@@ -4613,7 +10242,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_upgradelightcavalry1": {
       "name": "t_upgradelightcavalry1",
@@ -4630,7 +10260,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_upgradespear1": {
       "name": "t_upgradespear1",
@@ -4652,7 +10283,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_upgradespear2": {
       "name": "t_upgradespear2",
@@ -4673,7 +10305,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_upgradespear3": {
       "name": "t_upgradespear3",
@@ -4699,7 +10332,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_upgradesword1": {
       "name": "t_upgradesword1",
@@ -4726,7 +10360,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_upgradesword2": {
       "name": "t_upgradesword2",
@@ -4747,7 +10382,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_upgradesword3": {
       "name": "t_upgradesword3",
@@ -4773,7 +10409,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_weatherforecast": {
       "name": "t_weatherforecast",
@@ -4790,7 +10427,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_woodaging": {
       "name": "t_woodaging",
@@ -4807,7 +10445,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_alchemist": {
       "name": "up1_alchemist",
@@ -4822,7 +10461,8 @@
           "value": "GT_Metallurgy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_archery": {
       "name": "up1_archery",
@@ -4837,7 +10477,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_bank": {
       "name": "up1_bank",
@@ -4852,7 +10493,8 @@
           "value": "GT_Library"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_barracks": {
       "name": "up1_barracks",
@@ -4867,7 +10509,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_blacksmith": {
       "name": "up1_blacksmith",
@@ -4882,7 +10525,8 @@
           "value": "GT_Alloying"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_brickworks": {
       "name": "up1_brickworks",
@@ -4897,7 +10541,8 @@
           "value": "GT_Alloying"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_claymine": {
       "name": "up1_claymine",
@@ -4912,7 +10557,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_farm": {
       "name": "up1_farm",
@@ -4927,7 +10573,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_foundry": {
       "name": "up1_foundry",
@@ -4942,7 +10589,8 @@
           "value": "GT_Chemistry"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_headquarter": {
       "name": "up1_headquarter",
@@ -4952,7 +10600,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_ironmine": {
       "name": "up1_ironmine",
@@ -4967,7 +10616,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_market": {
       "name": "up1_market",
@@ -4982,7 +10632,8 @@
           "value": "GT_Trading"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_monastery": {
       "name": "up1_monastery",
@@ -4997,7 +10648,8 @@
           "value": "GT_Printing"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_residence": {
       "name": "up1_residence",
@@ -5012,7 +10664,8 @@
           "value": "GT_Construction"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_sawmill": {
       "name": "up1_sawmill",
@@ -5027,7 +10680,8 @@
           "value": "GT_ChainBlock"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_stables": {
       "name": "up1_stables",
@@ -5042,7 +10696,8 @@
           "value": "GT_Strategies"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_stonemason": {
       "name": "up1_stonemason",
@@ -5057,7 +10712,8 @@
           "value": "GT_ChainBlock"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_stonemine": {
       "name": "up1_stonemine",
@@ -5072,7 +10728,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_sulfurmine": {
       "name": "up1_sulfurmine",
@@ -5087,7 +10744,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_tower": {
       "name": "up1_tower",
@@ -5102,7 +10760,8 @@
           "value": "GT_GearWheel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_university": {
       "name": "up1_university",
@@ -5153,7 +10812,8 @@
           "value": "GT_Binocular"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_village": {
       "name": "up1_village",
@@ -5168,7 +10828,8 @@
           "value": "GT_Literacy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_blacksmith": {
       "name": "up2_blacksmith",
@@ -5183,7 +10844,8 @@
           "value": "GT_Metallurgy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_claymine": {
       "name": "up2_claymine",
@@ -5198,7 +10860,8 @@
           "value": "GT_Chemistry"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_farm": {
       "name": "up2_farm",
@@ -5213,7 +10876,8 @@
           "value": "GT_Architecture"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_headquarter": {
       "name": "up2_headquarter",
@@ -5289,7 +10953,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 3
     },
     "up2_ironmine": {
       "name": "up2_ironmine",
@@ -5304,7 +10969,8 @@
           "value": "GT_Chemistry"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_monastery": {
       "name": "up2_monastery",
@@ -5319,7 +10985,8 @@
           "value": "GT_Library"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_residence": {
       "name": "up2_residence",
@@ -5334,7 +11001,8 @@
           "value": "GT_Architecture"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_stonemine": {
       "name": "up2_stonemine",
@@ -5349,7 +11017,8 @@
           "value": "GT_Chemistry"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_sulfurmine": {
       "name": "up2_sulfurmine",
@@ -5364,7 +11033,8 @@
           "value": "GT_Chemistry"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_tower": {
       "name": "up2_tower",
@@ -5379,7 +11049,8 @@
           "value": "GT_Metallurgy"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up2_village": {
       "name": "up2_village",
@@ -5394,7 +11065,8 @@
           "value": "GT_Trading"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_bridge": {
       "name": "b_bridge",
@@ -5414,7 +11086,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_gunsmithworkshop": {
       "name": "b_gunsmithworkshop",
@@ -5427,7 +11100,8 @@
           "value": "GT_Matchlock"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_masterbuilderworkshop": {
       "name": "b_masterbuilderworkshop",
@@ -5442,7 +11116,8 @@
           "value": "GT_Mathematics"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "b_tavern": {
       "name": "b_tavern",
@@ -5457,7 +11132,8 @@
           "value": "GT_Binocular"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_binocular": {
       "name": "gt_binocular",
@@ -5483,7 +11159,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_matchlock": {
       "name": "gt_matchlock",
@@ -5509,7 +11186,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "gt_mathematics": {
       "name": "gt_mathematics",
@@ -5520,7 +11198,8 @@
         "wood": 200
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "gt_pulledbarrel": {
       "name": "gt_pulledbarrel",
@@ -5541,7 +11220,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_leaderrifle": {
       "name": "mu_leaderrifle",
@@ -5562,7 +11242,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "mu_scout": {
       "name": "mu_scout",
@@ -5572,7 +11253,8 @@
         "clay": 100
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "mu_thief": {
       "name": "mu_thief",
@@ -5588,7 +11270,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_fleecearmor": {
       "name": "t_fleecearmor",
@@ -5610,7 +11293,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_fleecelinedleatherarmor": {
       "name": "t_fleecelinedleatherarmor",
@@ -5631,7 +11315,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_leadshot": {
       "name": "t_leadshot",
@@ -5642,7 +11327,8 @@
         "sulfur": 50
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_scoutfindresources": {
       "name": "t_scoutfindresources",
@@ -5656,7 +11342,8 @@
         "sulfur": 10
       },
       "conditions": [],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_scouttorches": {
       "name": "t_scouttorches",
@@ -5677,7 +11364,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_sights": {
       "name": "t_sights",
@@ -5698,7 +11386,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": 1
     },
     "t_thiefsabotage": {
       "name": "t_thiefsabotage",
@@ -5716,7 +11405,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "t_upgraderifle1": {
       "name": "t_upgraderifle1",
@@ -5739,7 +11429,8 @@
           "amount": 1
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_gunsmithworkshop": {
       "name": "up1_gunsmithworkshop",
@@ -5754,7 +11445,8 @@
           "value": "GT_PulledBarrel"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     },
     "up1_tavern": {
       "name": "up1_tavern",
@@ -5769,7 +11461,8 @@
           "value": "GT_Matchlock"
         }
       ],
-      "effects": []
+      "effects": [],
+      "required_entity_conditions": null
     }
   },
   "units": {

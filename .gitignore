@@ -40,3 +40,6 @@ tensorboard/
 # Temp
 .claude/
 .env
+.tools/
+gmail_ocr_work/
+gmail_ocr_work_2/

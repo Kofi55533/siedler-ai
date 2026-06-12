@@ -166,6 +166,31 @@ class SiedlerDataExtractor:
                     cost[resource.lower()] = val
         return cost
 
+    def _extract_xy(self, element: ET.Element, path: str) -> Optional[Dict[str, int]]:
+        """Extrahiert X/Y-Koordinaten aus einem Unterelement."""
+        xy_el = element.find(path)
+        if xy_el is None:
+            return None
+        return {
+            "x": self._get_int(xy_el, "X", 0),
+            "y": self._get_int(xy_el, "Y", 0),
+        }
+
+    def _extract_builder_slots(self, construction: ET.Element) -> List[Dict[str, Any]]:
+        """Extrahiert BuilderSlot-Positionen einer ConstructionInfo."""
+        slots: List[Dict[str, Any]] = []
+        for slot in construction.findall("BuilderSlot"):
+            pos = self._extract_xy(slot, "Position")
+            if pos is None:
+                continue
+            slots.append(
+                {
+                    "position": pos,
+                    "orientation": self._get_int(slot, "Orientation", 0),
+                }
+            )
+        return slots
+
     # ==================== WORKERS ====================
 
     def _extract_workers(self):
@@ -272,6 +297,15 @@ class SiedlerDataExtractor:
             "worker_type": None,
             "upgrade": None,
             "behaviors": [],
+            "blocked1": None,
+            "blocked2": None,
+            "terrain_pos1": None,
+            "terrain_pos2": None,
+            "approach_pos": None,
+            "door_pos": None,
+            "leave_pos": None,
+            "footprint": None,
+            "builder_slots": [],
         }
 
         # Logic-Daten
@@ -282,6 +316,19 @@ class SiedlerDataExtractor:
             building["exploration"] = self._get_int(logic, "Exploration", 20)
             building["max_workers"] = self._get_int(logic, "MaxWorkers", 0)
             building["worker_type"] = self._get_text(logic, "Worker")
+            building["build_on"] = self._get_text(logic, "BuildOn")
+            building["approach_pos"] = self._extract_xy(logic, "ApproachPos")
+            building["door_pos"] = self._extract_xy(logic, "DoorPos")
+            building["leave_pos"] = self._extract_xy(logic, "LeavePos")
+            building["blocked1"] = self._extract_xy(logic, "Blocked1")
+            building["blocked2"] = self._extract_xy(logic, "Blocked2")
+            building["terrain_pos1"] = self._extract_xy(logic, "TerrainPos1")
+            building["terrain_pos2"] = self._extract_xy(logic, "TerrainPos2")
+            if building["blocked1"] and building["blocked2"]:
+                building["footprint"] = {
+                    "width": abs(building["blocked2"]["x"] - building["blocked1"]["x"]),
+                    "height": abs(building["blocked2"]["y"] - building["blocked1"]["y"]),
+                }
 
             # Kategorien
             for cat in logic.findall("Category"):
@@ -293,6 +340,7 @@ class SiedlerDataExtractor:
             if constr is not None:
                 building["build_time"] = self._get_int(constr, "Time", 60)
                 building["cost"] = self._extract_cost(constr)
+                building["builder_slots"] = self._extract_builder_slots(constr)
 
             # Upgrade-Info
             upgrade = logic.find("Upgrade")
@@ -400,6 +448,7 @@ class SiedlerDataExtractor:
             "cost": {},
             "conditions": [],
             "effects": [],
+            "required_entity_conditions": None,
         }
 
         # Kosten
@@ -413,6 +462,10 @@ class SiedlerDataExtractor:
         # Bedingungen
         conditions = root.find("Conditions")
         if conditions is not None:
+            required_entities = self._get_int(conditions, "RequiredEntityConditions", 0)
+            if required_entities > 0:
+                tech["required_entity_conditions"] = required_entities
+
             # Tech-Bedingungen
             for tec_cond in conditions.findall("TecCondition"):
                 req_tech = self._get_text(tec_cond, "TecType")

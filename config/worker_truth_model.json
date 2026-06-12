@@ -1,13 +1,13 @@
 {
   "meta": {
-    "generated_at_utc": "2026-02-11T15:07:56.289197+00:00",
+    "generated_at_utc": "2026-06-10T11:03:33.505786+00:00",
     "source_engine_decoded": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\engine_decoded.json",
     "source_mode": "layered_game_root",
-    "source_root": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5",
+    "source_root": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition",
     "config_roots": [
-      "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\extra2\\shr\\config",
-      "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\extra1\\shr\\config",
-      "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config"
+      "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\extra2\\shr\\config",
+      "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\extra1\\shr\\config",
+      "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config"
     ],
     "worker_count": 18,
     "limitations": [
@@ -643,12 +643,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_ALCHEMIST_WORK_START",
-          "resolved_file": "TL_ALCHEMIST_WORK_START.xml",
+          "resolved_file": "tl_alchemist_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_alchemist_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_ALCHEMIST_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_alchemist_work_start.xml",
           "summary": {
-            "file": "TL_ALCHEMIST_WORK_START.xml",
+            "file": "tl_alchemist_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -698,12 +698,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -735,12 +735,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -774,12 +774,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -811,12 +811,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -850,12 +850,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1116,12 +1116,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_BRICKMAKER_WORK_START",
-          "resolved_file": "TL_BRICKMAKER_WORK_START.xml",
+          "resolved_file": "tl_brickmaker_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_brickmaker_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_BRICKMAKER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_brickmaker_work_start.xml",
           "summary": {
-            "file": "TL_BRICKMAKER_WORK_START.xml",
+            "file": "tl_brickmaker_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1170,12 +1170,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1207,12 +1207,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1246,12 +1246,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1283,12 +1283,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1322,12 +1322,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1582,12 +1582,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_COINER_WORK_START",
-          "resolved_file": "TL_COINER_WORK_START.xml",
+          "resolved_file": "tl_coiner_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_coiner_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_COINER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_coiner_work_start.xml",
           "summary": {
-            "file": "TL_COINER_WORK_START.xml",
+            "file": "tl_coiner_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1625,12 +1625,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1662,12 +1662,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1701,12 +1701,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1738,12 +1738,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -1777,12 +1777,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2027,12 +2027,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_ENGINEER_WORK_START",
-          "resolved_file": "TL_ENGINEER_WORK_START.xml",
+          "resolved_file": "tl_engineer_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_engineer_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_ENGINEER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_engineer_work_start.xml",
           "summary": {
-            "file": "TL_ENGINEER_WORK_START.xml",
+            "file": "tl_engineer_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2070,12 +2070,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2107,12 +2107,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2146,12 +2146,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2183,12 +2183,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2222,12 +2222,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2466,12 +2466,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_FARMER_WORK_START",
-          "resolved_file": "TL_FARMER_WORK_START.xml",
+          "resolved_file": "tl_farmer_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_farmer_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_FARMER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_farmer_work_start.xml",
           "summary": {
-            "file": "TL_FARMER_WORK_START.xml",
+            "file": "tl_farmer_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2509,12 +2509,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2546,12 +2546,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_FARMER_EAT",
-          "resolved_file": "TL_FARMER_EAT.xml",
+          "resolved_file": "tl_farmer_eat.xml",
           "section": "overlay_tasklists",
           "key": "tl_farmer_eat",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_FARMER_EAT.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_farmer_eat.xml",
           "summary": {
-            "file": "TL_FARMER_EAT.xml",
+            "file": "tl_farmer_eat.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2579,12 +2579,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_FARMER_IDLE",
-          "resolved_file": "TL_FARMER_IDLE.xml",
+          "resolved_file": "tl_farmer_idle.xml",
           "section": "overlay_tasklists",
           "key": "tl_farmer_idle",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_FARMER_IDLE.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_farmer_idle.xml",
           "summary": {
-            "file": "TL_FARMER_IDLE.xml",
+            "file": "tl_farmer_idle.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2625,12 +2625,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2664,12 +2664,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2929,12 +2929,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_GUNSMITH_WORK_START",
-          "resolved_file": "TL_GUNSMITH_WORK_START.xml",
+          "resolved_file": "tl_gunsmith_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_gunsmith_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\extra1\\shr\\config\\TaskLists\\TL_GUNSMITH_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\extra1\\shr\\config\\TaskLists\\tl_gunsmith_work_start.xml",
           "summary": {
-            "file": "TL_GUNSMITH_WORK_START.xml",
+            "file": "tl_gunsmith_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -2983,12 +2983,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3020,12 +3020,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3059,12 +3059,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3096,12 +3096,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3135,12 +3135,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3406,12 +3406,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_MASTER_BUILDER_WORK1_START",
-          "resolved_file": "TL_MASTER_BUILDER_WORK1_START.xml",
+          "resolved_file": "tl_master_builder_work1_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_master_builder_work1_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\extra1\\shr\\config\\TaskLists\\TL_MASTER_BUILDER_WORK1_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\extra1\\shr\\config\\TaskLists\\tl_master_builder_work1_start.xml",
           "summary": {
-            "file": "TL_MASTER_BUILDER_WORK1_START.xml",
+            "file": "tl_master_builder_work1_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3449,12 +3449,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3486,12 +3486,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3525,12 +3525,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3562,12 +3562,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -3601,12 +3601,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4205,12 +4205,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_MINER_WORK_START",
-          "resolved_file": "TL_MINER_WORK_START.xml",
+          "resolved_file": "tl_miner_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_miner_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_MINER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_miner_work_start.xml",
           "summary": {
-            "file": "TL_MINER_WORK_START.xml",
+            "file": "tl_miner_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4248,12 +4248,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4285,12 +4285,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4324,12 +4324,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4361,12 +4361,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4400,12 +4400,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4663,12 +4663,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_PRIEST_WORK_START",
-          "resolved_file": "TL_PRIEST_WORK_START.xml",
+          "resolved_file": "tl_priest_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_priest_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_PRIEST_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_priest_work_start.xml",
           "summary": {
-            "file": "TL_PRIEST_WORK_START.xml",
+            "file": "tl_priest_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4706,12 +4706,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4743,12 +4743,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4782,12 +4782,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4819,12 +4819,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -4858,12 +4858,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5124,12 +5124,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_SAWMILLWORKER_WORK_START",
-          "resolved_file": "TL_SAWMILLWORKER_WORK_START.xml",
+          "resolved_file": "tl_sawmillworker_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_sawmillworker_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_SAWMILLWORKER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_sawmillworker_work_start.xml",
           "summary": {
-            "file": "TL_SAWMILLWORKER_WORK_START.xml",
+            "file": "tl_sawmillworker_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5179,12 +5179,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5216,12 +5216,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5255,12 +5255,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5292,12 +5292,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5331,12 +5331,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5596,12 +5596,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_SCHOLAR_WORK_START",
-          "resolved_file": "TL_SCHOLAR_WORK_START.xml",
+          "resolved_file": "tl_scholar_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_scholar_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_SCHOLAR_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_scholar_work_start.xml",
           "summary": {
-            "file": "TL_SCHOLAR_WORK_START.xml",
+            "file": "tl_scholar_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5639,12 +5639,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5676,12 +5676,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5715,12 +5715,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5752,12 +5752,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -5791,12 +5791,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6021,12 +6021,12 @@
         },
         "TurnIntoBattleSerfTaskList": {
           "requested_name": "TL_SERF_TURN_INTO_BATTLE_SERF",
-          "resolved_file": "TL_SERF_TURN_INTO_BATTLE_SERF.xml",
+          "resolved_file": "tl_serf_turn_into_battle_serf.xml",
           "section": "overlay_tasklists",
           "key": "tl_serf_turn_into_battle_serf",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_SERF_TURN_INTO_BATTLE_SERF.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_serf_turn_into_battle_serf.xml",
           "summary": {
-            "file": "TL_SERF_TURN_INTO_BATTLE_SERF.xml",
+            "file": "tl_serf_turn_into_battle_serf.xml",
             "principal_task": "",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6053,12 +6053,12 @@
         },
         "BattleTaskList": {
           "requested_name": "TL_BATTLE",
-          "resolved_file": "TL_BATTLE.xml",
+          "resolved_file": "tl_battle.xml",
           "section": "overlay_tasklists",
           "key": "tl_battle",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_BATTLE.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_battle.xml",
           "summary": {
-            "file": "TL_BATTLE.xml",
+            "file": "tl_battle.xml",
             "principal_task": "",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6474,12 +6474,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_SMELTER_WORK1_START",
-          "resolved_file": "TL_SMELTER_WORK1_START.xml",
+          "resolved_file": "tl_smelter_work1_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_smelter_work1_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_SMELTER_WORK1_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_smelter_work1_start.xml",
           "summary": {
-            "file": "TL_SMELTER_WORK1_START.xml",
+            "file": "tl_smelter_work1_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6517,12 +6517,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6554,12 +6554,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6593,12 +6593,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6630,12 +6630,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6669,12 +6669,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6894,12 +6894,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_SMITH_WORK_START",
-          "resolved_file": "TL_SMITH_WORK_START.xml",
+          "resolved_file": "tl_smith_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_smith_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_SMITH_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_smith_work_start.xml",
           "summary": {
-            "file": "TL_SMITH_WORK_START.xml",
+            "file": "tl_smith_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6948,12 +6948,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -6985,12 +6985,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7024,12 +7024,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7061,12 +7061,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7100,12 +7100,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7365,12 +7365,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_STONECUTTER_WORK_START",
-          "resolved_file": "TL_STONECUTTER_WORK_START.xml",
+          "resolved_file": "tl_stonecutter_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_stonecutter_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_STONECUTTER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_stonecutter_work_start.xml",
           "summary": {
-            "file": "TL_STONECUTTER_WORK_START.xml",
+            "file": "tl_stonecutter_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7420,12 +7420,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7457,12 +7457,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7496,12 +7496,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7533,12 +7533,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7572,12 +7572,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7816,12 +7816,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_TAVERNBARKEEPER_WORK_START",
-          "resolved_file": "TL_TAVERNBARKEEPER_WORK_START.xml",
+          "resolved_file": "tl_tavernbarkeeper_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_tavernbarkeeper_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\extra1\\shr\\config\\TaskLists\\TL_TAVERNBARKEEPER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\extra1\\shr\\config\\TaskLists\\tl_tavernbarkeeper_work_start.xml",
           "summary": {
-            "file": "TL_TAVERNBARKEEPER_WORK_START.xml",
+            "file": "tl_tavernbarkeeper_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7859,12 +7859,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7896,12 +7896,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_FARMER_EAT",
-          "resolved_file": "TL_FARMER_EAT.xml",
+          "resolved_file": "tl_farmer_eat.xml",
           "section": "overlay_tasklists",
           "key": "tl_farmer_eat",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_FARMER_EAT.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_farmer_eat.xml",
           "summary": {
-            "file": "TL_FARMER_EAT.xml",
+            "file": "tl_farmer_eat.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7929,12 +7929,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_FARMER_IDLE",
-          "resolved_file": "TL_FARMER_IDLE.xml",
+          "resolved_file": "tl_farmer_idle.xml",
           "section": "overlay_tasklists",
           "key": "tl_farmer_idle",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_FARMER_IDLE.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_farmer_idle.xml",
           "summary": {
-            "file": "TL_FARMER_IDLE.xml",
+            "file": "tl_farmer_idle.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -7975,12 +7975,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8014,12 +8014,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8276,12 +8276,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_TRADER_WORK_START",
-          "resolved_file": "TL_TRADER_WORK_START.xml",
+          "resolved_file": "tl_trader_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_trader_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_TRADER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_trader_work_start.xml",
           "summary": {
-            "file": "TL_TRADER_WORK_START.xml",
+            "file": "tl_trader_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8319,12 +8319,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8356,12 +8356,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8395,12 +8395,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8432,12 +8432,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8471,12 +8471,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8724,12 +8724,12 @@
       "resolved_declared_tasklists": {
         "WorkTaskList": {
           "requested_name": "TL_TREASURER_WORK_START",
-          "resolved_file": "TL_TREASURER_WORK_START.xml",
+          "resolved_file": "tl_treasurer_work_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_treasurer_work_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_TREASURER_WORK_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_treasurer_work_start.xml",
           "summary": {
-            "file": "TL_TREASURER_WORK_START.xml",
+            "file": "tl_treasurer_work_start.xml",
             "principal_task": "Work",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8779,12 +8779,12 @@
         },
         "WorkIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8816,12 +8816,12 @@
         },
         "EatTaskList": {
           "requested_name": "TL_WORKER_EAT_START",
-          "resolved_file": "TL_WORKER_EAT_START.xml",
+          "resolved_file": "tl_worker_eat_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_eat_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_EAT_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_eat_start.xml",
           "summary": {
-            "file": "TL_WORKER_EAT_START.xml",
+            "file": "tl_worker_eat_start.xml",
             "principal_task": "Eat",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8855,12 +8855,12 @@
         },
         "EatIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8892,12 +8892,12 @@
         },
         "RestTaskList": {
           "requested_name": "TL_WORKER_REST_START",
-          "resolved_file": "TL_WORKER_REST_START.xml",
+          "resolved_file": "tl_worker_rest_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_rest_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_REST_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_rest_start.xml",
           "summary": {
-            "file": "TL_WORKER_REST_START.xml",
+            "file": "tl_worker_rest_start.xml",
             "principal_task": "Rest",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,
@@ -8931,12 +8931,12 @@
         },
         "RestIdleTaskList": {
           "requested_name": "TL_WORKER_IDLE_START",
-          "resolved_file": "TL_WORKER_IDLE_START.xml",
+          "resolved_file": "tl_worker_idle_start.xml",
           "section": "overlay_tasklists",
           "key": "tl_worker_idle_start",
-          "source_path": "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\base\\shr\\config\\TaskLists\\TL_WORKER_IDLE_START.xml",
+          "source_path": "C:\\Users\\marku\\OneDrive\\Desktop\\Gold edition\\base\\shr\\config\\TaskLists\\tl_worker_idle_start.xml",
           "summary": {
-            "file": "TL_WORKER_IDLE_START.xml",
+            "file": "tl_worker_idle_start.xml",
             "principal_task": "Idle",
             "resource_ops_per_cycle": 0,
             "task_mined_resource_count": 0,

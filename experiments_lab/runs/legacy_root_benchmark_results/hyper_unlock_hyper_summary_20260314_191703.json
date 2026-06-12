@@ -1,0 +1,54 @@
+[
+  {
+    "candidate": "hyper_goal_default",
+    "family": "hyper",
+    "profile_name": "curriculum_unlock",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 69.41898608207703
+  },
+  {
+    "candidate": "hyper_goal_explore",
+    "family": "hyper",
+    "profile_name": "curriculum_unlock",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 76.35109877586365
+  },
+  {
+    "candidate": "hyper_goal_short_horizon",
+    "family": "hyper",
+    "profile_name": "curriculum_unlock",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 48.30919814109802
+  },
+  {
+    "candidate": "hyper_goal_conservative",
+    "family": "hyper",
+    "profile_name": "curriculum_unlock",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 78.31671595573425
+  }
+]

@@ -22,6 +22,10 @@ def _first_valid(mask):
 def _run_flow(main_action_name, phase_selector=None):
     phase_selector = phase_selector or {}
     main_idx = MAIN_ACTIONS.index(main_action_name)
+    main_mask = env.action_masks()
+    if main_idx >= len(main_mask) or not main_mask[main_idx]:
+        errors.append(f"{main_action_name}: Hauptaktion ist maskiert")
+        return obs, 0.0, False, False, {"blocked": True}
 
     obs, reward, done, trunc, info = env.step(main_idx)
     while info.get("multi_step"):
@@ -31,12 +35,29 @@ def _run_flow(main_action_name, phase_selector=None):
             choice = phase_selector[phase](mask)
         else:
             choice = _first_valid(mask)
+        if choice >= len(mask) or not mask[choice]:
+            choice = _first_valid(mask)
         obs, reward, done, trunc, info = env.step(choice)
     return obs, reward, done, trunc, info
 
 
+def _build_flow_selectors(building_name):
+    category_idx = env._get_build_category_index(building_name)
+    building_idx = env.buildable_buildings.index(building_name)
+    return {
+        ActionPhase.SOURCE_CATEGORY: lambda mask: 0 if mask[0] else _first_valid(mask),
+        ActionPhase.SOURCE_SPECIFIC: lambda mask: 0,
+        ActionPhase.QUANTITY: lambda mask: 0 if mask[0] else _first_valid(mask),
+        ActionPhase.BUILD_CATEGORY: lambda mask, idx=category_idx: idx if idx < len(mask) and mask[idx] else _first_valid(mask),
+        ActionPhase.BUILDING: lambda mask, idx=building_idx: idx if idx < len(mask) and mask[idx] else _first_valid(mask),
+        ActionPhase.POSITION_MODE: lambda mask: 0 if mask[0] else _first_valid(mask),
+        ActionPhase.POSITION_GROUP: _first_valid,
+        ActionPhase.POSITION_INDEX: _first_valid,
+    }
+
+
 # ============================================
-print('\n1. BUILD (assign_serf -> target Neubau) - Check')
+print('\n1. BUILD (eigener build-Flow) - Check')
 print('============================================')
 
 env.reset()
@@ -45,16 +66,7 @@ env.resources = {'Taler': 50000, 'Holz': 50000, 'Stein': 50000, 'Lehm': 50000, '
 
 sites_before = len(env.construction_sites)
 
-_run_flow(
-    "assign_serf",
-    phase_selector={
-        ActionPhase.SOURCE_CATEGORY: lambda mask: 0 if mask[0] else _first_valid(mask),
-        ActionPhase.SOURCE_SPECIFIC: lambda mask: 0,
-        ActionPhase.QUANTITY: lambda mask: 0,  # x1
-        ActionPhase.TARGET_CATEGORY: lambda mask: 7 if len(mask) > 7 and mask[7] else _first_valid(mask),
-        ActionPhase.TARGET_SPECIFIC: _first_valid,
-    },
-)
+_run_flow("build", phase_selector=_build_flow_selectors("Wohnhaus_1"))
 
 sites_after = len(env.construction_sites)
 if sites_after > sites_before:
@@ -170,9 +182,15 @@ if lehm_serfs_after < lehm_serfs:
 else:
     errors.append('RESOURCE: Lehm-Recall fehlgeschlagen')
 
-# Exakter Einzelbaum-Targetcheck
+# Exakter Holz-Zielcheck ueber Zone/TopK-Encoding
 env.reset()
-tree_idx = min(10, len(env.tree_list_internal) - 1)
+tree_specific = 0
+tree_idx = env._get_wood_zone_rank_tree_index(
+    tree_specific,
+    1,
+    mode="assign",
+    available_free_override=env.free_leibeigene,
+)
 tree = env.tree_list_internal[tree_idx]
 _run_flow(
     "assign_serf",
@@ -181,7 +199,7 @@ _run_flow(
         ActionPhase.SOURCE_SPECIFIC: lambda mask: 0,
         ActionPhase.QUANTITY: lambda mask: 0,
         ActionPhase.TARGET_CATEGORY: lambda mask: 1 if len(mask) > 1 and mask[1] else _first_valid(mask),
-        ActionPhase.TARGET_SPECIFIC: lambda mask, idx=tree_idx: idx if idx < len(mask) and mask[idx] else _first_valid(mask),
+        ActionPhase.TARGET_SPECIFIC: lambda mask, idx=tree_specific: idx if idx < len(mask) and mask[idx] else _first_valid(mask),
     },
 )
 tree_targeted = any(
@@ -307,6 +325,8 @@ print('============================================')
 
 env.reset()
 current_tax = env.current_tax_level
+env.researched_techs.add("Bildung")
+env._can_cache = {}
 
 _run_flow(
     "tax",
@@ -342,17 +362,8 @@ print('============================================')
 env.reset()
 env.resources = {'Taler': 50000, 'Holz': 50000, 'Stein': 50000, 'Lehm': 50000, 'Eisen': 5000, 'Schwefel': 5000}
 
-# Erst Baustelle erstellen (assign_serf -> Neubau)
-_run_flow(
-    "assign_serf",
-    phase_selector={
-        ActionPhase.SOURCE_CATEGORY: lambda mask: 0 if mask[0] else _first_valid(mask),
-        ActionPhase.SOURCE_SPECIFIC: lambda mask: 0,
-        ActionPhase.QUANTITY: lambda mask: 0,
-        ActionPhase.TARGET_CATEGORY: lambda mask: 7 if len(mask) > 7 and mask[7] else _first_valid(mask),
-        ActionPhase.TARGET_SPECIFIC: _first_valid,
-    },
-)
+# Erst Baustelle ueber den aktuellen build-Flow erstellen
+_run_flow("build", phase_selector=_build_flow_selectors("Wohnhaus_1"))
 
 if env.construction_sites:
     assigned_before = env.construction_sites[0]['serfs_assigned']

@@ -1,0 +1,211 @@
+[
+  {
+    "name": "custom_unlock_balanced",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.0,
+      "terminal_recruitable_bonus": 4.0,
+      "step_delta_progress_bonus": 0.8,
+      "step_delta_dependency_bonus": 0.4,
+      "step_delta_research_bonus": 0.4,
+      "step_delta_construction_bonus": 0.4,
+      "step_unlock_recruitable_bonus": 8.0,
+      "step_worker_growth_bonus": 0.05,
+      "action_buy_serf_growth_bonus": 0.05,
+      "action_assign_spawned_serf_bonus": 0.02,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_unlock_research",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.5,
+      "terminal_recruitable_bonus": 5.0,
+      "step_progress_mix_dependency": 0.5,
+      "step_progress_mix_research": 3.0,
+      "step_progress_mix_construction": 1.0,
+      "step_delta_progress_bonus": 0.9,
+      "step_delta_research_bonus": 1.5,
+      "step_delta_construction_bonus": 0.3,
+      "step_delta_dependency_bonus": 0.3,
+      "step_unlock_recruitable_bonus": 10.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_unlock_construction",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.5,
+      "terminal_recruitable_bonus": 5.0,
+      "step_progress_mix_dependency": 0.5,
+      "step_progress_mix_research": 1.0,
+      "step_progress_mix_construction": 3.0,
+      "step_delta_progress_bonus": 0.9,
+      "step_delta_research_bonus": 0.3,
+      "step_delta_construction_bonus": 1.5,
+      "step_delta_dependency_bonus": 0.3,
+      "step_unlock_recruitable_bonus": 10.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_dependency_heavy",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 3.0,
+      "terminal_recruitable_bonus": 6.0,
+      "step_progress_mix_dependency": 3.0,
+      "step_progress_mix_research": 1.0,
+      "step_progress_mix_construction": 1.0,
+      "step_delta_progress_bonus": 1.0,
+      "step_delta_dependency_bonus": 1.8,
+      "step_delta_research_bonus": 0.2,
+      "step_delta_construction_bonus": 0.2,
+      "step_unlock_recruitable_bonus": 12.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_economy_bootstrap",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 1.5,
+      "terminal_recruitable_bonus": 3.0,
+      "step_delta_progress_bonus": 0.4,
+      "step_delta_dependency_bonus": 0.2,
+      "step_delta_research_bonus": 0.2,
+      "step_delta_construction_bonus": 0.2,
+      "step_worker_growth_bonus": 0.12,
+      "action_buy_serf_growth_bonus": 0.15,
+      "action_assign_spawned_serf_bonus": 0.08,
+      "step_unlock_recruitable_bonus": 6.0,
+      "step_time_penalty": 0.0
+    },
+    "config_overrides": {
+      "learning_rate": 0.0003,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.015
+    }
+  },
+  {
+    "name": "custom_hybrid_current",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 1.5,
+      "terminal_recruitable_bonus": 4.0,
+      "terminal_potential_bonus_per_unit": 8.0,
+      "terminal_potential_use_cumulative_earnings": 0.0,
+      "step_delta_potential_bonus": 0.8,
+      "step_new_resource_potential_unit_bonus": 1.2,
+      "step_potential_use_cumulative_earnings": 0.0,
+      "step_delta_progress_bonus": 0.3,
+      "step_delta_dependency_bonus": 0.2,
+      "step_delta_research_bonus": 0.2,
+      "step_delta_construction_bonus": 0.2,
+      "step_unlock_recruitable_bonus": 4.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_hybrid_cumulative",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 1.5,
+      "terminal_recruitable_bonus": 4.0,
+      "terminal_potential_bonus_per_unit": 8.0,
+      "terminal_potential_use_cumulative_earnings": 1.0,
+      "step_delta_potential_bonus": 0.8,
+      "step_new_resource_potential_unit_bonus": 1.2,
+      "step_potential_use_cumulative_earnings": 1.0,
+      "step_delta_progress_bonus": 0.3,
+      "step_delta_dependency_bonus": 0.2,
+      "step_delta_research_bonus": 0.2,
+      "step_delta_construction_bonus": 0.2,
+      "step_unlock_recruitable_bonus": 4.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_force_progress",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.0,
+      "terminal_recruitable_bonus": 4.0,
+      "step_delta_progress_bonus": 1.2,
+      "step_delta_dependency_bonus": 0.7,
+      "step_delta_research_bonus": 0.7,
+      "step_delta_construction_bonus": 0.7,
+      "step_unlock_recruitable_bonus": 12.0,
+      "step_time_penalty": 0.003
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.015
+    }
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "candidate": "baseline_wait",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 1.1920928955078125e-06
+  },
+  {
+    "candidate": "baseline_random",
+    "family": "baseline",
+    "profile_name": "goal_v1",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 1.1920928955078125e-06
+  }
+]

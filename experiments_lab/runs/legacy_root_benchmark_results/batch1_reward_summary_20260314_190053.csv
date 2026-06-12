@@ -1,0 +1,5 @@
+candidate,family,profile_name,runs,mean_terminal_potential_metric,mean_terminal_path_ready,mean_scharf_dependency_progress,mean_scharf_research_progress,mean_scharf_construction_progress,mean_scharfschuetzen,mean_train_seconds
+goal_v1,reward,goal_v1,1,0.0,0.0,0.4166666666666667,0.0,0.0,0.0,30.404216289520264
+goal_v1_cumulative,reward,goal_v1,1,0.0,0.0,0.4166666666666667,0.0,0.0,0.0,31.635273456573486
+goal_v1_no_path_gate,reward,goal_v1,1,0.0,0.0,0.4166666666666667,0.0,0.0,0.0,28.06452775001526
+sparse,reward,sparse,1,0.0,0.0,0.4166666666666667,0.0,0.0,0.0,24.166158437728882

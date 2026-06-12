@@ -1,0 +1,54 @@
+[
+  {
+    "candidate": "curriculum_unlock",
+    "family": "reward",
+    "profile_name": "curriculum_unlock",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 25.700767040252686
+  },
+  {
+    "candidate": "dense_v2",
+    "family": "reward",
+    "profile_name": "dense_v2",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.4166666666666667,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 24.314022064208984
+  },
+  {
+    "candidate": "balanced",
+    "family": "reward",
+    "profile_name": "balanced",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.4166666666666667,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 26.632460594177246
+  },
+  {
+    "candidate": "curriculum_stockpile",
+    "family": "reward",
+    "profile_name": "curriculum_stockpile",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.4166666666666667,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 25.294809103012085
+  }
+]

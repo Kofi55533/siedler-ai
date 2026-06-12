@@ -247,7 +247,7 @@ Diese Tabelle zeigt die aktuelle, tatsaechlich maskierte Bedeutung von `source_s
 
 | target_category | category_name | specific_index | entry | coords | note |
 | --- | --- | --- | --- | --- | --- |
-| 0 | Frei | 0 | FREE | - | Specific wird uebersprungen; 0 ist Fallback |
+| 0 | Frei (deaktiviert) | 0 | FREE | - | Specific wird uebersprungen; 0 ist Fallback |
 | 1 | Holz | 0 | TREE_0 | 41780, 21532 | zone=HQ_Bereich; einzelner Baum |
 | 1 | Holz | 1 | TREE_1 | 42920, 23420 | zone=HQ_Bereich; einzelner Baum |
 | 1 | Holz | 2 | TREE_2 | 41169, 21057 | zone=HQ_Bereich; einzelner Baum |
@@ -472,41 +472,41 @@ Diese Tabelle zeigt die aktuelle, tatsaechlich maskierte Bedeutung von `source_s
 | 6 | Baustelle | 0..N-1 | construction_sites[i] | - | dynamisch zur Laufzeit |
 | 7 | Neubau | 0 | Hauptquartier_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 1 | Dorfzentrum_1 | - | 2 Baupositionen; maskiert=ja |
-| 7 | Neubau | 2 | Wohnhaus_1 | - | 407 Baupositionen; maskiert=ja |
-| 7 | Neubau | 3 | Bauernhof_1 | - | 115 Baupositionen; maskiert=ja |
-| 7 | Neubau | 4 | Hochschule_1 | - | 8 Baupositionen; maskiert=ja |
+| 7 | Neubau | 2 | Wohnhaus_1 | - | 376 Baupositionen; maskiert=ja |
+| 7 | Neubau | 3 | Bauernhof_1 | - | 149 Baupositionen; maskiert=ja |
+| 7 | Neubau | 4 | Hochschule_1 | - | 21 Baupositionen; maskiert=ja |
 | 7 | Neubau | 5 | Steinmine_1 | - | 1 Baupositionen; maskiert=ja |
 | 7 | Neubau | 6 | Lehmmine_1 | - | 1 Baupositionen; maskiert=ja |
 | 7 | Neubau | 7 | Eisenmine_1 | - | 2 Baupositionen; maskiert=ja |
 | 7 | Neubau | 8 | Schwefelmine_1 | - | 2 Baupositionen; maskiert=ja |
-| 7 | Neubau | 9 | SÃƒÂ¤gemÃƒÂ¼hle_1 | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 10 | LehmhÃƒÂ¼tte_1 | - | 0 Baupositionen; maskiert=nein |
+| 7 | Neubau | 9 | SÃƒÆ’Ã‚Â¤gemÃƒÆ’Ã‚Â¼hle_1 | - | 0 Baupositionen; maskiert=nein |
+| 7 | Neubau | 10 | LehmhÃƒÆ’Ã‚Â¼tte_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 11 | Schmiede_1 | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 12 | AlchimistenhÃƒÂ¼tte_1 | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 13 | SteinmetzhÃƒÂ¼tte_1 | - | 0 Baupositionen; maskiert=nein |
+| 7 | Neubau | 12 | AlchimistenhÃƒÆ’Ã‚Â¼tte_1 | - | 0 Baupositionen; maskiert=nein |
+| 7 | Neubau | 13 | SteinmetzhÃƒÆ’Ã‚Â¼tte_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 14 | Bank_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 15 | Kloster_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 16 | Markt_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 17 | Kaserne_1 | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 18 | SchieÃƒÅ¸platz_1 | - | 0 Baupositionen; maskiert=nein |
+| 7 | Neubau | 18 | SchieÃƒÆ’Ã…Â¸platz_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 19 | Stall_1 | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 20 | KanongieÃƒÅ¸erei_1 | - | 0 Baupositionen; maskiert=nein |
+| 7 | Neubau | 20 | KanongieÃƒÆ’Ã…Â¸erei_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 21 | Turm_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 22 | Wetterturm | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 23 | Wetterkraftwerk | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 24 | Taverne_1 | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 25 | BÃƒÂ¼chsenmacherei_1 | - | 0 Baupositionen; maskiert=nein |
+| 7 | Neubau | 25 | BÃƒÆ’Ã‚Â¼chsenmacherei_1 | - | 0 Baupositionen; maskiert=nein |
 | 7 | Neubau | 26 | Architektenstube | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 27 | BrÃƒÂ¼cke | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 28 | PB_Beautification01 | - | 897 Baupositionen; maskiert=ja |
-| 7 | Neubau | 29 | PB_Beautification02 | - | 251 Baupositionen; maskiert=ja |
-| 7 | Neubau | 30 | PB_Beautification03 | - | 897 Baupositionen; maskiert=ja |
-| 7 | Neubau | 31 | PB_Beautification04 | - | 897 Baupositionen; maskiert=ja |
-| 7 | Neubau | 32 | PB_Beautification05 | - | 897 Baupositionen; maskiert=ja |
+| 7 | Neubau | 27 | BrÃƒÆ’Ã‚Â¼cke | - | 0 Baupositionen; maskiert=nein |
+| 7 | Neubau | 28 | PB_Beautification01 | - | 2200 Baupositionen; maskiert=ja |
+| 7 | Neubau | 29 | PB_Beautification02 | - | 811 Baupositionen; maskiert=ja |
+| 7 | Neubau | 30 | PB_Beautification03 | - | 2200 Baupositionen; maskiert=ja |
+| 7 | Neubau | 31 | PB_Beautification04 | - | 2200 Baupositionen; maskiert=ja |
+| 7 | Neubau | 32 | PB_Beautification05 | - | 2200 Baupositionen; maskiert=ja |
 | 7 | Neubau | 33 | PB_Beautification06 | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 34 | PB_Beautification07 | - | 897 Baupositionen; maskiert=ja |
-| 7 | Neubau | 35 | PB_Beautification08 | - | 897 Baupositionen; maskiert=ja |
-| 7 | Neubau | 36 | PB_Beautification09 | - | 897 Baupositionen; maskiert=ja |
+| 7 | Neubau | 34 | PB_Beautification07 | - | 2200 Baupositionen; maskiert=ja |
+| 7 | Neubau | 35 | PB_Beautification08 | - | 2200 Baupositionen; maskiert=ja |
+| 7 | Neubau | 36 | PB_Beautification09 | - | 2200 Baupositionen; maskiert=ja |
 | 7 | Neubau | 37 | PB_Beautification10 | - | 0 Baupositionen; maskiert=nein |
-| 7 | Neubau | 38 | PB_Beautification11 | - | 897 Baupositionen; maskiert=ja |
+| 7 | Neubau | 38 | PB_Beautification11 | - | 2200 Baupositionen; maskiert=ja |
 | 7 | Neubau | 39 | PB_Beautification12 | - | 0 Baupositionen; maskiert=nein |

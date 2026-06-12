@@ -1,0 +1,61 @@
+{
+  "started_at": "2026-03-14 21:18:10",
+  "mode": "cpu_48h_adaptive",
+  "commands": [
+    [
+      "C:\\Users\\marku\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "-u",
+      "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab\\scripts\\adaptive_reward_search.py",
+      "--proxy-timesteps",
+      "4096",
+      "--full-timesteps",
+      "8192",
+      "--seeds",
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    [
+      "C:\\Users\\marku\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "-u",
+      "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab\\scripts\\benchmark_learning_hypotheses.py",
+      "--group",
+      "runtime",
+      "--best-reward-profile",
+      "goal_v1",
+      "--timesteps",
+      "4096",
+      "--eval-episodes",
+      "4",
+      "--seeds",
+      "0",
+      "1",
+      "2",
+      "3",
+      "--max-time-override",
+      "600",
+      "--stochastic-eval",
+      "--output-prefix",
+      "runtime_goal_proxy600"
+    ],
+    [
+      "C:\\Users\\marku\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "-u",
+      "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab\\scripts\\benchmark_learning_hypotheses.py",
+      "--group",
+      "baseline",
+      "--timesteps",
+      "1",
+      "--eval-episodes",
+      "4",
+      "--seeds",
+      "4",
+      "5",
+      "6",
+      "7",
+      "--output-prefix",
+      "baseline_repeat"
+    ]
+  ]
+}

@@ -1,0 +1,22 @@
+﻿date;category;subtype;counterparty;amount_eur;balance_after_eur;page;raw_description
+2023-01-24;Payout;PayOut;transit;700.00;21.46;7;PayOut to transit
+2025-03-24;Payout;Outgoing transfer;Damijan Boskovic;5.00;10898.98;28;Outgoing transfer for Damijan Boskovic
+2025-03-24;Payout;Outgoing transfer;Dominic Kofi Oppong;5.00;10903.98;28;Outgoing transfer for Dominic Kofi Oppong
+2025-03-25;Payout;Outgoing transfer;Banking Circle;10.00;10888.98;28;Outgoing transfer for Banking Circle
+2025-03-25;Payout;Outgoing transfer;Banking Circle;860.00;10028.98;28;Outgoing transfer for Banking Circle
+2025-03-25;Payout;Outgoing transfer;Dominic Kofi Oppong;10000.00;28.98;28;Outgoing transfer for Dominic Kofi Oppong
+2025-06-03;Payout;Outgoing transfer;Dominic Kofi Oppong;200.00;26.39;32;Outgoing transfer for Dominic Kofi Oppong
+2025-08-28;Payout;Outgoing transfer;Dominic Kofi Oppong;400.00;7501.82;36;Outgoing transfer for Dominic Kofi Oppong
+2025-09-09;Payout;Outgoing transfer;Dominic Kofi Oppong;200.00;4708.50;38;Outgoing transfer for Dominic Kofi Oppong
+2025-09-14;Payout;Outgoing transfer;Dominic Kofi Oppong;700.00;4008.50;38;Outgoing transfer for Dominic Kofi Oppong
+2025-09-19;Payout;Outgoing transfer;Dominic Kofi Oppong;20.00;3597.11;39;Outgoing transfer for Dominic Kofi Oppong
+2025-09-22;Payout;Outgoing transfer;Dominic Kofi Oppong;50.00;3547.11;39;Outgoing transfer for Dominic Kofi Oppong
+2025-09-24;Payout;Outgoing transfer;Dominic Kofi Oppong;100.00;445.76;40;Outgoing transfer for Dominic Kofi Oppong
+2025-09-26;Payout;Outgoing transfer;Dominic Kofi Oppong;865.00;5849.79;40;Outgoing transfer for Dominic Kofi Oppong
+2025-10-04;Payout;Outgoing transfer;Dominic Kofi Oppong;15.49;26.00;41;Outgoing transfer for Dominic Kofi Oppong
+2025-10-06;Payout;Outgoing transfer;Dominic Kofi Oppong;50.00;1148.86;41;Outgoing transfer for Dominic Kofi Oppong
+2025-10-06;Payout;Outgoing transfer;Dominic Kofi Oppong;800.00;1198.86;41;Outgoing transfer for Dominic Kofi Oppong
+2025-12-19;Payout;Outgoing transfer;Dominic Kofi Oppong (DE89400501500135502607);1000.00;618.41;46;Outgoing transfer for Dominic Kofi Oppong (DE89400501500135502607)
+2026-01-04;Payout;Outgoing transfer;Dominic Kofi Oppong (DE89400501500135502607);3087.00;0.57;47;Outgoing transfer for Dominic Kofi Oppong (DE89400501500135502607)
+2026-01-28;Payout;Outgoing transfer;Dominic Kofi Oppong (DE89400501500135502607);50.00;525.73;47;Outgoing transfer for Dominic Kofi Oppong (DE89400501500135502607)
+2026-03-25;Payout;Outgoing transfer;Dominic Oppong (DE89400501500135502607);160.00;2.33;48;Outgoing transfer for Dominic Oppong (DE89400501500135502607)

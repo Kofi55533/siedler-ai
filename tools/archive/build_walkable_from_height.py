@@ -22,6 +22,8 @@ import numpy as np
 from map_extract_config import EXTRACTED_DIR
 
 DEFAULT_HEIGHT = EXTRACTED_DIR / "height_map_515.npy"
+DEFAULT_TERRAIN_LOWRES = EXTRACTED_DIR / "terrain_lowres_131.npy"
+DEFAULT_ENGINE_DECODED = pathlib.Path(__file__).resolve().parents[2] / "config" / "engine_decoded.json"
 DEFAULT_OUT = pathlib.Path(__file__).resolve().parent
 
 MAP_WIDTH = 50480
@@ -65,10 +67,27 @@ def crop_player1_quadrant(grid: np.ndarray, grid_w: int, grid_h: int):
     return grid[y_start:y_end, x_start:x_end]
 
 
+def load_blocked_terrain_values(path: pathlib.Path) -> set[int]:
+    if not path.exists():
+        return set()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    terrain = data.get("terrain") or {}
+    values = set()
+    for item in terrain.get("blocked_types") or []:
+        try:
+            values.add(int(item.get("value")))
+        except (AttributeError, TypeError, ValueError):
+            continue
+    return values
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--height", default=str(DEFAULT_HEIGHT))
     parser.add_argument("--out", default=str(DEFAULT_OUT))
+    parser.add_argument("--terrain-lowres", default=str(DEFAULT_TERRAIN_LOWRES))
+    parser.add_argument("--engine-decoded", default=str(DEFAULT_ENGINE_DECODED))
+    parser.add_argument("--no-terrain-blocking", action="store_true")
     parser.add_argument("--water-level", type=int, default=None)
     parser.add_argument("--slope-threshold", type=int, default=None)
     parser.add_argument("--slope-quantile", type=float, default=0.8)
@@ -99,6 +118,29 @@ def main():
         slope_threshold = args.slope_threshold
 
     walkable = (height > water_level) & (max_diff <= slope_threshold)
+
+    terrain_blocking_report = None
+    if not args.no_terrain_blocking:
+        terrain_path = pathlib.Path(args.terrain_lowres)
+        engine_path = pathlib.Path(args.engine_decoded)
+        blocked_values = load_blocked_terrain_values(engine_path)
+        if terrain_path.exists() and blocked_values:
+            terrain_lowres = np.load(terrain_path)
+            terrain_at_height = upsample_nearest(terrain_lowres, h, w)
+            terrain_blocked = np.isin(terrain_at_height, list(blocked_values))
+            before = int(np.sum(walkable))
+            walkable = walkable & (~terrain_blocked)
+            terrain_blocking_report = {
+                "terrain_lowres": str(terrain_path),
+                "engine_decoded": str(engine_path),
+                "blocked_values": sorted(int(v) for v in blocked_values),
+                "blocked_values_present": sorted(
+                    int(v) for v in set(np.unique(terrain_lowres).astype(int)) & blocked_values
+                ),
+                "blocked_cells_at_height_grid": int(np.sum(terrain_blocked)),
+                "walkable_cells_removed": int(before - np.sum(walkable)),
+            }
+
     walkable = walkable.astype(np.uint8)
 
     # Save full grids
@@ -118,6 +160,7 @@ def main():
         "walkable_ratio_full": float(walkable.mean()),
         "walkable_ratio_land": float(walkable[land_mask].mean()) if land_mask.any() else 0.0,
         "player1_shape_native": list(p1_walkable_native.shape),
+        "terrain_blocking": terrain_blocking_report,
     }
 
     # Optional upsample to legacy training grid

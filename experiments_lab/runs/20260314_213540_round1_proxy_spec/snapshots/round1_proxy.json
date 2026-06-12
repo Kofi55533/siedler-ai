@@ -1,0 +1,377 @@
+[
+  {
+    "name": "custom_unlock_balanced",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.0,
+      "terminal_recruitable_bonus": 4.0,
+      "step_delta_progress_bonus": 0.8,
+      "step_delta_dependency_bonus": 0.4,
+      "step_delta_research_bonus": 0.4,
+      "step_delta_construction_bonus": 0.4,
+      "step_unlock_recruitable_bonus": 8.0,
+      "step_worker_growth_bonus": 0.05,
+      "action_buy_serf_growth_bonus": 0.05,
+      "action_assign_spawned_serf_bonus": 0.02,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_path_ready_bounty",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.0,
+      "terminal_path_ready_bonus": 12.0,
+      "terminal_recruitable_bonus": 2.0,
+      "step_delta_progress_bonus": 0.5,
+      "step_unlock_milestone_bonus": 3.0,
+      "step_unlock_milestone_count": 6.0,
+      "step_path_ready_bonus": 24.0,
+      "step_required_building_complete_bonus": 8.0,
+      "step_required_tech_complete_bonus": 10.0,
+      "step_delta_research_bonus": 0.6,
+      "step_delta_construction_bonus": 0.6,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_requirement_milestones",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 3.0,
+      "terminal_path_ready_bonus": 8.0,
+      "step_progress_mix_dependency": 1.0,
+      "step_progress_mix_research": 2.0,
+      "step_progress_mix_construction": 2.0,
+      "step_delta_progress_bonus": 0.6,
+      "step_unlock_milestone_bonus": 4.0,
+      "step_unlock_milestone_count": 8.0,
+      "step_required_building_complete_bonus": 7.0,
+      "step_required_tech_complete_bonus": 9.0,
+      "step_delta_research_bonus": 0.8,
+      "step_delta_construction_bonus": 0.8,
+      "step_time_penalty": 0.0015
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_income_bridge",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 1.5,
+      "terminal_path_ready_bonus": 6.0,
+      "terminal_potential_bonus_per_unit": 4.0,
+      "step_delta_progress_bonus": 0.3,
+      "step_required_building_complete_bonus": 3.0,
+      "step_required_tech_complete_bonus": 4.0,
+      "step_worker_growth_bonus": 0.12,
+      "step_delta_taler_income_bonus": 0.04,
+      "action_buy_serf_growth_bonus": 0.18,
+      "action_assign_spawned_serf_bonus": 0.08,
+      "step_path_ready_bonus": 10.0,
+      "step_time_penalty": 0.0
+    },
+    "config_overrides": {
+      "learning_rate": 0.0003,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.015
+    }
+  },
+  {
+    "name": "custom_short_unlock_curriculum",
+    "profile_name": "curriculum_unlock",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 3.0,
+      "terminal_path_ready_bonus": 12.0,
+      "step_delta_progress_bonus": 0.8,
+      "step_unlock_milestone_bonus": 4.0,
+      "step_unlock_milestone_count": 5.0,
+      "step_required_building_complete_bonus": 10.0,
+      "step_required_tech_complete_bonus": 12.0,
+      "step_path_ready_bonus": 28.0,
+      "step_delta_research_bonus": 1.0,
+      "step_delta_construction_bonus": 1.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.0003,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.02
+    },
+    "runtime_overrides": {
+      "max_time_override": 450,
+      "count_completed_actions_only": true
+    }
+  },
+  {
+    "name": "custom_short_requirement_sprint",
+    "profile_name": "curriculum_unlock",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.0,
+      "terminal_path_ready_bonus": 8.0,
+      "step_delta_progress_bonus": 0.5,
+      "step_unlock_milestone_bonus": 5.0,
+      "step_unlock_milestone_count": 4.0,
+      "step_required_building_complete_bonus": 12.0,
+      "step_required_tech_complete_bonus": 12.0,
+      "step_path_ready_bonus": 18.0,
+      "step_time_penalty": 0.0
+    },
+    "config_overrides": {
+      "learning_rate": 0.0003,
+      "n_steps": 32,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.02
+    },
+    "runtime_overrides": {
+      "max_time_override": 300,
+      "count_completed_actions_only": true
+    }
+  },
+  {
+    "name": "custom_dual_phase_stock_after_path",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 1.5,
+      "terminal_path_ready_bonus": 10.0,
+      "terminal_potential_bonus_per_unit": 10.0,
+      "step_delta_potential_bonus": 0.6,
+      "step_new_resource_potential_unit_bonus": 1.0,
+      "step_delta_progress_bonus": 0.3,
+      "step_unlock_milestone_bonus": 2.5,
+      "step_required_building_complete_bonus": 4.0,
+      "step_required_tech_complete_bonus": 5.0,
+      "step_path_ready_bonus": 20.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_unlock_research",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.5,
+      "terminal_recruitable_bonus": 5.0,
+      "step_progress_mix_dependency": 0.5,
+      "step_progress_mix_research": 3.0,
+      "step_progress_mix_construction": 1.0,
+      "step_delta_progress_bonus": 0.9,
+      "step_delta_research_bonus": 1.5,
+      "step_delta_construction_bonus": 0.3,
+      "step_delta_dependency_bonus": 0.3,
+      "step_unlock_recruitable_bonus": 10.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_unlock_construction",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.5,
+      "terminal_recruitable_bonus": 5.0,
+      "step_progress_mix_dependency": 0.5,
+      "step_progress_mix_research": 1.0,
+      "step_progress_mix_construction": 3.0,
+      "step_delta_progress_bonus": 0.9,
+      "step_delta_research_bonus": 0.3,
+      "step_delta_construction_bonus": 1.5,
+      "step_delta_dependency_bonus": 0.3,
+      "step_unlock_recruitable_bonus": 10.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_dependency_heavy",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 3.0,
+      "terminal_recruitable_bonus": 6.0,
+      "step_progress_mix_dependency": 3.0,
+      "step_progress_mix_research": 1.0,
+      "step_progress_mix_construction": 1.0,
+      "step_delta_progress_bonus": 1.0,
+      "step_delta_dependency_bonus": 1.8,
+      "step_delta_research_bonus": 0.2,
+      "step_delta_construction_bonus": 0.2,
+      "step_unlock_recruitable_bonus": 12.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_economy_bootstrap",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 1.5,
+      "terminal_recruitable_bonus": 3.0,
+      "step_delta_progress_bonus": 0.4,
+      "step_delta_dependency_bonus": 0.2,
+      "step_delta_research_bonus": 0.2,
+      "step_delta_construction_bonus": 0.2,
+      "step_worker_growth_bonus": 0.12,
+      "action_buy_serf_growth_bonus": 0.15,
+      "action_assign_spawned_serf_bonus": 0.08,
+      "step_unlock_recruitable_bonus": 6.0,
+      "step_time_penalty": 0.0
+    },
+    "config_overrides": {
+      "learning_rate": 0.0003,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.015
+    }
+  },
+  {
+    "name": "custom_hybrid_current",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 1.5,
+      "terminal_recruitable_bonus": 4.0,
+      "terminal_potential_bonus_per_unit": 8.0,
+      "terminal_potential_use_cumulative_earnings": 0.0,
+      "step_delta_potential_bonus": 0.8,
+      "step_new_resource_potential_unit_bonus": 1.2,
+      "step_potential_use_cumulative_earnings": 0.0,
+      "step_delta_progress_bonus": 0.3,
+      "step_delta_dependency_bonus": 0.2,
+      "step_delta_research_bonus": 0.2,
+      "step_delta_construction_bonus": 0.2,
+      "step_unlock_recruitable_bonus": 4.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_hybrid_cumulative",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 1.5,
+      "terminal_recruitable_bonus": 4.0,
+      "terminal_potential_bonus_per_unit": 8.0,
+      "terminal_potential_use_cumulative_earnings": 1.0,
+      "step_delta_potential_bonus": 0.8,
+      "step_new_resource_potential_unit_bonus": 1.2,
+      "step_potential_use_cumulative_earnings": 1.0,
+      "step_delta_progress_bonus": 0.3,
+      "step_delta_dependency_bonus": 0.2,
+      "step_delta_research_bonus": 0.2,
+      "step_delta_construction_bonus": 0.2,
+      "step_unlock_recruitable_bonus": 4.0,
+      "step_time_penalty": 0.001
+    },
+    "config_overrides": {
+      "learning_rate": 0.0002,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.01
+    }
+  },
+  {
+    "name": "custom_force_progress",
+    "profile_name": "goal_v1",
+    "family": "adaptive_reward",
+    "reward_overrides": {
+      "terminal_dependency_bonus": 2.0,
+      "terminal_recruitable_bonus": 4.0,
+      "step_delta_progress_bonus": 1.2,
+      "step_delta_dependency_bonus": 0.7,
+      "step_delta_research_bonus": 0.7,
+      "step_delta_construction_bonus": 0.7,
+      "step_unlock_recruitable_bonus": 12.0,
+      "step_time_penalty": 0.003
+    },
+    "config_overrides": {
+      "learning_rate": 0.00025,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.999,
+      "ent_coef": 0.015
+    }
+  }
+]

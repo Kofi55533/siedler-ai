@@ -1,0 +1,9 @@
+candidate,family,profile_name,runs,mean_terminal_potential_metric,mean_terminal_path_ready,mean_scharf_dependency_progress,mean_scharf_research_progress,mean_scharf_construction_progress,mean_scharfschuetzen,mean_train_seconds
+custom_unlock_balanced,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.0,12.51363492012024
+custom_unlock_research,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.0,9.97223424911499
+custom_unlock_construction,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.0,9.779555082321167
+custom_dependency_heavy,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.0,10.625377416610718
+custom_economy_bootstrap,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.0,12.704398155212402
+custom_hybrid_current,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.0,9.45940113067627
+custom_hybrid_cumulative,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.0,9.987483024597168
+custom_force_progress,adaptive_reward,goal_v1,1,0.0,0.0,0.5,0.0,0.0,0.0,13.939836502075195

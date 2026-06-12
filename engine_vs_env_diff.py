@@ -19,6 +19,7 @@ from typing import Any, Dict, List
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ENGINE_DATA = os.path.join(SCRIPT_DIR, "config", "engine_decoded.json")
+FULL_WORKER_ENGINE_DATA = os.path.join(SCRIPT_DIR, "config", "full_worker_engine_behavior.json")
 REPORT_FILE = os.path.join(SCRIPT_DIR, "config", "engine_env_diff_report.md")
 
 
@@ -53,6 +54,14 @@ def load_engine_data() -> Dict[str, Any]:
         return json.load(f)
 
 
+def load_full_worker_engine_data() -> Dict[str, Any]:
+    if not os.path.exists(FULL_WORKER_ENGINE_DATA):
+        return {}
+    with open(FULL_WORKER_ENGINE_DATA, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data if isinstance(data, dict) else {}
+
+
 def load_env_runtime() -> Dict[str, Any]:
     # Laufzeitwerte aus aktuellem Code.
     from map_config_wintersturm import PLAYER_1_SMALL_DEPOSITS
@@ -75,6 +84,8 @@ def load_env_runtime() -> Dict[str, Any]:
         BLESS_MOTIVATION_BONUS,
         BLESS_REQUIRED_FAITH,
         INITIAL_TAX_LEVEL,
+        MAXIMUM_FAITH,
+        SNOW_MOVE_SPEED_FACTOR,
         TAX_AMOUNT_PER_WORKER,
         TAX_PENALTY,
     )
@@ -141,10 +152,9 @@ def load_env_runtime() -> Dict[str, Any]:
         "initial_tax_level": INITIAL_TAX_LEVEL,
         "blessing_bonus": BLESS_MOTIVATION_BONUS,
         "blessing_bonus_time": BLESS_DURATION,
-        "maximum_faith": BLESS_REQUIRED_FAITH * 5,  # siehe _tick_time faith-cap
+        "maximum_faith": MAXIMUM_FAITH,
         "blessing_worker_filter_modeled": specific_bless_filters_modeled,
-        # Noch nicht als dedizierter Faktor modelliert (bewusst separat reporten):
-        "snow_speed_factor": None,
+        "snow_speed_factor": SNOW_MOVE_SPEED_FACTOR,
     }
 
     # Enum-Keys auf stabile String-Keys abbilden.
@@ -178,7 +188,11 @@ def load_env_runtime() -> Dict[str, Any]:
     }
 
 
-def generate_report(engine: Dict[str, Any], env: Dict[str, Any]) -> str:
+def generate_report(
+    engine: Dict[str, Any],
+    env: Dict[str, Any],
+    full_worker_engine: Dict[str, Any] | None = None,
+) -> str:
     lines: List[str] = []
     critical: List[str] = []
     warnings: List[str] = []
@@ -193,6 +207,12 @@ def generate_report(engine: Dict[str, Any], env: Dict[str, Any]) -> str:
     lines.append("# Engine vs Environment Diff Report")
     lines.append("")
     lines.append("Automatisch generiert von engine_vs_env_diff.py")
+    if full_worker_engine:
+        lines.append("")
+        lines.append(
+            "Worker-Parameter werden gegen `config/full_worker_engine_behavior.json` "
+            "verglichen, weil dieser Extract alle Arbeitsplatz-TaskLists rekursiv einbezieht."
+        )
     lines.append("")
 
     # ---------------------------------------------------------------------
@@ -285,6 +305,9 @@ def generate_report(engine: Dict[str, Any], env: Dict[str, Any]) -> str:
     lines.append("## 4. Worker-Parameter")
     lines.append("")
     workers = engine.get("workers", {}) or {}
+    full_runtime_workers = {}
+    if full_worker_engine:
+        full_runtime_workers = (full_worker_engine.get("runtime") or {}).get("workers") or {}
     for engine_name, data in sorted(workers.items()):
         if engine_name == "serf":
             continue
@@ -296,27 +319,33 @@ def generate_report(engine: Dict[str, Any], env: Dict[str, Any]) -> str:
             continue
 
         diffs = []
+        full_runtime = full_runtime_workers.get(env_name, {}) if isinstance(full_runtime_workers, dict) else {}
+        full_worktime = full_runtime.get("worktime") if isinstance(full_runtime, dict) else None
+        worker_truth = full_worktime if isinstance(full_worktime, dict) and full_worktime else data
         checks = [
-            ("work_wait_until", _safe_int(data.get("work_wait_until")), _safe_int(env_cfg.get("work_wait_until"))),
-            ("eat_wait", _safe_int(data.get("eat_wait")), _safe_int(env_cfg.get("eat_wait"))),
-            ("rest_wait", _safe_int(data.get("rest_wait")), _safe_int(env_cfg.get("rest_wait"))),
-            ("work_time_change_work", _safe_int(data.get("work_time_change_work")), _safe_int(env_cfg.get("work_time_change_work"))),
-            ("exhausted_malus", _safe_float(data.get("exhausted_malus")), _safe_float(env_cfg.get("exhausted_malus"))),
+            ("work_wait_until", _safe_int(worker_truth.get("work_wait_until")), _safe_int(env_cfg.get("work_wait_until"))),
+            ("eat_wait", _safe_int(worker_truth.get("eat_wait")), _safe_int(env_cfg.get("eat_wait"))),
+            ("rest_wait", _safe_int(worker_truth.get("rest_wait")), _safe_int(env_cfg.get("rest_wait"))),
+            ("work_time_change_work", _safe_int(worker_truth.get("work_time_change_work")), _safe_int(env_cfg.get("work_time_change_work"))),
+            ("exhausted_malus", _safe_float(worker_truth.get("exhausted_malus")), _safe_float(env_cfg.get("exhausted_malus"))),
         ]
         for key, engine_val, env_val in checks:
             if engine_val != env_val:
                 diffs.append(f"{key}: Engine={engine_val} vs Env={env_val}")
 
-        tl = tasklists.get(engine_name, {}) or {}
-        engine_wt_ops = _safe_int(tl.get("task_change_work_time_work_count"), 1)
-        if engine_name == "miner":
-            mine_tls = engine.get("mine_tasklists", {}) or {}
-            mine_counts = [
-                _safe_int(entry.get("task_change_work_time_work_count"), 1)
-                for entry in mine_tls.values()
-            ]
-            if mine_counts:
-                engine_wt_ops = max(engine_wt_ops, max(mine_counts))
+        if full_runtime:
+            engine_wt_ops = _safe_int(full_runtime.get("worktime_changes_per_cycle"), 1)
+        else:
+            tl = tasklists.get(engine_name, {}) or {}
+            engine_wt_ops = _safe_int(tl.get("task_change_work_time_work_count"), 1)
+            if engine_name == "miner":
+                mine_tls = engine.get("mine_tasklists", {}) or {}
+                mine_counts = [
+                    _safe_int(entry.get("task_change_work_time_work_count"), 1)
+                    for entry in mine_tls.values()
+                ]
+                if mine_counts:
+                    engine_wt_ops = max(engine_wt_ops, max(mine_counts))
         env_wt_ops = _safe_int(env_cfg.get("worktime_changes_per_cycle"), 1)
         if engine_wt_ops != env_wt_ops:
             diffs.append(f"worktime_changes_per_cycle: Engine={engine_wt_ops} vs Env={env_wt_ops}")
@@ -476,8 +505,9 @@ def main() -> None:
     print("Engine vs Environment Diff Report")
     print("=" * 40)
     engine = load_engine_data()
+    full_worker_engine = load_full_worker_engine_data()
     env = load_env_runtime()
-    report = generate_report(engine, env)
+    report = generate_report(engine, env, full_worker_engine)
     with open(REPORT_FILE, "w", encoding="utf-8") as f:
         f.write(report)
     print(f"Report geschrieben: {REPORT_FILE}")

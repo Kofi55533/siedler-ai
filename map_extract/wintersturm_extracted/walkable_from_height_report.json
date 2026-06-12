@@ -1,0 +1,66 @@
+{
+  "height_shape": [
+    515,
+    515
+  ],
+  "water_level": 2000,
+  "slope_threshold": 79,
+  "walkable_ratio_full": 0.5390328965972288,
+  "walkable_ratio_land": 0.6355497072643779,
+  "player1_shape_native": [
+    257,
+    258
+  ],
+  "terrain_blocking": {
+    "terrain_lowres": "map_extract\\wintersturm_extracted\\terrain_lowres_131.npy",
+    "engine_decoded": "config\\engine_decoded.json",
+    "blocked_values": [
+      12,
+      15,
+      27,
+      28,
+      29,
+      30,
+      31,
+      74,
+      80,
+      107,
+      108,
+      120,
+      133,
+      134,
+      148,
+      149,
+      150,
+      151,
+      157,
+      158,
+      163,
+      165,
+      166,
+      167,
+      168,
+      169,
+      212,
+      213,
+      215,
+      216,
+      217,
+      218,
+      219,
+      220,
+      221,
+      222
+    ],
+    "blocked_values_present": [
+      12,
+      27,
+      107,
+      108,
+      120,
+      220
+    ],
+    "blocked_cells_at_height_grid": 94954,
+    "walkable_cells_removed": 37149
+  }
+}

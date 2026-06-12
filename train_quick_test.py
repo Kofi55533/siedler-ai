@@ -9,13 +9,13 @@ from datetime import datetime
 
 import gymnasium as gym
 import torch as th
-from sb3_contrib import MaskablePPO
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
 from environment import SiedlerScharfschuetzenEnv
+from macro_maskable_ppo import CompletedActionMaskablePPO
 from multihead_policy import MultiHeadMaskablePolicy, SpatialVectorExtractor
-from training_profiles import get_train_profile
+from training_profiles import build_training_config
 
 
 class ProgressCallback(BaseCallback):
@@ -67,6 +67,12 @@ def _get_spatial_size():
     if size_val:
         return max(16, int(size_val))
     return 128
+
+
+def _count_completed_action_steps():
+    return str(os.environ.get("SIEDLER_COUNT_COMPLETED_ACTION_STEPS", "1")).strip().lower() in {
+        "1", "true", "yes", "on"
+    }
 
 
 def make_env(
@@ -124,7 +130,15 @@ def quick_test():
     print("=" * 60)
     print("SIEDLER AI - SCHNELLER TRAININGS-TEST")
     print("=" * 60)
-    profile = get_train_profile()
+    base_config = {
+        "learning_rate": 0.0003,
+        "n_steps": 512,
+        "batch_size": 64,
+        "n_epochs": 5,
+        "gamma": 0.99,
+        "ent_coef": 0.01,
+    }
+    config, profile = build_training_config(base_config)
     reward_profile = profile["reward_profile"]
     print(f"Train-Profil: {profile['name']} ({profile['description']})")
 
@@ -145,6 +159,16 @@ def quick_test():
         print(f"Observation Space: {env.observation_space.shape}")
     device = "cuda" if th.cuda.is_available() else "cpu"
     print(f"Device: {device}")
+    print(f"Completed-action timesteps: {int(_count_completed_action_steps())}")
+    print(
+        "PPO: "
+        f"lr={config['learning_rate']} "
+        f"gamma={config['gamma']} "
+        f"n_steps={config['n_steps']} "
+        f"batch={config['batch_size']} "
+        f"epochs={config['n_epochs']} "
+        f"ent={config['ent_coef']}"
+    )
 
     # Modell erstellen
     head_sizes = env.env_method("get_action_head_sizes")[0]
@@ -167,18 +191,19 @@ def quick_test():
                 "vector_out_dim": 256,
             },
         })
-    model = MaskablePPO(
+    model = CompletedActionMaskablePPO(
         MultiHeadMaskablePolicy,
         env,
-        learning_rate=0.0003,
-        n_steps=512,
-        batch_size=64,
-        n_epochs=5,
-        gamma=0.99,
-        ent_coef=0.01,
+        learning_rate=config["learning_rate"],
+        n_steps=config["n_steps"],
+        batch_size=config["batch_size"],
+        n_epochs=config["n_epochs"],
+        gamma=config["gamma"],
+        ent_coef=config["ent_coef"],
         policy_kwargs=policy_kwargs,
         device=device,
         verbose=0,
+        count_completed_actions_only=_count_completed_action_steps(),
     )
 
     print("\nStarte Training (10.000 Steps)...")

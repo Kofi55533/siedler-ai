@@ -1,0 +1,54 @@
+[
+  {
+    "candidate": "curriculum_unlock",
+    "family": "reward",
+    "profile_name": "curriculum_unlock",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.5,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 64.96198153495789
+  },
+  {
+    "candidate": "goal_v1",
+    "family": "reward",
+    "profile_name": "goal_v1",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.4166666666666667,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 122.47529697418213
+  },
+  {
+    "candidate": "dense_v2",
+    "family": "reward",
+    "profile_name": "dense_v2",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.4166666666666667,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 81.88195729255676
+  },
+  {
+    "candidate": "curriculum_stockpile",
+    "family": "reward",
+    "profile_name": "curriculum_stockpile",
+    "runs": 1,
+    "mean_terminal_potential_metric": 0.0,
+    "mean_terminal_path_ready": 0.0,
+    "mean_scharf_dependency_progress": 0.4166666666666667,
+    "mean_scharf_research_progress": 0.0,
+    "mean_scharf_construction_progress": 0.0,
+    "mean_scharfschuetzen": 0.0,
+    "mean_train_seconds": 72.54728055000305
+  }
+]

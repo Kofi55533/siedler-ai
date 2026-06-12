@@ -419,13 +419,32 @@ def _summarize_worker_profiles(
 
 def _select_branch_anchors(branch_matrix: Dict[str, Any]) -> Dict[str, Any]:
     by_fn = {f["function"]: f for f in branch_matrix.get("functions", [])}
-    out: Dict[str, Any] = {}
-    for fn, purpose in ANCHOR_FUNCTIONS.items():
-        item = by_fn.get(fn)
-        if not item:
-            continue
+
+    def _infer_purpose(item: Dict[str, Any]) -> str:
+        tags = item.get("tags", {}) or {}
+        patterns = set(tags.get("patterns", []) or [])
+        classes = set(tags.get("classes", []) or [])
+        if "TASK_GO_TO_CAMP" in patterns or "TASK_CHANGE_WORK_TIME_CAMP" in patterns:
+            return "worker camp task branch"
+        if any(p.startswith("TASK_CHECK_GO_TO_") for p in patterns):
+            return "worker path success-check branch"
+        if {"FinePath", "CoarsePath", "IsPathingUsed", "WayPoints"} & patterns:
+            return "pathfinding/runtime waypoint branch"
+        if {"UpdateBlocking", "BlockingArea", "NumBlockedPoints", "CheckSettlerPlacement"} & patterns:
+            return "blocking/placement branch"
+        if {"WorkerAlarmMode", "EnterWorkerAlarmMode", "QuitWorkerAlarmMode"} & patterns:
+            return "worker alarm/flee branch"
+        if any("CWorkerBehavior" in c for c in classes):
+            return "CWorkerBehavior vtable branch"
+        if any("CCamp" in c or "CCamper" in c for c in classes):
+            return "camp/camper behavior vtable branch"
+        if any("CPath" in c or "AStar" in c or "Unblocked" in c or "Blocking" in c for c in classes):
+            return "path/blocking predicate vtable branch"
+        return "worker/camp/path selected branch"
+
+    def _anchor_entry(fn: str, item: Dict[str, Any], purpose: str) -> Dict[str, Any]:
         conds = item.get("branches", {}).get("conditional_sites", []) or []
-        out[fn] = {
+        return {
             "purpose": purpose,
             "stats": item.get("stats", {}),
             "tags": item.get("tags", {}),
@@ -440,6 +459,40 @@ def _select_branch_anchors(branch_matrix: Dict[str, Any]) -> Dict[str, Any]:
                 for c in conds[:10]
             ],
         }
+
+    out: Dict[str, Any] = {}
+    for fn, purpose in ANCHOR_FUNCTIONS.items():
+        item = by_fn.get(fn)
+        if not item:
+            continue
+        out[fn] = _anchor_entry(fn, item, purpose)
+
+    dynamic_candidates: List[Dict[str, Any]] = []
+    for fn, item in by_fn.items():
+        if fn in out:
+            continue
+        stats = item.get("stats", {}) or {}
+        tags = item.get("tags", {}) or {}
+        has_tag = bool(tags.get("patterns") or tags.get("classes"))
+        jcc = int(stats.get("conditional_branches", 0))
+        if not has_tag or jcc <= 0:
+            continue
+        direct_tag_count = len(tags.get("patterns", []) or []) + len(tags.get("classes", []) or [])
+        dynamic_candidates.append(
+            {
+                "fn": fn,
+                "item": item,
+                "score": (jcc, direct_tag_count, int(stats.get("instruction_count", 0))),
+            }
+        )
+
+    dynamic_candidates.sort(key=lambda x: x["score"], reverse=True)
+    max_dynamic = 32
+    for candidate in dynamic_candidates[:max_dynamic]:
+        fn = candidate["fn"]
+        item = candidate["item"]
+        out[fn] = _anchor_entry(fn, item, _infer_purpose(item))
+
     return out
 
 

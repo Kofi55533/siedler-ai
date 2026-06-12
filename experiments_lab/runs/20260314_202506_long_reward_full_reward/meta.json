@@ -1,0 +1,29 @@
+{
+  "started_at": "2026-03-14 20:25:06",
+  "project_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai",
+  "experiment_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab",
+  "args": {
+    "group": "reward",
+    "timesteps": 8192,
+    "eval_episodes": 2,
+    "seeds": [
+      0,
+      1
+    ],
+    "best_reward_profile": "goal_v1",
+    "candidates": [],
+    "max_time_override": 0,
+    "stochastic_eval": false,
+    "output_prefix": "long_reward_full"
+  },
+  "candidates": [
+    "goal_v1",
+    "goal_v1_cumulative",
+    "goal_v1_no_path_gate",
+    "dense_v2",
+    "balanced",
+    "sparse",
+    "curriculum_unlock",
+    "curriculum_stockpile"
+  ]
+}

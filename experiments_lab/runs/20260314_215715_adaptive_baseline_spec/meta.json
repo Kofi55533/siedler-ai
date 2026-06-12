@@ -1,0 +1,29 @@
+{
+  "started_at": "2026-03-14 21:57:15",
+  "project_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai",
+  "experiment_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab",
+  "args": {
+    "group": "spec",
+    "timesteps": 1,
+    "eval_episodes": 4,
+    "seeds": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "best_reward_profile": "goal_v1",
+    "candidates": [
+      "baseline_wait",
+      "baseline_random"
+    ],
+    "candidate_spec": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab\\research\\adaptive_sessions\\adaptive_20260314_215715\\specs\\adaptive_baseline.json",
+    "max_time_override": 0,
+    "stochastic_eval": false,
+    "output_prefix": "adaptive_baseline"
+  },
+  "candidates": [
+    "baseline_wait",
+    "baseline_random"
+  ]
+}

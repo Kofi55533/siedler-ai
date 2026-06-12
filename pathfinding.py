@@ -11,11 +11,13 @@ Dieses Modul enthÃ¤lt:
 
 import numpy as np
 import heapq
+import math
 from dataclasses import dataclass, field
 from typing import List, Dict, Tuple, Optional, Set
 from enum import IntEnum
 import json
 import os
+import re
 
 # =============================================================================
 # KONSTANTEN
@@ -87,10 +89,66 @@ BUILDING_FOOTPRINTS = {
     "PB_Beautification12": (300, 300),
 }
 
+_ORIGINAL_BUILDING_GEOMETRY: Dict[str, Dict[str, object]] = {}
+
+try:
+    from original_game_values import load_building_footprints, load_building_geometry
+
+    _ORIGINAL_BUILDING_GEOMETRY = load_building_geometry()
+    BUILDING_FOOTPRINTS.update(load_building_footprints())
+except Exception:
+    pass
+
+
+def _centered_block_offsets(footprint: Tuple[int, int]) -> Tuple[int, int, int, int]:
+    width, height = footprint
+    half_w = int(width) // 2
+    half_h = int(height) // 2
+    return (-half_w, -half_h, int(width) - half_w, int(height) - half_h)
+
+
+BUILDING_BLOCK_OFFSETS: Dict[str, Tuple[int, int, int, int]] = {
+    name: _centered_block_offsets(footprint)
+    for name, footprint in BUILDING_FOOTPRINTS.items()
+}
+for name, geometry in _ORIGINAL_BUILDING_GEOMETRY.items():
+    blocked = geometry.get("blocked") if isinstance(geometry, dict) else None
+    if isinstance(blocked, (list, tuple)) and len(blocked) == 4:
+        try:
+            BUILDING_BLOCK_OFFSETS[name] = tuple(int(v) for v in blocked)  # type: ignore[assignment]
+        except (TypeError, ValueError):
+            pass
+
 
 def get_building_footprint(building_type: str) -> Tuple[int, int]:
     """Gibt (width, height) des GebÃ¤udes zurÃ¼ck (Fallback: 400x400)."""
-    return BUILDING_FOOTPRINTS.get(building_type, (400, 400))
+    if building_type in BUILDING_FOOTPRINTS:
+        return BUILDING_FOOTPRINTS[building_type]
+    base = re.sub(r"_\d+$", "", str(building_type))
+    return BUILDING_FOOTPRINTS.get(base, (400, 400))
+
+
+def get_building_block_offsets(building_type: str) -> Tuple[int, int, int, int]:
+    """Gibt Original-Blocked1/Blocked2-Offets relativ zum Gebaeudezentrum zurueck."""
+    if building_type in BUILDING_BLOCK_OFFSETS:
+        return BUILDING_BLOCK_OFFSETS[building_type]
+    base = re.sub(r"_\d+$", "", str(building_type))
+    if base in BUILDING_BLOCK_OFFSETS:
+        return BUILDING_BLOCK_OFFSETS[base]
+    return _centered_block_offsets(get_building_footprint(building_type))
+
+
+def _building_grid_bounds(world_x: float, world_y: float, building_type: str) -> Tuple[int, int, int, int]:
+    min_x, min_y, max_x, max_y = get_building_block_offsets(building_type)
+    x1 = math.floor((float(world_x) + min_x) / SCALE_X)
+    y1 = math.floor((float(world_y) + min_y) / SCALE_Y)
+    x2 = math.ceil((float(world_x) + max_x) / SCALE_X)
+    y2 = math.ceil((float(world_y) + max_y) / SCALE_Y)
+    if x2 <= x1:
+        x2 = x1 + 1
+    if y2 <= y1:
+        y2 = y1 + 1
+    return x1, y1, x2, y2
 
 # Bewegungsrichtungen fÃ¼r A* (8-direktional)
 DIRECTIONS = [
@@ -189,7 +247,7 @@ class WalkableGrid:
         self.resources = np.zeros((height, width), dtype=np.uint8)
 
         # GebÃ¤ude-Tracking
-        self.building_positions: Dict[int, Tuple[GridPosition, str, int, int]] = {}
+        self.building_positions: Dict[int, Tuple[int, int, int, int, str]] = {}
         self.next_building_id = 1
 
         # Baum-Tracking
@@ -286,27 +344,18 @@ class WalkableGrid:
         Returns:
             Building ID fÃ¼r spÃ¤teres Entfernen
         """
-        width, height = get_building_footprint(building_type)
-        size_x = max(1, int(width / SCALE_X))
-        size_y = max(1, int(height / SCALE_Y))
-
-        # Grid-Position (Zentrum)
-        center = GridPosition.from_world(world_x, world_y)
-
-        # Blockiere alle Zellen im Bereich (Numpy-Slicing statt nested Python-Loops)
-        half_x = size_x // 2
-        half_y = size_y // 2
-        y1 = max(0, center.y - half_y)
-        y2 = min(self.height, center.y + half_y + 1)
-        x1 = max(0, center.x - half_x)
-        x2 = min(self.width, center.x + half_x + 1)
+        raw_x1, raw_y1, raw_x2, raw_y2 = _building_grid_bounds(world_x, world_y, building_type)
+        x1 = max(0, raw_x1)
+        y1 = max(0, raw_y1)
+        x2 = min(self.width, raw_x2)
+        y2 = min(self.height, raw_y2)
         if y1 < y2 and x1 < x2:
             self.buildings[y1:y2, x1:x2] = 1
 
         # Tracking
         building_id = self.next_building_id
         self.next_building_id += 1
-        self.building_positions[building_id] = (center, building_type, size_x, size_y)
+        self.building_positions[building_id] = (x1, y1, x2, y2, building_type)
 
         # Cache invalidieren
         self.cache_valid = False
@@ -320,14 +369,7 @@ class WalkableGrid:
         if building_id not in self.building_positions:
             return
 
-        center, building_type, size_x, size_y = self.building_positions[building_id]
-
-        half_x = size_x // 2
-        half_y = size_y // 2
-        y1 = max(0, center.y - half_y)
-        y2 = min(self.height, center.y + half_y + 1)
-        x1 = max(0, center.x - half_x)
-        x2 = min(self.width, center.x + half_x + 1)
+        x1, y1, x2, y2, _building_type = self.building_positions[building_id]
         if y1 < y2 and x1 < x2:
             self.buildings[y1:y2, x1:x2] = 0
 
@@ -439,24 +481,13 @@ class WalkableGrid:
         2. Keine anderen GebÃ¤ude im Weg
         3. Keine BÃ¤ume im Weg (mÃ¼ssen erst gefÃ¤llt werden)
         """
-        width, height = get_building_footprint(building_type)
-        size_x = max(1, int(width / SCALE_X))
-        size_y = max(1, int(height / SCALE_Y))
-
-        center = GridPosition.from_world(world_x, world_y)
-        half_x = size_x // 2
-        half_y = size_y // 2
+        x1, y1, x2, y2 = _building_grid_bounds(world_x, world_y, building_type)
 
         # Pruefe ob Bereich innerhalb der Karte liegt
-        if (center.x - half_x < 0 or center.x + half_x >= self.width or
-                center.y - half_y < 0 or center.y + half_y >= self.height):
+        if x1 < 0 or y1 < 0 or x2 > self.width or y2 > self.height:
             return False
 
         # Numpy-Slicing statt nested Python-Loops
-        y1 = center.y - half_y
-        y2 = center.y + half_y + 1
-        x1 = center.x - half_x
-        x2 = center.x + half_x + 1
         region_terrain = self.terrain_base[y1:y2, x1:x2]
         region_buildings = self.buildings[y1:y2, x1:x2]
         region_trees = self.trees[y1:y2, x1:x2]
@@ -473,20 +504,13 @@ class WalkableGrid:
     def get_trees_blocking_building(self, world_x: float, world_y: float,
                                      building_type: str) -> List[int]:
         """Gibt Liste der BÃ¤ume zurÃ¼ck, die fÃ¼r den Bau gefÃ¤llt werden mÃ¼ssen."""
-        width, height = get_building_footprint(building_type)
-        size_x = max(1, int(width / SCALE_X))
-        size_y = max(1, int(height / SCALE_Y))
-
-        center = GridPosition.from_world(world_x, world_y)
-        half_x = size_x // 2
-        half_y = size_y // 2
+        x1, y1, x2, y2 = _building_grid_bounds(world_x, world_y, building_type)
 
         blocking_trees = []
 
         for tree_id, tree_pos in self.tree_positions.items():
             # Ist der Baum im Baubereich?
-            if (center.x - half_x <= tree_pos.x <= center.x + half_x and
-                center.y - half_y <= tree_pos.y <= center.y + half_y):
+            if x1 <= tree_pos.x < x2 and y1 <= tree_pos.y < y2:
                 blocking_trees.append(tree_id)
 
         return blocking_trees

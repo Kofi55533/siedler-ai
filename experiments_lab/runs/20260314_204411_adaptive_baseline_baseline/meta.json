@@ -1,0 +1,23 @@
+{
+  "started_at": "2026-03-14 20:44:11",
+  "project_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai",
+  "experiment_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab",
+  "args": {
+    "group": "baseline",
+    "timesteps": 1,
+    "eval_episodes": 4,
+    "seeds": [
+      0
+    ],
+    "best_reward_profile": "goal_v1",
+    "candidates": [],
+    "candidate_spec": "",
+    "max_time_override": 0,
+    "stochastic_eval": false,
+    "output_prefix": "adaptive_baseline"
+  },
+  "candidates": [
+    "baseline_wait",
+    "baseline_random"
+  ]
+}

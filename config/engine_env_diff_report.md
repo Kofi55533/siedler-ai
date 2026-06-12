@@ -2,6 +2,8 @@
 
 Automatisch generiert von engine_vs_env_diff.py
 
+Worker-Parameter werden gegen `config/full_worker_engine_behavior.json` verglichen, weil dieser Extract alle Arbeitsplatz-TaskLists rekursiv einbezieht.
+
 ## 1. Minen-Produktion
 
 - OK: claymine_work: mine_ops=2, worktime_ops=2
@@ -68,19 +70,13 @@ Automatisch generiert von engine_vs_env_diff.py
 - InitialTaxLevel: Engine=2, Env=2 [OK]
 - BlessingBonus: Engine=0.3, Env=0.3 [OK]
 - BlessingBonusTime: Engine=180, Env=180 [OK]
-- MaximumFaith: Engine=5000, Env=25000 [DIFF]
+- MaximumFaith: Engine=5000, Env=5000 [OK]
 - OK: Blessing worker filter ist modelliert
-- KRITISCH: SnowMoveSpeedFactor: Engine=0.85, Env=nicht modelliert
+- SnowMoveSpeedFactor: Engine=0.85, Env=0.85 [OK]
 
 ---
 
 ## Zusammenfassung
 
-- Kritische Punkte: 1
+- Kritische Punkte: 0
 - Warnungen: 0
-
-### Kritisch
-1. SnowMoveSpeedFactor: Engine=0.85, Env=nicht modelliert
-
-### Empfohlene Aenderungen
-1. SnowMoveSpeedFactor fuer Wintersturm modellieren (wenn gewuenscht).

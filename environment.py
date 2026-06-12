@@ -13,6 +13,7 @@ import copy
 import re
 import json
 import os
+import math
 import unicodedata
 from functools import lru_cache
 from enum import Enum
@@ -44,8 +45,10 @@ def _resolve_sim_mode_from_env() -> str:
 
 class ActionPhase(Enum):
     """Phase im Multi-Step Action Flow."""
-    MAIN = "main"                       # Haupt-Aktion wÃƒÆ’Ã‚Â¤hlen (11 Optionen)
+    MAIN = "main"                       # Haupt-Aktion waehlen
+    BUILD_CATEGORY = "build_category"   # Bau-Menuekategorie waehlen
     BUILDING = "building"               # GebÃƒÆ’Ã‚Â¤ude-Typ wÃƒÆ’Ã‚Â¤hlen
+    POSITION_MODE = "position_mode"     # Semantische Bauplatz-Sortierung
     POSITION_GROUP = "position_group"   # Positions-Gruppe wÃƒÆ’Ã‚Â¤hlen (z.B. 44)
     POSITION_INDEX = "position_index"   # Index innerhalb der Gruppe (z.B. 50)
     TECH_BUILDING = "tech_building"     # Forschungs-GebÃƒÆ’Ã‚Â¤ude wÃƒÆ’Ã‚Â¤hlen (Hochschule/Schmiede/etc.)
@@ -82,10 +85,31 @@ TARGET_CATEGORIES = {
     4: "Lehm",
     5: "Schwefel",
     6: "Baustelle",
-    7: "Neubau",  # Erstellt Baustelle + weist Serfs direkt zu
+    7: "Neubau (legacy, deaktiviert)",  # Neubau ist jetzt eigener build-Flow
+}
+
+BUILD_CATEGORIES = {
+    0: "village",
+    1: "resource",
+    2: "production",
+    3: "research_utility",
+    4: "military",
+    5: "beautification",
+    6: "other",
+}
+
+POSITION_MODES = {
+    0: "auto",
+    1: "near_hq",
+    2: "near_resource",
+    3: "near_worker_cluster",
+    4: "expansion_slot",
 }
 
 MAX_SPECIFIC_OPTIONS = 28  # Max(6 Holz-Zonen, 5 Eisen, 10 Baustellen, 28 GebÃƒÆ’Ã‚Â¤ude)
+WOOD_TOPK_PER_ZONE = 8
+MAX_WOOD_ZONE_ACTIONS = 18
+MAX_WOOD_SPECIFIC_OPTIONS = WOOD_TOPK_PER_ZONE * MAX_WOOD_ZONE_ACTIONS
 MAX_POSITION_SLOTS = 2200
 POSITION_GROUP_SIZE = 50
 POSITION_GROUP_COUNT = (MAX_POSITION_SLOTS + POSITION_GROUP_SIZE - 1) // POSITION_GROUP_SIZE
@@ -118,9 +142,20 @@ MAX_TECHS_PER_BUILDING = 40  # Hochschule hat die meisten (erweitert durch Utili
 
 
 # Definiert welche Phasen fÃƒÆ’Ã‚Â¼r jede Haupt-Aktion durchlaufen werden
-# "build" ist in "assign_serf" integriert (TARGET_CATEGORY=Neubau)
+# Neubau ist ein eigener build-Flow; assign_serf verteilt nur Serfs.
 ACTION_FLOWS = {
     "wait": [ActionPhase.MAIN],
+    "build": [
+        ActionPhase.MAIN,
+        ActionPhase.SOURCE_CATEGORY,
+        ActionPhase.SOURCE_SPECIFIC,
+        ActionPhase.QUANTITY,
+        ActionPhase.BUILD_CATEGORY,
+        ActionPhase.BUILDING,
+        ActionPhase.POSITION_MODE,
+        ActionPhase.POSITION_GROUP,
+        ActionPhase.POSITION_INDEX,
+    ],
     "upgrade": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION_GROUP, ActionPhase.POSITION_INDEX],
     "research": [ActionPhase.MAIN, ActionPhase.TECH_BUILDING, ActionPhase.TECH],
     "recruit": [ActionPhase.MAIN, ActionPhase.SOLDIER, ActionPhase.QUANTITY],
@@ -137,6 +172,9 @@ ACTION_FLOWS = {
         ActionPhase.POSITION_INDEX,
     ],
     "demolish": [ActionPhase.MAIN, ActionPhase.BUILDING, ActionPhase.POSITION_GROUP, ActionPhase.POSITION_INDEX],
+    "cancel_build": [ActionPhase.MAIN, ActionPhase.TARGET_SPECIFIC],
+    "cancel_research": [ActionPhase.MAIN, ActionPhase.TECH_BUILDING, ActionPhase.TECH],
+    "cancel_recruit": [ActionPhase.MAIN, ActionPhase.SOLDIER],
     "bless": [ActionPhase.MAIN, ActionPhase.CATEGORY],
     "tax": [ActionPhase.MAIN, ActionPhase.TAX_LEVEL],
     "alarm": [ActionPhase.MAIN, ActionPhase.ON_OFF],
@@ -298,6 +336,42 @@ TECHNOLOGY_EFFECTS = {
     "Bleikugeln": {"rifle_damage": 2},               # T_LeadShot
     "Zielfernrohr": {"rifle_damage": 4},             # T_Sights
 
+    # === Nicht-Kampf/Utility-Techs aus Original-IDs ===
+    "T_AdjustTaxes": {"tax_control_unlock": True},
+    "T_BlessSettlers1": {"bless_category_0_unlock": True},
+    "T_BlessSettlers2": {"bless_category_1_unlock": True},
+    "T_BlessSettlers3": {"bless_category_2_unlock": True},
+    "T_BlessSettlers4": {"bless_category_3_unlock": True},
+    "T_BlessSettlers5": {"bless_category_4_unlock": True},
+    "T_CityGuard": {"exploration_modifier": 5},
+    "T_CropCycle": {"crop_cycle_unlock": True},
+    "T_SpinningWheel": {"spinning_wheel_unlock": True},
+    "T_PickAxe": {"pickaxe_unlock": True},
+    "T_Tracking": {"exploration_modifier": 10},
+    "T_WeatherForecast": {"weather_forecast_unlock": True},
+    "T_ChangeWeather": {"weather_change_unlock": True},
+    "Wettervorhersage": {"weather_forecast_unlock": True},
+    "Wettermanipulation": {"weather_change_unlock": True},
+    "T_MakeRain": {"weather_rain_unlock": True},
+    "T_MakeSnow": {"weather_snow_unlock": True},
+    "T_MakeSummer": {"weather_summer_unlock": True},
+    "T_MarketClay": {"market_resource_clay_unlock": True},
+    "T_MarketGold": {"market_resource_gold_unlock": True},
+    "T_MarketIron": {"market_resource_iron_unlock": True},
+    "T_MarketStone": {"market_resource_stone_unlock": True},
+    "T_MarketSulfur": {"market_resource_sulfur_unlock": True},
+    "T_MarketWood": {"market_resource_wood_unlock": True},
+    "T_ScoutFindResources": {"scout_find_resources_unlock": True},
+    "T_ScoutTorches": {"scout_torches_unlock": True},
+    "T_ThiefSabotage": {"thief_sabotage_unlock": True},
+    "T_MinimapNormalView": {"ui_minimap_normal_unlock": True},
+    "T_MinimapResouceView": {"ui_minimap_resource_unlock": True},
+    "T_MinimapTacticView": {"ui_minimap_tactic_unlock": True},
+    "T_OnlineHelp": {"ui_help_unlock": True},
+    "T_SuperTechnology": {"supertechnology_unlock": True},
+    "T_Test": {"test_technology_unlock": True},
+    "T_Test2": {"test_technology_2_unlock": True},
+
 }
 
 # Importiere Karten-Konfiguration
@@ -317,7 +391,7 @@ from wood_zones_config import WOOD_ZONES
 # Importiere neue Simulationssysteme
 from worker_simulation import (
     Position, WorkforceManager, Worker, Farm, Residence, Camp,
-    WorkerState, WORKER_PARAMS, WORKER_SPEEDS,
+    WorkerState, WORKER_PARAMS, WORKER_SPEEDS, WORKER_CAMPER_RANGE, get_original_work_route,
 )
 
 try:
@@ -1359,6 +1433,164 @@ technologies = {
 }
 
 
+NONCOMBAT_ORIGINAL_TECH_IDS = {
+    "t_adjusttaxes",
+    "t_blesssettlers1",
+    "t_blesssettlers2",
+    "t_blesssettlers3",
+    "t_blesssettlers4",
+    "t_blesssettlers5",
+    "t_changeweather",
+    "t_cityguard",
+    "t_cropcycle",
+    "t_makerain",
+    "t_makesnow",
+    "t_makesummer",
+    "t_marketclay",
+    "t_marketgold",
+    "t_marketiron",
+    "t_marketstone",
+    "t_marketsulfur",
+    "t_marketwood",
+    "t_minimapnormalview",
+    "t_minimapresouceview",
+    "t_minimaptacticview",
+    "t_onlinehelp",
+    "t_pickaxe",
+    "t_scoutfindresources",
+    "t_scouttorches",
+    "t_spinningwheel",
+    "t_supertechnology",
+    "t_test",
+    "t_test2",
+    "t_thiefsabotage",
+    "t_tracking",
+    "t_weatherforecast",
+}
+
+DISABLED_ORIGINAL_UTILITY_TECH_IDS = {
+    "t_minimapnormalview",
+    "t_minimapresouceview",
+    "t_minimaptacticview",
+    "t_onlinehelp",
+    "t_supertechnology",
+    "t_test",
+    "t_test2",
+}
+
+
+def _infer_research_buildings_for_original_tech(original_id: str) -> List[str]:
+    tech_id = str(original_id or "").lower()
+    if tech_id.startswith("t_blesssettlers"):
+        return ["Kloster"]
+    if tech_id.startswith("t_market"):
+        return ["Markt"]
+    if tech_id in {"t_makerain", "t_makesnow", "t_makesummer"}:
+        return ["Wetterkraftwerk"]
+    if tech_id in {"t_weatherforecast", "t_changeweather"}:
+        return ["Alchimistenh\u00fctte"]
+    if tech_id in {"t_scoutfindresources", "t_scouttorches", "t_thiefsabotage"}:
+        return ["Taverne"]
+    if tech_id in {"t_cropcycle", "t_spinningwheel", "t_pickaxe", "t_cityguard"}:
+        return ["Dorfzentrum"]
+    return ["Hochschule"]
+
+
+def _ensure_noncombat_original_technology_entries() -> None:
+    """Ergaenzt Original-Techs, die fuer Economy/Utility relevant, aber manuell nicht gelistet sind."""
+    try:
+        from original_game_values import aliases_for_technology, load_technology_xml_values
+    except Exception:
+        return
+
+    for original_id in load_technology_xml_values().keys():
+        lowered = str(original_id).lower()
+        if lowered not in NONCOMBAT_ORIGINAL_TECH_IDS:
+            continue
+        if any(alias in technologies for alias in aliases_for_technology(original_id)):
+            continue
+        aliases = list(aliases_for_technology(original_id))
+        canonical = next((alias for alias in aliases if alias in TECHNOLOGY_EFFECTS), aliases[0] if aliases else str(original_id))
+        technologies[canonical] = {
+            "cost": {},
+            "tech_required": [],
+            "unlocks_buildings": [],
+            "research_time": 1,
+            "research_buildings": _infer_research_buildings_for_original_tech(original_id),
+            "effects": dict(TECHNOLOGY_EFFECTS.get(canonical, {})),
+            "disabled": lowered in DISABLED_ORIGINAL_UTILITY_TECH_IDS,
+        }
+
+
+_ensure_noncombat_original_technology_entries()
+
+
+def _apply_original_technology_xml_values() -> None:
+    """Uebernimmt belegte XML-Werte fuer Forschung aus config/game_data.json."""
+    try:
+        from original_game_values import (
+            aliases_for_building_entity,
+            aliases_for_technology,
+            load_technology_xml_values,
+        )
+    except Exception:
+        return
+
+    def resolve_tech(original_id: str) -> Optional[str]:
+        for alias in aliases_for_technology(original_id):
+            if alias in technologies:
+                return alias
+        return None
+
+    def resolve_building(entity_id: str) -> Optional[str]:
+        for alias in aliases_for_building_entity(entity_id):
+            if alias in buildings_db:
+                return alias
+        return None
+
+    for original_id, values in load_technology_xml_values().items():
+        tech_name = resolve_tech(original_id)
+        if not tech_name:
+            continue
+        tech_info = technologies[tech_name]
+
+        tech_info["cost"] = dict(values.get("cost") or {})
+        research_time = int(values.get("research_time") or 0)
+        if research_time > 0:
+            tech_info["research_time"] = research_time
+
+        resolved_reqs = []
+        for req_id in values.get("tech_required_ids") or []:
+            req_name = resolve_tech(req_id)
+            if req_name:
+                resolved_reqs.append(req_name)
+        tech_info["tech_required"] = resolved_reqs
+
+        entity_conditions = []
+        for cond in values.get("entity_conditions") or []:
+            building = resolve_building(cond.get("entity", ""))
+            if not building:
+                continue
+            entity_conditions.append(
+                {"building": building, "amount": int(cond.get("amount", 1) or 1)}
+            )
+        if entity_conditions:
+            tech_info["entity_conditions"] = entity_conditions
+            required = values.get("required_entity_conditions")
+            if required is not None:
+                tech_info["required_entity_conditions"] = int(required)
+            elif "required_entity_conditions" in tech_info:
+                tech_info.pop("required_entity_conditions", None)
+        effects = values.get("effects") or {}
+        if isinstance(effects, dict) and effects:
+            merged_effects = dict(tech_info.get("effects") or {})
+            merged_effects.update(effects)
+            tech_info["effects"] = merged_effects
+
+
+_apply_original_technology_xml_values()
+
+
 # =============================================================================
 # VOLLSTÃƒÆ’Ã¢â‚¬Å¾NDIGE SOLDATEN-DATENBANK (40+ Einheiten)
 # =============================================================================
@@ -1488,7 +1720,7 @@ def _get_scharf_taler_sulfur_cost(target_tier: int = 0) -> Tuple[float, float]:
 # =============================================================================
 
 TIME_STEP = 1
-INCOME_CYCLE = 40
+INCOME_CYCLE = 120  # PaydayFrequency=120s (aus PlayerAttraction.xml)
 TOTAL_SIM_TIME = 1800  # 30 Minuten
 MAX_POSSIBLE_LEIBEIGENE = 400
 # TL_SERF_BUILD.xml: ein Hammerschlag besteht aus 400ms + 1000ms.
@@ -1537,6 +1769,53 @@ BLESS_COOLDOWN = 180  # 3 Minuten Cooldown wie im Original (extra2/logic.xml)
 BLESS_DURATION = 180  # Sekunden wie lange der Bonus hÃƒÆ’Ã‚Â¤lt (aus extra2!)
 BLESS_MOTIVATION_BONUS = 0.3  # +30% Motivation (aus extra2!)
 BLESS_REQUIRED_FAITH = 5000  # BenÃƒÆ’Ã‚Â¶tigter Glaube pro Kategorie
+MAXIMUM_FAITH = 5000  # Logic.xml: MaximumFaith
+
+# Wetter aus Logic.xml und Wintersturm-Lua.
+WEATHER_SUMMER = "summer"
+WEATHER_RAIN = "rain"
+WEATHER_SNOW = "snow"
+RAIN_MOVE_SPEED_FACTOR = 1.0
+SNOW_MOVE_SPEED_FACTOR = 0.85
+WEATHER_MOVE_SPEED_FACTORS = {
+    WEATHER_SUMMER: 1.0,
+    WEATHER_RAIN: RAIN_MOVE_SPEED_FACTOR,
+    WEATHER_SNOW: SNOW_MOVE_SPEED_FACTOR,
+}
+DEFAULT_WEATHER_SCHEDULE = [
+    (WEATHER_SUMMER, 15 * 60),
+    (WEATHER_RAIN, 3 * 60),
+    (WEATHER_SUMMER, 12 * 60),
+    (WEATHER_RAIN, 2 * 60),
+    (WEATHER_SUMMER, 8 * 60),
+]
+
+
+def _normalize_weather(value: Optional[str], default: str = WEATHER_SUMMER) -> str:
+    weather = str(value or "").strip().lower()
+    aliases = {
+        "sommer": WEATHER_SUMMER,
+        "summer": WEATHER_SUMMER,
+        "rain": WEATHER_RAIN,
+        "regen": WEATHER_RAIN,
+        "winter": WEATHER_SNOW,
+        "snow": WEATHER_SNOW,
+        "schnee": WEATHER_SNOW,
+    }
+    return aliases.get(weather, default)
+
+
+def _get_scheduled_weather(current_time: int, schedule: List[Tuple[str, int]]) -> str:
+    total_duration = sum(max(0, int(duration)) for _, duration in schedule)
+    if total_duration <= 0:
+        return WEATHER_SUMMER
+    t = int(current_time) % total_duration
+    elapsed = 0
+    for weather, duration in schedule:
+        elapsed += max(0, int(duration))
+        if t < elapsed:
+            return _normalize_weather(weather)
+    return _normalize_weather(schedule[-1][0])
 
 # 5 Segen-Kategorien (aus extra2/logic.xml)
 BLESS_CATEGORIES = {
@@ -1646,6 +1925,13 @@ BUILDING_FOOTPRINTS = {
     "PB_Beautification11": (300, 300),
     "PB_Beautification12": (300, 300),
 }
+
+try:
+    from original_game_values import load_building_footprints
+
+    BUILDING_FOOTPRINTS.update(load_building_footprints())
+except Exception:
+    pass
 
 # Worker-KapazitÃƒÆ’Ã‚Â¤t wird durch DORFZENTRUM bestimmt (VILLAGE_CENTER_CAPACITY)!
 
@@ -1916,6 +2202,19 @@ def _select_resource_trees(resources_data: Dict[str, Any], base_dir: str) -> Lis
 
 
 DEFAULT_REWARD_PROFILE = {
+    # Terminal objective components.
+    "terminal_dependency_bonus": 0.0,
+    "terminal_recruitable_bonus": 0.0,
+    "terminal_potential_bonus_per_unit": 0.0,
+    "terminal_scharf_count_bonus": 0.0,
+    "terminal_potential_use_cumulative_earnings": 0.0,
+    "terminal_potential_include_start_resources": 0.0,
+    "terminal_potential_scharf_tier": 1.0,
+    # If enabled, terminal potential only counts once the Scharfschuetzen path
+    # (requirements + motivation gate) is unlocked.
+    "terminal_potential_require_path_ready": 1.0,
+    # Optional terminal bonus once the path itself is unlocked.
+    "terminal_path_ready_bonus": 0.0,
     # Dense shaping on state deltas (off by default to preserve sparse behavior).
     "step_delta_potential_bonus": 0.0,
     # Event bonus when cumulative resource potential crosses the next whole-unit threshold.
@@ -1931,6 +2230,19 @@ DEFAULT_REWARD_PROFILE = {
     # Reward per newly reached taxable worker (episode high-water mark).
     "step_worker_growth_bonus": 0.0,
     "step_unlock_recruitable_bonus": 0.0,
+    "step_scharf_recruited_bonus": 0.0,
+    # Reward for crossing evenly spaced unlock-progress milestones.
+    "step_unlock_milestone_bonus": 0.0,
+    "step_unlock_milestone_count": 10.0,
+    # One-time path and requirement completion events.
+    "step_path_ready_bonus": 0.0,
+    "step_required_building_complete_bonus": 0.0,
+    "step_required_tech_complete_bonus": 0.0,
+    "step_required_building_started_bonus": 0.0,
+    "step_required_building_affordable_bonus": 0.0,
+    "step_goal_resource_progress_bonus": 0.0,
+    # Economy shaping on income growth.
+    "step_delta_taler_income_bonus": 0.0,
     "step_time_penalty": 0.0,
     # Event rewards for serf economy growth (episode high-water marks).
     "action_buy_serf_growth_bonus": 0.0,
@@ -1941,6 +2253,9 @@ DEFAULT_REWARD_PROFILE = {
     # Which Scharfschuetzen tier to use for step potential conversion (1=min-tier fallback, 2=T2).
     "step_potential_scharf_tier": 1.0,
     "step_delta_positive_only": 1.0,
+    # Training-only search-space reduction for Scharfschuetzen-focused runs.
+    "goal_action_pruning": 0.0,
+    "goal_pruning_max_tree_targets": 32.0,
 }
 
 
@@ -1998,10 +2313,19 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_step_potential_metric = 0.0
         self._last_step_potential_units = 0
         self._last_step_unlock_progress = 0.0
+        self._last_unlock_milestone_level = 0
         self._best_step_taxable_workers = 0.0
         self._last_scharf_research_progress = 0.0
         self._last_scharf_construction_progress = 0.0
         self._last_scharf_recruitable = False
+        self._last_scharf_path_ready = False
+        self._last_scharf_required_buildings_completed = 0
+        self._last_scharf_required_techs_completed = 0
+        self._last_scharf_required_buildings_started = 0
+        self._last_scharf_required_buildings_affordable = 0
+        self._last_goal_resource_progress = 0.0
+        self._last_scharfschuetzen_count = 0
+        self._last_taler_income_per_cycle = 0.0
         self._terminal_start_total_taler = 0.0
         self._terminal_start_total_schwefel = 0.0
         self._terminal_prev_total_taler = 0.0
@@ -2010,6 +2334,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._terminal_cumulative_schwefel_earned = 0.0
         self._best_total_leibeigene = 0
         self._pending_spawned_unassigned_serfs = 0
+        self._construction_freed_serfs = 0  # Serfs die gerade ein Gebaeude fertiggestellt haben
         self._scharf_required_buildings, self._scharf_required_techs = self._get_scharf_requirements()
 
         # GebÃƒÆ’Ã‚Â¤ude-Listen fÃƒÆ’Ã‚Â¼r Actions
@@ -2165,13 +2490,19 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 self.tech_by_building["Hochschule"].append(tech_name)
 
         # Action Spaces pro Phase
-        self.building_selection_size = max(len(self.upgradeable_buildings), len(self.demolishable_buildings))
-        tree_specific_size = int(PLAYER_1_TREES_SUMMARY.get("total_trees", len(self.resource_trees)))
+        self.building_selection_size = max(
+            len(self.buildable_buildings),
+            len(self.upgradeable_buildings),
+            len(self.demolishable_buildings),
+        )
+        tree_specific_size = MAX_WOOD_SPECIFIC_OPTIONS
         self.source_specific_size = max(MAX_SPECIFIC_OPTIONS, tree_specific_size)
         self.target_specific_size = max(MAX_SPECIFIC_OPTIONS, len(self.buildable_buildings), tree_specific_size)
         self.action_spaces = {
-            ActionPhase.MAIN: spaces.Discrete(len(MAIN_ACTIONS)),  # 11 (build entfernt)
+            ActionPhase.MAIN: spaces.Discrete(len(MAIN_ACTIONS)),
+            ActionPhase.BUILD_CATEGORY: spaces.Discrete(len(BUILD_CATEGORIES)),
             ActionPhase.BUILDING: spaces.Discrete(self.building_selection_size),
+            ActionPhase.POSITION_MODE: spaces.Discrete(len(POSITION_MODES)),
             ActionPhase.POSITION_GROUP: spaces.Discrete(POSITION_GROUP_COUNT),
             ActionPhase.POSITION_INDEX: spaces.Discrete(POSITION_GROUP_SIZE),
             ActionPhase.TECH_BUILDING: spaces.Discrete(len(RESEARCH_BUILDINGS)),  # 13 Forschungs-GebÃƒÆ’Ã‚Â¤ude
@@ -2189,7 +2520,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.phase_list = list(ActionPhase)
         self.phase_index = {phase: idx for idx, phase in enumerate(self.phase_list)}
         self.phase_dim = len(self.phase_list)
-        self.max_action_size = max(space.n for space in self.action_spaces.values())
+        self.max_phase_action_size = max(space.n for space in self.action_spaces.values())
+        self.cancel_action_index = self.max_phase_action_size
+        self.max_action_size = self.max_phase_action_size + 1
 
         # Gymnasium-kompatible action_space Property (fixe GrÃƒÆ’Ã‚Â¶ÃƒÆ’Ã…Â¸e)
         self.action_space = gym.spaces.Discrete(self.max_action_size)
@@ -2203,7 +2536,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         # Observation Space (ERWEITERT mit WorkTime-System)
         n_resource_obs = len(RESOURCE_NAMES)
-        n_worker_obs = len(RESOURCE_MAP) + 2
+        n_worker_obs = len(RESOURCE_MAP) + 4  # +2 fuer pending_spawned + construction_freed
         n_building_obs = len(self.buildable_buildings) * 2
         n_upgrade_obs = len(self.upgradeable_buildings)
         n_tech_obs = len(self.tech_list) * 2
@@ -2212,7 +2545,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         n_time_obs = 2
         # Produktionsraten pro Ressource + effektive Taler-Rate (inkl. Handels-Multiplikator)
         n_production_obs = len(RESOURCE_MAP) + 1
+        n_flow_context_obs = self._get_flow_context_obs_size()
         n_phase_obs = self.phase_dim
+        self.flow_context_dim = n_flow_context_obs
         # Queue-/Kapazitaets-Stats + Bauplaetze + Motivation + Walkable-Stats
         # + zielgerichtete Scharfschuetzen-/Ressourcen-Features
         n_macro_obs = 31
@@ -2230,7 +2565,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         total_obs = (n_resource_obs + n_worker_obs + n_building_obs + n_upgrade_obs +
                     n_tech_obs + n_research_building_obs + n_soldier_obs + n_time_obs +
                     n_production_obs + n_worktime_obs + n_new_action_obs + n_macro_obs +
-                    n_phase_obs)
+                    n_flow_context_obs + n_phase_obs)
 
         self.vector_obs_size = total_obs
         self.vector_observation_space = gym.spaces.Box(
@@ -2704,7 +3039,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # =====================================================================
         # PERFORMANCE: Map-Daten aus Cache verwenden (schnelles Array-Copy!)
         # =====================================================================
-        self.map_manager = MapManager()
+        grid_h, grid_w = self._cached_terrain_base.shape
+        self.map_manager = MapManager(width=grid_w, height=grid_h)
+        self.map_manager.offset_x = self._cached_map_manager.offset_x
+        self.map_manager.offset_y = self._cached_map_manager.offset_y
         # Direkt gecachte Arrays kopieren (VIEL schneller als neu aufbauen!)
         self.map_manager.grid.terrain_base = self._cached_terrain_base.copy()
         self.map_manager.grid.trees = self._cached_trees_layer.copy()
@@ -2739,6 +3077,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._best_total_leibeigene = int(self.total_leibeigene)
         # Start-Serfs sind keine "neu gekauften" Serfs -> keine initialen Pending-Tokens.
         self._pending_spawned_unassigned_serfs = 0
+        self._construction_freed_serfs = 0
+        self._first_worker_building_time = None  # Zahltag startet erst nach erstem Workergebaeude
         hq_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
         for i in range(self.total_leibeigene):
             serf = Serf(
@@ -2758,6 +3098,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         # NEU: Glaube (Faith) fÃƒÆ’Ã‚Â¼r Segnen
         self.faith = 0  # Startwert
+        self._weather_schedule = list(DEFAULT_WEATHER_SCHEDULE)
+        self._weather_schedule_enabled = not _env_truthy(
+            os.environ.get("SIEDLER_DISABLE_WEATHER_SCHEDULE", "0")
+        )
+        weather_override = os.environ.get("SIEDLER_INITIAL_WEATHER")
+        self.current_weather = (
+            _normalize_weather(weather_override)
+            if weather_override
+            else _get_scheduled_weather(0, self._weather_schedule)
+        )
 
         # NEU: Alarm-Modus
         self.alarm_active = False
@@ -2775,12 +3125,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._start_scharf_resource_potential = self._get_scharf_resource_potential()
         self._start_scharf_dependency_progress = self._get_scharf_dependency_progress()
         self._start_scharf_recruitable = self._is_scharf_recruitable_now()
+        step_potential_tier = self._get_goal_training_tier()
 
         self._last_scharf_resource_potential = self._start_scharf_resource_potential
         self._last_scharf_dependency_progress = self._start_scharf_dependency_progress
         self._reset_terminal_cumulative_tracker()
-        current_research_progress = self._get_scharf_research_progress_metric()
-        current_construction_progress = self._get_scharf_construction_progress_metric()
+        current_research_progress = self._get_scharf_research_progress_metric(target_tier=step_potential_tier)
+        current_construction_progress = self._get_scharf_construction_progress_metric(target_tier=step_potential_tier)
         self._last_scharf_research_progress = current_research_progress
         self._last_scharf_construction_progress = current_construction_progress
         self._last_step_unlock_progress = self._get_step_unlock_progress_metric(
@@ -2789,6 +3140,30 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             construction_progress=current_construction_progress,
         )
         self._last_scharf_recruitable = self._start_scharf_recruitable
+        self._last_unlock_milestone_level = self._get_unlock_milestone_level(
+            self._last_step_unlock_progress
+        )
+        self._last_scharf_path_ready = self._is_scharf_path_ready(
+            target_tier=self._get_reward_profile_scharf_tier(
+                "step_potential_scharf_tier",
+                default=1,
+            )
+        )
+        self._last_scharf_required_buildings_completed = (
+            self._get_scharf_required_buildings_completed_count(target_tier=step_potential_tier)
+        )
+        self._last_scharf_required_techs_completed = (
+            self._get_scharf_required_techs_completed_count(target_tier=step_potential_tier)
+        )
+        self._last_scharf_required_buildings_started = (
+            self._get_scharf_required_buildings_started_count(target_tier=step_potential_tier)
+        )
+        self._last_scharf_required_buildings_affordable = (
+            self._get_scharf_required_buildings_affordable_count(target_tier=step_potential_tier)
+        )
+        self._last_goal_resource_progress = self._get_goal_resource_progress_metric(target_tier=step_potential_tier)
+        self._last_scharfschuetzen_count = int(self.scharfschuetzen)
+        self._last_taler_income_per_cycle = float(self._get_taler_income_per_cycle())
 
         use_step_cumulative = float(
             self.reward_profile.get("step_potential_use_cumulative_earnings", 1.0)
@@ -2796,10 +3171,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         step_include_start = float(
             self.reward_profile.get("step_potential_include_start_resources", 0.0)
         ) > 0.0
-        step_potential_tier = self._get_reward_profile_scharf_tier(
-            "step_potential_scharf_tier",
-            default=1,
-        )
         if use_step_cumulative:
             self._last_step_potential_metric = float(
                 self._get_scharf_cumulative_resource_potential(
@@ -2901,7 +3272,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # HQ sicherstellen
         hq_x, hq_y = self.hq_position
         hq_key = "Hauptquartier_1_0"
-        hq_pos = {"x": hq_x, "y": hq_y}
+        hq_pos = self._with_original_orientation("Hauptquartier_1", {"x": hq_x, "y": hq_y})
         self.buildings["Hauptquartier_1"] = 1
         self.building_position_map[hq_key] = hq_pos
         self.building_grid_ids[hq_key] = self.map_manager.add_building(hq_x, hq_y, "Hauptquartier")
@@ -2911,7 +3282,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.buildings["Dorfzentrum_1"] = len(built_slots)
         for idx, slot in enumerate(built_slots):
             key = f"Dorfzentrum_1_{idx}"
-            pos = {"x": slot["x"], "y": slot["y"]}
+            pos = self._with_original_orientation("Dorfzentrum_1", {"x": slot["x"], "y": slot["y"]})
             self.building_position_map[key] = pos
             self.building_grid_ids[key] = self.map_manager.add_building(pos["x"], pos["y"], "Dorfzentrum")
 
@@ -2983,6 +3354,176 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         return np.stack(layers, axis=0)
 
+    def _get_flow_context_obs_size(self) -> int:
+        """Fixed size of the dynamic multi-step action context block."""
+        return (
+            2  # flow_active, normalized flow_step
+            + len(MAIN_ACTIONS)
+            + len(BUILD_CATEGORIES)
+            + len(SOURCE_CATEGORIES)
+            + 2  # source_specific selected flag + normalized index
+            + len(TARGET_CATEGORIES)
+            + 2  # target_specific selected flag + normalized index
+            + len(QUANTITY_VALUES)
+            + 1  # selected quantity value normalized
+            + len(self.buildable_buildings)
+            + len(self.upgradeable_buildings)
+            + len(self.demolishable_buildings)
+            + len(RESEARCH_BUILDINGS)
+            + MAX_TECHS_PER_BUILDING
+            + len(self.soldier_types)
+            + len(BLESS_CATEGORIES)
+            + len(TAX_LEVELS)
+            + 2  # alarm on/off
+            + len(POSITION_MODES)
+            + POSITION_GROUP_COUNT
+            + 2  # position_index selected flag + normalized index
+        )
+
+    @staticmethod
+    def _append_one_hot(values: List[float], index: Optional[int], size: int) -> None:
+        start = len(values)
+        values.extend([0.0] * max(0, int(size)))
+        if index is None or size <= 0:
+            return
+        idx = int(index)
+        if 0 <= idx < size:
+            values[start + idx] = 1.0
+
+    @staticmethod
+    def _normalize_choice_index(index: Optional[int], size: int) -> float:
+        if index is None or size <= 1:
+            return 0.0
+        idx = max(0, min(int(index), int(size) - 1))
+        return float(idx) / float(size - 1)
+
+    def _get_flow_context_observation(self) -> np.ndarray:
+        """
+        Encodes pending multi-step selections so feedforward policies can see
+        the current action context, not only the current phase.
+        """
+        selections = dict(getattr(self, "pending_selections", {}) or {})
+        flow_name = getattr(self, "current_flow", None)
+
+        main_idx: Optional[int] = None
+        if ActionPhase.MAIN in selections:
+            main_idx = self._to_int_choice(selections.get(ActionPhase.MAIN), -1)
+        elif flow_name in MAIN_ACTIONS:
+            main_idx = MAIN_ACTIONS.index(flow_name)
+        if main_idx is not None and not (0 <= main_idx < len(MAIN_ACTIONS)):
+            main_idx = None
+
+        flow_phases = ACTION_FLOWS.get(flow_name, []) if flow_name else []
+        flow_active = 1.0 if main_idx is not None else 0.0
+        flow_step_norm = 0.0
+        if flow_active and flow_phases:
+            denom = max(1, len(flow_phases) - 1)
+            flow_step_norm = max(0.0, min(float(getattr(self, "flow_step", 0)) / denom, 1.0))
+
+        values: List[float] = [flow_active, flow_step_norm]
+        self._append_one_hot(values, main_idx, len(MAIN_ACTIONS))
+
+        build_cat_idx = None
+        if ActionPhase.BUILD_CATEGORY in selections:
+            build_cat_idx = self._to_int_choice(selections.get(ActionPhase.BUILD_CATEGORY), -1)
+        self._append_one_hot(values, build_cat_idx, len(BUILD_CATEGORIES))
+
+        src_cat = None
+        if ActionPhase.SOURCE_CATEGORY in selections:
+            src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY), -1)
+        self._append_one_hot(values, src_cat, len(SOURCE_CATEGORIES))
+
+        src_spec = None
+        if ActionPhase.SOURCE_SPECIFIC in selections:
+            src_spec = self._to_int_choice(selections.get(ActionPhase.SOURCE_SPECIFIC), -1)
+        values.append(1.0 if src_spec is not None else 0.0)
+        values.append(self._normalize_choice_index(src_spec, self.source_specific_size))
+
+        tgt_cat = None
+        if ActionPhase.TARGET_CATEGORY in selections:
+            tgt_cat = self._to_int_choice(selections.get(ActionPhase.TARGET_CATEGORY), -1)
+        self._append_one_hot(values, tgt_cat, len(TARGET_CATEGORIES))
+
+        tgt_spec = None
+        if ActionPhase.TARGET_SPECIFIC in selections:
+            tgt_spec = self._to_int_choice(selections.get(ActionPhase.TARGET_SPECIFIC), -1)
+        values.append(1.0 if tgt_spec is not None else 0.0)
+        values.append(self._normalize_choice_index(tgt_spec, self.target_specific_size))
+
+        qty_idx = None
+        if ActionPhase.QUANTITY in selections:
+            qty_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY), -1)
+        self._append_one_hot(values, qty_idx, len(QUANTITY_VALUES))
+        if qty_idx is not None and 0 <= qty_idx < len(QUANTITY_VALUES):
+            values.append(float(QUANTITY_VALUES[qty_idx]) / float(max(QUANTITY_VALUES)))
+        else:
+            values.append(0.0)
+
+        build_idx = tgt_spec if flow_name == "assign_serf" and tgt_cat == 7 else None
+        if flow_name == "build":
+            selected_building = self._get_build_flow_building_from_selections(selections)
+            if selected_building in self.buildable_buildings:
+                build_idx = self.buildable_buildings.index(selected_building)
+        self._append_one_hot(values, build_idx, len(self.buildable_buildings))
+
+        building_idx = None
+        if ActionPhase.BUILDING in selections:
+            building_idx = self._to_int_choice(selections.get(ActionPhase.BUILDING), -1)
+        self._append_one_hot(values, building_idx if flow_name == "upgrade" else None, len(self.upgradeable_buildings))
+        self._append_one_hot(values, building_idx if flow_name == "demolish" else None, len(self.demolishable_buildings))
+
+        tech_building_idx = None
+        if ActionPhase.TECH_BUILDING in selections:
+            tech_building_idx = self._to_int_choice(selections.get(ActionPhase.TECH_BUILDING), -1)
+        self._append_one_hot(values, tech_building_idx, len(RESEARCH_BUILDINGS))
+
+        tech_idx = None
+        if ActionPhase.TECH in selections:
+            tech_idx = self._to_int_choice(selections.get(ActionPhase.TECH), -1)
+        self._append_one_hot(values, tech_idx, MAX_TECHS_PER_BUILDING)
+
+        soldier_idx = None
+        if ActionPhase.SOLDIER in selections:
+            soldier_idx = self._to_int_choice(selections.get(ActionPhase.SOLDIER), -1)
+        self._append_one_hot(values, soldier_idx, len(self.soldier_types))
+
+        bless_idx = None
+        if ActionPhase.CATEGORY in selections:
+            bless_idx = self._to_int_choice(selections.get(ActionPhase.CATEGORY), -1)
+        self._append_one_hot(values, bless_idx, len(BLESS_CATEGORIES))
+
+        tax_idx = None
+        if ActionPhase.TAX_LEVEL in selections:
+            tax_idx = self._to_int_choice(selections.get(ActionPhase.TAX_LEVEL), -1)
+        self._append_one_hot(values, tax_idx, len(TAX_LEVELS))
+
+        alarm_idx = None
+        if ActionPhase.ON_OFF in selections:
+            alarm_idx = self._to_int_choice(selections.get(ActionPhase.ON_OFF), -1)
+        self._append_one_hot(values, alarm_idx, 2)
+
+        pos_mode_idx = None
+        if ActionPhase.POSITION_MODE in selections:
+            pos_mode_idx = self._to_int_choice(selections.get(ActionPhase.POSITION_MODE), -1)
+        self._append_one_hot(values, pos_mode_idx, len(POSITION_MODES))
+
+        pos_group_idx = None
+        if ActionPhase.POSITION_GROUP in selections:
+            pos_group_idx = self._to_int_choice(selections.get(ActionPhase.POSITION_GROUP), -1)
+        self._append_one_hot(values, pos_group_idx, POSITION_GROUP_COUNT)
+
+        pos_index_idx = None
+        if ActionPhase.POSITION_INDEX in selections:
+            pos_index_idx = self._to_int_choice(selections.get(ActionPhase.POSITION_INDEX), -1)
+        values.append(1.0 if pos_index_idx is not None else 0.0)
+        values.append(self._normalize_choice_index(pos_index_idx, POSITION_GROUP_SIZE))
+
+        if len(values) != self.flow_context_dim:
+            raise RuntimeError(
+                f"Flow context length mismatch: got {len(values)} expected {self.flow_context_dim}"
+            )
+        return np.asarray(values, dtype=np.float32)
+
     def _get_observation(self):
         phase_idx = self.phase_index.get(self.current_phase, 0)
         phase_vec = np.zeros(self.phase_dim, dtype=np.float32)
@@ -3000,6 +3541,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 obs.append(self.resource_workers.get(r, 0) / 50.0)
             obs.append(self.free_leibeigene / 100.0)
             obs.append(self.total_leibeigene / 100.0)
+            obs.append(max(0, int(getattr(self, "_pending_spawned_unassigned_serfs", 0))) / 100.0)
+            obs.append(max(0, int(getattr(self, "_construction_freed_serfs", 0))) / 100.0)
 
             construction_counts = {}
             if self.construction_queue:
@@ -3116,7 +3659,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             # Zielnahe Features fuer stabileres Scharfschuetzen-Lernen.
             obs.extend(self._get_goal_observation_features())
 
-            expected_base_obs = self.vector_obs_size - self.phase_dim
+            expected_base_obs = self.vector_obs_size - self.flow_context_dim - self.phase_dim
             if len(obs) != expected_base_obs:
                 raise RuntimeError(
                     f"Observation length mismatch: got {len(obs)} expected {expected_base_obs}"
@@ -3126,7 +3669,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self._obs_cache_base = base
             self._obs_cache_time = self.current_time
 
-        vector_obs = np.concatenate([base, phase_vec])
+        flow_context = self._get_flow_context_observation()
+        vector_obs = np.concatenate([base, flow_context, phase_vec])
         if self.use_spatial_obs:
             use_cache = (
                 getattr(self, "_spatial_cache_time", None) == self.current_time
@@ -3242,7 +3786,15 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _get_total_motivation(self) -> float:
         """Berechnet die Basis-Motivation (ohne Segen, der ist pro Worker-Typ)."""
-        cached = self._get_can_cache("_total_motivation")
+        motivation_buildings = tuple(
+            sorted(
+                (b_name, count)
+                for b_name, count in self.buildings.items()
+                if count and buildings_db.get(b_name, {}).get("motivation_effect")
+            )
+        )
+        cache_key = ("_total_motivation", float(self.base_motivation), motivation_buildings)
+        cached = self._get_can_cache(cache_key)
         if cached is not None:
             return float(cached)
 
@@ -3256,7 +3808,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         # Segen-Bonus jetzt PRO WORKER-TYP (nicht mehr global!)
         result = float(max(0.25, min(3.0, motivation)))
-        self._set_can_cache("_total_motivation", result)
+        self._set_can_cache(cache_key, result)
         return result
 
     def _get_blessed_worker_types(self) -> set:
@@ -3285,6 +3837,35 @@ class SiedlerScharfschuetzenEnv(gym.Env):
     def _get_bless_duration(self) -> int:
         bonus = self.active_tech_effects.get("bless_duration_bonus", 0)
         return max(1, BLESS_DURATION + int(bonus))
+
+    def _update_current_weather(self) -> str:
+        if getattr(self, "_weather_schedule_enabled", True):
+            self.current_weather = _get_scheduled_weather(
+                self.current_time,
+                getattr(self, "_weather_schedule", DEFAULT_WEATHER_SCHEDULE),
+            )
+        else:
+            self.current_weather = _normalize_weather(
+                getattr(self, "current_weather", WEATHER_SUMMER)
+            )
+        return self.current_weather
+
+    def _set_weather(self, weather: str) -> None:
+        self.current_weather = _normalize_weather(weather)
+        self._weather_schedule_enabled = False
+
+    def _on_technology_completed(self, tech_name: str) -> None:
+        tech_key = str(tech_name or "").lower()
+        if tech_key in {"t_makerain", "t_makerain.xml"} or str(tech_name) == "T_MakeRain":
+            self._set_weather(WEATHER_RAIN)
+        elif tech_key in {"t_makesnow", "t_makesnow.xml"} or str(tech_name) == "T_MakeSnow":
+            self._set_weather(WEATHER_SNOW)
+        elif tech_key in {"t_makesummer", "t_makesummer.xml"} or str(tech_name) == "T_MakeSummer":
+            self._set_weather(WEATHER_SUMMER)
+
+    def _get_weather_move_speed_multiplier(self) -> float:
+        weather = _normalize_weather(getattr(self, "current_weather", WEATHER_SUMMER))
+        return float(WEATHER_MOVE_SPEED_FACTORS.get(weather, 1.0))
 
     def _get_alarm_recharge_time(self) -> int:
         reduction = self.active_tech_effects.get("alarm_recharge_reduction", 0)
@@ -3401,6 +3982,91 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     req_techs.add(req)
         return req_buildings, req_techs
 
+    def _get_scharf_requirements_for_tier(
+        self,
+        target_tier: Optional[int] = None,
+    ) -> Tuple[Set[str], Set[str]]:
+        """Tier-spezifische und transitive Scharfschuetzen-Anforderungen."""
+        if target_tier is None:
+            return set(self._scharf_required_buildings or set()), set(self._scharf_required_techs or set())
+
+        tier = max(1, int(target_tier))
+        req_buildings: Set[str] = set()
+        req_techs: Set[str] = set()
+        tech_stack: List[str] = []
+
+        def add_building(building: str) -> None:
+            if building not in buildings_db:
+                return
+            req_buildings.add(building)
+
+            # Upgrade-Ziele brauchen auch die niedrigeren Stufen als Baupfad.
+            base = get_base_building_name(building)
+            level = get_building_level(building)
+            for lower_level in range(1, level):
+                lower_name = f"{base}_{lower_level}"
+                if lower_name in buildings_db:
+                    req_buildings.add(lower_name)
+
+            tech_req = buildings_db.get(building, {}).get("tech_required")
+            if tech_req and tech_req in technologies and tech_req not in req_techs:
+                tech_stack.append(tech_req)
+
+        def add_research_building(raw_building: str) -> None:
+            if raw_building in buildings_db:
+                add_building(raw_building)
+                return
+            level_one = f"{get_base_building_name(str(raw_building))}_1"
+            if level_one in buildings_db:
+                add_building(level_one)
+
+        for soldier in self._get_scharf_soldier_types():
+            if get_building_level(str(soldier)) != tier:
+                continue
+            for req in soldiers_db.get(soldier, {}).get("requirements", []):
+                if req in buildings_db:
+                    add_building(req)
+                elif req in technologies:
+                    tech_stack.append(req)
+
+        while tech_stack:
+            tech = tech_stack.pop()
+            if tech in req_techs or tech not in technologies:
+                continue
+            req_techs.add(tech)
+            tech_info = technologies.get(tech, {})
+            explicit_building_req = False
+
+            for req in tech_info.get("tech_required", []):
+                if req not in req_techs:
+                    tech_stack.append(req)
+
+            for building_key in ("requires_building", "research_building"):
+                building_req = tech_info.get(building_key)
+                if building_req:
+                    explicit_building_req = True
+                    add_research_building(str(building_req))
+
+            for building_req in tech_info.get("research_buildings", []) or []:
+                explicit_building_req = True
+                add_research_building(str(building_req))
+
+            entity_conditions = tech_info.get("entity_conditions", []) or []
+            required_conditions = int(tech_info.get("required_entity_conditions", len(entity_conditions)) or 0)
+            if (
+                entity_conditions
+                and not explicit_building_req
+                and required_conditions >= len(entity_conditions)
+            ):
+                for condition in entity_conditions:
+                    if not isinstance(condition, dict):
+                        continue
+                    building_req = condition.get("building")
+                    if building_req:
+                        add_building(str(building_req))
+
+        return req_buildings, req_techs
+
     def _get_scharf_resource_potential(self, target_tier: Optional[int] = None) -> float:
         """Theoretisch rekrutierbare Scharfschuetzen nur aus Taler+Schwefel."""
         taler_cost, sulfur_cost = self._get_scharf_costs(target_tier=target_tier)
@@ -3408,14 +4074,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         sulfur_total = float(self._get_total_resource(RESOURCE_SCHWEFEL))
         return float(max(0.0, min(taler_total / taler_cost, sulfur_total / sulfur_cost)))
 
-    def _get_scharf_research_progress_metric(self) -> float:
+    def _get_scharf_research_progress_metric(self, target_tier: Optional[int] = None) -> float:
         """
         Fortschrittsmetrik (0..1) fuer scharf-relevante Forschung.
         Belohnt auch laengere Forschungen bereits waehrend sie laufen.
         """
-        required_techs = self._scharf_required_techs or set()
+        _, required_techs = self._get_scharf_requirements_for_tier(target_tier)
         if not required_techs:
-            return 0.0
+            return 1.0 if target_tier is not None else 0.0
 
         in_progress: Dict[str, float] = {}
         for tech, remaining in self.current_researches:
@@ -3438,12 +4104,12 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         return float(max(0.0, min(1.0, score / max(1, len(required_techs)))))
 
-    def _get_scharf_construction_progress_metric(self) -> float:
+    def _get_scharf_construction_progress_metric(self, target_tier: Optional[int] = None) -> float:
         """
         Fortschrittsmetrik (0..1) fuer scharf-relevante Gebaeude.
         Beruecksichtigt bereits laufende Baustellen.
         """
-        required_buildings = self._scharf_required_buildings or set()
+        required_buildings, _ = self._get_scharf_requirements_for_tier(target_tier)
         if not required_buildings:
             return 0.0
 
@@ -3479,9 +4145,283 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 if queued_progress > progress:
                     progress = queued_progress
 
+            for item in self.upgrade_queue:
+                if len(item) < 3:
+                    continue
+                old_building, new_building, remaining = item[:3]
+                if new_building != building:
+                    continue
+                total = float(buildings_db.get(old_building, {}).get("upgrade_time", 0.0))
+                if total <= 0.0:
+                    continue
+                upgrade_progress = max(0.0, min(1.0, 1.0 - (float(remaining) / total)))
+                if upgrade_progress > progress:
+                    progress = upgrade_progress
+
             score += progress
 
         return float(max(0.0, min(1.0, score / max(1, len(required_buildings)))))
+
+    def _get_scharf_required_buildings_completed_count(self, target_tier: Optional[int] = None) -> int:
+        required_buildings, _ = self._get_scharf_requirements_for_tier(target_tier)
+        if not required_buildings:
+            return 0
+        return int(
+            sum(1 for building in required_buildings if self.buildings.get(building, 0) >= 1)
+        )
+
+    def _get_scharf_required_techs_completed_count(self, target_tier: Optional[int] = None) -> int:
+        _, required_techs = self._get_scharf_requirements_for_tier(target_tier)
+        if not required_techs:
+            return 0
+        return int(sum(1 for tech in required_techs if tech in self.researched_techs))
+
+    def _goal_action_pruning_enabled(self) -> bool:
+        if _env_truthy(os.environ.get("SIEDLER_GOAL_ACTION_PRUNING", "0")):
+            return True
+        return float(self.reward_profile.get("goal_action_pruning", 0.0)) > 0.0
+
+    def _get_goal_training_tier(self) -> int:
+        return self._get_reward_profile_scharf_tier(
+            "step_potential_scharf_tier",
+            default=1,
+        )
+
+    def _get_goal_relevant_techs(self, target_tier: Optional[int] = None) -> Set[str]:
+        tier = int(target_tier) if target_tier is not None else self._get_goal_training_tier()
+        cache_key = ("goal_relevant_techs", tier)
+        cached = self._get_can_cache(cache_key)
+        if isinstance(cached, set):
+            return cached
+
+        _, required_techs = self._get_scharf_requirements_for_tier(tier)
+        relevant: Set[str] = set()
+        stack = list(required_techs)
+        while stack:
+            tech = stack.pop()
+            if tech in relevant or tech not in technologies:
+                continue
+            relevant.add(tech)
+            for req in technologies.get(tech, {}).get("tech_required", []):
+                if req not in relevant:
+                    stack.append(req)
+
+        self._set_can_cache(cache_key, relevant)
+        return relevant
+
+    def _is_goal_relevant_building(self, building: str) -> bool:
+        if not building:
+            return False
+        if str(building).startswith("PB_Beautification"):
+            return False
+        target_tier = self._get_goal_training_tier()
+        required_buildings, _ = self._get_scharf_requirements_for_tier(target_tier)
+        if building in required_buildings:
+            return True
+
+        base_name = get_base_building_name(str(building))
+        essential_bases = {
+            "Dorfzentrum",
+            "Wohnhaus",
+            "Bauernhof",
+            "Steinmine",
+            "Lehmmine",
+            "Eisenmine",
+            "Schwefelmine",
+        }
+        if target_tier >= 2:
+            essential_bases.update({"Hochschule", "Schmiede", "Bank"})
+        if base_name in essential_bases:
+            return True
+        if buildings_db.get(building, {}).get("mine_type"):
+            return True
+        if building in FARM_EAT_CAPACITY or building in RESIDENCE_CAPACITY:
+            return True
+        return False
+
+    def _is_goal_relevant_upgrade(self, building: str) -> bool:
+        upgrade_to = buildings_db.get(building, {}).get("upgrade_to")
+        required_buildings, _ = self._get_scharf_requirements_for_tier(self._get_goal_training_tier())
+        return bool(upgrade_to and upgrade_to in required_buildings)
+
+    def _get_goal_tree_target_indices(self) -> Set[int]:
+        limit = int(max(0, round(float(self.reward_profile.get("goal_pruning_max_tree_targets", 32.0)))))
+        if limit <= 0 or limit >= len(self.tree_list_internal):
+            return set(range(len(self.tree_list_internal)))
+
+        cache_key = ("goal_tree_target_indices", limit)
+        cached = self._get_can_cache(cache_key)
+        if isinstance(cached, set):
+            return cached
+
+        hq_x, hq_y = self.hq_position
+        scored = []
+        for idx, tree in enumerate(self.tree_list_internal):
+            if tree.get("resource_remaining", 0) <= 0:
+                continue
+            dx = float(tree.get("x", 0.0)) - float(hq_x)
+            dy = float(tree.get("y", 0.0)) - float(hq_y)
+            scored.append((dx * dx + dy * dy, idx))
+        scored.sort()
+        result = {idx for _, idx in scored[:limit]}
+        self._set_can_cache(cache_key, result)
+        return result
+
+    def _can_build_goal_relevant_any(self) -> bool:
+        return any(self._is_goal_relevant_building(b) and self._can_build(b) for b in self.buildable_buildings)
+
+    def _get_build_category_index(self, building: str) -> int:
+        if str(building).startswith("PB_Beautification"):
+            return 5
+
+        base_name = self._normalize_building_name(get_base_building_name(str(building)))
+        base_key = base_name.lower()
+        b_info = buildings_db.get(building, {})
+
+        if base_key in {"dorfzentrum", "wohnhaus", "bauernhof"}:
+            return 0
+        if b_info.get("mine_type") or base_key.endswith("mine"):
+            return 1
+        if base_key in {
+            "sägemühle",
+            "lehmhütte",
+            "schmiede",
+            "alchimistenhütte",
+            "steinmetzhütte",
+            "bank",
+            "markt",
+        }:
+            return 2
+        if base_key in {
+            "hochschule",
+            "kloster",
+            "taverne",
+            "architektenstube",
+            "wetterkraftwerk",
+        }:
+            return 3
+        if base_key in {
+            "kaserne",
+            "schießplatz",
+            "schiessplatz",
+            "stall",
+            "kanongießerei",
+            "kanongiesserei",
+            "turm",
+            "büchsenmacherei",
+            "buchsenmacherei",
+        }:
+            return 4
+        if b_info.get("worker_type") and int(b_info.get("max_workers", 0) or 0) > 0:
+            return 2
+        return 6
+
+    def _get_buildings_for_build_category(self, category_idx: int) -> List[str]:
+        category_idx = int(category_idx)
+        return [
+            building
+            for building in self.buildable_buildings
+            if self._get_build_category_index(building) == category_idx
+        ]
+
+    def _is_build_flow_building_allowed(self, building: str) -> bool:
+        if not building or not self._can_build(building):
+            return False
+        if self._goal_action_pruning_enabled() and not self._is_goal_relevant_building(building):
+            return False
+        return True
+
+    def _can_build_action(self, batch_size: int = 1) -> bool:
+        if batch_size <= 0:
+            return False
+        source_exists = (
+            self.free_leibeigene >= batch_size
+            or self._has_nonfree_source_for_batch(batch_size)
+        )
+        if not source_exists:
+            return False
+        if self._goal_action_pruning_enabled():
+            return self._can_build_goal_relevant_any()
+        return any(self._can_build(building) for building in self.buildable_buildings)
+
+    def _get_build_flow_building_from_selections(self, selections: Dict[ActionPhase, int]) -> Optional[str]:
+        category_idx = self._to_int_choice(selections.get(ActionPhase.BUILD_CATEGORY, 0), 0)
+        building_idx = self._to_int_choice(selections.get(ActionPhase.BUILDING, 0), 0)
+        category_buildings = self._get_buildings_for_build_category(category_idx)
+        if building_idx < 0 or building_idx >= len(category_buildings):
+            return None
+        return category_buildings[building_idx]
+
+    def _get_scharf_required_buildings_started_count(self, target_tier: Optional[int] = None) -> int:
+        required_buildings, _ = self._get_scharf_requirements_for_tier(target_tier)
+        if not required_buildings:
+            return 0
+        started = 0
+        for building in required_buildings:
+            if self.buildings.get(building, 0) >= 1:
+                started += 1
+                continue
+            if any(site.get("building") == building for site in self.construction_sites):
+                started += 1
+                continue
+            if any(item and item[0] == building for item in self.construction_queue):
+                started += 1
+                continue
+            if any(len(item) >= 2 and item[1] == building for item in self.upgrade_queue):
+                started += 1
+        return int(started)
+
+    def _can_reach_required_building_now(self, building: str) -> bool:
+        if self.buildings.get(building, 0) >= 1:
+            return True
+        if building in self.buildable_buildings and self._can_build(building):
+            return True
+        for old_building, info in buildings_db.items():
+            if info.get("upgrade_to") != building:
+                continue
+            if self.buildings.get(old_building, 0) < 1:
+                continue
+            if self._can_upgrade(old_building):
+                return True
+        return False
+
+    def _get_scharf_required_buildings_affordable_count(self, target_tier: Optional[int] = None) -> int:
+        required_buildings, _ = self._get_scharf_requirements_for_tier(target_tier)
+        if not required_buildings:
+            return 0
+        count = 0
+        for building in required_buildings:
+            if self._can_reach_required_building_now(building):
+                count += 1
+        return int(count)
+
+    def _get_goal_resource_targets(self, target_tier: Optional[int] = None) -> Dict[str, float]:
+        targets: Dict[str, float] = {}
+        tier = int(target_tier) if target_tier is not None else self._get_goal_training_tier()
+        required_buildings, _ = self._get_scharf_requirements_for_tier(tier)
+
+        for building in required_buildings:
+            for resource, amount in buildings_db.get(building, {}).get("cost", {}).items():
+                targets[resource] = targets.get(resource, 0.0) + float(amount)
+
+        taler_cost, sulfur_cost = self._get_scharf_costs(target_tier=tier)
+        targets[RESOURCE_TALER] = targets.get(RESOURCE_TALER, 0.0) + float(taler_cost)
+        targets[RESOURCE_SCHWEFEL] = targets.get(RESOURCE_SCHWEFEL, 0.0) + float(sulfur_cost)
+
+        for tech in self._get_goal_relevant_techs(target_tier=tier):
+            for resource, amount in technologies.get(tech, {}).get("cost", {}).items():
+                targets[resource] = targets.get(resource, 0.0) + float(amount)
+
+        return {resource: amount for resource, amount in targets.items() if amount > 0.0}
+
+    def _get_goal_resource_progress_metric(self, target_tier: Optional[int] = None) -> float:
+        targets = self._get_goal_resource_targets(target_tier=target_tier)
+        if not targets:
+            return 0.0
+        progress = []
+        for resource, target in targets.items():
+            progress.append(min(1.0, float(self._get_total_resource(resource)) / max(1.0, float(target))))
+        return float(max(0.0, min(1.0, np.mean(progress))))
 
     def _reset_terminal_cumulative_tracker(self) -> None:
         """Initialisiert Tracking fuer kumulierte Episode-Einnahmen (Taler/Schwefel)."""
@@ -3557,6 +4497,65 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         return float(max(0.0, min(1.0, best_progress)))
 
+    def _is_scharf_path_ready(self, target_tier: Optional[int] = None) -> bool:
+        """
+        True, sobald mindestens ein Scharfschuetzen-Tier ohne Ressourcenpruefung
+        freigeschaltet ist (Gebaeude/Techs + Motivation).
+        """
+        if not self._has_min_population_motivation():
+            return False
+
+        for soldier in self._get_scharf_soldier_types():
+            if target_tier is not None and get_building_level(str(soldier)) != int(target_tier):
+                continue
+
+            requirements_met = True
+            for req in soldiers_db.get(soldier, {}).get("requirements", []):
+                if req in buildings_db and self.buildings.get(req, 0) < 1:
+                    requirements_met = False
+                    break
+                if req in technologies and req not in self.researched_techs:
+                    requirements_met = False
+                    break
+
+            if requirements_met:
+                return True
+
+        return False
+
+    def _get_scharf_terminal_potential(self) -> float:
+        """
+        Endziel-Metrik fuer Training:
+        Wie viele Scharfschuetzen koennten aus dem finalen Zustand rekrutiert
+        werden, optional nur wenn der Rekrutierungs-Pfad freigeschaltet ist.
+        """
+        use_cumulative = float(
+            self.reward_profile.get("terminal_potential_use_cumulative_earnings", 0.0)
+        ) > 0.0
+        include_start_resources = float(
+            self.reward_profile.get("terminal_potential_include_start_resources", 0.0)
+        ) > 0.0
+        target_tier = self._get_reward_profile_scharf_tier(
+            "terminal_potential_scharf_tier",
+            default=1,
+        )
+        require_path_ready = float(
+            self.reward_profile.get("terminal_potential_require_path_ready", 1.0)
+        ) > 0.0
+
+        if require_path_ready and not self._is_scharf_path_ready(target_tier=target_tier):
+            return 0.0
+
+        if use_cumulative:
+            return float(
+                self._get_scharf_cumulative_resource_potential(
+                    include_start_resources=include_start_resources,
+                    target_tier=target_tier,
+                )
+            )
+
+        return float(self._get_scharf_resource_potential(target_tier=target_tier))
+
     def _get_step_unlock_progress_metric(
         self,
         dependency_progress: float,
@@ -3582,6 +4581,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             + construction * construction_weight
         ) / total_weight
         return float(max(0.0, min(1.0, metric)))
+
+    def _get_unlock_milestone_level(self, progress: float) -> int:
+        milestone_count = max(
+            1,
+            int(round(float(self.reward_profile.get("step_unlock_milestone_count", 10.0)))),
+        )
+        clipped = float(max(0.0, min(1.0, progress)))
+        if clipped >= 1.0:
+            return int(milestone_count)
+        return int(np.floor(clipped * float(milestone_count)))
 
     def _is_scharf_recruitable_now(self) -> bool:
         for soldier in self._get_scharf_soldier_types():
@@ -3757,9 +4766,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         cached = self._get_can_cache(cache_key)
         if cached is not None:
             return cached
-        # VillageCenterLockThreshold: Unter 0.3 Motivation keine neuen Worker/Serfs!
-        if not self._has_min_population_motivation():
-            return self._set_can_cache(cache_key, False)
         # Genug Taler fÃƒÆ’Ã‚Â¼r alle?
         if self._get_total_resource(RESOURCE_TALER) < SERF_BUY_COST * count:
             return self._set_can_cache(cache_key, False)
@@ -3904,6 +4910,36 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             else:
                 return Position(x=0, y=0)
 
+        def load_geometry():
+            cached = getattr(self, "_original_building_geometry", None)
+            if cached is not None:
+                return cached
+            try:
+                from original_game_values import load_building_geometry
+                cached = load_building_geometry()
+            except Exception:
+                cached = {}
+            self._original_building_geometry = cached
+            return cached
+
+        def point_offset(building_type: str, raw_pos, point_name: str) -> Optional[Position]:
+            geometry_map = load_geometry()
+            geometry = geometry_map.get(building_type) or geometry_map.get(get_base_building_name(building_type))
+            if not isinstance(geometry, dict):
+                return None
+            point = geometry.get(point_name)
+            if not isinstance(point, (list, tuple)) or len(point) != 2:
+                return None
+            try:
+                rx, ry = self._rotate_local_offset(
+                    float(point[0]),
+                    float(point[1]),
+                    self._get_position_orientation(building_type, raw_pos),
+                )
+                return Position(x=rx, y=ry)
+            except (TypeError, ValueError):
+                return None
+
         def positions_for_type(building_type: str):
             items = [
                 (key, pos) for key, pos in self.building_position_map.items()
@@ -3926,7 +4962,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             level = get_building_level(farm_type)
             for raw_pos in positions_for_type(farm_type):
                 pos_obj = to_position(raw_pos)
-                farm = Farm(position=pos_obj, level=level, capacity_bonus=farm_capacity_bonus)
+                farm = Farm(
+                    position=pos_obj,
+                    level=level,
+                    capacity_bonus=farm_capacity_bonus,
+                    approach_offset=point_offset(farm_type, raw_pos, "approach_pos"),
+                    door_offset=point_offset(farm_type, raw_pos, "door_pos"),
+                    leave_offset=point_offset(farm_type, raw_pos, "leave_pos"),
+                )
                 self.workforce_manager.farms.append(farm)
 
         # Residences synchronisieren
@@ -3935,7 +4978,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             level = get_building_level(res_type)
             for raw_pos in positions_for_type(res_type):
                 pos_obj = to_position(raw_pos)
-                residence = Residence(position=pos_obj, level=level, capacity_bonus=residence_capacity_bonus)
+                residence = Residence(
+                    position=pos_obj,
+                    level=level,
+                    capacity_bonus=residence_capacity_bonus,
+                    approach_offset=point_offset(res_type, raw_pos, "approach_pos"),
+                    door_offset=point_offset(res_type, raw_pos, "door_pos"),
+                    leave_offset=point_offset(res_type, raw_pos, "leave_pos"),
+                )
                 self.workforce_manager.residences.append(residence)
 
         # Kein erzwungenes HQ-Camp: ohne explizite Camps campen Worker lokal am Arbeitsplatz.
@@ -3954,6 +5004,163 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             if base in BUILDING_WORKER_TYPES:
                 active.add(_pos_key(pos))
         return active
+
+    def _position_xy(self, value) -> Tuple[float, float]:
+        if isinstance(value, Position):
+            return float(value.x), float(value.y)
+        if isinstance(value, tuple):
+            return float(value[0]), float(value[1])
+        if isinstance(value, dict):
+            return float(value.get("x", 0)), float(value.get("y", 0))
+        return 0.0, 0.0
+
+    def _raw_position_orientation(self, value) -> Optional[float]:
+        if not isinstance(value, dict):
+            return None
+        for key in ("orientation", "Orientation", "rotation", "Rotation", "r", "R"):
+            if key in value:
+                try:
+                    return float(value.get(key))
+                except (TypeError, ValueError):
+                    return None
+        return None
+
+    def _load_map_entity_orientation_index(self) -> Dict[Tuple[str, int, int], float]:
+        cached = getattr(self, "_map_entity_orientation_index", None)
+        if cached is not None:
+            return cached
+
+        index: Dict[Tuple[str, int, int], float] = {}
+        try:
+            from pathlib import Path
+            import xml.etree.ElementTree as ET
+
+            if MAP_EXTRACT_DIR:
+                mapdata_path = Path(str(MAP_EXTRACT_DIR)) / "mapdata.xml"
+            else:
+                mapdata_path = Path(__file__).resolve().parent / "map_extract" / "wintersturm_extracted" / "mapdata.xml"
+            if mapdata_path.exists():
+                for _, elem in ET.iterparse(str(mapdata_path), events=("end",)):
+                    if elem.tag != "Entity":
+                        continue
+                    entity_type = (elem.findtext("Type") or "").strip().lower()
+                    pos_el = elem.find("Position")
+                    if not entity_type or pos_el is None:
+                        elem.clear()
+                        continue
+                    try:
+                        x = float(pos_el.findtext("X") or 0)
+                        y = float(pos_el.findtext("Y") or 0)
+                        orientation = float(elem.findtext("Orientation") or 0)
+                    except (TypeError, ValueError):
+                        elem.clear()
+                        continue
+                    index[(entity_type, int(round(x)), int(round(y)))] = orientation
+                    elem.clear()
+        except Exception:
+            index = {}
+
+        self._map_entity_orientation_index = index
+        return index
+
+    def _get_position_orientation(self, building_type: str, raw_pos) -> float:
+        explicit = self._raw_position_orientation(raw_pos)
+        if explicit is not None:
+            return explicit
+
+        try:
+            cached = getattr(self, "_original_building_geometry", None)
+            if cached is None:
+                from original_game_values import load_building_geometry
+                cached = load_building_geometry()
+                self._original_building_geometry = cached
+        except Exception:
+            cached = {}
+
+        geometry = {}
+        if isinstance(cached, dict):
+            geometry = cached.get(building_type) or cached.get(get_base_building_name(building_type)) or {}
+        entity = str(geometry.get("entity") or "").lower() if isinstance(geometry, dict) else ""
+        if entity:
+            x, y = self._position_xy(raw_pos)
+            orientation = self._load_map_entity_orientation_index().get(
+                (entity, int(round(x)), int(round(y)))
+            )
+            if orientation is not None:
+                return float(orientation)
+        return 0.0
+
+    def _rotate_local_offset(self, x: float, y: float, orientation: float) -> Tuple[float, float]:
+        angle = math.radians(float(orientation or 0.0))
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle)
+        return x * cos_a - y * sin_a, x * sin_a + y * cos_a
+
+    def _with_original_orientation(self, building_type: str, raw_pos) -> Dict[str, float]:
+        x, y = self._position_xy(raw_pos)
+        result = dict(raw_pos) if isinstance(raw_pos, dict) else {"x": x, "y": y}
+        result["x"] = x
+        result["y"] = y
+        if self._raw_position_orientation(result) is None:
+            result["orientation"] = self._get_position_orientation(building_type, result)
+        return result
+
+    def _building_attachment_position(self, building_type: str, raw_pos, point_name: str = "approach_pos") -> Position:
+        """Liefert Original-Approach/Door/Leave-Weltposition fuer ein Gebaeude."""
+        from worker_simulation import Position
+
+        def to_position(value) -> Position:
+            if isinstance(value, Position):
+                return Position(x=value.x, y=value.y)
+            if isinstance(value, tuple):
+                return Position(x=value[0], y=value[1])
+            if isinstance(value, dict):
+                return Position(x=value.get("x", 0), y=value.get("y", 0))
+            return Position(x=0, y=0)
+
+        pos = to_position(raw_pos)
+        try:
+            cached = getattr(self, "_original_building_geometry", None)
+            if cached is None:
+                from original_game_values import load_building_geometry
+                cached = load_building_geometry()
+                self._original_building_geometry = cached
+        except Exception:
+            cached = {}
+
+        geometry = {}
+        if isinstance(cached, dict):
+            geometry = cached.get(building_type) or cached.get(get_base_building_name(building_type)) or {}
+        point = geometry.get(point_name) if isinstance(geometry, dict) else None
+        if isinstance(point, (list, tuple)) and len(point) == 2:
+            try:
+                rx, ry = self._rotate_local_offset(
+                    float(point[0]),
+                    float(point[1]),
+                    self._get_position_orientation(building_type, raw_pos),
+                )
+                return Position(x=pos.x + rx, y=pos.y + ry)
+            except (TypeError, ValueError):
+                pass
+        return pos
+
+    def _configure_worker_original_behavior(
+        self,
+        worker: Worker,
+        building: str,
+        supplier_position: Optional[Position] = None,
+        building_position=None,
+    ):
+        route = get_original_work_route(building, worker.worker_type)
+        orientation = self._get_position_orientation(
+            building,
+            building_position if building_position is not None else worker.workplace_position,
+        )
+        worker.configure_original_work_cycle(
+            route,
+            supplier_position=supplier_position,
+            workplace_orientation=orientation,
+        )
 
     def _get_supplier_position(self, resource_type: ResourceType, consumer_pos) -> Position:
         """Waehlt den naechsten XML-konformen Supplier fuer die angeforderte Rohressource."""
@@ -4014,7 +5221,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 base = get_base_building_name(building_name)
                 categories = building_supplier_categories.get(base, ())
                 if required_category in categories:
-                    candidate_positions.append(to_position(pos))
+                    candidate_positions.append(
+                        self._building_attachment_position(building_name, pos, "approach_pos")
+                    )
 
             # Runtime-Minen mitnehmen, falls building_position_map noch nicht synchron ist.
             mine_category_by_resource = {
@@ -4028,13 +5237,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 for mine in self.production_system.mines.values():
                     mine_category = mine_category_by_resource.get(mine.resource_type)
                     if mine_category == required_category:
-                        candidate_positions.append(to_position(mine.position))
+                        candidate_positions.append(
+                            self._building_attachment_position(str(mine.name), mine.position, "approach_pos")
+                        )
 
         if candidate_positions:
             return min(candidate_positions, key=lambda p: c_pos.distance_to(p))
 
         # Fallback: HQ-Position
         return to_position(self.hq_position)
+
     def _sync_refiner_suppliers(self):
         """Aktualisiert Supplier-Positionen aller Refiner."""
         if not hasattr(self, "production_system"):
@@ -4043,6 +5255,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             refiner.supplier_position = self._get_supplier_position(refiner.input_resource, refiner.position)
             _, dist = self._compute_path(refiner.position, refiner.supplier_position)
             refiner.path_distance = dist
+        refiners_by_pos = {_pos_key(refiner.position): refiner for refiner in self.production_system.refiners.values()}
+        for worker in getattr(self.workforce_manager, "workers", []):
+            refiner = refiners_by_pos.get(_pos_key(worker.workplace_position))
+            if refiner and worker.worker_type == refiner.worker_type:
+                worker.supplier_position = Position(
+                    x=refiner.supplier_position.x,
+                    y=refiner.supplier_position.y,
+                )
 
     def _sync_refiner_path_distances(self):
         """Aktualisiert Pfad-Distanzen aller Refiner (ohne Supplier-Wechsel)."""
@@ -4168,19 +5388,19 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         ref_eff_sum: Dict[Tuple[int, int], float] = {}
         ref_eff_count: Dict[Tuple[int, int], int] = {}
         for worker in self.workforce_manager.workers:
-            if worker.state != WorkerState.WORKING:
+            if not worker.is_work_cycle_active():
                 continue
             key = _pos_key(worker.workplace_position)
             mine = mines_by_pos.get(key)
             if mine and worker.worker_type == mine.worker_type:
                 mine.current_workers += 1
-                mine_eff_sum[key] = mine_eff_sum.get(key, 0.0) + worker.get_efficiency()
+                mine_eff_sum[key] = mine_eff_sum.get(key, 0.0) + worker.get_work_cycle_efficiency()
                 mine_eff_count[key] = mine_eff_count.get(key, 0) + 1
                 continue
             refiner = refiners_by_pos.get(key)
             if refiner and worker.worker_type == refiner.worker_type:
                 refiner.current_workers += 1
-                ref_eff_sum[key] = ref_eff_sum.get(key, 0.0) + worker.get_efficiency()
+                ref_eff_sum[key] = ref_eff_sum.get(key, 0.0) + worker.get_work_cycle_efficiency()
                 ref_eff_count[key] = ref_eff_count.get(key, 0) + 1
 
         for mine in self.production_system.mines.values():
@@ -4390,6 +5610,146 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 return True
         return False
 
+    def _iter_positioned_buildings(self, include_construction: bool = False):
+        """Iteriert gebaute Gebaeude plus optional Baustellen mit Weltposition."""
+        for key, pos in self.building_position_map.items():
+            building = "_".join(str(key).split("_")[:-1])
+            if not building:
+                continue
+            try:
+                x, y = self._position_xy(pos)
+            except Exception:
+                continue
+            yield building, x, y, False
+
+        if include_construction:
+            for site in getattr(self, "construction_sites", []):
+                building = str(site.get("building") or "")
+                pos = site.get("position")
+                if not building or pos is None:
+                    continue
+                try:
+                    x, y = self._position_xy(pos)
+                except Exception:
+                    continue
+                yield building, x, y, True
+
+    def _get_pause_building_anchor_positions(self, building_norm: str) -> List[Tuple[float, float]]:
+        """Priorisierte Anker fuer Wohnhaus/Bauernhof nahe Worker-Clustern."""
+        if building_norm not in {"wohnhaus", "bauernhof"}:
+            return []
+
+        if building_norm == "wohnhaus":
+            support_capacity = RESIDENCE_CAPACITY
+            support_bonus = self._get_residence_capacity_bonus()
+        else:
+            support_capacity = FARM_EAT_CAPACITY
+            support_bonus = self._get_farm_capacity_bonus()
+
+        support_entries: List[Tuple[float, float, int]] = []
+        residence_entries: List[Tuple[float, float]] = []
+        workplaces: List[dict] = []
+
+        for built_building, x, y, is_construction in self._iter_positioned_buildings(include_construction=True):
+            b_info = buildings_db.get(built_building, {})
+            max_workers = int(b_info.get("max_workers", 0) or 0)
+            base_name = get_base_building_name(built_building)
+            worker_type = b_info.get("worker_type") or BUILDING_WORKER_TYPES.get(base_name)
+            camper_range = float(WORKER_CAMPER_RANGE.get(worker_type, CAMPER_RANGE))
+
+            if not is_construction:
+                capacity = support_capacity.get(built_building)
+                if capacity is not None:
+                    support_entries.append((x, y, max(1, int(capacity) + int(support_bonus))))
+                if built_building in RESIDENCE_CAPACITY:
+                    residence_entries.append((x, y))
+
+            if max_workers > 0:
+                workplaces.append(
+                    {
+                        "x": x,
+                        "y": y,
+                        "weight": max_workers,
+                        "range": camper_range,
+                    }
+                )
+
+        if not workplaces:
+            if building_norm == "bauernhof" and residence_entries:
+                return self._dedupe_anchor_positions(residence_entries, max_count=4)
+            return []
+
+        def distance(a_x: float, a_y: float, b_x: float, b_y: float) -> float:
+            return math.hypot(a_x - b_x, a_y - b_y)
+
+        def cluster_around(center: dict) -> Tuple[float, float, int]:
+            members = [
+                workplace
+                for workplace in workplaces
+                if distance(center["x"], center["y"], workplace["x"], workplace["y"]) <= CAMPER_RANGE
+            ]
+            if not members:
+                return center["x"], center["y"], int(center["weight"])
+            total_weight = sum(int(member["weight"]) for member in members)
+            if total_weight <= 0:
+                return center["x"], center["y"], 0
+            cx = sum(float(member["x"]) * int(member["weight"]) for member in members) / total_weight
+            cy = sum(float(member["y"]) * int(member["weight"]) for member in members) / total_weight
+            return cx, cy, int(total_weight)
+
+        deficient: List[Tuple[float, int, float, float]] = []
+        cluster_fallback: List[Tuple[int, float, float]] = []
+
+        for workplace in workplaces:
+            wx = float(workplace["x"])
+            wy = float(workplace["y"])
+            camper_range = float(workplace["range"])
+            nearby_workload = sum(
+                int(other["weight"])
+                for other in workplaces
+                if distance(wx, wy, float(other["x"]), float(other["y"])) <= CAMPER_RANGE
+            )
+            nearby_capacity = sum(
+                capacity
+                for sx, sy, capacity in support_entries
+                if distance(wx, wy, sx, sy) <= camper_range
+            )
+            cx, cy, cluster_load = cluster_around(workplace)
+            cluster_fallback.append((cluster_load, cx, cy))
+            deficit = max(0.0, float(nearby_workload - nearby_capacity))
+            if deficit > 0:
+                deficient.append((deficit, cluster_load, cx, cy))
+
+        if deficient:
+            deficient.sort(key=lambda item: (item[0], item[1]), reverse=True)
+            return self._dedupe_anchor_positions(
+                [(cx, cy) for _, _, cx, cy in deficient],
+                max_count=8,
+            )
+
+        cluster_fallback.sort(key=lambda item: item[0], reverse=True)
+        return self._dedupe_anchor_positions(
+            [(cx, cy) for _, cx, cy in cluster_fallback],
+            max_count=8,
+        )
+
+    def _dedupe_anchor_positions(
+        self,
+        anchors: List[Tuple[float, float]],
+        max_count: int = 8,
+    ) -> List[Tuple[float, float]]:
+        unique: List[Tuple[float, float]] = []
+        seen = set()
+        for ax, ay in anchors:
+            key = (int(round(ax)), int(round(ay)))
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append((float(ax), float(ay)))
+            if len(unique) >= max_count:
+                break
+        return unique
+
     def _get_build_anchor_positions(self, building: str) -> List[Tuple[float, float]]:
         """Liefert priorisierte Ankerpositionen fÃƒÆ’Ã‚Â¼r Platzierungssuche."""
         hq_anchor = (float(self.hq_position[0]), float(self.hq_position[1]))
@@ -4407,6 +5767,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         }
 
         anchors: List[Tuple[float, float]] = []
+        anchors.extend(self._get_pause_building_anchor_positions(norm))
+
         mine_type = mine_anchor_map.get(norm)
         if mine_type:
             mine_positions = self.built_mines.get(mine_type, []) or self.mine_positions.get(mine_type, [])
@@ -4425,15 +5787,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         anchors.append(hq_anchor)
 
         # Duplikate entfernen, Reihenfolge erhalten.
-        unique: List[Tuple[float, float]] = []
-        seen = set()
-        for ax, ay in anchors:
-            key = (int(round(ax)), int(round(ay)))
-            if key in seen:
-                continue
-            seen.add(key)
-            unique.append((ax, ay))
-        return unique or [hq_anchor]
+        return self._dedupe_anchor_positions(anchors, max_count=16) or [hq_anchor]
 
     def _find_candidate_build_positions(self, building: str, limit: int = 1) -> List[dict]:
         """Sucht freie Baupositionen (Slots zuerst, dann dynamisch auf ganz P1)."""
@@ -5072,7 +6426,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 assigned += 1
 
         self.wood_serfs += assigned
-        self.free_leibeigene -= assigned
+        self._consume_free_serfs(assigned)
         self.resource_workers[RESOURCE_HOLZ_ROH] = self.resource_workers.get(RESOURCE_HOLZ_ROH, 0) + assigned
 
     def _recall_wood_batch(self, batch_size: int):
@@ -5180,8 +6534,61 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         zone_data["serfs_assigned"] += assigned
         self.wood_serfs += assigned
-        self.free_leibeigene -= assigned
+        self._consume_free_serfs(assigned)
         self.resource_workers[RESOURCE_HOLZ_ROH] = self.resource_workers.get(RESOURCE_HOLZ_ROH, 0) + assigned
+
+    def _tree_index_from_ref(self, tree_ref: dict) -> Optional[int]:
+        for idx, tree in enumerate(getattr(self, "tree_list_internal", [])):
+            if tree is tree_ref:
+                return idx
+        return None
+
+    def _get_wood_zone_rank_tree_index(
+        self,
+        specific_idx: int,
+        batch_size: int,
+        mode: str,
+        available_free_override: Optional[int] = None,
+    ) -> Optional[int]:
+        """Dekodiert SOURCE/TARGET_SPECIFIC fuer Holz als Zone * TopK + Rank."""
+        specific_idx = int(specific_idx)
+        if specific_idx < 0:
+            return None
+
+        zone_count = min(len(getattr(self, "wood_zone_names", [])), MAX_WOOD_ZONE_ACTIONS)
+        encoded_limit = zone_count * WOOD_TOPK_PER_ZONE
+        if specific_idx < encoded_limit:
+            zone_idx = specific_idx // WOOD_TOPK_PER_ZONE
+            rank_idx = specific_idx % WOOD_TOPK_PER_ZONE
+            zone_name = self.wood_zone_names[zone_idx]
+            zone_data = self.wood_zone_categories.get(zone_name, {})
+            candidates = []
+            for tree in zone_data.get("trees", []):
+                tree_idx = self._tree_index_from_ref(tree)
+                if tree_idx is None:
+                    continue
+                if mode == "assign":
+                    if self._can_assign_wood_tree_batch(
+                        tree_idx,
+                        batch_size,
+                        available_free_override=available_free_override,
+                    ):
+                        candidates.append((float(tree.get("dist", 0.0)), tree_idx))
+                elif mode == "recall":
+                    if self._can_recall_wood_tree_batch(tree_idx, batch_size):
+                        candidates.append((float(tree.get("dist", 0.0)), tree_idx))
+            candidates.sort(key=lambda item: (item[0], item[1]))
+            if rank_idx < len(candidates):
+                return candidates[rank_idx][1]
+            return None
+
+        # Legacy-Fallback fuer direkte alte Calls mit flachem Baumindex.
+        if 0 <= specific_idx < len(getattr(self, "tree_list_internal", [])):
+            return specific_idx
+        return None
+
+    def _wood_specific_encoded_limit(self) -> int:
+        return min(len(getattr(self, "wood_zone_names", [])), MAX_WOOD_ZONE_ACTIONS) * WOOD_TOPK_PER_ZONE
 
     def _can_assign_wood_tree_batch(
         self,
@@ -5238,7 +6645,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     self.wood_zone_categories[zone_name].get("serfs_assigned", 0) + assigned
                 )
             self.wood_serfs += assigned
-            self.free_leibeigene -= assigned
+            self._consume_free_serfs(assigned)
             self.resource_workers[RESOURCE_HOLZ_ROH] = self.resource_workers.get(RESOURCE_HOLZ_ROH, 0) + assigned
         return assigned
 
@@ -5737,7 +7144,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     assigned += 1
             if assigned:
                 self.shaft_categories[category]["serfs_assigned"] = self.shaft_categories[category].get("serfs_assigned", 0) + assigned
-                self.free_leibeigene -= assigned
+                self._consume_free_serfs(assigned)
                 raw_name = {
                     "Eisen": RESOURCE_EISEN_ROH,
                     "Stein": RESOURCE_STEIN_ROH,
@@ -5776,7 +7183,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     assigned += 1
             if assigned:
                 self.deposit_categories[category]["serfs_assigned"] = self.deposit_categories[category].get("serfs_assigned", 0) + assigned
-                self.free_leibeigene -= assigned
+                self._consume_free_serfs(assigned)
                 raw_name = {
                     "Eisen": RESOURCE_EISEN_ROH,
                     "Stein": RESOURCE_STEIN_ROH,
@@ -6049,7 +7456,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 assigned += 1
 
         cat_data["serfs_assigned"] += assigned
-        self.free_leibeigene -= assigned
+        self._consume_free_serfs(assigned)
         raw_name_map = {
             "Eisen": RESOURCE_EISEN_ROH,
             "Stein": RESOURCE_STEIN_ROH,
@@ -6268,7 +7675,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 assigned += 1
 
         shaft_data["serfs_assigned"] = shaft_data.get("serfs_assigned", 0) + assigned
-        self.free_leibeigene -= assigned
+        self._consume_free_serfs(assigned)
         raw_name_map = {
             "Eisen": RESOURCE_EISEN_ROH,
             "Stein": RESOURCE_STEIN_ROH,
@@ -6365,7 +7772,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         mine_data = self.mine_categories[mine_type]
         mine_data["serfs_assigned"] += assigned
-        self.free_leibeigene -= assigned
+        self._consume_free_serfs(assigned)
         if resource_name:
             self.resource_workers[resource_name] = self.resource_workers.get(resource_name, 0) + assigned
 
@@ -6405,6 +7812,20 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.resource_workers[resource_name] = max(0, self.resource_workers.get(resource_name, 0) - recalled)
 
     # --- BAUSTELLEN-SYSTEM ---
+    def _select_idle_serfs_nearest_to(self, target_pos: Position, limit: int) -> List[Serf]:
+        """Waehlt freie Leibeigene deterministisch nach Naehe zum Ziel."""
+        limit = max(0, int(limit))
+        if limit <= 0:
+            return []
+        candidates = []
+        for idx, serf in enumerate(self.production_system.serfs):
+            if not serf.is_idle():
+                continue
+            dist = serf.position.distance_to(target_pos)
+            candidates.append((float(dist), idx, serf))
+        candidates.sort(key=lambda item: (item[0], item[1]))
+        return [serf for _, _, serf in candidates[:limit]]
+
     def _can_assign_build_batch(self, batch_size: int) -> bool:
         """PrÃƒÆ’Ã‚Â¼ft ob batch_size Serfs zu Baustellen zugewiesen werden kÃƒÆ’Ã‚Â¶nnen."""
         cache_key = ("assign_build", batch_size)
@@ -6432,30 +7853,27 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if target_site is None:
             return
 
+        pos = target_site["position"]
+        if pos:
+            build_pos = Position(x=pos["x"], y=pos["y"])
+        else:
+            # Fallback: HQ Position
+            build_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
+
         assigned = 0
-        for serf in self.production_system.serfs:
-            if assigned >= batch_size:
-                break
-            if serf.is_idle():
-                # Serf zur Baustelle schicken
-                pos = target_site["position"]
-                if pos:
-                    build_pos = Position(x=pos["x"], y=pos["y"])
-                else:
-                    # Fallback: HQ Position
-                    build_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
-                serf_pos = Position(x=serf.position.x, y=serf.position.y)
-                self._assign_serf_to_build(
-                    serf,
-                    target_site["building"],
-                    build_pos,
-                    serf_pos,
-                    target_site["site_id"]
-                )
-                assigned += 1
+        for serf in self._select_idle_serfs_nearest_to(build_pos, batch_size):
+            serf_pos = Position(x=serf.position.x, y=serf.position.y)
+            self._assign_serf_to_build(
+                serf,
+                target_site["building"],
+                build_pos,
+                serf_pos,
+                target_site["site_id"]
+            )
+            assigned += 1
 
         target_site["serfs_assigned"] += assigned
-        self.free_leibeigene -= assigned
+        self._consume_free_serfs(assigned)
 
     def _can_recall_build_batch(self, batch_size: int) -> bool:
         """PrÃƒÆ’Ã‚Â¼ft ob batch_size Serfs von Baustellen zurÃƒÆ’Ã‚Â¼ckgerufen werden kÃƒÆ’Ã‚Â¶nnen."""
@@ -6491,6 +7909,20 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 serf.stop()
                 released += 1
         self.free_leibeigene += released
+        self._construction_freed_serfs = max(0, getattr(self, "_construction_freed_serfs", 0)) + released
+
+    def _consume_free_serfs(self, n: int):
+        """Reduziert free_leibeigene und aktualisiert Herkunfts-Tracking-Counter.
+        Prioritaet: zuerst pending_spawned, dann construction_freed, dann idle."""
+        self.free_leibeigene -= n
+        remaining = n
+        # Zuerst "neu gekaufte" Serfs verbrauchen
+        consume_spawned = min(remaining, max(0, int(getattr(self, "_pending_spawned_unassigned_serfs", 0))))
+        self._pending_spawned_unassigned_serfs = max(0, self._pending_spawned_unassigned_serfs - consume_spawned)
+        remaining -= consume_spawned
+        # Dann "von Bau befreite" Serfs verbrauchen
+        consume_construction = min(remaining, max(0, int(getattr(self, "_construction_freed_serfs", 0))))
+        self._construction_freed_serfs = max(0, self._construction_freed_serfs - consume_construction)
 
     def _get_active_construction_sites(self) -> int:
         """Gibt Anzahl aktiver Baustellen zurÃƒÆ’Ã‚Â¼ck."""
@@ -6519,6 +7951,22 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # MULTI-STEP FLOW MANAGEMENT
         # =================================================================
         action = self._to_int_choice(action, default=0)
+        if (
+            self.current_phase != ActionPhase.MAIN
+            and action == int(getattr(self, "cancel_action_index", -1))
+        ):
+            cancelled_flow = self.current_flow
+            cancelled_phase = self.current_phase
+            self.current_phase = ActionPhase.MAIN
+            self.current_flow = None
+            self.flow_step = 0
+            self.pending_selections = {}
+            obs = self._get_observation()
+            return obs, 0.0, False, False, {
+                "multi_step_cancelled": True,
+                "cancelled_flow": cancelled_flow,
+                "cancelled_phase": cancelled_phase.value,
+            }
         phase_size = self.action_spaces[self.current_phase].n
         local_mask = np.asarray(self._get_local_action_mask(), dtype=bool).reshape(-1)
         is_in_range = 0 <= action < phase_size
@@ -6603,11 +8051,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         resource_potential_now = self._get_scharf_resource_potential()
         dependency_progress_now = self._get_scharf_dependency_progress()
         self._update_terminal_cumulative_tracker()
-        research_progress_now = self._get_scharf_research_progress_metric()
-        construction_progress_now = self._get_scharf_construction_progress_metric()
+        step_potential_tier = self._get_reward_profile_scharf_tier(
+            "step_potential_scharf_tier",
+            default=1,
+        )
+        research_progress_now = self._get_scharf_research_progress_metric(target_tier=step_potential_tier)
+        construction_progress_now = self._get_scharf_construction_progress_metric(target_tier=step_potential_tier)
         recruitable_now = self._is_scharf_recruitable_now()
         taxable_workers_now = float(self._get_taxable_worker_count())
         taler_income_per_cycle_now = float(self._get_taler_income_per_cycle())
+        scharfschuetzen_now = int(self.scharfschuetzen)
 
         info["scharf_resource_potential"] = resource_potential_now
         info["scharf_dependency_progress"] = dependency_progress_now
@@ -6621,10 +8074,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         step_include_start_resources = float(
             self.reward_profile.get("step_potential_include_start_resources", 0.0)
         ) > 0.0
-        step_potential_tier = self._get_reward_profile_scharf_tier(
-            "step_potential_scharf_tier",
-            default=1,
-        )
         if step_use_cumulative_potential:
             step_potential_metric_now = float(
                 self._get_scharf_cumulative_resource_potential(
@@ -6648,8 +8097,54 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             research_progress=research_progress_now,
             construction_progress=construction_progress_now,
         )
+        step_unlock_milestone_level_now = self._get_unlock_milestone_level(step_unlock_progress_now)
         step_delta_progress = step_unlock_progress_now - float(self._last_step_unlock_progress)
         step_unlock_recruitable = bool(recruitable_now and (not self._last_scharf_recruitable))
+        path_ready_now = self._is_scharf_path_ready(target_tier=step_potential_tier)
+        step_path_ready = bool(path_ready_now and (not self._last_scharf_path_ready))
+        required_buildings_completed_now = self._get_scharf_required_buildings_completed_count(
+            target_tier=step_potential_tier
+        )
+        required_techs_completed_now = self._get_scharf_required_techs_completed_count(
+            target_tier=step_potential_tier
+        )
+        required_buildings_started_now = self._get_scharf_required_buildings_started_count(
+            target_tier=step_potential_tier
+        )
+        required_buildings_affordable_now = self._get_scharf_required_buildings_affordable_count(
+            target_tier=step_potential_tier
+        )
+        goal_resource_progress_now = self._get_goal_resource_progress_metric(target_tier=step_potential_tier)
+        step_new_required_buildings = max(
+            0,
+            int(required_buildings_completed_now) - int(self._last_scharf_required_buildings_completed),
+        )
+        step_new_required_techs = max(
+            0,
+            int(required_techs_completed_now) - int(self._last_scharf_required_techs_completed),
+        )
+        step_new_required_buildings_started = max(
+            0,
+            int(required_buildings_started_now) - int(self._last_scharf_required_buildings_started),
+        )
+        step_new_required_buildings_affordable = max(
+            0,
+            int(required_buildings_affordable_now) - int(self._last_scharf_required_buildings_affordable),
+        )
+        step_delta_goal_resource_progress = (
+            float(goal_resource_progress_now) - float(self._last_goal_resource_progress)
+        )
+        step_new_unlock_milestones = max(
+            0,
+            int(step_unlock_milestone_level_now) - int(self._last_unlock_milestone_level),
+        )
+        step_new_scharfschuetzen = max(
+            0,
+            int(scharfschuetzen_now) - int(self._last_scharfschuetzen_count),
+        )
+        step_delta_taler_income = float(taler_income_per_cycle_now) - float(
+            self._last_taler_income_per_cycle
+        )
 
         step_positive_only = float(self.reward_profile.get("step_delta_positive_only", 1.0)) > 0.0
         if step_positive_only:
@@ -6659,6 +8154,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             step_delta_research = max(0.0, step_delta_research)
             step_delta_construction = max(0.0, step_delta_construction)
             step_worker_growth = max(0.0, step_worker_growth)
+            step_delta_taler_income = max(0.0, step_delta_taler_income)
+            step_delta_goal_resource_progress = max(0.0, step_delta_goal_resource_progress)
 
         step_reward = 0.0
         step_reward += step_delta_potential * float(self.reward_profile.get("step_delta_potential_bonus", 0.0))
@@ -6666,14 +8163,40 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.reward_profile.get("step_new_resource_potential_unit_bonus", 0.0)
         )
         step_reward += step_delta_progress * float(self.reward_profile.get("step_delta_progress_bonus", 0.0))
+        step_reward += float(step_new_unlock_milestones) * float(
+            self.reward_profile.get("step_unlock_milestone_bonus", 0.0)
+        )
         step_reward += step_delta_dependency * float(self.reward_profile.get("step_delta_dependency_bonus", 0.0))
         step_reward += step_delta_research * float(self.reward_profile.get("step_delta_research_bonus", 0.0))
         step_reward += step_delta_construction * float(self.reward_profile.get("step_delta_construction_bonus", 0.0))
+        step_reward += float(step_new_required_buildings) * float(
+            self.reward_profile.get("step_required_building_complete_bonus", 0.0)
+        )
+        step_reward += float(step_new_required_techs) * float(
+            self.reward_profile.get("step_required_tech_complete_bonus", 0.0)
+        )
+        step_reward += float(step_new_required_buildings_started) * float(
+            self.reward_profile.get("step_required_building_started_bonus", 0.0)
+        )
+        step_reward += float(step_new_required_buildings_affordable) * float(
+            self.reward_profile.get("step_required_building_affordable_bonus", 0.0)
+        )
+        step_reward += step_delta_goal_resource_progress * float(
+            self.reward_profile.get("step_goal_resource_progress_bonus", 0.0)
+        )
         step_reward += step_worker_growth * float(
             self.reward_profile.get("step_worker_growth_bonus", 0.0)
         )
+        step_reward += step_delta_taler_income * float(
+            self.reward_profile.get("step_delta_taler_income_bonus", 0.0)
+        )
+        if step_path_ready:
+            step_reward += float(self.reward_profile.get("step_path_ready_bonus", 0.0))
         if step_unlock_recruitable:
             step_reward += float(self.reward_profile.get("step_unlock_recruitable_bonus", 0.0))
+        step_reward += float(step_new_scharfschuetzen) * float(
+            self.reward_profile.get("step_scharf_recruited_bonus", 0.0)
+        )
         step_reward -= abs(float(self.reward_profile.get("step_time_penalty", 0.0)))
         reward += step_reward
 
@@ -6688,14 +8211,29 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         info["step_new_potential_units"] = int(step_new_potential_units)
         info["step_taxable_workers"] = float(taxable_workers_now)
         info["step_taler_income_per_cycle"] = float(taler_income_per_cycle_now)
+        info["step_delta_taler_income"] = float(step_delta_taler_income)
         info["step_delta_potential"] = float(step_delta_potential)
         info["step_unlock_progress_metric"] = float(step_unlock_progress_now)
+        info["step_unlock_milestone_level"] = int(step_unlock_milestone_level_now)
+        info["step_new_unlock_milestones"] = int(step_new_unlock_milestones)
         info["step_delta_unlock_progress"] = float(step_delta_progress)
         info["step_delta_dependency"] = float(step_delta_dependency)
         info["step_delta_research"] = float(step_delta_research)
         info["step_delta_construction"] = float(step_delta_construction)
+        info["step_required_buildings_completed"] = int(required_buildings_completed_now)
+        info["step_required_techs_completed"] = int(required_techs_completed_now)
+        info["step_new_required_buildings"] = int(step_new_required_buildings)
+        info["step_new_required_techs"] = int(step_new_required_techs)
+        info["step_required_buildings_started"] = int(required_buildings_started_now)
+        info["step_required_buildings_affordable"] = int(required_buildings_affordable_now)
+        info["step_new_required_buildings_started"] = int(step_new_required_buildings_started)
+        info["step_new_required_buildings_affordable"] = int(step_new_required_buildings_affordable)
+        info["step_goal_resource_progress"] = float(goal_resource_progress_now)
+        info["step_delta_goal_resource_progress"] = float(step_delta_goal_resource_progress)
         info["step_worker_growth"] = float(step_worker_growth)
+        info["step_path_ready"] = bool(step_path_ready)
         info["step_unlock_recruitable"] = bool(step_unlock_recruitable)
+        info["step_new_scharfschuetzen"] = int(step_new_scharfschuetzen)
         info["step_reward"] = float(step_reward)
         info["pending_spawned_unassigned_serfs"] = int(
             max(0, int(getattr(self, "_pending_spawned_unassigned_serfs", 0)))
@@ -6709,10 +8247,68 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_scharf_research_progress = research_progress_now
         self._last_scharf_construction_progress = construction_progress_now
         self._last_step_unlock_progress = step_unlock_progress_now
+        self._last_unlock_milestone_level = int(step_unlock_milestone_level_now)
         self._last_scharf_recruitable = recruitable_now
+        self._last_scharf_path_ready = bool(path_ready_now)
+        self._last_scharf_required_buildings_completed = int(required_buildings_completed_now)
+        self._last_scharf_required_techs_completed = int(required_techs_completed_now)
+        self._last_scharf_required_buildings_started = int(required_buildings_started_now)
+        self._last_scharf_required_buildings_affordable = int(required_buildings_affordable_now)
+        self._last_goal_resource_progress = float(goal_resource_progress_now)
+        self._last_scharfschuetzen_count = int(scharfschuetzen_now)
+        self._last_taler_income_per_cycle = float(taler_income_per_cycle_now)
 
         terminated = self.current_time >= self.max_time
-        # Terminal reward logic intentionally disabled.
+        terminal_potential_reward = 0.0
+        terminal_path_ready = False
+        terminal_potential_source = "disabled"
+        terminal_potential_tier = self._get_reward_profile_scharf_tier(
+            "terminal_potential_scharf_tier",
+            default=1,
+        )
+        terminal_include_start_resources = float(
+            self.reward_profile.get("terminal_potential_include_start_resources", 0.0)
+        ) > 0.0
+        terminal_require_path_ready = float(
+            self.reward_profile.get("terminal_potential_require_path_ready", 1.0)
+        ) > 0.0
+        terminal_use_cumulative = float(
+            self.reward_profile.get("terminal_potential_use_cumulative_earnings", 0.0)
+        ) > 0.0
+
+        if terminated:
+            terminal_potential_source = (
+                "cumulative_earnings" if terminal_use_cumulative else "current_stock"
+            )
+            terminal_path_ready = self._is_scharf_path_ready(target_tier=terminal_potential_tier)
+            terminal_potential_metric = self._get_scharf_terminal_potential()
+            terminal_reward = 0.0
+            terminal_reward += float(dependency_progress_now) * float(
+                self.reward_profile.get("terminal_dependency_bonus", 0.0)
+            )
+            if terminal_path_ready:
+                terminal_reward += float(self.reward_profile.get("terminal_path_ready_bonus", 0.0))
+            if recruitable_now:
+                terminal_reward += float(self.reward_profile.get("terminal_recruitable_bonus", 0.0))
+            terminal_reward += float(self.scharfschuetzen) * float(
+                self.reward_profile.get("terminal_scharf_count_bonus", 0.0)
+            )
+            terminal_reward += float(terminal_potential_metric) * float(
+                self.reward_profile.get("terminal_potential_bonus_per_unit", 0.0)
+            )
+            reward += terminal_reward
+            terminal_potential_reward = float(terminal_reward)
+        else:
+            terminal_potential_metric = 0.0
+
+        info["terminal_path_ready"] = bool(terminal_path_ready)
+        info["terminal_potential_metric"] = float(terminal_potential_metric)
+        info["terminal_potential_reward"] = float(terminal_potential_reward)
+        info["terminal_potential_source"] = str(terminal_potential_source)
+        info["terminal_potential_scharf_tier"] = int(terminal_potential_tier)
+        info["terminal_potential_include_start_resources"] = bool(terminal_include_start_resources)
+        info["terminal_potential_require_path_ready"] = bool(terminal_require_path_ready)
+        info["terminal_reward_applied"] = bool(terminated)
         return self._get_observation(), reward, terminated, False, info
 
     def _resolve_area(self, category, specific):
@@ -7024,12 +8620,38 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         self._building_serfs_count = building_count
 
-    def _build_and_assign(self, source_area, quantity, building, build_position: Optional[dict] = None):
+        # Clamp Herkunfts-Counter auf free_leibeigene (verhindert Drift)
+        free = max(0, int(getattr(self, "free_leibeigene", 0)))
+        self._pending_spawned_unassigned_serfs = max(
+            0, min(int(getattr(self, "_pending_spawned_unassigned_serfs", 0)), free)
+        )
+        self._construction_freed_serfs = max(
+            0, min(int(getattr(self, "_construction_freed_serfs", 0)),
+                   free - self._pending_spawned_unassigned_serfs)
+        )
+
+    def _build_and_assign(
+        self,
+        source_area,
+        quantity,
+        building,
+        build_position: Optional[dict] = None,
+        selected_serfs: Optional[List[Serf]] = None,
+    ):
         """Baut Gebaeude und weist Leibeigene direkt der neuen Baustelle zu."""
         if not self._can_build(building):
             return 0.0
         site_count_before = len(self.construction_sites)
         reward = self._build_building(building, position=build_position)
+
+        if selected_serfs is not None and len(self.construction_sites) > site_count_before:
+            newest_site_index = len(self.construction_sites) - 1
+            self._assign_specific_serfs_to_construction_site(
+                selected_serfs,
+                newest_site_index,
+                quantity=quantity,
+            )
+            return reward
 
         # Zaehler nicht nur umbuchen: echte Serf-Objekte zur Baustelle schicken.
         if len(self.construction_sites) > site_count_before and source_area == SerfArea.FREE:
@@ -7040,6 +8662,60 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 self._assign_serf_to_construction_site(SerfArea.FREE, actual, newest_site_index)
 
         return reward
+
+    def _assign_specific_serfs_to_construction_site(
+        self,
+        serfs: List[Serf],
+        site_index: int,
+        quantity: Optional[int] = None,
+    ) -> int:
+        from worker_simulation import Position
+
+        if site_index < 0 or site_index >= len(self.construction_sites):
+            return 0
+        if not serfs:
+            return 0
+
+        target_site = self.construction_sites[site_index]
+        already_assigned = int(target_site.get("serfs_assigned", 0) or 0)
+        capacity_left = max(0, MAX_ACTIVE_BUILDERS_PER_SITE - already_assigned)
+        if capacity_left <= 0:
+            return 0
+
+        requested = min(
+            len(serfs),
+            capacity_left,
+            max(0, int(quantity)) if quantity is not None else len(serfs),
+        )
+        pos = target_site.get("position")
+        if pos:
+            build_pos = Position(x=pos["x"], y=pos["y"])
+        else:
+            build_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
+
+        assigned = 0
+        for serf in serfs:
+            if assigned >= requested:
+                break
+            if not serf.is_idle():
+                continue
+            serf_pos = Position(x=serf.position.x, y=serf.position.y)
+            self._assign_serf_to_build(
+                serf,
+                target_site["building"],
+                build_pos,
+                serf_pos,
+                target_site["site_id"],
+            )
+            assigned += 1
+
+        if assigned <= 0:
+            return 0
+
+        target_site["serfs_assigned"] += assigned
+        self.free_leibeigene = max(0, self.free_leibeigene - assigned)
+        self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
+        return int(assigned)
 
     def _recall_serfs_from_construction_site(self, site_index: int, quantity: int) -> int:
         if site_index < 0 or site_index >= len(self.construction_sites):
@@ -7064,13 +8740,178 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if src_cat == 0:
             return min(quantity, self.free_leibeigene)
         if src_cat == 1:
-            return self._recall_wood_tree_batch(src_spec, quantity)
+            tree_idx = self._get_wood_zone_rank_tree_index(src_spec, quantity, mode="recall")
+            if tree_idx is None:
+                return 0
+            return self._recall_wood_tree_batch(tree_idx, quantity)
         if src_cat in CATEGORY_AREA_MAP:
             area = self._resolve_area(src_cat, src_spec)
             return self._recall_serfs_from_specific_area(area, quantity)
         if src_cat == 6:
             return self._recall_serfs_from_construction_site(src_spec, quantity)
         return 0
+
+    def _take_serfs_from_source_for_build(
+        self,
+        src_cat: int,
+        src_spec: int,
+        quantity: int,
+        build_pos: Position,
+    ) -> List[Serf]:
+        """Nimmt konkrete Serf-Objekte aus der gewaehlen Quelle fuer einen Bauauftrag."""
+        quantity = max(0, int(quantity))
+        if quantity <= 0:
+            return []
+
+        if src_cat == 0:
+            return self._select_idle_serfs_nearest_to(build_pos, quantity)
+
+        selected: List[Serf] = []
+
+        def _resource_value(category: str) -> Optional[str]:
+            return {
+                "Eisen": "iron_raw",
+                "Stein": "stone_raw",
+                "Lehm": "clay_raw",
+                "Schwefel": "sulfur_raw",
+            }.get(category)
+
+        def _raw_resource_name(category: str) -> str:
+            return {
+                "Eisen": RESOURCE_EISEN_ROH,
+                "Stein": RESOURCE_STEIN_ROH,
+                "Lehm": RESOURCE_LEHM_ROH,
+                "Schwefel": RESOURCE_SCHWEFEL_ROH,
+            }.get(category, category)
+
+        if src_cat == 1:
+            tree_idx = self._get_wood_zone_rank_tree_index(src_spec, quantity, mode="recall")
+            if tree_idx is None or not self._can_recall_wood_tree_batch(tree_idx, quantity):
+                return []
+            tree = self.tree_list_internal[tree_idx]
+            target_x = int(tree.get("x", 0))
+            target_y = int(tree.get("y", 0))
+            zone_name = tree.get("zone")
+            for serf in self.production_system.serfs:
+                if len(selected) >= quantity:
+                    break
+                if (
+                    serf.target_resource
+                    and serf.target_resource.value == "wood_raw"
+                    and serf.target_position
+                    and int(serf.target_position.x) == target_x
+                    and int(serf.target_position.y) == target_y
+                ):
+                    serf.stop()
+                    selected.append(serf)
+            if selected:
+                count = len(selected)
+                tree["serfs_assigned"] = max(0, tree.get("serfs_assigned", 0) - count)
+                if zone_name in self.wood_zone_categories:
+                    self.wood_zone_categories[zone_name]["serfs_assigned"] = max(
+                        0,
+                        self.wood_zone_categories[zone_name].get("serfs_assigned", 0) - count,
+                    )
+                self.wood_serfs = max(0, self.wood_serfs - count)
+                self.free_leibeigene += count
+                self.resource_workers[RESOURCE_HOLZ_ROH] = max(
+                    0,
+                    self.resource_workers.get(RESOURCE_HOLZ_ROH, 0) - count,
+                )
+            return selected
+
+        if src_cat in CATEGORY_AREA_MAP:
+            area = self._resolve_area(src_cat, src_spec)
+            if area in SHAFT_AREA_TO_SLOT:
+                category, slot_idx = SHAFT_AREA_TO_SLOT[area]
+                shafts = self.shaft_categories.get(category, {}).get("shafts", [])
+                if slot_idx >= len(shafts):
+                    return []
+                shaft = shafts[slot_idx]
+                target_value = _resource_value(category)
+                if not target_value:
+                    return []
+                for serf in self.production_system.serfs:
+                    if len(selected) >= quantity:
+                        break
+                    if (
+                        serf.work_location == "shaft"
+                        and serf.target_resource
+                        and serf.target_resource.value == target_value
+                        and serf.target_position
+                        and int(serf.target_position.x) == int(shaft["x"])
+                        and int(serf.target_position.y) == int(shaft["y"])
+                    ):
+                        serf.stop()
+                        selected.append(serf)
+                if selected:
+                    count = len(selected)
+                    shaft["serfs_assigned"] = max(0, shaft.get("serfs_assigned", 0) - count)
+                    self.shaft_categories[category]["serfs_assigned"] = max(
+                        0,
+                        self.shaft_categories[category].get("serfs_assigned", 0) - count,
+                    )
+                    self.free_leibeigene += count
+                    raw_name = _raw_resource_name(category)
+                    self.resource_workers[raw_name] = max(
+                        0,
+                        self.resource_workers.get(raw_name, 0) - count,
+                    )
+                return selected
+
+            if area in DEPOSIT_AREA_TO_SLOT:
+                category, slot_idx = DEPOSIT_AREA_TO_SLOT[area]
+                deposits = self.deposit_categories.get(category, {}).get("deposits", [])
+                if slot_idx >= len(deposits):
+                    return []
+                dep = deposits[slot_idx]
+                target_value = _resource_value(category)
+                if not target_value:
+                    return []
+                for serf in self.production_system.serfs:
+                    if len(selected) >= quantity:
+                        break
+                    if (
+                        serf.work_location == "deposit"
+                        and serf.target_resource
+                        and serf.target_resource.value == target_value
+                        and serf.target_position
+                        and int(serf.target_position.x) == int(dep["x"])
+                        and int(serf.target_position.y) == int(dep["y"])
+                    ):
+                        serf.stop()
+                        selected.append(serf)
+                if selected:
+                    count = len(selected)
+                    self.deposit_categories[category]["serfs_assigned"] = max(
+                        0,
+                        self.deposit_categories[category].get("serfs_assigned", 0) - count,
+                    )
+                    self.free_leibeigene += count
+                    raw_name = _raw_resource_name(category)
+                    self.resource_workers[raw_name] = max(
+                        0,
+                        self.resource_workers.get(raw_name, 0) - count,
+                    )
+                return selected
+
+        if src_cat == 6:
+            if src_spec < 0 or src_spec >= len(self.construction_sites):
+                return []
+            site = self.construction_sites[src_spec]
+            for serf in self.production_system.serfs:
+                if len(selected) >= quantity:
+                    break
+                if serf.build_site_id == site.get("site_id"):
+                    serf.stop()
+                    selected.append(serf)
+            if selected:
+                count = len(selected)
+                site["serfs_assigned"] = max(0, int(site.get("serfs_assigned", 0) or 0) - count)
+                self.free_leibeigene += count
+            return selected
+
+        return []
 
     def _assign_serfs_to_selection(self, tgt_cat: int, tgt_spec: int, quantity: int, selections: dict) -> float:
         quantity = max(0, int(quantity))
@@ -7079,8 +8920,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if tgt_cat == 0:
             return 0.0
         if tgt_cat == 1:
-            if tgt_spec < len(self.tree_list_internal):
-                self._assign_wood_tree_batch(tgt_spec, quantity)
+            tree_idx = self._get_wood_zone_rank_tree_index(
+                tgt_spec,
+                quantity,
+                mode="assign",
+                available_free_override=self.free_leibeigene,
+            )
+            if tree_idx is not None:
+                self._assign_wood_tree_batch(tree_idx, quantity)
             return 0.0
         if tgt_cat in CATEGORY_AREA_MAP:
             area = self._resolve_area(tgt_cat, tgt_spec)
@@ -7103,6 +8950,35 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         """Fuehrt die komplette Aktion aus basierend auf Selections."""
         if action_name == "wait":
             return 0.0
+        elif action_name == "build":
+            building = self._get_build_flow_building_from_selections(selections)
+            if not building or not self._is_build_flow_building_allowed(building):
+                return 0.0
+            build_pos = self._select_build_position(building, selections)
+            if build_pos is None:
+                return 0.0
+            quantity = self._get_selected_batch_size_from_selections(selections)
+            src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
+            src_spec = self._to_int_choice(selections.get(ActionPhase.SOURCE_SPECIFIC, 0), 0)
+            if quantity <= 0 or not self._can_use_source_batch(src_cat, src_spec, quantity):
+                return 0.0
+            quantity = min(quantity, MAX_ACTIVE_BUILDERS_PER_SITE)
+            build_target = Position(x=build_pos["x"], y=build_pos["y"])
+            selected_serfs = self._take_serfs_from_source_for_build(
+                src_cat,
+                src_spec,
+                quantity,
+                build_target,
+            )
+            if not selected_serfs:
+                return 0.0
+            return self._build_and_assign(
+                SerfArea.FREE,
+                len(selected_serfs),
+                building,
+                build_position=build_pos,
+                selected_serfs=selected_serfs,
+            )
         elif action_name == "upgrade":
             building_idx = self._to_int_choice(selections.get(ActionPhase.BUILDING, 0), 0)
             if building_idx < len(self.upgradeable_buildings):
@@ -7123,8 +8999,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             return 0.0
         elif action_name == "recruit":
             soldier_idx = self._to_int_choice(selections.get(ActionPhase.SOLDIER, 0), 0)
-            quantity_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY, 0), 0)
-            quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
+            quantity = self._get_selected_batch_size_from_selections(selections)
             if soldier_idx < len(self.soldier_types):
                 soldier = self.soldier_types[soldier_idx]
                 reward = 0.0
@@ -7134,8 +9009,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 return reward
             return 0.0
         elif action_name == "buy_serf":
-            quantity_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY, 0), 0)
-            quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
+            quantity = self._get_selected_batch_size_from_selections(selections)
             reward = 0.0
             for _ in range(quantity):
                 if self._can_buy_serf():
@@ -7144,8 +9018,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         elif action_name == "dismiss_serf":
             src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
             src_spec = self._to_int_choice(selections.get(ActionPhase.SOURCE_SPECIFIC, 0), 0)
-            quantity_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY, 0), 0)
-            quantity = [1, 2, 3, 5, 10, 20][min(quantity_idx, 5)]
+            quantity = self._get_selected_batch_size_from_selections(selections)
             if src_cat == 0:
                 reward = 0.0
                 for _ in range(quantity):
@@ -7183,6 +9056,22 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 if self._can_demolish(building):
                     pos_key = self._select_building_instance_key(building, selections)
                     return self._demolish_building(building, pos_key)
+            return 0.0
+        elif action_name == "cancel_build":
+            site_idx = self._to_int_choice(selections.get(ActionPhase.TARGET_SPECIFIC, 0), 0)
+            return self._cancel_construction_site(site_idx)
+        elif action_name == "cancel_research":
+            building_idx = self._to_int_choice(selections.get(ActionPhase.TECH_BUILDING, 0), 0)
+            tech_idx = self._to_int_choice(selections.get(ActionPhase.TECH, 0), 0)
+            building = RESEARCH_BUILDINGS[min(building_idx, len(RESEARCH_BUILDINGS) - 1)]
+            active = self._get_active_researches_for_building(building)
+            if 0 <= tech_idx < len(active):
+                return self._cancel_research(active[tech_idx])
+            return 0.0
+        elif action_name == "cancel_recruit":
+            soldier_idx = self._to_int_choice(selections.get(ActionPhase.SOLDIER, 0), 0)
+            if 0 <= soldier_idx < len(self.soldier_types):
+                return self._cancel_recruit(self.soldier_types[soldier_idx])
             return 0.0
         elif action_name == "bless":
             category_idx = self._to_int_choice(selections.get(ActionPhase.CATEGORY, 0), 0)
@@ -7322,26 +9211,24 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if capacity_left <= 0:
             return 0
 
-        requested = min(int(quantity), capacity_left)
+        requested = min(int(quantity), capacity_left, int(self.free_leibeigene))
+        pos = target_site.get("position")
+        if pos:
+            build_pos = Position(x=pos["x"], y=pos["y"])
+        else:
+            build_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
+
         assigned = 0
-        for serf in self.production_system.serfs:
-            if assigned >= requested:
-                break
-            if serf.is_idle():
-                pos = target_site.get("position")
-                if pos:
-                    build_pos = Position(x=pos["x"], y=pos["y"])
-                else:
-                    build_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
-                serf_pos = Position(x=serf.position.x, y=serf.position.y)
-                self._assign_serf_to_build(
-                    serf,
-                    target_site["building"],
-                    build_pos,
-                    serf_pos,
-                    target_site["site_id"]
-                )
-                assigned += 1
+        for serf in self._select_idle_serfs_nearest_to(build_pos, requested):
+            serf_pos = Position(x=serf.position.x, y=serf.position.y)
+            self._assign_serf_to_build(
+                serf,
+                target_site["building"],
+                build_pos,
+                serf_pos,
+                target_site["site_id"]
+            )
+            assigned += 1
 
         if assigned <= 0:
             return 0
@@ -7355,12 +9242,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         """Dynamische Maske fuer die aktuelle Phase (ohne zusaetzliche Zukunfts-Pruefung)."""
         if self.current_phase == ActionPhase.MAIN:
             return self._mask_main_actions()
+        if self.current_phase == ActionPhase.BUILD_CATEGORY:
+            return self._mask_build_categories()
         if self.current_phase == ActionPhase.BUILDING:
             return self._mask_buildings()
         if self.current_phase == ActionPhase.POSITION_GROUP:
             return self._mask_position_group()
         if self.current_phase == ActionPhase.POSITION_INDEX:
             return self._mask_position_index()
+        if self.current_phase == ActionPhase.POSITION_MODE:
+            return self._mask_position_mode()
         if self.current_phase == ActionPhase.TECH_BUILDING:
             return self._mask_tech_building()
         if self.current_phase == ActionPhase.TECH:
@@ -7433,6 +9324,12 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             }
         if flow_name in {"upgrade", "demolish"}:
             return phase in {ActionPhase.BUILDING, ActionPhase.POSITION_GROUP, ActionPhase.POSITION_INDEX}
+        if flow_name == "cancel_build":
+            return phase == ActionPhase.TARGET_SPECIFIC
+        if flow_name == "cancel_research":
+            return phase in {ActionPhase.TECH_BUILDING, ActionPhase.TECH}
+        if flow_name == "cancel_recruit":
+            return phase == ActionPhase.SOLDIER
         if flow_name == "bless":
             return phase == ActionPhase.CATEGORY
         if flow_name == "tax":
@@ -7570,6 +9467,19 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             quantity = self._get_selected_batch_size_from_selections(selections)
             return self._can_buy_serf_batch(quantity)
 
+        if flow_name == "build":
+            building = self._get_build_flow_building_from_selections(selections)
+            if not building or not self._is_build_flow_building_allowed(building):
+                return False
+            quantity = self._get_selected_batch_size_from_selections(selections)
+            src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
+            src_spec = self._to_int_choice(selections.get(ActionPhase.SOURCE_SPECIFIC, 0), 0)
+            if quantity <= 0 or not self._can_use_source_batch(src_cat, src_spec, quantity):
+                return False
+            if quantity > MAX_ACTIVE_BUILDERS_PER_SITE:
+                return False
+            return self._select_build_position(building, selections) is not None
+
         if flow_name == "dismiss_serf":
             src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
             src_spec = self._to_int_choice(selections.get(ActionPhase.SOURCE_SPECIFIC, 0), 0)
@@ -7583,21 +9493,27 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             tgt_spec = self._to_int_choice(selections.get(ActionPhase.TARGET_SPECIFIC, 0), 0)
             quantity = self._get_selected_batch_size_from_selections(selections)
 
-            if not self._can_use_source_batch(src_cat, src_spec, quantity):
-                return False
-
             if tgt_cat == 0:
                 return False
 
+            if tgt_cat != 7 and not self._can_use_source_batch(src_cat, src_spec, quantity):
+                return False
+
             available_free = self._get_available_free_for_assign(src_cat=src_cat, batch_size=quantity)
-            if available_free <= 0:
+            if tgt_cat != 7 and available_free <= 0:
                 return False
 
             if tgt_cat == 1:
-                if tgt_spec < 0 or tgt_spec >= len(self.tree_list_internal):
+                tree_idx = self._get_wood_zone_rank_tree_index(
+                    tgt_spec,
+                    quantity,
+                    mode="assign",
+                    available_free_override=available_free,
+                )
+                if tree_idx is None:
                     return False
                 return self._can_assign_wood_tree_batch(
-                    tgt_spec,
+                    tree_idx,
                     quantity,
                     available_free_override=available_free,
                 )
@@ -7619,12 +9535,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 return already_assigned < MAX_ACTIVE_BUILDERS_PER_SITE
 
             if tgt_cat == 7:
-                if tgt_spec < 0 or tgt_spec >= len(self.buildable_buildings):
-                    return False
-                building = self.buildable_buildings[tgt_spec]
-                if not self._can_build(building):
-                    return False
-                return self._select_build_position(building, selections) is not None
+                return False
 
             return False
 
@@ -7636,6 +9547,26 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             if not self._can_demolish(building):
                 return False
             return self._select_building_instance_key(building, selections) is not None
+
+        if flow_name == "cancel_build":
+            site_idx = self._to_int_choice(selections.get(ActionPhase.TARGET_SPECIFIC, 0), 0)
+            return 0 <= site_idx < len(self.construction_sites)
+
+        if flow_name == "cancel_research":
+            building_idx = self._to_int_choice(selections.get(ActionPhase.TECH_BUILDING, 0), 0)
+            tech_idx = self._to_int_choice(selections.get(ActionPhase.TECH, 0), 0)
+            if not RESEARCH_BUILDINGS:
+                return False
+            building = RESEARCH_BUILDINGS[min(max(0, building_idx), len(RESEARCH_BUILDINGS) - 1)]
+            active = self._get_active_researches_for_building(building)
+            return 0 <= tech_idx < len(active)
+
+        if flow_name == "cancel_recruit":
+            soldier_idx = self._to_int_choice(selections.get(ActionPhase.SOLDIER, 0), 0)
+            if soldier_idx < 0 or soldier_idx >= len(self.soldier_types):
+                return False
+            soldier = self.soldier_types[soldier_idx]
+            return any(item[0] == soldier for item in self.recruit_queue)
 
         if flow_name == "bless":
             category_idx = self._to_int_choice(selections.get(ActionPhase.CATEGORY, 0), 0)
@@ -7770,6 +9701,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         size = min(len(mask), self.max_action_size)
         if size > 0:
             full[:size] = mask[:size]
+        if self.current_phase != ActionPhase.MAIN:
+            cancel_idx = int(getattr(self, "cancel_action_index", -1))
+            if 0 <= cancel_idx < full.size:
+                full[cancel_idx] = True
         if not full.any():
             full[0] = True
         return full
@@ -7784,30 +9719,49 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return [self.action_spaces[phase].n for phase in self.phase_list]
 
     def _mask_main_actions(self):
-        """Maske fuer die 11 Hauptaktionen (build in assign_serf integriert)."""
-        cache_key = ("mask_main_actions",)
+        """Maske fuer die Hauptaktionen."""
+        pruning = self._goal_action_pruning_enabled()
+        cache_key = ("mask_main_actions", bool(pruning))
         cached = self._get_can_cache(cache_key)
         if cached is not None:
             return cached.copy()
 
-        # MAIN_ACTIONS = [wait, upgrade, research, recruit, buy_serf, dismiss_serf, assign_serf, demolish, bless, tax, alarm]
+        # MAIN_ACTIONS wird aus ACTION_FLOWS abgeleitet.
         n = len(MAIN_ACTIONS)
         mask = np.ones(n, dtype=bool)
-        can_upgrade_any = any(self.buildings.get(b, 0) > 0 and self._can_upgrade(b) for b in self.upgradeable_buildings)
+        can_build_any = self._can_build_action(batch_size=1)
+        can_upgrade_any = any(
+            self.buildings.get(b, 0) > 0
+            and self._can_upgrade(b)
+            and (not pruning or self._is_goal_relevant_upgrade(b))
+            for b in self.upgradeable_buildings
+        )
         has_university = (
             self.buildings.get("Hochschule_1", 0) > 0
             or self.buildings.get("Hochschule_2", 0) > 0
         )
-        can_research_any = has_university and self._can_research_any()
+        if pruning:
+            relevant_techs = self._get_goal_relevant_techs()
+            can_research_any = bool(relevant_techs) and any(
+                self._can_research(t) for t in relevant_techs
+            )
+        else:
+            can_research_any = has_university and self._can_research_any()
         # Fast-reject: alle Soldaten kosten Taler - wenn nicht genug, keine Iteration nötig
-        can_recruit_any = (
-            self.resources.get(RESOURCE_TALER, 0) >= _MIN_SOLDIER_TALER_COST
-            and any(self._can_recruit(s) for s in self.soldier_types)
-        )
-        can_demolish_any = any(self.buildings.get(b, 0) > 0 for b in self.demolishable_buildings)
+        if pruning:
+            can_recruit_any = any(self._can_recruit(s) for s in self._get_scharf_soldier_types())
+            can_demolish_any = False
+        else:
+            can_recruit_any = (
+                self._get_total_resource(RESOURCE_TALER) >= _MIN_SOLDIER_TALER_COST
+                and any(self._can_recruit(s) for s in self.soldier_types)
+            )
+            can_demolish_any = any(self.buildings.get(b, 0) > 0 for b in self.demolishable_buildings)
         for i, action_name in enumerate(MAIN_ACTIONS):
             if action_name == "wait":
                 mask[i] = True
+            elif action_name == "build":
+                mask[i] = can_build_any
             elif action_name == "upgrade":
                 mask[i] = can_upgrade_any
             elif action_name == "research":
@@ -7817,40 +9771,83 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             elif action_name == "buy_serf":
                 mask[i] = self._can_buy_serf()
             elif action_name == "dismiss_serf":
-                mask[i] = self._can_dismiss_serf()
+                mask[i] = False if pruning else self._can_dismiss_serf()
             elif action_name == "assign_serf":
                 mask[i] = self._can_assign_serf_action(batch_size=1)
             elif action_name == "demolish":
                 mask[i] = can_demolish_any
+            elif action_name == "cancel_build":
+                mask[i] = len(self.construction_sites) > 0
+            elif action_name == "cancel_research":
+                mask[i] = len(self.current_researches) > 0
+            elif action_name == "cancel_recruit":
+                mask[i] = len(self.recruit_queue) > 0
             elif action_name == "bless":
-                mask[i] = self._can_bless()
+                mask[i] = False if pruning else self._can_bless()
             elif action_name == "tax":
-                mask[i] = any(level != self.current_tax_level for level in TAX_LEVELS.keys())
+                # Steuern erst nach "Bildung" (GT_Literacy, erste Hochschul-Tech) verfuegbar
+                has_bildung = "Bildung" in self.researched_techs
+                mask[i] = has_bildung and any(level != self.current_tax_level for level in TAX_LEVELS.keys())
             elif action_name == "alarm":
-                mask[i] = (self.alarm_active or (not self.alarm_active and self.alarm_cooldown <= 0))
+                mask[i] = False if pruning else (
+                    self.alarm_active or (not self.alarm_active and self.alarm_cooldown <= 0)
+                )
+        self._set_can_cache(cache_key, mask.copy())
+        return mask
+
+    def _mask_build_categories(self):
+        """Maske fuer Bau-Menuekategorien."""
+        pruning = self._goal_action_pruning_enabled()
+        src_cat = self._to_int_choice(self.pending_selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
+        src_spec = self._to_int_choice(self.pending_selections.get(ActionPhase.SOURCE_SPECIFIC, 0), 0)
+        batch_size = self._get_selected_batch_size()
+        cache_key = ("mask_build_categories", bool(pruning), src_cat, src_spec, batch_size)
+        cached = self._get_can_cache(cache_key)
+        if isinstance(cached, np.ndarray):
+            return np.asarray(cached, dtype=bool).copy()
+
+        mask = np.zeros(len(BUILD_CATEGORIES), dtype=bool)
+        if self._can_use_source_batch(src_cat, src_spec, batch_size):
+            for idx in BUILD_CATEGORIES.keys():
+                mask[idx] = any(
+                    self._is_build_flow_building_allowed(building)
+                    for building in self._get_buildings_for_build_category(idx)
+                )
         self._set_can_cache(cache_key, mask.copy())
         return mask
 
     def _mask_buildings(self):
         """Maske fuer Gebaeude-Auswahl (upgrade/demolish)."""
-        cache_key = ("mask_buildings", str(self.current_flow))
+        pruning = self._goal_action_pruning_enabled()
+        build_category = self._to_int_choice(self.pending_selections.get(ActionPhase.BUILD_CATEGORY, -1), -1)
+        cache_key = ("mask_buildings", str(self.current_flow), build_category, bool(pruning))
         cached = self._get_can_cache(cache_key)
         if isinstance(cached, np.ndarray):
             return np.asarray(cached, dtype=bool).copy()
 
         size = self.action_spaces[ActionPhase.BUILDING].n
+        if self.current_flow == "build":
+            mask = np.zeros(size, dtype=bool)
+            for i, building in enumerate(self._get_buildings_for_build_category(build_category)):
+                if i < size:
+                    mask[i] = self._is_build_flow_building_allowed(building)
+            self._set_can_cache(cache_key, mask.copy())
+            return mask
         if self.current_flow == "upgrade":
             mask = np.zeros(size, dtype=bool)
             for i, b in enumerate(self.upgradeable_buildings):
                 if i < size:
-                    mask[i] = self._can_upgrade(b)
+                    mask[i] = self._can_upgrade(b) and (
+                        not pruning or self._is_goal_relevant_upgrade(b)
+                    )
             self._set_can_cache(cache_key, mask.copy())
             return mask
         elif self.current_flow == "demolish":
             mask = np.zeros(size, dtype=bool)
-            for i, b in enumerate(self.demolishable_buildings):
-                if i < size:
-                    mask[i] = self._can_demolish(b)
+            if not pruning:
+                for i, b in enumerate(self.demolishable_buildings):
+                    if i < size:
+                        mask[i] = self._can_demolish(b)
             self._set_can_cache(cache_key, mask.copy())
             return mask
         mask = np.ones(size, dtype=bool)
@@ -7873,6 +9870,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _get_position_phase_building(self, building_idx: int) -> Optional[str]:
         """Loest Building-Index fuer Positionsphasen (upgrade/demolish/build) auf."""
+        if self.current_flow == "build":
+            building = self._get_build_flow_building_from_selections(self.pending_selections)
+            return building
         if self.current_flow == "upgrade":
             building_list = self.upgradeable_buildings
         elif self.current_flow == "demolish":
@@ -7887,6 +9887,71 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if building_idx < len(building_list):
             return building_list[building_idx]
         return None
+
+    def _get_position_mode_from_selections(self, selections: dict) -> int:
+        mode = self._to_int_choice(selections.get(ActionPhase.POSITION_MODE, 0), 0)
+        if mode < 0 or mode >= len(POSITION_MODES):
+            return 0
+        return mode
+
+    def _distance_to_nearest_anchor(self, pos: dict, anchors: List[Tuple[float, float]]) -> float:
+        if not anchors:
+            return 0.0
+        px = float(pos.get("x", 0.0))
+        py = float(pos.get("y", 0.0))
+        return min((px - ax) * (px - ax) + (py - ay) * (py - ay) for ax, ay in anchors)
+
+    def _get_resource_anchor_positions(self, building: str) -> List[Tuple[float, float]]:
+        hq_key = (int(round(self.hq_position[0])), int(round(self.hq_position[1])))
+        anchors = []
+        for ax, ay in self._get_build_anchor_positions(building):
+            if (int(round(ax)), int(round(ay))) == hq_key:
+                continue
+            anchors.append((ax, ay))
+        return anchors
+
+    def _get_worker_cluster_anchor_positions(self) -> List[Tuple[float, float]]:
+        anchors = self._get_pause_building_anchor_positions("wohnhaus")
+        if not anchors:
+            anchors = self._get_pause_building_anchor_positions("bauernhof")
+        return anchors
+
+    def _sort_build_position_candidates_for_mode(
+        self,
+        building: str,
+        candidates: List[dict],
+        mode: int,
+    ) -> List[dict]:
+        if not candidates or mode == 0:
+            return list(candidates)
+        result = list(candidates)
+        if mode == 1:  # near_hq
+            anchors = [self.hq_position]
+            result.sort(key=lambda pos: self._distance_to_nearest_anchor(pos, anchors))
+            return result
+        if mode == 2:  # near_resource
+            anchors = self._get_resource_anchor_positions(building) or [self.hq_position]
+            result.sort(key=lambda pos: self._distance_to_nearest_anchor(pos, anchors))
+            return result
+        if mode == 3:  # near_worker_cluster
+            anchors = self._get_worker_cluster_anchor_positions() or [self.hq_position]
+            result.sort(key=lambda pos: self._distance_to_nearest_anchor(pos, anchors))
+            return result
+        if mode == 4:  # expansion_slot
+            hq = [self.hq_position]
+            result.sort(
+                key=lambda pos: (
+                    0 if bool(pos.get("_slot_candidate", False)) else 1,
+                    -self._distance_to_nearest_anchor(pos, hq),
+                )
+            )
+            return result
+        return result
+
+    def _get_build_position_candidates_for_selections(self, building: str, selections: dict) -> List[dict]:
+        candidates = self._get_build_position_candidates(building)
+        mode = self._get_position_mode_from_selections(selections)
+        return self._sort_build_position_candidates_for_mode(building, candidates, mode)
 
     def _get_build_position_candidates(self, building: str) -> List[dict]:
         if self._is_building_forbidden_by_rules(building):
@@ -7927,7 +9992,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
     def _mask_position_group(self):
         """Maske fuer Positions-Gruppen (upgrade/demolish/build)."""
         building_idx = self.pending_selections.get(ActionPhase.BUILDING, 0)
-        cache_key = ("mask_pos_group", building_idx, self.current_flow)
+        build_category = self.pending_selections.get(ActionPhase.BUILD_CATEGORY, -1)
+        target_category = self.pending_selections.get(ActionPhase.TARGET_CATEGORY, -1)
+        position_mode = self.pending_selections.get(ActionPhase.POSITION_MODE, 0)
+        cache_key = ("mask_pos_group", building_idx, self.current_flow, build_category, target_category, position_mode)
         cached = self._get_can_cache(cache_key)
         if cached is not None:
             return cached.copy()
@@ -7935,8 +10003,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         mask = np.zeros(POSITION_GROUP_COUNT, dtype=bool)
         building = self._get_position_phase_building(building_idx)
         if building:
-            if self.current_flow == "assign_serf":
-                count = self._count_free_build_positions(building, limit=MAX_POSITION_SLOTS)
+            if self.current_flow in {"assign_serf", "build"}:
+                # _get_build_position_candidates nutzen: korrekte Mine/DZ-Slots
+                count = len(self._get_build_position_candidates_for_selections(building, self.pending_selections))
             else:
                 count = len(self._get_building_instance_keys(building))
             if count > 0:
@@ -7950,14 +10019,25 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._set_can_cache(cache_key, mask)
         return mask
 
+    def _mask_position_mode(self):
+        """Maske fuer semantische Positionsmodi im Build-Flow."""
+        mask = np.zeros(len(POSITION_MODES), dtype=bool)
+        building = self._get_position_phase_building(self.pending_selections.get(ActionPhase.BUILDING, 0))
+        if building and self._get_build_position_candidates(building):
+            mask[:] = True
+        if not mask.any():
+            mask[0] = True
+        return mask
+
     def _mask_position_index(self):
         """Maske fuer Positions-Index innerhalb der gewaehlten Gruppe."""
         mask = np.zeros(POSITION_GROUP_SIZE, dtype=bool)
         group_idx = self.pending_selections.get(ActionPhase.POSITION_GROUP, 0)
         building = self._get_position_phase_building(self.pending_selections.get(ActionPhase.BUILDING, 0))
         if building:
-            if self.current_flow == "assign_serf":
-                total_count = self._count_free_build_positions(building, limit=MAX_POSITION_SLOTS)
+            if self.current_flow in {"assign_serf", "build"}:
+                # _get_build_position_candidates nutzen: korrekte Mine/DZ-Slots
+                total_count = len(self._get_build_position_candidates_for_selections(building, self.pending_selections))
             else:
                 total_count = len(self._get_building_instance_keys(building))
             start = max(0, group_idx) * POSITION_GROUP_SIZE
@@ -7983,7 +10063,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
     def _select_build_position(self, building: str, selections: dict) -> Optional[dict]:
         """Waehlt eine konkrete Bauposition basierend auf Gruppen/Index-Auswahl."""
-        candidates = self._get_build_position_candidates(building)
+        candidates = self._get_build_position_candidates_for_selections(building, selections)
         if not candidates:
             return None
         group_idx = selections.get(ActionPhase.POSITION_GROUP, 0)
@@ -7992,11 +10072,16 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if global_idx >= len(candidates):
             global_idx = len(candidates) - 1
         pos = candidates[global_idx]
-        return {
+        selected = {
             "x": int(round(pos["x"])),
             "y": int(round(pos["y"])),
             "_slot_candidate": bool(pos.get("_slot_candidate", False)),
         }
+        if isinstance(pos, dict):
+            orientation = self._raw_position_orientation(pos)
+            if orientation is not None:
+                selected["orientation"] = orientation
+        return selected
 
     def _update_building_position_key(self, old_key: str, new_building: str) -> Optional[str]:
         """Aktualisiert building_position_map bei Upgrade (gleicher Ort, neuer Typ)."""
@@ -8020,16 +10105,14 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return new_key
 
     def _get_building_bounds(self, pos_x: float, pos_y: float, building_type: str) -> Tuple[float, float, float, float]:
-        """World-AABB fÃƒÆ’Ã‚Â¼r ein GebÃƒÆ’Ã‚Â¤udezentrum (x, y) berechnen."""
+        """World-AABB fuer ein Gebaeudezentrum aus den Original-Blocked-Offets berechnen."""
         base_name = get_base_building_name(building_type)
-        width, height = BUILDING_FOOTPRINTS.get(base_name, (400, 400))
-        half_w = float(width) / 2.0
-        half_h = float(height) / 2.0
+        min_x, min_y, max_x, max_y = pathfinding.get_building_block_offsets(base_name)
         return (
-            float(pos_x) - half_w,
-            float(pos_y) - half_h,
-            float(pos_x) + half_w,
-            float(pos_y) + half_h,
+            float(pos_x) + float(min_x),
+            float(pos_y) + float(min_y),
+            float(pos_x) + float(max_x),
+            float(pos_y) + float(max_y),
         )
 
     def _bounds_overlap(
@@ -8126,11 +10209,34 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if unlocked:
             self._mark_spatial_dirty("available_slots")
 
+    def _get_active_researches_for_building(self, building: str) -> List[str]:
+        """Aktive Forschungen fuer die Tech-Auswahl eines Forschungsgebaeudes."""
+        active = {tech for tech, _remaining in self.current_researches}
+        if not active:
+            return []
+        return [
+            tech
+            for tech in self.tech_by_building.get(building, [])
+            if tech in active
+        ]
+
     def _mask_tech_building(self):
         """Maske fuer Forschungs-Gebaeude-Auswahl: Welches Gebaeude hat erforschbare Techs?"""
+        if self.current_flow == "cancel_research":
+            mask = np.zeros(len(RESEARCH_BUILDINGS), dtype=bool)
+            for i, building in enumerate(RESEARCH_BUILDINGS):
+                mask[i] = bool(self._get_active_researches_for_building(building))
+            if not mask.any():
+                mask[0] = True
+            return mask
+
+        pruning = self._goal_action_pruning_enabled()
+        relevant_techs = self._get_goal_relevant_techs() if pruning else None
         mask = np.zeros(len(RESEARCH_BUILDINGS), dtype=bool)
         for i, building in enumerate(RESEARCH_BUILDINGS):
             techs = self.tech_by_building.get(building, [])
+            if relevant_techs is not None:
+                techs = [t for t in techs if t in relevant_techs]
             mask[i] = any(self._can_research(t) for t in techs)
         if not mask.any():
             mask[0] = True
@@ -8140,21 +10246,46 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         """Maske fuer Technologie-Auswahl innerhalb des gewaehlten Forschungs-Gebaeudes."""
         building_idx = self.pending_selections.get(ActionPhase.TECH_BUILDING, 0)
         building = RESEARCH_BUILDINGS[min(building_idx, len(RESEARCH_BUILDINGS) - 1)]
+        if self.current_flow == "cancel_research":
+            active = self._get_active_researches_for_building(building)
+            mask = np.zeros(MAX_TECHS_PER_BUILDING, dtype=bool)
+            for i, _tech in enumerate(active[:MAX_TECHS_PER_BUILDING]):
+                mask[i] = True
+            if not mask.any():
+                mask[0] = True
+            return mask
+
         techs = self.tech_by_building.get(building, [])
+        relevant_techs = self._get_goal_relevant_techs() if self._goal_action_pruning_enabled() else None
         mask = np.zeros(MAX_TECHS_PER_BUILDING, dtype=bool)
         for i, tech in enumerate(techs):
             if i < MAX_TECHS_PER_BUILDING:
-                mask[i] = self._can_research(tech)
+                mask[i] = self._can_research(tech) and (
+                    relevant_techs is None or tech in relevant_techs
+                )
         if not mask.any():
             mask[0] = True
         return mask
 
     def _mask_soldiers(self):
         """Maske fuer Soldaten-Auswahl."""
+        if self.current_flow == "cancel_recruit":
+            queued = {soldier for soldier, _remaining in self.recruit_queue}
+            mask = np.zeros(len(self.soldier_types), dtype=bool)
+            for i, soldier in enumerate(self.soldier_types):
+                mask[i] = soldier in queued
+            if not mask.any():
+                mask[0] = True
+            return mask
+
+        pruning = self._goal_action_pruning_enabled()
+        scharf_types = set(self._get_scharf_soldier_types()) if pruning else set()
         mask = np.zeros(len(self.soldier_types), dtype=bool)
         for i, soldier in enumerate(self.soldier_types):
             if i < mask.shape[0]:
-                mask[i] = self._can_recruit(soldier)
+                mask[i] = self._can_recruit(soldier) and (
+                    not pruning or soldier in scharf_types
+                )
         if not mask.any():
             mask[0] = True
         return mask
@@ -8176,10 +10307,24 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     mask[i] = self._can_recruit_batch(soldier, batch_size)
             return mask
 
+        if self.current_flow == "build":
+            src_cat = int(self.pending_selections.get(ActionPhase.SOURCE_CATEGORY, 0) or 0)
+            src_spec = int(self.pending_selections.get(ActionPhase.SOURCE_SPECIFIC, 0) or 0)
+            for i, batch_size in enumerate(QUANTITY_VALUES):
+                if batch_size not in {1, 2, 3}:
+                    continue
+                mask[i] = (
+                    batch_size <= MAX_ACTIVE_BUILDERS_PER_SITE
+                    and self._can_use_source_batch(src_cat, src_spec, batch_size)
+                )
+            return mask
+
         if self.current_flow in {"dismiss_serf", "assign_serf"}:
             src_cat = int(self.pending_selections.get(ActionPhase.SOURCE_CATEGORY, 0) or 0)
             src_spec = int(self.pending_selections.get(ActionPhase.SOURCE_SPECIFIC, 0) or 0)
             for i, batch_size in enumerate(QUANTITY_VALUES):
+                if batch_size not in {1, 3, 5}:
+                    continue
                 if not self._can_use_source_batch(src_cat, src_spec, batch_size):
                     continue
                 if self.current_flow == "dismiss_serf":
@@ -8216,7 +10361,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if src_cat == 0:
             return self.serf_areas.get(SerfArea.FREE, {}).get("count", 0) >= batch_size
         if src_cat == 1:
-            return self._can_recall_wood_tree_batch(src_spec, batch_size)
+            tree_idx = self._get_wood_zone_rank_tree_index(src_spec, batch_size, mode="recall")
+            return tree_idx is not None and self._can_recall_wood_tree_batch(tree_idx, batch_size)
         if src_cat in CATEGORY_AREA_MAP:
             area = self._resolve_area(src_cat, src_spec)
             return self._can_recall_from_specific_area(area, batch_size)
@@ -8281,8 +10427,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             int(site.get("serfs_assigned", 0) or 0) < MAX_ACTIVE_BUILDERS_PER_SITE
             for site in self.construction_sites
         ):
-            return self._set_can_cache(cache_key, True)
-        if available_free > 0 and any(self._can_build(b) for b in self.buildable_buildings):
             return self._set_can_cache(cache_key, True)
         return self._set_can_cache(cache_key, False)
 
@@ -8350,6 +10494,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         mask = np.zeros(len(SOURCE_CATEGORIES), dtype=bool)
         # 0=Frei: nur wenn freie Leibeigene vorhanden
         mask[0] = self.serf_areas.get(SerfArea.FREE, {}).get("count", 0) >= batch_size
+        if self._goal_action_pruning_enabled() and self.current_flow != "build":
+            if not mask.any():
+                mask[0] = True
+            return mask
         # 1-5: Ressource-Kategorien (Holz, Eisen, Stein, Lehm, Schwefel)
         mask[1] = any(tree.get("serfs_assigned", 0) >= batch_size for tree in self.tree_list_internal)
         for cat_idx in range(2, 6):
@@ -8369,9 +10517,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if cat == 0:  # Frei (sollte ÃƒÆ’Ã‚Â¼bersprungen werden, Fallback)
             mask[0] = True
         elif cat == 1:
-            for i, tree in enumerate(self.tree_list_internal[:self.source_specific_size]):
-                if i < self.source_specific_size:
-                    mask[i] = tree.get("serfs_assigned", 0) >= batch_size
+            for specific_idx in range(min(self._wood_specific_encoded_limit(), self.source_specific_size)):
+                mask[specific_idx] = (
+                    self._get_wood_zone_rank_tree_index(specific_idx, batch_size, mode="recall") is not None
+                )
         elif cat in CATEGORY_AREA_MAP:
             areas = CATEGORY_AREA_MAP[cat]
             for i, area in enumerate(areas):
@@ -8388,7 +10537,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
     def _mask_target_category(self):
         """Kategorie-Auswahl: Wohin Leibeigene schicken?"""
         batch_size = self._get_selected_batch_size()
-        cache_key = ("mask_tgt_cat", batch_size)
+        pruning = self._goal_action_pruning_enabled()
+        cache_key = ("mask_tgt_cat", batch_size, bool(pruning))
         cached = self._get_can_cache(cache_key)
         if cached is not None:
             return cached.copy()
@@ -8406,23 +10556,44 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             int(site.get("serfs_assigned", 0) or 0) < MAX_ACTIVE_BUILDERS_PER_SITE
             for site in self.construction_sites
         )
-        mask[7] = available_free > 0 and any(self._can_build(b) for b in self.buildable_buildings)
+        # Neubau ist ein eigener build-Flow; assign_serf verteilt nur zu existierenden Zielen.
+        mask[7] = False
         self._set_can_cache(cache_key, mask)
         return mask
 
     def _mask_target_specific(self):
         """Spezifische Auswahl innerhalb der gewÃƒÆ’Ã‚Â¤hlten Target-Kategorie."""
+        if self.current_flow == "cancel_build":
+            mask = np.zeros(self.target_specific_size, dtype=bool)
+            for i, _site in enumerate(self.construction_sites[:self.target_specific_size]):
+                mask[i] = True
+            if not mask.any():
+                mask[0] = True
+            return mask
+
         cat = self.pending_selections.get(ActionPhase.TARGET_CATEGORY, 0)
         batch_size = self._get_selected_batch_size()
-        cache_key = ("mask_tgt_specific", cat, batch_size)
+        pruning = self._goal_action_pruning_enabled()
+        cache_key = ("mask_tgt_specific", cat, batch_size, bool(pruning))
         cached = self._get_can_cache(cache_key)
         if cached is not None:
             return cached.copy()
         available_free = self._get_target_phase_available_free(batch_size)
         mask = np.zeros(self.target_specific_size, dtype=bool)
         if cat == 1:
-            for i, _tree in enumerate(self.tree_list_internal[:self.target_specific_size]):
-                mask[i] = self._can_assign_wood_tree_batch(i, batch_size, available_free_override=available_free)
+            allowed_trees = self._get_goal_tree_target_indices() if pruning else None
+            for specific_idx in range(min(self._wood_specific_encoded_limit(), self.target_specific_size)):
+                tree_idx = self._get_wood_zone_rank_tree_index(
+                    specific_idx,
+                    batch_size,
+                    mode="assign",
+                    available_free_override=available_free,
+                )
+                if tree_idx is None:
+                    continue
+                if allowed_trees is not None and tree_idx not in allowed_trees:
+                    continue
+                mask[specific_idx] = True
         elif cat in CATEGORY_AREA_MAP:
             for i, area in enumerate(CATEGORY_AREA_MAP[cat]):
                 if i < self.target_specific_size:
@@ -8438,7 +10609,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     mask[i] = True
         elif cat == 7:  # Neubau
             for i, b in enumerate(self.buildable_buildings):
-                if i < self.target_specific_size and available_free > 0 and self._can_build(b):
+                if (
+                    i < self.target_specific_size
+                    and self._can_build(b)
+                    and (not pruning or self._is_goal_relevant_building(b))
+                ):
                     mask[i] = True
         if not mask.any():
             if cat == 0:
@@ -8539,6 +10714,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         if chosen_position is None:
             return 0.0
+        chosen_position = self._with_original_orientation(building, chosen_position)
 
         # Ressourcen erst abziehen wenn ein Platz wirklich existiert
         self._spend_costs(b_info["cost"])
@@ -8889,6 +11065,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             0,
             int(getattr(self, "_pending_spawned_unassigned_serfs", 0)) - 1,
         )
+        self._construction_freed_serfs = max(
+            0,
+            int(getattr(self, "_construction_freed_serfs", 0)) - 1,
+        )
 
         # Einen idle Serf entfernen (vereinfacht)
         for i, serf in enumerate(self.production_system.serfs):
@@ -8897,6 +11077,78 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 break
 
         return 0.0  # MINIMALER REWARD
+
+    def _refund_costs(self, costs: Dict[str, float], factor: float = BUILDING_SALE_COMPENSATION) -> None:
+        for resource, amount in (costs or {}).items():
+            refund = int(float(amount) * float(factor))
+            if refund:
+                self.resources[resource] = self.resources.get(resource, 0) + refund
+
+    def _cancel_construction_site(self, site_index: int) -> float:
+        """Bricht eine Baustelle ab, gibt Serfs frei und erstattet anteilig Kosten."""
+        if site_index < 0 or site_index >= len(self.construction_sites):
+            return 0.0
+        site = self.construction_sites.pop(site_index)
+        building = site.get("building", "")
+        b_info = buildings_db.get(building, {})
+        self._refund_costs(b_info.get("cost", {}))
+        self._release_serfs_from_site(site)
+        self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
+
+        pos = site.get("position")
+        if pos:
+            px = int(round(pos.get("x", 0))) if isinstance(pos, dict) else int(round(pos[0]))
+            py = int(round(pos.get("y", 0))) if isinstance(pos, dict) else int(round(pos[1]))
+            base_name = get_base_building_name(building)
+            if b_info.get("mine_type"):
+                mine_type = b_info["mine_type"]
+                self.built_mines[mine_type] = [
+                    mine_pos for mine_pos in self.built_mines.get(mine_type, [])
+                    if self._pos_key_from_position(mine_pos) != (px, py)
+                ]
+            elif base_name == "Dorfzentrum":
+                for slot in self.dz_slots:
+                    if self._pos_key_from_xy(slot.get("x", 0), slot.get("y", 0)) == (px, py):
+                        slot["status"] = "free"
+                        break
+            else:
+                if not any(self._pos_key_from_position(p) == (px, py) for p in self.available_positions):
+                    self.available_positions.append({"x": px, "y": py})
+                self.used_positions = [
+                    used for used in self.used_positions
+                    if self._pos_key_from_position(used) != (px, py)
+                ]
+                self._mark_spatial_dirty("available_slots")
+
+        self._mark_spatial_dirty("construction_sites")
+        self._building_block_revision += 1
+        self._can_cache = {}
+        self._placement_cache = {}
+        return 0.0
+
+    def _cancel_research(self, tech: str) -> float:
+        for idx, (queued_tech, _remaining) in enumerate(list(self.current_researches)):
+            if queued_tech != tech:
+                continue
+            self.current_researches.pop(idx)
+            self.researching_set.discard(tech)
+            self._refund_costs(technologies.get(tech, {}).get("cost", {}))
+            self._research_check_cache_time = None
+            self._research_check_cache = {}
+            self._research_any_cache = None
+            self._can_cache = {}
+            return 0.0
+        return 0.0
+
+    def _cancel_recruit(self, soldier: str) -> float:
+        for idx, (queued_soldier, _remaining) in enumerate(list(self.recruit_queue)):
+            if queued_soldier != soldier:
+                continue
+            self.recruit_queue.pop(idx)
+            self._refund_costs(soldiers_db.get(soldier, {}).get("cost", {}))
+            self._can_cache = {}
+            return 0.0
+        return 0.0
 
     def _demolish_building(self, building: str, pos_key: Optional[str] = None):
         """Reisst ein Gebaeude ab. Position wird wieder freigegeben."""
@@ -8909,9 +11161,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         # Ressourcen zurueckgeben (CompensationOnBuildingSale aus Logic.xml)
         b_info = buildings_db.get(building, {})
-        for resource, amount in b_info.get("cost", {}).items():
-            refund = int(amount * BUILDING_SALE_COMPENSATION)
-            self.resources[resource] = self.resources.get(resource, 0) + refund
+        self._refund_costs(b_info.get("cost", {}))
 
         # Position wieder freigeben
         target_key = pos_key if pos_key in self.building_position_map else None
@@ -9088,7 +11338,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if priest_workers:
             # Faith pro Sekunde = Summe der Priester-Effizienz
             priests_eff = sum(w.get_efficiency() for w in priest_workers)
-            self.faith = min(self.faith + priests_eff * TIME_STEP, self._get_bless_required_faith() * 5)
+            self.faith = min(self.faith + priests_eff * TIME_STEP, MAXIMUM_FAITH)
 
         # NEU: Infrastruktur synchronisieren
         self._sync_workforce_infrastructure()
@@ -9104,6 +11354,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Speed-Bonus aus Technologie (T_Shoes: +20 fÃƒÆ’Ã‚Â¼r Worker/Serfs)
         shoes_speed = self.active_tech_effects.get("speed_modifier", 0)
         self.workforce_manager.set_speed_bonus(shoes_speed)
+        self._update_current_weather()
+        self.workforce_manager.set_speed_multiplier(self._get_weather_move_speed_multiplier())
 
         runtime_pathfinder = None if self.disable_runtime_pathing else self._find_path_world
         grid_revision = None if runtime_pathfinder is None else self._get_routing_revision()
@@ -9174,7 +11426,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         # Steuer-Einkommen (aus extra2/logic.xml)
         # RegularTax = fester Betrag PRO WORKER (nicht Multiplikator!)
-        if self.current_time % INCOME_CYCLE == 0:
+        payday_anchor = self._first_worker_building_time
+        if payday_anchor is None:
+            payday_anchor = 0
+        if (self.current_time > payday_anchor
+                and (self.current_time - payday_anchor) % INCOME_CYCLE == 0):
             tax_info = TAX_LEVELS.get(self.current_tax_level, TAX_LEVELS[2])
             # ZÃƒÆ’Ã‚Â¤hle alle arbeitenden Worker
             total_workers = len(self.workforce_manager.workers)
@@ -9224,6 +11480,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     self._on_building_completed(building, pos, pos_key=pos_key)
                     # Serfs werden frei
                     self._release_serfs_from_site(site)
+                    self._serf_areas_dirty = True  # Recount nach Baufertigstellung
                     completed_sites.append(i)
 
         for i in reversed(completed_sites):
@@ -9278,17 +11535,19 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if self.current_researches:
             scholar_efficiency = self._get_scholar_efficiency()
             updated = []
-            completed_any = False
+            completed_techs = []
             for tech, remaining in self.current_researches:
                 remaining -= TIME_STEP * scholar_efficiency
                 if remaining <= 0:
                     self.researched_techs.add(tech)
                     self.researching_set.discard(tech)
-                    completed_any = True
+                    completed_techs.append(tech)
                 else:
                     updated.append((tech, remaining))
             self.current_researches = updated
-            if completed_any:
+            if completed_techs:
+                for tech in completed_techs:
+                    self._on_technology_completed(tech)
                 # NEU: Technologie-Effekte anwenden (aus GEPLANTE_AENDERUNGEN.md)
                 self._apply_technology_effects()
 
@@ -9367,6 +11626,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         level = get_building_level(building)
         self._mark_infrastructure_dirty()
 
+        # Zahltag-Timer: startet beim ersten Workergebaeude (nicht bei HQ/DZ)
+        if (self._first_worker_building_time is None
+                and buildings_db.get(building, {}).get("max_workers", 0) > 0):
+            self._first_worker_building_time = self.current_time
+
         if position is None:
             position = self.hq_position
 
@@ -9396,7 +11660,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Dorfzentrum-KapazitÃƒÆ’Ã‚Â¤t vor Worker-Spawn aktualisieren
         self.workforce_manager.set_village_capacity(self._get_total_village_capacity())
 
-        def spawn_workers(worker_type: str, count: int) -> int:
+        def spawn_workers(worker_type: str, count: int, supplier_position: Optional[Position] = None) -> int:
             worker_type = normalize_worker_type(worker_type)
             spawned = 0
             for _ in range(max(0, int(count))):
@@ -9416,6 +11680,12 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     worker.target_position = Position(x=pos_obj.x, y=pos_obj.y)
                 worker.final_destination = Position(x=pos_obj.x, y=pos_obj.y)
                 worker.path_revision = self._get_routing_revision()
+                self._configure_worker_original_behavior(
+                    worker,
+                    building,
+                    supplier_position=supplier_position,
+                    building_position=position,
+                )
                 spawned += 1
                 if runtime is not None:
                     runtime["workers"].append(worker)
@@ -9557,7 +11827,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     runtime["refiner_key"] = refiner_key
 
                 # Worker erstellen mit Spawn-Delay
-                spawned = spawn_workers(config["worker_type"], max_workers)
+                spawned = spawn_workers(config["worker_type"], max_workers, supplier_position=supplier_pos)
                 refiner.current_workers += spawned
 
         # Sonstige Worker-GebÃƒÆ’Ã‚Â¤ude (Hochschule, Kloster, Markt, etc.)
@@ -9599,7 +11869,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Dorfzentrum-KapazitÃƒÆ’Ã‚Â¤t vor Worker-Spawn aktualisieren
         self.workforce_manager.set_village_capacity(self._get_total_village_capacity())
 
-        def spawn_workers(worker_type: str, count: int) -> int:
+        def spawn_workers(worker_type: str, count: int, supplier_position: Optional[Position] = None) -> int:
             worker_type = normalize_worker_type(worker_type)
             spawned = 0
             for _ in range(max(0, int(count))):
@@ -9619,6 +11889,12 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     worker.target_position = Position(x=pos_obj.x, y=pos_obj.y)
                 worker.final_destination = Position(x=pos_obj.x, y=pos_obj.y)
                 worker.path_revision = self._get_routing_revision()
+                self._configure_worker_original_behavior(
+                    worker,
+                    new_building,
+                    supplier_position=supplier_position,
+                    building_position=raw_pos,
+                )
                 spawned += 1
                 if runtime is not None:
                     runtime["workers"].append(worker)
@@ -9670,7 +11946,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 refiner.path_distance = dist
                 missing = max(0, refiner.max_workers - refiner.current_workers)
                 if missing:
-                    refiner.current_workers += spawn_workers(refiner.worker_type, missing)
+                    refiner.current_workers += spawn_workers(
+                        refiner.worker_type,
+                        missing,
+                        supplier_position=refiner.supplier_position,
+                    )
 
         # --- Sonstige Worker-GebÃƒÆ’Ã‚Â¤ude upgraden ---
         else:

@@ -1,0 +1,29 @@
+{
+  "started_at": "2026-03-14 20:45:42",
+  "project_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai",
+  "experiment_root": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab",
+  "args": {
+    "group": "spec",
+    "timesteps": 128,
+    "eval_episodes": 4,
+    "seeds": [
+      0
+    ],
+    "best_reward_profile": "goal_v1",
+    "candidates": [],
+    "candidate_spec": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\experiments_lab\\research\\adaptive_sessions\\adaptive_20260314_204403\\specs\\round1_proxy.json",
+    "max_time_override": 600,
+    "stochastic_eval": true,
+    "output_prefix": "round1_proxy"
+  },
+  "candidates": [
+    "custom_unlock_balanced",
+    "custom_unlock_research",
+    "custom_unlock_construction",
+    "custom_dependency_heavy",
+    "custom_economy_bootstrap",
+    "custom_hybrid_current",
+    "custom_hybrid_cumulative",
+    "custom_force_progress"
+  ]
+}

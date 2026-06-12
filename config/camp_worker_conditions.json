@@ -1,7 +1,7 @@
 {
   "meta": {
-    "generated_at_utc": "2026-02-11T15:17:08.601564+00:00",
-    "source_worker_truth_model": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\config\\worker_truth_model.json",
+    "generated_at_utc": "2026-06-10T11:03:34.708156+00:00",
+    "source_worker_truth_model": "C:\\Users\\marku\\OneDrive\\Desktop\\siedler_ai\\tools\\archive\\config\\worker_truth_model.json",
     "source_config_roots": [
       "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\extra2\\shr\\config",
       "C:\\Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games\\theSettlers5\\extra1\\shr\\config",

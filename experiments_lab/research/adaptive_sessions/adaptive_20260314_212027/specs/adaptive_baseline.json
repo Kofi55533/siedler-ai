@@ -1,0 +1,22 @@
+[
+  {
+    "name": "baseline_wait",
+    "profile_name": "goal_v1",
+    "family": "baseline",
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "wait"
+    }
+  },
+  {
+    "name": "baseline_random",
+    "profile_name": "goal_v1",
+    "family": "baseline",
+    "reward_overrides": {},
+    "config_overrides": {},
+    "runtime_overrides": {
+      "policy_mode": "random"
+    }
+  }
+]

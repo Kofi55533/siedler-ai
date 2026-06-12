@@ -1,0 +1,5 @@
+candidate,family,profile_name,runs,mean_terminal_potential_metric,mean_terminal_path_ready,mean_scharf_dependency_progress,mean_scharf_research_progress,mean_scharf_construction_progress,mean_scharfschuetzen,mean_train_seconds
+curriculum_unlock,reward,curriculum_unlock,1,0.0,0.0,0.5,0.0,0.0,0.0,64.96198153495789
+goal_v1,reward,goal_v1,1,0.0,0.0,0.4166666666666667,0.0,0.0,0.0,122.47529697418213
+dense_v2,reward,dense_v2,1,0.0,0.0,0.4166666666666667,0.0,0.0,0.0,81.88195729255676
+curriculum_stockpile,reward,curriculum_stockpile,1,0.0,0.0,0.4166666666666667,0.0,0.0,0.0,72.54728055000305

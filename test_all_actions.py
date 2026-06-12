@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Test aller Actions im Multi-Step System."""
 
-from environment import SiedlerScharfschuetzenEnv, MAIN_ACTIONS, ActionPhase
+from environment import SiedlerScharfschuetzenEnv, MAIN_ACTIONS, ActionPhase, SerfArea
 import numpy as np
 
 print('=' * 60)
@@ -20,6 +20,7 @@ def _first_valid(mask):
 
 
 def _run_flow(main_action_name, phase_selector=None):
+    global obs
     phase_selector = phase_selector or {}
     main_idx = MAIN_ACTIONS.index(main_action_name)
     main_mask = env.action_masks()
@@ -39,6 +40,13 @@ def _run_flow(main_action_name, phase_selector=None):
             choice = _first_valid(mask)
         obs, reward, done, trunc, info = env.step(choice)
     return obs, reward, done, trunc, info
+
+
+def _grant_free_serfs(count):
+    env.resources["Taler"] = max(float(env.resources.get("Taler", 0)), count * 100.0)
+    while env.free_leibeigene < count:
+        env._buy_serf()
+    env.serf_areas[SerfArea.FREE]["count"] = env.free_leibeigene
 
 
 def _build_flow_selectors(building_name):
@@ -63,6 +71,7 @@ print('============================================')
 env.reset()
 # Genug Ressourcen fuer Bau
 env.resources = {'Taler': 50000, 'Holz': 50000, 'Stein': 50000, 'Lehm': 50000, 'Eisen': 5000, 'Schwefel': 5000}
+_grant_free_serfs(1)
 
 sites_before = len(env.construction_sites)
 
@@ -150,6 +159,7 @@ print('\n5. RESOURCE (Holz) - Check')
 print('============================================')
 
 env.reset()
+_grant_free_serfs(1)
 wood_before = env.wood_serfs
 
 _run_flow(
@@ -171,6 +181,7 @@ else:
 
 # Deposit-Recall (direkt testen)
 env.reset()
+_grant_free_serfs(3)
 env._assign_deposit_batch('Lehm', 3)
 lehm_serfs = env.deposit_categories['Lehm']['serfs_assigned']
 print(f'  Lehm-Deposit Serfs: {lehm_serfs}')
@@ -184,6 +195,7 @@ else:
 
 # Exakter Holz-Zielcheck ueber Zone/TopK-Encoding
 env.reset()
+_grant_free_serfs(1)
 tree_specific = 0
 tree_idx = env._get_wood_zone_rank_tree_index(
     tree_specific,
@@ -361,6 +373,7 @@ print('============================================')
 
 env.reset()
 env.resources = {'Taler': 50000, 'Holz': 50000, 'Stein': 50000, 'Lehm': 50000, 'Eisen': 5000, 'Schwefel': 5000}
+_grant_free_serfs(2)
 
 # Erst Baustelle ueber den aktuellen build-Flow erstellen
 _run_flow("build", phase_selector=_build_flow_selectors("Wohnhaus_1"))

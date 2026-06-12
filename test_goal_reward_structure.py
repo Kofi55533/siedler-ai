@@ -169,7 +169,15 @@ def test_guided_profile_prunes_noisy_actions_and_decorations():
 
     main_mask = env.action_masks()[: env.action_spaces[ActionPhase.MAIN].n]
     valid_main = {MAIN_ACTIONS[i] for i, flag in enumerate(main_mask) if flag}
-    assert valid_main == {"wait", "build", "upgrade", "buy_serf", "assign_serf"}
+    assert valid_main == {"wait", "upgrade", "buy_serf"}
+
+    env.step(MAIN_ACTIONS.index("buy_serf"))
+    quantity_mask = env.action_masks()[: env.action_spaces[env.current_phase].n]
+    env.step(int(np.flatnonzero(quantity_mask)[0]))
+
+    main_mask = env.action_masks()[: env.action_spaces[ActionPhase.MAIN].n]
+    valid_main = {MAIN_ACTIONS[i] for i, flag in enumerate(main_mask) if flag}
+    assert {"build", "assign_serf"}.issubset(valid_main)
 
     env.step(MAIN_ACTIONS.index("build"))
     env.step(0)  # source free, source-specific is skipped
@@ -221,6 +229,8 @@ def test_guided_build_mask_can_reach_gunsmith_after_required_techs():
         reward_profile=profile["reward_profile"],
     )
     env.reset(seed=0)
+    env._buy_serf()
+    env._pending_spawned_unassigned_serfs = 0
     env.researched_techs.update({"Mathematik", "Fernglas", "Luntenschloss"})
     env.resources[RESOURCE_SCHWEFEL] = env.resources.get(RESOURCE_SCHWEFEL, 0) + 500.0
     env._can_cache = {}

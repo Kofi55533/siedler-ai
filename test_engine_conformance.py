@@ -19,6 +19,7 @@ from map_config_wintersturm import (
 from environment import (
     ACTION_FLOWS,
     BUILD_CATEGORIES,
+    INITIAL_LEIBEIGENE,
     MAIN_ACTIONS,
     MAXIMUM_FAITH,
     POSITION_MODES,
@@ -56,6 +57,24 @@ from worker_simulation import (
 PROJECT_ROOT = Path(__file__).resolve().parent
 WORKER_TRUTH_PATH = PROJECT_ROOT / "config" / "worker_truth_model.json"
 FULL_WORKER_ENGINE_PATH = PROJECT_ROOT / "config" / "full_worker_engine_behavior.json"
+
+
+def test_wintersturm_starts_without_free_serfs_but_can_buy_first_serf():
+    env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
+    env.reset(seed=0)
+
+    assert INITIAL_LEIBEIGENE == 0
+    assert env.total_leibeigene == 0
+    assert env.free_leibeigene == 0
+    assert env.serf_areas[SerfArea.FREE]["count"] == 0
+    assert env._can_buy_serf()
+
+    assert env.step(MAIN_ACTIONS.index("buy_serf"))[4].get("invalid_action") is not True
+    assert env.step(0)[4].get("invalid_action") is not True
+
+    assert env.total_leibeigene == 1
+    assert env.free_leibeigene == 1
+    assert env.serf_areas[SerfArea.FREE]["count"] == 1
 
 
 def _safe_int(value, default):
@@ -99,9 +118,20 @@ def _load_json(path):
         return json.load(f)
 
 
+def _grant_free_serfs(env, count=10):
+    env.resources["Taler"] = max(float(env.resources.get("Taler", 0)), float(count * 100))
+    while env.free_leibeigene < count:
+        env._buy_serf()
+    env.serf_areas[SerfArea.FREE]["count"] = env.free_leibeigene
+    env._pending_spawned_unassigned_serfs = 0
+    env._best_total_leibeigene = max(int(env._best_total_leibeigene), int(env.total_leibeigene))
+    env._can_cache = {}
+
+
 def _grant_abundant_resources(env):
     for key in list(env.resources.keys()):
         env.resources[key] = 1_000_000
+    _grant_free_serfs(env, 10)
 
 
 def _prepare_env_for_action(env, action_name):
@@ -421,6 +451,7 @@ def test_build_main_action_replaces_assign_serf_neubau_path():
 def test_construction_assignment_uses_nearest_idle_serfs():
     env = SiedlerScharfschuetzenEnv()
     env.reset()
+    _grant_free_serfs(env, 2)
     assert len(env.production_system.serfs) >= 2
 
     site_id = 4242

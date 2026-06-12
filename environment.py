@@ -1723,6 +1723,7 @@ TIME_STEP = 1
 INCOME_CYCLE = 120  # PaydayFrequency=120s (aus PlayerAttraction.xml)
 TOTAL_SIM_TIME = 1800  # 30 Minuten
 MAX_POSSIBLE_LEIBEIGENE = 400
+INITIAL_LEIBEIGENE = 0
 # TL_SERF_BUILD.xml: ein Hammerschlag besteht aus 400ms + 1000ms.
 SERF_BUILD_SWING_SECONDS = 1.4
 # ZB_ConstructionSite*.xml: MaxWorkers=4 fuer Bau-/Upgrade-Baustellen.
@@ -2529,7 +2530,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         # Serf Areas tracking
         self.serf_areas = {area: {"count": 0} for area in SerfArea}
-        self.serf_areas[SerfArea.FREE]["count"] = 30  # Start-Leibeigene
+        self.serf_areas[SerfArea.FREE]["count"] = INITIAL_LEIBEIGENE
 
         # Tech Effects (wird in reset() zurueckgesetzt)
         self.active_tech_effects = {}
@@ -2799,7 +2800,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         for raw_name in RESOURCE_RAW:
             self.resources.setdefault(raw_name, 0)
         self.resources.setdefault(RESOURCE_GOLD_ROH, 0)
-        self.total_leibeigene = 30
+        self.total_leibeigene = INITIAL_LEIBEIGENE
         # Worker-KapazitÃƒÆ’Ã‚Â¤t wird durch WohnhÃƒÆ’Ã‚Â¤user bestimmt, nicht HQ
         self.free_leibeigene = self.total_leibeigene
         self.resource_workers = {r: 0 for r in RESOURCE_MAP}
@@ -3066,14 +3067,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # PERFORMANCE: Tree-ID Mapping aus Cache (nicht neu berechnen!)
         self.tree_id_mapping = dict(self._cached_tree_id_mapping)
 
-        # Initiale Serfs erstellen (30 Leibeigene zu Start)
-        # VEREINFACHT: Keine IDs mehr, nur Z?hler
+        # Initiale Serfs erstellen. Wintersturm startet ohne freie Leibeigene;
+        # die ersten Serfs muessen per buy_serf erzeugt werden.
+        # VEREINFACHT: Keine IDs mehr, nur Zaehler
         from worker_simulation import Position
-        has_built_dz = any(slot.get("status") == "built" for slot in self.dz_slots)
-        if not has_built_dz:
-            self.total_leibeigene = 0
-            self.free_leibeigene = 0
-            self.serf_areas[SerfArea.FREE]["count"] = 0
         self._best_total_leibeigene = int(self.total_leibeigene)
         # Start-Serfs sind keine "neu gekauften" Serfs -> keine initialen Pending-Tokens.
         self._pending_spawned_unassigned_serfs = 0
@@ -10879,6 +10876,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._spend_resource(RESOURCE_TALER, SERF_BUY_COST)
         self.total_leibeigene += 1
         self.free_leibeigene += 1
+        self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
         self._pending_spawned_unassigned_serfs = max(0, int(self._pending_spawned_unassigned_serfs)) + 1
 
         # Neuen Serf erstellen (vereinfacht - keine IDs mehr)
@@ -11060,6 +11058,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         self.total_leibeigene -= 1
         self.free_leibeigene -= 1
+        self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
         # Ohne stabile Serf-IDs konservativ gegen Ghost-Tokens absichern.
         self._pending_spawned_unassigned_serfs = max(
             0,

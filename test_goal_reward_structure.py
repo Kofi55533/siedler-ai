@@ -9,7 +9,7 @@ from environment import (
     RESOURCE_TALER,
     SiedlerScharfschuetzenEnv,
 )
-from training_profiles import get_train_profile
+from training_profiles import DEFAULT_TRAIN_PROFILE, get_train_profile
 
 
 WAIT_ACTION = MAIN_ACTIONS.index("wait")
@@ -94,6 +94,40 @@ def test_sparse_profile_is_no_longer_zero_reward():
 
     assert profile["reward_profile"]["terminal_potential_bonus_per_unit"] > 0.0
     assert profile["reward_profile"]["terminal_potential_use_cumulative_earnings"] == pytest.approx(0.0)
+
+
+def test_default_bc_opening_profile_uses_milestones_and_terminal_reward_only():
+    assert DEFAULT_TRAIN_PROFILE == "bc_opening"
+    profile = get_train_profile()
+    rewards = profile["reward_profile"]
+
+    assert profile["name"] == "bc_opening"
+    assert rewards.get("step_expert_opening_milestone_bonus", 0.0) > 0.0
+    assert rewards.get("terminal_potential_bonus_per_unit", 0.0) > 0.0
+    assert rewards.get("terminal_scharf_count_bonus", 0.0) > 0.0
+    assert rewards.get("goal_action_pruning", 0.0) == pytest.approx(0.0)
+
+    dense_step_keys = {
+        "step_delta_potential_bonus",
+        "step_new_resource_potential_unit_bonus",
+        "step_goal_resource_progress_bonus",
+        "step_delta_progress_bonus",
+        "step_delta_dependency_bonus",
+        "step_delta_research_bonus",
+        "step_delta_construction_bonus",
+        "step_required_building_affordable_bonus",
+        "step_required_building_started_bonus",
+        "step_required_building_complete_bonus",
+        "step_required_tech_complete_bonus",
+        "step_path_ready_bonus",
+        "step_scharf_recruited_bonus",
+        "step_worker_growth_bonus",
+        "step_unlock_recruitable_bonus",
+        "step_time_penalty",
+        "action_buy_serf_growth_bonus",
+        "action_assign_spawned_serf_bonus",
+    }
+    assert all(float(rewards.get(key, 0.0)) == 0.0 for key in dense_step_keys)
 
 
 def test_expert_opening_milestone_reward_is_ordered_and_once():

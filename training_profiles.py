@@ -7,7 +7,7 @@ import copy
 import os
 from typing import Dict, Optional, Tuple
 
-DEFAULT_TRAIN_PROFILE = "guided_v1"
+DEFAULT_TRAIN_PROFILE = "bc_opening"
 
 
 TRAIN_PROFILES = {
@@ -245,6 +245,30 @@ TRAIN_PROFILES = {
             "action_assign_spawned_serf_bonus": 0.003,
         },
     },
+    "bc_opening": {
+        "description": "BC-Startlinie + Expert-Opening-Milestones + finaler Scharfschuetzen-Reward ohne zusaetzliches Dense-Shaping.",
+        "config_overrides": {
+            "learning_rate": 0.00025,
+            "gamma": 0.999,
+            "ent_coef": 0.01,
+            "batch_size": 256,
+            "n_epochs": 4,
+        },
+        "reward_profile": {
+            # Kein goal_action_pruning: BC gibt die Startlinie vor, PPO darf danach
+            # aus allen gueltigen Spielaktionen optimieren. Die normalen
+            # Validitaetsmasken bleiben davon unberuehrt.
+            "terminal_path_ready_bonus": 10.0,
+            "terminal_recruitable_bonus": 5.0,
+            "terminal_potential_bonus_per_unit": 12.0,
+            "terminal_scharf_count_bonus": 30.0,
+            "terminal_potential_use_cumulative_earnings": 0.0,
+            "terminal_potential_include_start_resources": 0.0,
+            "terminal_potential_scharf_tier": 1.0,
+            "terminal_potential_require_path_ready": 1.0,
+            "step_expert_opening_milestone_bonus": 10.0,
+        },
+    },
     "goal_v1": {
         "description": "Empfohlen: maximiert das finale Potential sofort rekrutierbarer Scharfschuetzen.",
         "config_overrides": {
@@ -283,6 +307,9 @@ TRAIN_PROFILES = {
 PROFILE_ALIASES = {
     "default": DEFAULT_TRAIN_PROFILE,
     "recommended": DEFAULT_TRAIN_PROFILE,
+    "bc": "bc_opening",
+    "opening": "bc_opening",
+    "milestones": "bc_opening",
     "guided": "guided_v1",
     "goal": "goal_v1",
     "stable": "balanced",

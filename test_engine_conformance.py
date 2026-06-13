@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 import pathfinding
 from original_game_values import aliases_for_technology, load_building_geometry, load_technology_xml_values
@@ -19,9 +20,12 @@ from map_config_wintersturm import (
 from environment import (
     ACTION_FLOWS,
     BUILD_CATEGORIES,
+    COHORT_BASE_TYPES,
+    COHORT_OBS_FEATURES_PER_SLOT,
     INITIAL_LEIBEIGENE,
     MAIN_ACTIONS,
     MAXIMUM_FAITH,
+    MAX_COMPLETED_SERF_COHORTS,
     POSITION_MODES,
     QUANTITY_VALUES,
     WOOD_TOPK_PER_ZONE,
@@ -255,6 +259,28 @@ def test_spawned_serf_cohort_supports_one_to_twenty_and_repeated_splits():
         assert len(env.free_serf_cohorts) == 1
         assert env.free_serf_cohorts[0]["count"] == expected_remaining
         assert env.free_leibeigene == expected_remaining
+
+
+def test_free_serf_cohort_observation_exposes_type_count_and_position():
+    env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
+    env.reset(seed=13)
+    env.resources["Taler"] = 50_000
+    env.buildings["Dorfzentrum_1"] = max(4, env.buildings.get("Dorfzentrum_1", 0))
+    env._can_cache = {}
+
+    env._execute_action("buy_serf", {ActionPhase.QUANTITY: QUANTITY_VALUES.index(3)})
+
+    values = []
+    env._append_free_cohort_observation(values)
+    assert len(values) == MAX_COMPLETED_SERF_COHORTS * COHORT_OBS_FEATURES_PER_SLOT
+
+    first = values[:COHORT_OBS_FEATURES_PER_SLOT]
+    assert first[0] == pytest.approx(1.0)
+    assert first[1] == pytest.approx(3.0 / 20.0)
+    assert first[2] > 0.0
+    assert first[3] > 0.0
+    base_start = 5
+    assert first[base_start + COHORT_BASE_TYPES.index("Rekrutiert")] == pytest.approx(1.0)
 
 
 def test_completed_building_cohort_can_partially_build_next_site():

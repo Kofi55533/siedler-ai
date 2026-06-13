@@ -116,6 +116,21 @@ MAX_POSITION_SLOTS = 2200
 POSITION_GROUP_SIZE = 50
 POSITION_GROUP_COUNT = (MAX_POSITION_SLOTS + POSITION_GROUP_SIZE - 1) // POSITION_GROUP_SIZE
 QUANTITY_VALUES = list(range(1, 21))
+COHORT_BASE_TYPES = [
+    "Rekrutiert",
+    "Hochschule",
+    "Eisenmine",
+    "Schwefelmine",
+    "Steinmine",
+    "Lehmmine",
+    "Kloster",
+    "Dorfzentrum",
+    "Wohnhaus",
+    "Bauernhof",
+    "Lehmh",
+    "Other",
+]
+COHORT_OBS_FEATURES_PER_SLOT = 5 + len(COHORT_BASE_TYPES)
 
 # Forschungs-GebÃƒÆ’Ã‚Â¤ude: In welchem GebÃƒÆ’Ã‚Â¤ude wird welche Technologie erforscht?
 # Jede Technologie hat ein "requires_building" - wir gruppieren nach Basis-GebÃƒÆ’Ã‚Â¤ude
@@ -2548,6 +2563,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Observation Space (ERWEITERT mit WorkTime-System)
         n_resource_obs = len(RESOURCE_NAMES)
         n_worker_obs = len(RESOURCE_MAP) + 4  # +2 fuer pending_spawned + construction_freed
+        n_cohort_obs = MAX_COMPLETED_SERF_COHORTS * COHORT_OBS_FEATURES_PER_SLOT
         n_building_obs = len(self.buildable_buildings) * 2
         n_upgrade_obs = len(self.upgradeable_buildings)
         n_tech_obs = len(self.tech_list) * 2
@@ -2573,7 +2589,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # + 5x bless_cooldown (pro Kategorie) + 5x bless_active (pro Kategorie)
         n_new_action_obs = 4 + len(BLESS_CATEGORIES) * 2  # 4 + 10 = 14
 
-        total_obs = (n_resource_obs + n_worker_obs + n_building_obs + n_upgrade_obs +
+        total_obs = (n_resource_obs + n_worker_obs + n_cohort_obs + n_building_obs + n_upgrade_obs +
                     n_tech_obs + n_research_building_obs + n_soldier_obs + n_time_obs +
                     n_production_obs + n_worktime_obs + n_new_action_obs + n_macro_obs +
                     n_flow_context_obs + n_phase_obs)
@@ -3552,6 +3568,47 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             )
         return np.asarray(values, dtype=np.float32)
 
+    def _append_free_cohort_observation(self, obs: List[float]) -> None:
+        """Encodes selectable free serf cohorts in source-specific order."""
+        self._cleanup_free_serf_cohorts()
+        cohorts = list(getattr(self, "free_serf_cohorts", []))[:MAX_COMPLETED_SERF_COHORTS]
+        max_x = max(1.0, float(MAP_SIZE[0]))
+        max_y = max(1.0, float(MAP_SIZE[1]))
+        zone_denominator = max(1, len(getattr(self, "wood_zone_names", [])) - 1)
+
+        def _base_index(base_name: str) -> int:
+            base_norm = self._normalize_building_name(str(base_name or ""))
+            for idx, token in enumerate(COHORT_BASE_TYPES[:-1]):
+                token_norm = self._normalize_building_name(token)
+                if token_norm and token_norm in base_norm:
+                    return idx
+            return len(COHORT_BASE_TYPES) - 1
+
+        def _preferred_zone_index(zone_name: Optional[str]) -> float:
+            if not zone_name:
+                return 0.0
+            for idx, candidate in enumerate(getattr(self, "wood_zone_names", [])):
+                if str(candidate) == str(zone_name):
+                    return float(idx) / float(zone_denominator)
+            return 0.0
+
+        for slot_idx in range(MAX_COMPLETED_SERF_COHORTS):
+            if slot_idx < len(cohorts):
+                cohort = cohorts[slot_idx]
+                pos = cohort.get("position") or {}
+                if not isinstance(pos, dict):
+                    pos = {}
+                obs.append(1.0)
+                obs.append(min(1.0, max(0.0, float(cohort.get("count", 0) or 0) / 20.0)))
+                obs.append(min(1.0, max(0.0, float(pos.get("x", 0.0)) / max_x)))
+                obs.append(min(1.0, max(0.0, float(pos.get("y", 0.0)) / max_y)))
+                obs.append(_preferred_zone_index(cohort.get("preferred_wood_zone")))
+                base_idx = _base_index(str(cohort.get("base", "")))
+            else:
+                obs.extend([0.0, 0.0, 0.0, 0.0, 0.0])
+                base_idx = None
+            self._append_one_hot(obs, base_idx, len(COHORT_BASE_TYPES))
+
     def _get_observation(self):
         phase_idx = self.phase_index.get(self.current_phase, 0)
         phase_vec = np.zeros(self.phase_dim, dtype=np.float32)
@@ -3571,6 +3628,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             obs.append(self.total_leibeigene / 100.0)
             obs.append(max(0, int(getattr(self, "_pending_spawned_unassigned_serfs", 0))) / 100.0)
             obs.append(max(0, int(getattr(self, "_construction_freed_serfs", 0))) / 100.0)
+            self._append_free_cohort_observation(obs)
 
             construction_counts = {}
             if self.construction_queue:

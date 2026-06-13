@@ -1324,8 +1324,10 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
                 reward_profile=reward_profile,
             )
             bc_episodes = _get_int_env("SIEDLER_BC_EPISODES", 2, minimum=1)
-            bc_max_micro_steps = _get_int_env("SIEDLER_BC_MAX_MICRO_STEPS", 2500, minimum=1)
-            bc_max_completed = _get_int_env("SIEDLER_BC_MAX_COMPLETED_ACTIONS", 220, minimum=1)
+            bc_max_micro_steps = _get_int_env("SIEDLER_BC_MAX_MICRO_STEPS", 12000, minimum=1)
+            bc_max_completed = _get_int_env("SIEDLER_BC_MAX_COMPLETED_ACTIONS", 1200, minimum=1)
+            bc_wait_stride = _get_int_env("SIEDLER_BC_WAIT_SAMPLE_STRIDE", 10, minimum=1)
+            bc_max_wait_samples = _get_int_env("SIEDLER_BC_MAX_WAIT_SAMPLES", 400, minimum=0)
             bc_epochs = _get_int_env("SIEDLER_BC_EPOCHS", 3, minimum=1)
             bc_batch_size = _get_int_env("SIEDLER_BC_BATCH_SIZE", 512, minimum=1)
             bc_lr = _get_float_env("SIEDLER_BC_LR", min(float(config["learning_rate"]), 1e-4), minimum=1e-7)
@@ -1333,7 +1335,8 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
 
             print(
                 "Behavior Cloning: sammle Expert-Opening-Demos "
-                f"(episodes={bc_episodes}, epochs={bc_epochs}, batch={bc_batch_size})"
+                f"(episodes={bc_episodes}, epochs={bc_epochs}, batch={bc_batch_size}, "
+                f"wait_stride={bc_wait_stride})"
             )
             bc_stats = behavior_cloning_pretrain(
                 model,
@@ -1341,6 +1344,8 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
                 episodes=bc_episodes,
                 max_micro_steps=bc_max_micro_steps,
                 max_completed_actions=bc_max_completed,
+                wait_sample_stride=bc_wait_stride,
+                max_wait_samples=bc_max_wait_samples,
                 epochs=bc_epochs,
                 batch_size=bc_batch_size,
                 learning_rate=bc_lr,
@@ -1355,6 +1360,8 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
                 f"samples={int(bc_stats['samples'])}, "
                 f"loss={bc_stats['loss_start']:.4f}->{bc_stats['loss_end']:.4f}, "
                 f"avg_completed={bc_stats['avg_completed_actions']:.1f}, "
+                f"wait_samples={int(bc_stats['recorded_wait_samples'])}/"
+                f"{int(bc_stats['executed_wait_actions'])}, "
                 f"fallbacks={int(bc_stats['fallback_actions'])}"
             )
         except Exception as exc:

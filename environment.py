@@ -5461,10 +5461,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         path = self._find_path_world(start_pos, target_pos)
         if not path:
-            # Kein valider A*-Pfad => Distanz unendlich (nicht Luftlinie erzwingen).
-            dist = float("inf")
-            self._path_cache[key] = ([], dist)
-            return [], dist
+            if _env_truthy(os.environ.get("SIEDLER_BLOCK_ON_PATH_FAILURE", "0")):
+                # Strict debug mode: expose unreachable pathing instead of falling back.
+                dist = float("inf")
+                self._path_cache[key] = ([], dist)
+                return [], dist
+            # Training/runtime fallback: a valid assignment must not freeze forever
+            # when A* cannot reach the exact target cell, e.g. a building center.
+            dist = float(start_pos.distance_to(target_pos))
+            direct_path = [Position(x=target_pos.x, y=target_pos.y)]
+            self._path_cache[key] = (direct_path, dist)
+            return direct_path, dist
         dist = 0.0
         for i in range(len(path) - 1):
             dist += path[i].distance_to(path[i + 1])

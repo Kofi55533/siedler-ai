@@ -516,8 +516,10 @@ def _slice_obs(stacked_obs, indices: np.ndarray):
 def collect_expert_opening_demonstrations(
     env,
     episodes: int = 2,
-    max_micro_steps: int = 2500,
-    max_completed_actions: int = 220,
+    max_micro_steps: int = 12000,
+    max_completed_actions: int = 1200,
+    wait_sample_stride: int = 10,
+    max_wait_samples: int = 400,
     seed: int = 123,
 ) -> Dict[str, object]:
     """Collect phase-level demonstrations from the expert controller."""
@@ -527,11 +529,15 @@ def collect_expert_opening_demonstrations(
     masks: List[np.ndarray] = []
     episode_completed: List[int] = []
     fallback_actions = 0
+    executed_wait_actions = 0
+    recorded_wait_samples = 0
+    recorded_non_wait_samples = 0
 
     for ep in range(max(1, int(episodes))):
         obs, _info = env.reset(seed=int(seed) + ep)
         controller.reset()
         completed = 0
+        consecutive_wait_choices = 0
         for _step in range(max(1, int(max_micro_steps))):
             mask = np.asarray(env.action_masks(), dtype=bool).reshape(-1)
             action = int(controller.act(env))
@@ -539,9 +545,34 @@ def collect_expert_opening_demonstrations(
                 action = _first_valid(mask)
                 fallback_actions += 1
 
-            observations.append(_copy_obs(obs))
-            actions.append(action)
-            masks.append(mask.copy())
+            is_wait_choice = (
+                env.current_phase == ActionPhase.MAIN
+                and 0 <= action < len(MAIN_ACTIONS)
+                and MAIN_ACTIONS[action] == "wait"
+            )
+            if is_wait_choice:
+                consecutive_wait_choices += 1
+                executed_wait_actions += 1
+                should_record = (
+                    recorded_wait_samples < int(max_wait_samples)
+                    and (
+                        consecutive_wait_choices == 1
+                        or max(1, int(wait_sample_stride)) <= 1
+                        or consecutive_wait_choices % max(1, int(wait_sample_stride)) == 0
+                    )
+                )
+            else:
+                consecutive_wait_choices = 0
+                should_record = True
+
+            if should_record:
+                observations.append(_copy_obs(obs))
+                actions.append(action)
+                masks.append(mask.copy())
+                if is_wait_choice:
+                    recorded_wait_samples += 1
+                else:
+                    recorded_non_wait_samples += 1
 
             obs, _reward, terminated, truncated, info = env.step(action)
             controller.observe_step(info)
@@ -565,6 +596,9 @@ def collect_expert_opening_demonstrations(
         "masks": np.asarray(masks, dtype=bool),
         "episode_completed_actions": episode_completed,
         "fallback_actions": int(fallback_actions),
+        "executed_wait_actions": int(executed_wait_actions),
+        "recorded_wait_samples": int(recorded_wait_samples),
+        "recorded_non_wait_samples": int(recorded_non_wait_samples),
     }
 
 
@@ -572,8 +606,10 @@ def behavior_cloning_pretrain(
     model,
     env,
     episodes: int = 2,
-    max_micro_steps: int = 2500,
-    max_completed_actions: int = 220,
+    max_micro_steps: int = 12000,
+    max_completed_actions: int = 1200,
+    wait_sample_stride: int = 10,
+    max_wait_samples: int = 400,
     epochs: int = 3,
     batch_size: int = 512,
     learning_rate: float = 1e-4,
@@ -585,6 +621,8 @@ def behavior_cloning_pretrain(
         episodes=episodes,
         max_micro_steps=max_micro_steps,
         max_completed_actions=max_completed_actions,
+        wait_sample_stride=wait_sample_stride,
+        max_wait_samples=max_wait_samples,
         seed=seed,
     )
     observations = demos["observations"]
@@ -628,4 +666,7 @@ def behavior_cloning_pretrain(
         "loss_end": float(losses[-1]) if losses else 0.0,
         "fallback_actions": float(demos["fallback_actions"]),
         "avg_completed_actions": float(np.mean(demos["episode_completed_actions"])),
+        "executed_wait_actions": float(demos["executed_wait_actions"]),
+        "recorded_wait_samples": float(demos["recorded_wait_samples"]),
+        "recorded_non_wait_samples": float(demos["recorded_non_wait_samples"]),
     }

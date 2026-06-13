@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the human opening expert used by behavior cloning."""
 
-from environment import MAIN_ACTIONS, QUANTITY_VALUES, ActionPhase, SiedlerScharfschuetzenEnv
+from environment import INCOME_CYCLE, MAIN_ACTIONS, QUANTITY_VALUES, ActionPhase, SiedlerScharfschuetzenEnv
 from expert_opening import ExpertOpeningController, collect_expert_opening_demonstrations
 from production_system import Serf, SerfState
 from worker_simulation import Position
@@ -37,7 +37,7 @@ def test_expert_opening_demo_collection_has_no_invalid_fallbacks():
     demos = collect_expert_opening_demonstrations(
         env,
         episodes=1,
-        max_micro_steps=220,
+        max_micro_steps=700,
         max_completed_actions=45,
         seed=8,
     )
@@ -65,3 +65,30 @@ def test_build_assignment_falls_back_when_astar_cannot_reach_exact_cell():
     before_x = serf.position.x
     serf.tick(1.0)
     assert serf.position.x != before_x
+
+
+def test_full_sim_expert_opening_completes_mines_and_universities_before_first_payday(monkeypatch):
+    monkeypatch.setenv("SIEDLER_SIM_MODE", "full_sim")
+    monkeypatch.delenv("SIEDLER_DISABLE_RUNTIME_PATHING", raising=False)
+    env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
+    env.reset(seed=11)
+    controller = ExpertOpeningController()
+
+    first_payday = None
+    for _micro_step in range(5000):
+        obs, _reward, terminated, truncated, info = env.step(controller.act(env))
+        controller.observe_step(info)
+        if env._first_worker_building_time is not None and first_payday is None:
+            first_payday = env._first_worker_building_time + INCOME_CYCLE
+        if first_payday is not None and env.current_time >= first_payday:
+            break
+        assert not terminated
+        assert not truncated
+
+    assert first_payday is not None
+    assert env.current_time >= first_payday
+    assert env._get_completed_base_delta("Hochschule") >= 2
+    assert env._get_completed_base_delta("Eisenmine") >= 2
+    assert env._get_completed_base_delta("Schwefelmine") >= 2
+    assert env._get_completed_base_delta("Steinmine") >= 1
+    assert env._get_completed_base_delta("Lehmmine") >= 1

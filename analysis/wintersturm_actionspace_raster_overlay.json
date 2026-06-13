@@ -1,0 +1,44 @@
+{
+  "grid_shape": [
+    257,
+    258
+  ],
+  "scale_px_per_cell": 12,
+  "walkable_cells": 34602,
+  "blocked_cells": 31704,
+  "trees": 202,
+  "build_layers": {
+    "Wohnhaus_1": {
+      "universe_candidates": 27135,
+      "currently_valid": 24439
+    },
+    "Bauernhof_1": {
+      "universe_candidates": 22579,
+      "currently_valid": 17987
+    },
+    "Hochschule_1": {
+      "universe_candidates": 15867,
+      "currently_valid": 8789
+    },
+    "Kloster_1": {
+      "universe_candidates": 15867,
+      "currently_valid": 8789
+    },
+    "Eisenmine_1": {
+      "universe_candidates": 2,
+      "currently_valid": 2
+    },
+    "Schwefelmine_1": {
+      "universe_candidates": 2,
+      "currently_valid": 2
+    },
+    "Lehmmine_1": {
+      "universe_candidates": 1,
+      "currently_valid": 1
+    },
+    "Steinmine_1": {
+      "universe_candidates": 1,
+      "currently_valid": 1
+    }
+  }
+}

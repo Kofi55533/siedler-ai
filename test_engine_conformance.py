@@ -28,7 +28,6 @@ from environment import (
     MAX_COMPLETED_SERF_COHORTS,
     POSITION_MODES,
     QUANTITY_VALUES,
-    WOOD_TOPK_PER_ZONE,
     SNOW_MOVE_SPEED_FACTOR,
     ActionPhase,
     SerfArea,
@@ -169,6 +168,20 @@ def _first_assignable_target_specific(env, target_cat, batch_size):
         env.current_phase = previous_phase
         env.pending_selections = previous_selections
     raise AssertionError(f"No assignable target for category {target_cat} and batch {batch_size}")
+
+
+def _first_valid_build_position_selection(env, building, selections):
+    full = dict(selections)
+    full.setdefault(ActionPhase.POSITION_MODE, 0)
+    valid_mask = env._get_build_position_valid_mask_for_selections(building, full)
+    valid = np.flatnonzero(valid_mask)
+    if len(valid) == 0:
+        raise AssertionError(f"No valid build position for {building}")
+    global_idx = int(valid[0])
+    group_size = env.action_spaces[ActionPhase.POSITION_INDEX].n
+    full[ActionPhase.POSITION_GROUP] = global_idx // group_size
+    full[ActionPhase.POSITION_INDEX] = global_idx % group_size
+    return full
 
 
 def test_spawned_serf_cohort_can_be_split_for_exact_assignment():
@@ -324,8 +337,9 @@ def test_completed_building_cohort_can_partially_build_next_site():
     building = "Wohnhaus_1"
     category_idx = env._get_build_category_index(building)
     category_buildings = env._get_buildings_for_build_category(category_idx)
-    env._execute_action(
-        "build",
+    selections = _first_valid_build_position_selection(
+        env,
+        building,
         {
             ActionPhase.SOURCE_CATEGORY: 7,
             ActionPhase.SOURCE_SPECIFIC: 0,
@@ -333,9 +347,11 @@ def test_completed_building_cohort_can_partially_build_next_site():
             ActionPhase.BUILD_CATEGORY: category_idx,
             ActionPhase.BUILDING: category_buildings.index(building),
             ActionPhase.POSITION_MODE: 0,
-            ActionPhase.POSITION_GROUP: 0,
-            ActionPhase.POSITION_INDEX: 0,
         },
+    )
+    env._execute_action(
+        "build",
+        selections,
     )
 
     newest_site = env.construction_sites[-1]
@@ -727,18 +743,22 @@ def test_build_uses_selected_source_serfs_not_nearest_free_serfs():
     building = "Wohnhaus_1"
     category_idx = env._get_build_category_index(building)
     building_idx = env._get_buildings_for_build_category(category_idx).index(building)
-
-    reward = env._execute_action(
-        "build",
+    selections = _first_valid_build_position_selection(
+        env,
+        building,
         {
             ActionPhase.SOURCE_CATEGORY: 6,
             ActionPhase.SOURCE_SPECIFIC: 0,
             ActionPhase.QUANTITY: 0,
             ActionPhase.BUILD_CATEGORY: category_idx,
             ActionPhase.BUILDING: building_idx,
-            ActionPhase.POSITION_GROUP: 0,
-            ActionPhase.POSITION_INDEX: 0,
+            ActionPhase.POSITION_MODE: 0,
         },
+    )
+
+    reward = env._execute_action(
+        "build",
+        selections,
     )
 
     assert reward == 0.0
@@ -842,12 +862,12 @@ def test_multihead_policy_can_sample_cancel_slot_in_subflows():
     assert cancel_prob > 0.0
 
 
-def test_wood_specific_uses_zone_rank_topk_not_flat_tree_space():
+def test_wood_specific_uses_stable_flat_tree_ids():
     env = SiedlerScharfschuetzenEnv()
     env.reset()
     _grant_abundant_resources(env)
 
-    assert env.action_spaces[ActionPhase.TARGET_SPECIFIC].n < PLAYER_1_TREES_SUMMARY["total_trees"]
+    assert env.action_spaces[ActionPhase.TARGET_SPECIFIC].n >= PLAYER_1_TREES_SUMMARY["total_trees"]
     env.current_flow = "assign_serf"
     env.current_phase = ActionPhase.TARGET_SPECIFIC
     env.pending_selections = {
@@ -861,7 +881,8 @@ def test_wood_specific_uses_zone_rank_topk_not_flat_tree_space():
     mask = env.action_masks()[: env.action_spaces[ActionPhase.TARGET_SPECIFIC].n]
     valid = np.flatnonzero(mask)
     assert len(valid) > 0
-    assert int(valid.max()) < env._wood_specific_encoded_limit()
+    assert int(valid.max()) < PLAYER_1_TREES_SUMMARY["total_trees"]
+    assert env._wood_specific_encoded_limit() == PLAYER_1_TREES_SUMMARY["total_trees"]
 
     first_specific = int(valid[0])
     tree_idx = env._get_wood_zone_rank_tree_index(
@@ -870,13 +891,11 @@ def test_wood_specific_uses_zone_rank_topk_not_flat_tree_space():
         mode="assign",
         available_free_override=env.free_leibeigene,
     )
-    assert tree_idx is not None
-    expected_tree = env.tree_list_internal[tree_idx]
-    expected_zone = env.wood_zone_names[first_specific // WOOD_TOPK_PER_ZONE]
+    assert tree_idx == first_specific
+    expected_tree = env.tree_list_internal[first_specific]
 
     env._assign_serfs_to_selection(1, first_specific, 1, env.pending_selections)
 
-    assert expected_tree["zone"] == expected_zone
     assert expected_tree["serfs_assigned"] == 1
 
 
@@ -903,6 +922,33 @@ def test_position_mode_changes_candidate_order_without_changing_validity():
     assert worker
     assert len(auto) == len(worker)
     assert _xy(auto[0]) != _xy(worker[0])
+
+
+def test_build_position_indices_stay_stable_when_position_becomes_blocked():
+    env = SiedlerScharfschuetzenEnv()
+    env.reset()
+    _grant_abundant_resources(env)
+
+    building = "Wohnhaus_1"
+    selections = {ActionPhase.POSITION_MODE: 1}
+    candidates_before = env._get_build_position_candidates_for_selections(building, selections)
+    valid_before = env._get_build_position_valid_mask_for_selections(building, selections)
+    valid_indices = np.flatnonzero(valid_before)
+
+    assert len(candidates_before) > 0
+    assert len(valid_indices) > 0
+
+    selected_idx = int(valid_indices[0])
+    selected = dict(candidates_before[selected_idx])
+    env._build_building(building, position=selected)
+
+    candidates_after = env._get_build_position_candidates_for_selections(building, selections)
+    valid_after = env._get_build_position_valid_mask_for_selections(building, selections)
+
+    assert [_xy(pos) for pos in candidates_after[:200]] == [_xy(pos) for pos in candidates_before[:200]]
+    assert _xy(candidates_after[selected_idx]) == _xy(selected)
+    assert bool(valid_before[selected_idx])
+    assert not bool(valid_after[selected_idx])
 
 
 def test_queue_cancel_actions_remove_selected_items_and_refund():
@@ -1323,15 +1369,14 @@ def test_wintersturm_player1_map_data_matches_extract():
     assert env.map_manager.offset_x == 25240.0
     assert env.map_manager.offset_y == 0.0
 
-    free_village_centers = [
+    village_centers = [
         (int(slot["x"]), int(slot["y"]))
         for slot in PLAYER_1_VILLAGE_CENTER_SLOTS
-        if slot["status"] == "free"
     ]
     assert [
         _xy(pos)
         for pos in env._get_build_position_candidates("Dorfzentrum_1")
-    ] == free_village_centers
+    ] == village_centers
 
     mine_buildings = {
         "Eisenmine_1": "Eisen",

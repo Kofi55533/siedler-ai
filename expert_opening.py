@@ -20,10 +20,11 @@ from environment import (
     QUANTITY_VALUES,
     RESEARCH_BUILDINGS,
     TAX_LEVELS,
-    WOOD_TOPK_PER_ZONE,
     ActionPhase,
     get_base_building_name,
 )
+
+FULL_SIM_FIRST_UNIVERSITY_MIN_START_TIME = 30
 
 
 @dataclass
@@ -125,6 +126,8 @@ class ExpertOpeningController:
             ("Hochschule_1", "Hochschule", 3, 1),
         ]
         for building, base, qty, mode in first_sites:
+            if base == "Hochschule" and self._should_delay_first_university(env):
+                return None
             if self._started_delta(env, base) < 1 and self._can_build_with_source(env, building, qty):
                 return self._plan_build(
                     env,
@@ -363,6 +366,14 @@ class ExpertOpeningController:
             )
         return None
 
+    def _should_delay_first_university(self, env) -> bool:
+        """Delay full-sim university timing so the first payday does not arrive before mine chain completion."""
+        if str(getattr(env, "sim_mode", "")) != "full_sim":
+            return False
+        if self._started_delta(env, "Hochschule") >= 1:
+            return False
+        return float(getattr(env, "current_time", 0.0)) < FULL_SIM_FIRST_UNIVERSITY_MIN_START_TIME
+
     def _select_position_index(self, env, flow_name: str, building: str, selections: Dict[ActionPhase, int]) -> int:
         previous_flow = env.current_flow
         previous_phase = env.current_phase
@@ -374,6 +385,11 @@ class ExpertOpeningController:
             candidates = env._get_build_position_candidates_for_selections(building, selections)
             if not candidates:
                 return 0
+            if hasattr(env, "_get_build_position_valid_mask_for_selections"):
+                valid_mask = env._get_build_position_valid_mask_for_selections(building, selections)
+                valid = np.flatnonzero(valid_mask)
+                if valid.size:
+                    return int(valid[0])
             return 0
         finally:
             env.current_flow = previous_flow
@@ -421,19 +437,20 @@ class ExpertOpeningController:
         available_free = max(int(env.free_leibeigene), int(quantity))
         if preferred_zone:
             preferred_norm = _normal_base(preferred_zone)
-            for zone_idx, zone_name in enumerate(getattr(env, "wood_zone_names", [])):
+            candidates = []
+            for tree_idx, tree in enumerate(getattr(env, "tree_list_internal", [])):
+                zone_name = tree.get("zone")
                 if preferred_norm and preferred_norm not in _normal_base(zone_name):
                     continue
-                for rank in range(WOOD_TOPK_PER_ZONE):
-                    specific = zone_idx * WOOD_TOPK_PER_ZONE + rank
-                    tree_idx = env._get_wood_zone_rank_tree_index(
-                        specific,
-                        quantity,
-                        mode="assign",
-                        available_free_override=available_free,
-                    )
-                    if tree_idx is not None:
-                        return int(specific)
+                if env._can_assign_wood_tree_batch(
+                    tree_idx,
+                    quantity,
+                    available_free_override=available_free,
+                ):
+                    candidates.append((float(tree.get("dist", 0.0)), int(tree_idx)))
+            candidates.sort(key=lambda item: (item[0], item[1]))
+            if candidates:
+                return candidates[0][1]
 
         for specific in range(min(env._wood_specific_encoded_limit(), env.target_specific_size)):
             tree_idx = env._get_wood_zone_rank_tree_index(

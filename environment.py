@@ -107,12 +107,12 @@ POSITION_MODES = {
     4: "expansion_slot",
 }
 
-MAX_SPECIFIC_OPTIONS = 28  # Max(6 Holz-Zonen, 5 Eisen, 10 Baustellen, 28 GebÃƒÆ’Ã‚Â¤ude)
+MAX_SPECIFIC_OPTIONS = 28  # Max(6 Holz-Zonen, 5 Eisen, 10 Baustellen, 28 Gebaeude)
 MAX_COMPLETED_SERF_COHORTS = MAX_SPECIFIC_OPTIONS
 WOOD_TOPK_PER_ZONE = 8
 MAX_WOOD_ZONE_ACTIONS = 18
-MAX_WOOD_SPECIFIC_OPTIONS = WOOD_TOPK_PER_ZONE * MAX_WOOD_ZONE_ACTIONS
-MAX_POSITION_SLOTS = 2200
+MAX_WOOD_SPECIFIC_OPTIONS = 256
+MAX_POSITION_SLOTS = 70000
 POSITION_GROUP_SIZE = 50
 POSITION_GROUP_COUNT = (MAX_POSITION_SLOTS + POSITION_GROUP_SIZE - 1) // POSITION_GROUP_SIZE
 QUANTITY_VALUES = list(range(1, 21))
@@ -2904,6 +2904,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._path_cache = {}
         self._placement_cache_signature = None
         self._placement_cache = {}
+        self._static_position_universe_cache = {}
         self._building_block_revision = 0
         self._infrastructure_dirty = True
         # DZ-Slots: Feste Positionen fÃƒÆ’Ã‚Â¼r Dorfzentren (aus MapData.xml)
@@ -5760,6 +5761,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             len(self.zone_b_positions),
             len(self.building_position_map),
             len(self.construction_sites),
+            sum(1 for tree in getattr(self, "tree_list_internal", []) if tree.get("resource_remaining", 0) <= 0),
             grid_revision,
         )
         self._set_can_cache("_placement_sig", sig)
@@ -5979,8 +5981,131 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Duplikate entfernen, Reihenfolge erhalten.
         return self._dedupe_anchor_positions(anchors, max_count=16) or [hq_anchor]
 
+    def _is_static_build_position_on_terrain(self, local_x: float, local_y: float, building: str) -> bool:
+        """Terrain-only check for the fixed build-position universe.
+
+        Trees, buildings and construction sites are intentionally ignored here;
+        they belong in the dynamic action mask so indices stay stable.
+        """
+        if not (hasattr(self, "map_manager") and self.map_manager):
+            return False
+        base_name = get_base_building_name(building)
+        x1, y1, x2, y2 = pathfinding._building_grid_bounds(local_x, local_y, base_name)
+        grid = self.map_manager.grid
+        if x1 < 0 or y1 < 0 or x2 > grid.width or y2 > grid.height:
+            return False
+        region_terrain = grid.terrain_base[y1:y2, x1:x2]
+        return bool(region_terrain.size and np.all(region_terrain == 1))
+
+    def _get_static_resource_anchor_positions(self, building: str) -> List[Tuple[float, float]]:
+        base_name = get_base_building_name(building)
+        norm = self._normalize_building_name(base_name)
+        mine_anchor_map = {
+            "lehmhutte": "Lehmmine",
+            "steinmetzhutte": "Steinmine",
+            "alchimistenhutte": "Schwefelmine",
+            "schmiede": "Eisenmine",
+            "buchsenmacherei": "Eisenmine",
+            "kanongiesserei": "Schwefelmine",
+        }
+        mine_type = mine_anchor_map.get(norm)
+        if not mine_type:
+            return []
+        anchors = []
+        for pos in self.mine_positions.get(mine_type, []):
+            if isinstance(pos, dict):
+                anchors.append((float(pos.get("x", 0.0)), float(pos.get("y", 0.0))))
+            elif isinstance(pos, tuple):
+                anchors.append((float(pos[0]), float(pos[1])))
+        return self._dedupe_anchor_positions(anchors, max_count=16)
+
+    def _get_static_worker_anchor_positions(self) -> List[Tuple[float, float]]:
+        anchors = [(float(self.hq_position[0]), float(self.hq_position[1]))]
+        for slot in self.dz_slots:
+            anchors.append((float(slot.get("x", 0.0)), float(slot.get("y", 0.0))))
+        return self._dedupe_anchor_positions(anchors, max_count=16)
+
+    def _get_build_position_universe(self, building: str) -> List[dict]:
+        """Stable per-building position universe.
+
+        A candidate index always means the same coordinate for a building type.
+        Dynamic blockers only affect masks, never the candidate ordering.
+        """
+        if self._is_building_forbidden_by_rules(building):
+            return []
+
+        cache_key = ("position_universe", building)
+        cached = getattr(self, "_static_position_universe_cache", {}).get(cache_key)
+        if cached is not None:
+            return [
+                {"x": int(px), "y": int(py), "_slot_candidate": bool(slot_flag)}
+                for px, py, slot_flag in cached
+            ]
+
+        b_info = buildings_db.get(building, {})
+        base_name = get_base_building_name(building)
+        candidates: List[dict] = []
+        seen = set()
+
+        def _add_candidate(x, y, slot_candidate=False) -> None:
+            if len(candidates) >= MAX_POSITION_SLOTS:
+                return
+            key = (int(round(x)), int(round(y)))
+            if key in seen:
+                return
+            seen.add(key)
+            candidates.append(
+                {
+                    "x": key[0],
+                    "y": key[1],
+                    "_slot_candidate": bool(slot_candidate),
+                }
+            )
+
+        if b_info.get("mine_type"):
+            mine_type = b_info["mine_type"]
+            for pos in self.mine_positions.get(mine_type, []):
+                _add_candidate(pos["x"], pos["y"], slot_candidate=True)
+        elif base_name == "Dorfzentrum":
+            for slot in self.dz_slots:
+                _add_candidate(slot["x"], slot["y"], slot_candidate=True)
+        else:
+            fixed_slots = (
+                list(getattr(self, "available_positions", []))
+                + list(getattr(self, "zone_b_positions", []))
+                + list(getattr(self, "used_positions", []))
+            )
+            for pos in fixed_slots:
+                if isinstance(pos, dict):
+                    _add_candidate(pos.get("x", 0), pos.get("y", 0), slot_candidate=True)
+                else:
+                    _add_candidate(pos[0], pos[1], slot_candidate=True)
+
+            if hasattr(self, "map_manager") and self.map_manager:
+                grid = self.map_manager.grid
+                for gy in range(grid.height):
+                    for gx in range(grid.width):
+                        if len(candidates) >= MAX_POSITION_SLOTS:
+                            break
+                        local_x = (gx + 0.5) * pathfinding.SCALE_X
+                        local_y = (gy + 0.5) * pathfinding.SCALE_Y
+                        if not self._is_static_build_position_on_terrain(local_x, local_y, building):
+                            continue
+                        world_x, world_y = self.map_manager.to_world_coords(local_x, local_y)
+                        _add_candidate(world_x, world_y, slot_candidate=False)
+                    if len(candidates) >= MAX_POSITION_SLOTS:
+                        break
+
+        if not hasattr(self, "_static_position_universe_cache"):
+            self._static_position_universe_cache = {}
+        self._static_position_universe_cache[cache_key] = [
+            (int(p["x"]), int(p["y"]), bool(p.get("_slot_candidate", False)))
+            for p in candidates
+        ]
+        return candidates
+
     def _find_candidate_build_positions(self, building: str, limit: int = 1) -> List[dict]:
-        """Sucht freie Baupositionen (Slots zuerst, dann dynamisch auf ganz P1)."""
+        """Returns currently valid positions from the stable build-position universe."""
         if limit <= 0:
             return []
 
@@ -5997,74 +6122,12 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 for px, py, slot_flag in cached
             ]
 
-        anchor_positions = self._get_build_anchor_positions(building)
-        primary_anchor = anchor_positions[0]
         placements: List[dict] = []
-        reserved: List[Tuple[float, float, str, Tuple[float, float, float, float]]] = []
-        seen = set()
-        fast_build_search = (self.sim_mode == "fast_train")
-
-        def _try_add(px: float, py: float, slot_candidate: bool) -> bool:
-            key = (int(round(px)), int(round(py)))
-            if key in seen:
-                return False
-            if not self._is_position_free(key[0], key[1], building, extra_reserved=reserved):
-                return False
-            seen.add(key)
-            placements.append(
-                {
-                    "x": key[0],
-                    "y": key[1],
-                    "_slot_candidate": bool(slot_candidate),
-                }
-            )
-            reserved.append((key[0], key[1], building, self._get_building_bounds(key[0], key[1], building)))
-            return True
-
-        # 1) Erst bekannte Slot-Kandidaten (nahe am PrimÃƒÆ’Ã‚Â¤r-Anker).
-        slot_candidates = []
-        for pos in self.available_positions:
-            if isinstance(pos, dict):
-                px, py = pos.get("x", 0), pos.get("y", 0)
-            else:
-                px, py = pos[0], pos[1]
-            dist = abs(px - primary_anchor[0]) + abs(py - primary_anchor[1])
-            slot_candidates.append((dist, float(px), float(py)))
-        slot_candidates.sort(key=lambda item: item[0])
-
-        for _, px, py in slot_candidates:
-            _try_add(px, py, slot_candidate=True)
+        for pos in self._get_build_position_candidates(building):
+            if self._is_build_position_candidate_valid(building, pos):
+                placements.append(pos)
             if len(placements) >= limit:
                 break
-
-        # 2) Falls nÃƒÆ’Ã‚Â¶tig: dynamische Suche ÃƒÆ’Ã‚Â¼ber das Walkable-Grid auf ganz P1.
-        if len(placements) < limit and hasattr(self, "map_manager") and self.map_manager:
-            base_name = get_base_building_name(building)
-            if fast_build_search:
-                # Fast-Train: engere Suchparameter vermeiden teure Vollkartenscans.
-                search_radius = 7000.0
-                max_results = max(16, limit * 8)
-                anchor_iter = [primary_anchor]
-            else:
-                search_radius = (max(MAP_SIZE[0], MAP_SIZE[1]) / 2.0) + 2000.0
-                max_results = max(40, limit * 24)
-                anchor_iter = anchor_positions
-            for anchor_x, anchor_y in anchor_iter:
-                local_x, local_y = self.map_manager.to_local_coords(anchor_x, anchor_y)
-                dynamic_positions = self.map_manager.grid.find_valid_building_positions(
-                    base_name,
-                    local_x,
-                    local_y,
-                    search_radius=search_radius,
-                    max_results=max_results,
-                )
-                for local_pos_x, local_pos_y, _ in dynamic_positions:
-                    world_x, world_y = self.map_manager.to_world_coords(local_pos_x, local_pos_y)
-                    _try_add(world_x, world_y, slot_candidate=False)
-                    if len(placements) >= limit:
-                        break
-                if len(placements) >= limit:
-                    break
 
         self._placement_cache[cache_key] = [
             (int(p["x"]), int(p["y"]), bool(p.get("_slot_candidate", False)))
@@ -6087,7 +6150,12 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         if cached is not None:
             return cached
 
-        free_count = len(self._find_candidate_build_positions(building, limit=limit))
+        free_count = 0
+        for pos in self._get_build_position_candidates(building):
+            if self._is_build_position_candidate_valid(building, pos):
+                free_count += 1
+                if free_count >= limit:
+                    break
         self._placement_cache[cache_key] = free_count
         return free_count
 
@@ -6740,45 +6808,29 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         mode: str,
         available_free_override: Optional[int] = None,
     ) -> Optional[int]:
-        """Dekodiert SOURCE/TARGET_SPECIFIC fuer Holz als Zone * TopK + Rank."""
+        """Dekodiert SOURCE/TARGET_SPECIFIC fuer Holz als stabilen flachen Baumindex."""
         specific_idx = int(specific_idx)
         if specific_idx < 0:
             return None
 
-        zone_count = min(len(getattr(self, "wood_zone_names", [])), MAX_WOOD_ZONE_ACTIONS)
-        encoded_limit = zone_count * WOOD_TOPK_PER_ZONE
-        if specific_idx < encoded_limit:
-            zone_idx = specific_idx // WOOD_TOPK_PER_ZONE
-            rank_idx = specific_idx % WOOD_TOPK_PER_ZONE
-            zone_name = self.wood_zone_names[zone_idx]
-            zone_data = self.wood_zone_categories.get(zone_name, {})
-            candidates = []
-            for tree in zone_data.get("trees", []):
-                tree_idx = self._tree_index_from_ref(tree)
-                if tree_idx is None:
-                    continue
-                if mode == "assign":
-                    if self._can_assign_wood_tree_batch(
-                        tree_idx,
-                        batch_size,
-                        available_free_override=available_free_override,
-                    ):
-                        candidates.append((float(tree.get("dist", 0.0)), tree_idx))
-                elif mode == "recall":
-                    if self._can_recall_wood_tree_batch(tree_idx, batch_size):
-                        candidates.append((float(tree.get("dist", 0.0)), tree_idx))
-            candidates.sort(key=lambda item: (item[0], item[1]))
-            if rank_idx < len(candidates):
-                return candidates[rank_idx][1]
-            return None
-
-        # Legacy-Fallback fuer direkte alte Calls mit flachem Baumindex.
         if 0 <= specific_idx < len(getattr(self, "tree_list_internal", [])):
+            if mode == "assign":
+                if self._can_assign_wood_tree_batch(
+                    specific_idx,
+                    batch_size,
+                    available_free_override=available_free_override,
+                ):
+                    return specific_idx
+                return None
+            if mode == "recall":
+                if self._can_recall_wood_tree_batch(specific_idx, batch_size):
+                    return specific_idx
+                return None
             return specific_idx
         return None
 
     def _wood_specific_encoded_limit(self) -> int:
-        return min(len(getattr(self, "wood_zone_names", [])), MAX_WOOD_ZONE_ACTIONS) * WOOD_TOPK_PER_ZONE
+        return len(getattr(self, "tree_list_internal", []))
 
     def _can_assign_wood_tree_batch(
         self,
@@ -9841,6 +9893,17 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             return phase in {ActionPhase.SOLDIER, ActionPhase.QUANTITY}
         if flow_name == "buy_serf":
             return phase == ActionPhase.QUANTITY
+        if flow_name == "build":
+            return phase in {
+                ActionPhase.SOURCE_CATEGORY,
+                ActionPhase.SOURCE_SPECIFIC,
+                ActionPhase.QUANTITY,
+                ActionPhase.BUILD_CATEGORY,
+                ActionPhase.BUILDING,
+                ActionPhase.POSITION_MODE,
+                ActionPhase.POSITION_GROUP,
+                ActionPhase.POSITION_INDEX,
+            }
         if flow_name == "dismiss_serf":
             return phase == ActionPhase.QUANTITY
         if flow_name == "assign_serf":
@@ -10459,11 +10522,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             result.sort(key=lambda pos: self._distance_to_nearest_anchor(pos, anchors))
             return result
         if mode == 2:  # near_resource
-            anchors = self._get_resource_anchor_positions(building) or [self.hq_position]
+            anchors = self._get_static_resource_anchor_positions(building) or [self.hq_position]
             result.sort(key=lambda pos: self._distance_to_nearest_anchor(pos, anchors))
             return result
         if mode == 3:  # near_worker_cluster
-            anchors = self._get_worker_cluster_anchor_positions() or [self.hq_position]
+            anchors = self._get_static_worker_anchor_positions() or [self.hq_position]
             result.sort(key=lambda pos: self._distance_to_nearest_anchor(pos, anchors))
             return result
         if mode == 4:  # expansion_slot
@@ -10483,40 +10546,55 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return self._sort_build_position_candidates_for_mode(building, candidates, mode)
 
     def _get_build_position_candidates(self, building: str) -> List[dict]:
-        if self._is_building_forbidden_by_rules(building):
-            return []
+        return self._get_build_position_universe(building)
+
+    def _is_build_position_candidate_valid(self, building: str, pos: dict) -> bool:
+        if not building or not pos:
+            return False
         b_info = buildings_db.get(building, {})
         base_name = get_base_building_name(building)
-        candidates = []
-        seen = set()
-
-        def _add_candidate(x, y, slot_candidate=False):
-            key = (int(round(x)), int(round(y)))
-            if key in seen:
-                return
-            seen.add(key)
-            candidates.append({"x": key[0], "y": key[1], "_slot_candidate": bool(slot_candidate)})
-
+        pos_key = self._pos_key_from_position(pos)
         if b_info.get("mine_type"):
             mine_type = b_info["mine_type"]
             built_keys = {
-                self._pos_key_from_position(pos)
-                for pos in self.built_mines.get(mine_type, [])
+                self._pos_key_from_position(mine_pos)
+                for mine_pos in self.built_mines.get(mine_type, [])
             }
-            for pos in self.mine_positions.get(mine_type, []):
-                pos_key = self._pos_key_from_position(pos)
-                if pos_key in built_keys:
-                    continue
-                _add_candidate(pos["x"], pos["y"], slot_candidate=True)
-            return candidates
-
+            site_keys = {
+                self._pos_key_from_position(site.get("position"))
+                for site in getattr(self, "construction_sites", [])
+                if site.get("position") is not None
+            }
+            return pos_key not in built_keys and pos_key not in site_keys
         if base_name == "Dorfzentrum":
+            site_keys = {
+                self._pos_key_from_position(site.get("position"))
+                for site in getattr(self, "construction_sites", [])
+                if site.get("position") is not None
+            }
             for slot in self.dz_slots:
-                if slot.get("status") == "free":
-                    _add_candidate(slot["x"], slot["y"], slot_candidate=True)
-            return candidates
+                slot_key = self._pos_key_from_xy(slot["x"], slot["y"])
+                if slot_key == pos_key:
+                    return slot.get("status") == "free" and pos_key not in site_keys
+            return False
+        return self._is_position_free(pos["x"], pos["y"], building)
 
-        return self._find_candidate_build_positions(building, limit=MAX_POSITION_SLOTS)
+    def _get_build_position_valid_mask_for_selections(self, building: str, selections: dict) -> np.ndarray:
+        candidates = self._get_build_position_candidates_for_selections(building, selections)
+        signature = self._get_placement_cache_signature()
+        if getattr(self, "_placement_cache_signature", None) != signature:
+            self._placement_cache_signature = signature
+            self._placement_cache = {}
+        mode = self._get_position_mode_from_selections(selections)
+        cache_key = ("position_valid_mask", building, int(mode), signature)
+        cached = self._placement_cache.get(cache_key)
+        if isinstance(cached, np.ndarray) and cached.shape[0] == len(candidates):
+            return np.asarray(cached, dtype=bool).copy()
+        valid = np.zeros(len(candidates), dtype=bool)
+        for idx, pos in enumerate(candidates):
+            valid[idx] = self._is_build_position_candidate_valid(building, pos)
+        self._placement_cache[cache_key] = valid.copy()
+        return valid
 
     def _mask_position_group(self):
         """Maske fuer Positions-Gruppen (upgrade/demolish/build)."""
@@ -10533,15 +10611,20 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         building = self._get_position_phase_building(building_idx)
         if building:
             if self.current_flow in {"assign_serf", "build"}:
-                # _get_build_position_candidates nutzen: korrekte Mine/DZ-Slots
-                count = len(self._get_build_position_candidates_for_selections(building, self.pending_selections))
+                valid_mask = self._get_build_position_valid_mask_for_selections(building, self.pending_selections)
+                count = len(valid_mask)
             else:
                 count = len(self._get_building_instance_keys(building))
             if count > 0:
                 group_count = (count + POSITION_GROUP_SIZE - 1) // POSITION_GROUP_SIZE
                 group_count = min(group_count, POSITION_GROUP_COUNT)
                 for i in range(group_count):
-                    mask[i] = True
+                    if self.current_flow in {"assign_serf", "build"}:
+                        start = i * POSITION_GROUP_SIZE
+                        end = min(count, start + POSITION_GROUP_SIZE)
+                        mask[i] = bool(np.any(valid_mask[start:end]))
+                    else:
+                        mask[i] = True
 
         if not mask.any():
             mask[0] = True  # Fallback
@@ -10551,7 +10634,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
     def _mask_position_mode(self):
         """Maske fuer semantische Positionsmodi im Build-Flow."""
         mask = np.zeros(len(POSITION_MODES), dtype=bool)
-        building = self._get_position_phase_building(self.pending_selections.get(ActionPhase.BUILDING, 0))
+        building = self._get_position_phase_building(
+            self._to_int_choice(self.pending_selections.get(ActionPhase.BUILDING, 0), 0)
+        )
         if building and self._get_build_position_candidates(building):
             mask[:] = True
         if not mask.any():
@@ -10562,17 +10647,22 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         """Maske fuer Positions-Index innerhalb der gewaehlten Gruppe."""
         mask = np.zeros(POSITION_GROUP_SIZE, dtype=bool)
         group_idx = self.pending_selections.get(ActionPhase.POSITION_GROUP, 0)
-        building = self._get_position_phase_building(self.pending_selections.get(ActionPhase.BUILDING, 0))
+        building = self._get_position_phase_building(
+            self._to_int_choice(self.pending_selections.get(ActionPhase.BUILDING, 0), 0)
+        )
         if building:
             if self.current_flow in {"assign_serf", "build"}:
-                # _get_build_position_candidates nutzen: korrekte Mine/DZ-Slots
-                total_count = len(self._get_build_position_candidates_for_selections(building, self.pending_selections))
+                valid_mask = self._get_build_position_valid_mask_for_selections(building, self.pending_selections)
+                total_count = len(valid_mask)
             else:
                 total_count = len(self._get_building_instance_keys(building))
             start = max(0, group_idx) * POSITION_GROUP_SIZE
             available = max(0, min(POSITION_GROUP_SIZE, total_count - start))
             for i in range(available):
-                mask[i] = True
+                if self.current_flow in {"assign_serf", "build"}:
+                    mask[i] = bool(valid_mask[start + i])
+                else:
+                    mask[i] = True
 
         if not mask.any():
             mask[0] = True  # Fallback
@@ -10599,8 +10689,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         index_idx = selections.get(ActionPhase.POSITION_INDEX, 0)
         global_idx = max(0, group_idx) * POSITION_GROUP_SIZE + max(0, index_idx)
         if global_idx >= len(candidates):
-            global_idx = len(candidates) - 1
+            return None
         pos = candidates[global_idx]
+        if not self._is_build_position_candidate_valid(building, pos):
+            return None
         selected = {
             "x": int(round(pos["x"])),
             "y": int(round(pos["y"])),
@@ -11309,6 +11401,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.construction_sites.append(site)
         self.next_site_id += 1
         self._mark_spatial_dirty("construction_sites")
+        self._can_cache = {}
+        self._placement_cache = {}
+        self._placement_cache_signature = None
 
         return 0.0
 

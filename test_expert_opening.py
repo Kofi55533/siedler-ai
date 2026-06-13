@@ -3,6 +3,7 @@
 
 from environment import INCOME_CYCLE, MAIN_ACTIONS, QUANTITY_VALUES, ActionPhase, SiedlerScharfschuetzenEnv
 from expert_opening import (
+    EXPERT_KLOSTER_ANCHOR,
     FULL_SIM_FIRST_UNIVERSITY_START_TIME,
     ExpertOpeningController,
     collect_expert_opening_demonstrations,
@@ -118,3 +119,29 @@ def test_full_sim_expert_opening_completes_mines_and_universities_before_first_p
     for base, count in required.items():
         assert env._get_completed_base_delta(base) >= count
         assert completion_times[base] < first_payday
+
+
+def test_full_sim_expert_places_monastery_at_verified_clay_expansion_anchor(monkeypatch):
+    monkeypatch.setenv("SIEDLER_SIM_MODE", "full_sim")
+    monkeypatch.delenv("SIEDLER_DISABLE_RUNTIME_PATHING", raising=False)
+    env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
+    env.reset(seed=11)
+    controller = ExpertOpeningController()
+
+    for _micro_step in range(6000):
+        obs, _reward, terminated, truncated, info = env.step(controller.act(env))
+        controller.observe_step(info)
+        monastery_sites = [
+            site for site in env.construction_sites
+            if str(site.get("building", "")).startswith("Kloster")
+        ]
+        if monastery_sites:
+            pos = monastery_sites[0]["position"]
+            assert int(round(pos["x"])) == int(EXPERT_KLOSTER_ANCHOR[0])
+            assert int(round(pos["y"])) == int(EXPERT_KLOSTER_ANCHOR[1])
+            assert int(controller.fallback_actions) == 0
+            return
+        assert not terminated
+        assert not truncated
+
+    raise AssertionError("Expert did not start monastery construction")

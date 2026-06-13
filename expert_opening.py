@@ -25,6 +25,8 @@ from environment import (
 )
 
 FULL_SIM_FIRST_UNIVERSITY_START_TIME = 29
+EXPERT_KLOSTER_ANCHOR = (33604.0, 24511.0)
+EXPERT_LEHM_DZ_ANCHOR = (34500.0, 23700.0)
 
 
 @dataclass
@@ -215,7 +217,8 @@ class ExpertOpeningController:
                 env,
                 building="Kloster_1",
                 quantity=4,
-                position_mode=4,
+                position_mode=0,
+                preferred_position=EXPERT_KLOSTER_ANCHOR,
                 reason="opening: build monastery/cathedral expansion anchor",
             )
 
@@ -228,7 +231,8 @@ class ExpertOpeningController:
                 env,
                 building="Dorfzentrum_1",
                 quantity=4,
-                position_mode=4,
+                position_mode=0,
+                preferred_position=EXPERT_LEHM_DZ_ANCHOR,
                 prefer_source_base="Kloster",
                 reason="opening: monastery builders continue to village center",
             )
@@ -303,6 +307,7 @@ class ExpertOpeningController:
         position_mode: int,
         reason: str,
         prefer_source_base: Optional[str] = None,
+        preferred_position: Optional[Tuple[float, float]] = None,
     ) -> Optional[ExpertPlan]:
         source = self._select_source(env, quantity, prefer_source_base=prefer_source_base)
         if source is None:
@@ -319,7 +324,7 @@ class ExpertOpeningController:
             ActionPhase.BUILDING: int(category_buildings.index(building)),
             ActionPhase.POSITION_MODE: int(position_mode),
         }
-        pos_idx = self._select_position_index(env, "build", building, selections)
+        pos_idx = self._select_position_index(env, "build", building, selections, preferred_position=preferred_position)
         selections[ActionPhase.POSITION_GROUP] = int(pos_idx // POSITION_GROUP_SIZE)
         selections[ActionPhase.POSITION_INDEX] = int(pos_idx % POSITION_GROUP_SIZE)
         return ExpertPlan("build", selections, reason)
@@ -374,7 +379,14 @@ class ExpertOpeningController:
             return False
         return float(getattr(env, "current_time", 0.0)) < FULL_SIM_FIRST_UNIVERSITY_START_TIME
 
-    def _select_position_index(self, env, flow_name: str, building: str, selections: Dict[ActionPhase, int]) -> int:
+    def _select_position_index(
+        self,
+        env,
+        flow_name: str,
+        building: str,
+        selections: Dict[ActionPhase, int],
+        preferred_position: Optional[Tuple[float, float]] = None,
+    ) -> int:
         previous_flow = env.current_flow
         previous_phase = env.current_phase
         previous_selections = dict(env.pending_selections)
@@ -389,6 +401,20 @@ class ExpertOpeningController:
                 valid_mask = env._get_build_position_valid_mask_for_selections(building, selections)
                 valid = np.flatnonzero(valid_mask)
                 if valid.size:
+                    if preferred_position is not None:
+                        px, py = float(preferred_position[0]), float(preferred_position[1])
+                        best = min(
+                            (
+                                (
+                                    (float(candidates[int(idx)].get("x", 0.0)) - px) ** 2
+                                    + (float(candidates[int(idx)].get("y", 0.0)) - py) ** 2,
+                                    int(idx),
+                                )
+                                for idx in valid
+                            ),
+                            key=lambda item: (item[0], item[1]),
+                        )
+                        return int(best[1])
                     return int(valid[0])
             return 0
         finally:

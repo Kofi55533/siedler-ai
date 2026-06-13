@@ -269,6 +269,26 @@ TRAIN_PROFILES = {
             "step_expert_opening_milestone_bonus": 10.0,
         },
     },
+    "bc_terminal": {
+        "description": "BC-Startlinie + nur finaler Scharfschuetzen-Reward; keine Milestone- oder Dense-Step-Rewards.",
+        "config_overrides": {
+            "learning_rate": 0.00025,
+            "gamma": 0.999,
+            "ent_coef": 0.012,
+            "batch_size": 256,
+            "n_epochs": 4,
+        },
+        "reward_profile": {
+            "terminal_path_ready_bonus": 10.0,
+            "terminal_recruitable_bonus": 5.0,
+            "terminal_potential_bonus_per_unit": 12.0,
+            "terminal_scharf_count_bonus": 30.0,
+            "terminal_potential_use_cumulative_earnings": 0.0,
+            "terminal_potential_include_start_resources": 0.0,
+            "terminal_potential_scharf_tier": 1.0,
+            "terminal_potential_require_path_ready": 1.0,
+        },
+    },
     "goal_v1": {
         "description": "Empfohlen: maximiert das finale Potential sofort rekrutierbarer Scharfschuetzen.",
         "config_overrides": {
@@ -310,6 +330,9 @@ PROFILE_ALIASES = {
     "bc": "bc_opening",
     "opening": "bc_opening",
     "milestones": "bc_opening",
+    "terminal": "bc_terminal",
+    "bc_no_milestones": "bc_terminal",
+    "no_milestones": "bc_terminal",
     "guided": "guided_v1",
     "goal": "goal_v1",
     "stable": "balanced",

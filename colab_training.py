@@ -882,6 +882,15 @@ def _get_float_env(name: str, default: float, minimum: float = 0.0) -> float:
         return float(default)
 
 
+def _resolve_bc_sim_mode(training_sim_mode: str) -> str:
+    raw = str(os.environ.get("SIEDLER_BC_SIM_MODE", "")).strip().lower()
+    if raw in {"", "same", "training"}:
+        return str(training_sim_mode)
+    if raw in {"fast_train", "full_sim"}:
+        return raw
+    return str(training_sim_mode)
+
+
 def _get_env_init_param_names() -> set:
     try:
         sig = inspect.signature(SiedlerScharfschuetzenEnv.__init__)
@@ -1314,15 +1323,25 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
 
     bc_enabled = _env_truthy(os.environ.get("SIEDLER_BC_PRETRAIN", "1"))
     if bc_enabled and not loaded_from_checkpoint:
+        bc_env = None
         try:
             from expert_opening import behavior_cloning_pretrain
 
-            bc_env = _create_env_instance(
-                player_id=1,
-                use_spatial_obs=use_spatial_obs,
-                spatial_size=spatial_size,
-                reward_profile=reward_profile,
-            )
+            bc_sim_mode = _resolve_bc_sim_mode(sim_mode)
+            old_sim_mode = os.environ.get("SIEDLER_SIM_MODE")
+            os.environ["SIEDLER_SIM_MODE"] = bc_sim_mode
+            try:
+                bc_env = _create_env_instance(
+                    player_id=1,
+                    use_spatial_obs=use_spatial_obs,
+                    spatial_size=spatial_size,
+                    reward_profile=reward_profile,
+                )
+            finally:
+                if old_sim_mode is None:
+                    os.environ.pop("SIEDLER_SIM_MODE", None)
+                else:
+                    os.environ["SIEDLER_SIM_MODE"] = old_sim_mode
             bc_episodes = _get_int_env("SIEDLER_BC_EPISODES", 2, minimum=1)
             bc_max_micro_steps = _get_int_env("SIEDLER_BC_MAX_MICRO_STEPS", 12000, minimum=1)
             bc_max_completed = _get_int_env("SIEDLER_BC_MAX_COMPLETED_ACTIONS", 1200, minimum=1)
@@ -1336,8 +1355,14 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
             print(
                 "Behavior Cloning: sammle Expert-Opening-Demos "
                 f"(episodes={bc_episodes}, epochs={bc_epochs}, batch={bc_batch_size}, "
-                f"wait_stride={bc_wait_stride})"
+                f"wait_stride={bc_wait_stride}, sim_mode={bc_sim_mode})"
             )
+            if bc_sim_mode != sim_mode:
+                print(
+                    "Behavior-Cloning-Hinweis: BC-Demo-Sim-Mode unterscheidet sich vom PPO-Sim-Mode "
+                    f"({bc_sim_mode} vs {sim_mode}). Das ist nur sinnvoll, wenn die Demo bewusst "
+                    "aus full_sim kommt und PPO danach mit dieser Vorinitialisierung weitertrainiert."
+                )
             bc_stats = behavior_cloning_pretrain(
                 model,
                 bc_env,
@@ -1351,10 +1376,6 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
                 learning_rate=bc_lr,
                 seed=bc_seed,
             )
-            try:
-                bc_env.close()
-            except Exception:
-                pass
             print(
                 "Behavior Cloning fertig: "
                 f"samples={int(bc_stats['samples'])}, "
@@ -1366,6 +1387,12 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
             )
         except Exception as exc:
             print(f"Behavior Cloning uebersprungen/fehlgeschlagen: {exc}")
+        finally:
+            if bc_env is not None:
+                try:
+                    bc_env.close()
+                except Exception:
+                    pass
     elif bc_enabled and loaded_from_checkpoint:
         print("Behavior Cloning: uebersprungen, weil ein Checkpoint resumed wurde.")
     else:

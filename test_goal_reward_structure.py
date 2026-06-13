@@ -130,6 +130,20 @@ def test_default_bc_opening_profile_uses_milestones_and_terminal_reward_only():
     assert all(float(rewards.get(key, 0.0)) == 0.0 for key in dense_step_keys)
 
 
+def test_bc_terminal_profile_has_no_milestone_or_dense_step_rewards():
+    profile = get_train_profile("bc_terminal")
+    rewards = profile["reward_profile"]
+
+    assert profile["name"] == "bc_terminal"
+    assert rewards.get("terminal_potential_bonus_per_unit", 0.0) > 0.0
+    assert rewards.get("terminal_scharf_count_bonus", 0.0) > 0.0
+    assert rewards.get("step_expert_opening_milestone_bonus", 0.0) == pytest.approx(0.0)
+    assert rewards.get("goal_action_pruning", 0.0) == pytest.approx(0.0)
+
+    step_keys = [key for key in rewards if key.startswith("step_") or key.startswith("action_")]
+    assert all(float(rewards.get(key, 0.0)) == 0.0 for key in step_keys)
+
+
 def test_expert_opening_milestone_reward_is_ordered_and_once():
     env = SiedlerScharfschuetzenEnv(
         use_spatial_obs=False,

@@ -143,6 +143,30 @@ def _first_assignable_wood_specific(env, batch_size):
     raise AssertionError("No assignable wood target found")
 
 
+def _first_assignable_target_specific(env, target_cat, batch_size):
+    previous_flow = env.current_flow
+    previous_phase = env.current_phase
+    previous_selections = dict(env.pending_selections)
+    try:
+        env.current_flow = "assign_serf"
+        env.current_phase = ActionPhase.TARGET_SPECIFIC
+        env.pending_selections = {
+            ActionPhase.SOURCE_CATEGORY: 7,
+            ActionPhase.SOURCE_SPECIFIC: 0,
+            ActionPhase.QUANTITY: QUANTITY_VALUES.index(batch_size),
+            ActionPhase.TARGET_CATEGORY: target_cat,
+        }
+        mask = env._mask_target_specific()
+        valid = np.flatnonzero(mask)
+        if len(valid):
+            return int(valid[0])
+    finally:
+        env.current_flow = previous_flow
+        env.current_phase = previous_phase
+        env.pending_selections = previous_selections
+    raise AssertionError(f"No assignable target for category {target_cat} and batch {batch_size}")
+
+
 def test_spawned_serf_cohort_can_be_split_for_exact_assignment():
     env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
     env.reset(seed=1)
@@ -187,6 +211,50 @@ def test_spawned_serf_cohort_can_be_split_for_exact_assignment():
     remaining_ids = set(env.free_serf_cohorts[0]["serf_ids"])
     assert len(remaining_ids) == 1
     assert remaining_ids < original_ids
+
+
+def test_spawned_serf_cohort_supports_one_to_twenty_and_repeated_splits():
+    env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
+    env.reset(seed=12)
+    env.resources["Taler"] = 50_000
+    env.buildings["Dorfzentrum_1"] = max(4, env.buildings.get("Dorfzentrum_1", 0))
+    env._can_cache = {}
+
+    env._execute_action("buy_serf", {ActionPhase.QUANTITY: QUANTITY_VALUES.index(20)})
+
+    assert QUANTITY_VALUES == list(range(1, 21))
+    assert env.total_leibeigene == 20
+    assert env.free_leibeigene == 20
+    assert len(env.free_serf_cohorts) == 1
+    assert env.free_serf_cohorts[0]["count"] == 20
+
+    env.current_flow = "assign_serf"
+    env.current_phase = ActionPhase.QUANTITY
+    env.pending_selections = {ActionPhase.SOURCE_CATEGORY: 7, ActionPhase.SOURCE_SPECIFIC: 0}
+    qty_mask = env._mask_quantity()
+    assert all(qty_mask[QUANTITY_VALUES.index(qty)] for qty in range(1, 21))
+    env.current_flow = None
+    env.current_phase = ActionPhase.MAIN
+    env.pending_selections = {}
+
+    splits = [(3, 2), (4, 3), (8, 4)]  # Eisen, Stein, Lehm
+    expected_remaining = 20
+    for qty, target_cat in splits:
+        target_specific = _first_assignable_target_specific(env, target_cat, qty)
+        env._execute_action(
+            "assign_serf",
+            {
+                ActionPhase.SOURCE_CATEGORY: 7,
+                ActionPhase.SOURCE_SPECIFIC: 0,
+                ActionPhase.QUANTITY: QUANTITY_VALUES.index(qty),
+                ActionPhase.TARGET_CATEGORY: target_cat,
+                ActionPhase.TARGET_SPECIFIC: target_specific,
+            },
+        )
+        expected_remaining -= qty
+        assert len(env.free_serf_cohorts) == 1
+        assert env.free_serf_cohorts[0]["count"] == expected_remaining
+        assert env.free_leibeigene == expected_remaining
 
 
 def test_completed_building_cohort_can_partially_build_next_site():

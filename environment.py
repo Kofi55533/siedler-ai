@@ -54,7 +54,7 @@ class ActionPhase(Enum):
     TECH_BUILDING = "tech_building"     # Forschungs-GebÃƒÆ’Ã‚Â¤ude wÃƒÆ’Ã‚Â¤hlen (Hochschule/Schmiede/etc.)
     TECH = "tech"                       # Technologie wÃƒÆ’Ã‚Â¤hlen (innerhalb des GebÃƒÆ’Ã‚Â¤udes)
     SOLDIER = "soldier"                 # Soldaten-Typ wÃƒÆ’Ã‚Â¤hlen
-    QUANTITY = "quantity"               # Menge wÃƒÆ’Ã‚Â¤hlen (1,2,3,5,10,20)
+    QUANTITY = "quantity"               # Menge waehlen (1..20)
     SOURCE_CATEGORY = "source_category" # Quell-Kategorie (Frei/Holz/Eisen/Stein/Lehm/Schwefel/Baustelle)
     SOURCE_SPECIFIC = "source_specific" # Spezifischer Quell-Ort innerhalb der Kategorie
     TARGET_CATEGORY = "target_category" # Ziel-Kategorie (Holz/.../Baustelle/Neubau; Frei als Ziel deaktiviert)
@@ -115,7 +115,7 @@ MAX_WOOD_SPECIFIC_OPTIONS = WOOD_TOPK_PER_ZONE * MAX_WOOD_ZONE_ACTIONS
 MAX_POSITION_SLOTS = 2200
 POSITION_GROUP_SIZE = 50
 POSITION_GROUP_COUNT = (MAX_POSITION_SLOTS + POSITION_GROUP_SIZE - 1) // POSITION_GROUP_SIZE
-QUANTITY_VALUES = [1, 2, 3, 4, 5, 8, 10, 16, 20]
+QUANTITY_VALUES = list(range(1, 21))
 
 # Forschungs-GebÃƒÆ’Ã‚Â¤ude: In welchem GebÃƒÆ’Ã‚Â¤ude wird welche Technologie erforscht?
 # Jede Technologie hat ein "requires_building" - wir gruppieren nach Basis-GebÃƒÆ’Ã‚Â¤ude
@@ -10755,7 +10755,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         return mask
 
     def _mask_quantity(self):
-        """Maske fuer Mengen-Auswahl (1,2,3,5,10,20)."""
+        """Maske fuer Mengen-Auswahl (1..20)."""
         mask = np.zeros(len(QUANTITY_VALUES), dtype=bool)
 
         if self.current_flow == "buy_serf":

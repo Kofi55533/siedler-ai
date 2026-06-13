@@ -7,6 +7,23 @@ from production_system import Serf, SerfState
 from worker_simulation import Position
 
 
+class _DelayProbeEnv:
+    sim_mode = "full_sim"
+
+
+def test_first_university_delay_is_projection_based_not_fixed_time():
+    controller = ExpertOpeningController()
+    env = _DelayProbeEnv()
+
+    controller._started_delta = lambda _env, _base: 0
+    controller._estimate_new_build_completion_time = lambda *_args, **_kwargs: 50.0
+    controller._estimate_opening_ready_time = lambda _env, _first_done: 160.0
+    assert not controller._should_delay_first_university(env)
+
+    controller._estimate_opening_ready_time = lambda _env, _first_done: 180.0
+    assert controller._should_delay_first_university(env)
+
+
 def test_expert_opening_starts_with_nine_serfs():
     env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
     obs, _info = env.reset(seed=7)

@@ -15,16 +15,18 @@ import torch as th
 from stable_baselines3.common.utils import obs_as_tensor
 
 from environment import (
+    INCOME_CYCLE,
     MAIN_ACTIONS,
+    MAX_ACTIVE_BUILDERS_PER_SITE,
     POSITION_GROUP_SIZE,
     QUANTITY_VALUES,
     RESEARCH_BUILDINGS,
+    SERF_BUILD_SWING_SECONDS,
     TAX_LEVELS,
     ActionPhase,
+    buildings_db,
     get_base_building_name,
 )
-
-FULL_SIM_FIRST_UNIVERSITY_MIN_START_TIME = 30
 
 
 @dataclass
@@ -367,12 +369,333 @@ class ExpertOpeningController:
         return None
 
     def _should_delay_first_university(self, env) -> bool:
-        """Delay full-sim university timing so the first payday does not arrive before mine chain completion."""
+        """Delay only when an immediate first university would pull payday before the opening is ready."""
         if str(getattr(env, "sim_mode", "")) != "full_sim":
             return False
         if self._started_delta(env, "Hochschule") >= 1:
             return False
-        return float(getattr(env, "current_time", 0.0)) < FULL_SIM_FIRST_UNIVERSITY_MIN_START_TIME
+        first_university_done = self._estimate_new_build_completion_time(
+            env,
+            building="Hochschule_1",
+            quantity=3,
+            position_mode=1,
+            prefer_source_base="Rekrutiert",
+        )
+        if first_university_done is None:
+            return False
+
+        opening_ready = self._estimate_opening_ready_time(env, first_university_done)
+        if opening_ready is None:
+            return False
+        return (first_university_done + INCOME_CYCLE) < opening_ready
+
+    def _estimate_opening_ready_time(self, env, first_university_done: float) -> Optional[float]:
+        mine_ready = self._estimate_opening_mines_ready_time(env)
+        second_university_done = self._estimate_second_university_completion_time(env, first_university_done)
+        ready_times = [t for t in (mine_ready, second_university_done) if t is not None]
+        if not ready_times:
+            return None
+        return max(ready_times)
+
+    def _estimate_opening_mines_ready_time(self, env) -> Optional[float]:
+        required = {
+            "Eisenmine": 2,
+            "Schwefelmine": 2,
+            "Steinmine": 1,
+            "Lehmmine": 1,
+        }
+        ready_times: List[float] = []
+        for base, target_count in required.items():
+            completed = self._completed_delta(env, base)
+            if completed >= target_count:
+                continue
+            active_sites = [
+                site for site in getattr(env, "construction_sites", [])
+                if get_base_building_name(str(site.get("building", ""))) == base
+            ]
+            site_done_times = [
+                t for t in (self._estimate_site_completion_time(env, site) for site in active_sites)
+                if t is not None
+            ]
+            site_done_times.sort()
+            for done_time in site_done_times[: max(0, target_count - completed)]:
+                ready_times.append(done_time)
+
+            remaining_after_active = target_count - completed - len(site_done_times)
+            if remaining_after_active <= 0:
+                continue
+            if base not in {"Eisenmine", "Schwefelmine"} or not site_done_times:
+                return None
+
+            first_site = active_sites[0]
+            followup_done = self._estimate_followup_mine_completion_time(env, base, site_done_times[0], first_site)
+            if followup_done is None:
+                return None
+            ready_times.append(followup_done)
+
+        return max(ready_times) if ready_times else float(getattr(env, "current_time", 0.0))
+
+    def _estimate_second_university_completion_time(self, env, first_university_done: float) -> Optional[float]:
+        first_target = self._select_build_target_position(
+            env,
+            building="Hochschule_1",
+            quantity=3,
+            position_mode=1,
+            prefer_source_base="Rekrutiert",
+        )
+        if first_target is None:
+            return None
+        second_target = self._select_build_target_position(
+            env,
+            building="Hochschule_1",
+            quantity=3,
+            position_mode=1,
+            exclude_positions=[first_target],
+        )
+        if second_target is None:
+            return None
+        travel = self._estimate_travel_time_between_positions(env, first_target, second_target)
+        duration = self._estimate_build_duration_from_starts(
+            building="Hochschule_1",
+            remaining_work=self._effective_build_time(env, "Hochschule_1"),
+            builder_start_offsets=[travel] * 3,
+        )
+        if duration is None:
+            return None
+        return float(first_university_done) + 1.0 + duration
+
+    def _estimate_followup_mine_completion_time(self, env, base: str, first_done_time: float, first_site: dict) -> Optional[float]:
+        building = f"{base}_1"
+        current_pos = first_site.get("position")
+        target = self._select_build_target_position(
+            env,
+            building=building,
+            quantity=2,
+            position_mode=2,
+            exclude_positions=[current_pos] if current_pos is not None else None,
+        )
+        if target is None or current_pos is None:
+            return None
+        travel = self._estimate_travel_time_between_positions(env, current_pos, target)
+        duration = self._estimate_build_duration_from_starts(
+            building=building,
+            remaining_work=self._effective_build_time(env, building),
+            builder_start_offsets=[travel] * 2,
+        )
+        if duration is None:
+            return None
+        return float(first_done_time) + 1.0 + duration
+
+    def _estimate_new_build_completion_time(
+        self,
+        env,
+        building: str,
+        quantity: int,
+        position_mode: int,
+        prefer_source_base: Optional[str] = None,
+    ) -> Optional[float]:
+        target = self._select_build_target_position(
+            env,
+            building=building,
+            quantity=quantity,
+            position_mode=position_mode,
+            prefer_source_base=prefer_source_base,
+        )
+        if target is None:
+            return None
+        source = self._select_source(env, quantity, prefer_source_base=prefer_source_base)
+        if source is None:
+            return None
+        serfs = self._peek_source_serfs(env, source, quantity, target)
+        if len(serfs) < int(quantity):
+            return None
+        starts = [1.0 + self._estimate_serf_travel_time_to_position(env, serf, target) for serf in serfs[:quantity]]
+        duration = self._estimate_build_duration_from_starts(
+            building=building,
+            remaining_work=self._effective_build_time(env, building),
+            builder_start_offsets=starts,
+        )
+        if duration is None:
+            return None
+        return float(getattr(env, "current_time", 0.0)) + duration
+
+    def _select_build_target_position(
+        self,
+        env,
+        building: str,
+        quantity: int,
+        position_mode: int,
+        prefer_source_base: Optional[str] = None,
+        exclude_positions: Optional[Iterable[dict]] = None,
+    ) -> Optional[dict]:
+        category_idx = env._get_build_category_index(building)
+        category_buildings = env._get_buildings_for_build_category(category_idx)
+        if building not in category_buildings:
+            return None
+        source = self._select_source(env, quantity, prefer_source_base=prefer_source_base)
+        if source is None and prefer_source_base:
+            source = self._select_source(env, quantity)
+        if source is None:
+            return None
+        selections = {
+            ActionPhase.SOURCE_CATEGORY: int(source[0]),
+            ActionPhase.SOURCE_SPECIFIC: int(source[1]),
+            ActionPhase.QUANTITY: _quantity_index(quantity),
+            ActionPhase.BUILD_CATEGORY: int(category_idx),
+            ActionPhase.BUILDING: int(category_buildings.index(building)),
+            ActionPhase.POSITION_MODE: int(position_mode),
+        }
+        candidates = env._get_build_position_candidates_for_selections(building, selections)
+        if not candidates:
+            return None
+        if hasattr(env, "_get_build_position_valid_mask_for_selections"):
+            valid_mask = np.asarray(env._get_build_position_valid_mask_for_selections(building, selections), dtype=bool)
+        else:
+            valid_mask = np.ones(len(candidates), dtype=bool)
+        excluded = {
+            self._position_key(pos)
+            for pos in (exclude_positions or [])
+            if pos is not None
+        }
+        for idx, candidate in enumerate(candidates):
+            if idx >= valid_mask.size or not bool(valid_mask[idx]):
+                continue
+            if self._position_key(candidate) in excluded:
+                continue
+            return candidate
+        return None
+
+    def _estimate_site_completion_time(self, env, site: dict) -> Optional[float]:
+        starts: List[float] = []
+        site_id = site.get("site_id")
+        for serf in getattr(getattr(env, "production_system", None), "serfs", []):
+            if getattr(serf, "build_site_id", None) != site_id:
+                continue
+            state = str(getattr(getattr(serf, "state", None), "value", getattr(serf, "state", "")))
+            if state == "building":
+                starts.append(0.0)
+            elif state == "walking_to_build":
+                starts.append(self._estimate_serf_remaining_walk_time(serf))
+        if not starts:
+            assigned = int(site.get("serfs_assigned", 0) or 0)
+            if assigned <= 0:
+                return None
+            starts = [0.0] * assigned
+        duration = self._estimate_build_duration_from_starts(
+            building=str(site.get("building", "")),
+            remaining_work=float(site.get("remaining_work", 0.0) or 0.0),
+            builder_start_offsets=starts,
+        )
+        if duration is None:
+            return None
+        return float(getattr(env, "current_time", 0.0)) + duration
+
+    def _estimate_build_duration_from_starts(
+        self,
+        building: str,
+        remaining_work: float,
+        builder_start_offsets: Iterable[float],
+    ) -> Optional[float]:
+        starts = sorted(max(0.0, float(v)) for v in builder_start_offsets)
+        starts = starts[:MAX_ACTIVE_BUILDERS_PER_SITE]
+        if not starts:
+            return None
+        required_builder_seconds = max(0.0, float(remaining_work)) * SERF_BUILD_SWING_SECONDS
+        if required_builder_seconds <= 0:
+            return 0.0
+        low = 0.0
+        high = max(starts) + required_builder_seconds
+        for _ in range(48):
+            mid = (low + high) / 2.0
+            contributed = sum(max(0.0, mid - start) for start in starts)
+            if contributed >= required_builder_seconds:
+                high = mid
+            else:
+                low = mid
+        return high
+
+    def _estimate_serf_remaining_walk_time(self, serf) -> float:
+        dist = 0.0
+        current = getattr(serf, "position", None)
+        waypoint = getattr(serf, "waypoint", None)
+        if current is not None and waypoint is not None:
+            dist += current.distance_to(waypoint)
+            current = waypoint
+        path = list(getattr(serf, "path", []) or [])
+        path_index = int(getattr(serf, "path_index", 0) or 0)
+        for point in path[path_index + 1:]:
+            if current is not None:
+                dist += current.distance_to(point)
+            current = point
+        final = getattr(serf, "final_destination", None) or getattr(serf, "target_position", None)
+        if current is not None and final is not None:
+            dist += current.distance_to(final)
+        return dist / self._serf_speed(serf)
+
+    def _estimate_serf_travel_time_to_position(self, env, serf, target: dict) -> float:
+        from worker_simulation import Position
+
+        start = Position(x=float(getattr(serf.position, "x", 0.0)), y=float(getattr(serf.position, "y", 0.0)))
+        goal = Position(x=float(target.get("x", 0.0)), y=float(target.get("y", 0.0)))
+        try:
+            _path, dist = env._compute_path(start, goal)
+        except Exception:
+            dist = start.distance_to(goal)
+        return float(dist) / self._serf_speed(serf)
+
+    def _estimate_travel_time_between_positions(self, env, start_pos: dict, target_pos: dict) -> float:
+        from worker_simulation import Position
+
+        start = Position(x=float(start_pos.get("x", 0.0)), y=float(start_pos.get("y", 0.0)))
+        goal = Position(x=float(target_pos.get("x", 0.0)), y=float(target_pos.get("y", 0.0)))
+        try:
+            _path, dist = env._compute_path(start, goal)
+        except Exception:
+            dist = start.distance_to(goal)
+        return float(dist) / 120.0
+
+    @staticmethod
+    def _serf_speed(serf) -> float:
+        try:
+            return max(1.0, float(serf._effective_speed()))
+        except Exception:
+            return 120.0
+
+    @staticmethod
+    def _effective_build_time(env, building: str) -> float:
+        if hasattr(env, "_get_effective_build_time"):
+            return float(env._get_effective_build_time(building))
+        return float(buildings_db.get(building, {}).get("build_time", 0.0))
+
+    @staticmethod
+    def _position_key(pos: dict) -> Tuple[int, int]:
+        if isinstance(pos, dict):
+            return int(round(pos.get("x", 0))), int(round(pos.get("y", 0)))
+        return int(round(pos[0])), int(round(pos[1]))
+
+    def _peek_source_serfs(self, env, source: Tuple[int, int], quantity: int, target_pos: dict) -> List[object]:
+        from worker_simulation import Position
+
+        src_cat, src_spec = int(source[0]), int(source[1])
+        target = Position(x=float(target_pos.get("x", 0.0)), y=float(target_pos.get("y", 0.0)))
+        if src_cat == 7:
+            cohort = env._get_free_serf_cohort(src_spec)
+            if not cohort:
+                return []
+            candidates = []
+            for order_idx, sid in enumerate(cohort.get("serf_ids", [])):
+                serf = env._get_serf_by_id(int(sid))
+                if serf is None or not serf.is_idle():
+                    continue
+                candidates.append((serf.position.distance_to(target), order_idx, serf))
+            candidates.sort(key=lambda item: (item[0], item[1]))
+            return [serf for _, _, serf in candidates[: max(0, int(quantity))]]
+        if hasattr(env, "_iter_idle_serfs_for_assignment"):
+            return list(env._iter_idle_serfs_for_assignment(target))[: max(0, int(quantity))]
+        return [
+            serf for serf in getattr(getattr(env, "production_system", None), "serfs", [])
+            if getattr(serf, "is_idle", lambda: False)()
+        ][: max(0, int(quantity))]
 
     def _select_position_index(self, env, flow_name: str, building: str, selections: Dict[ActionPhase, int]) -> int:
         previous_flow = env.current_flow

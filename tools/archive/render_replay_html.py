@@ -8,6 +8,7 @@ import argparse
 import html
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -39,7 +40,124 @@ def _parse_args():
     parser.add_argument("--labels", action="store_true", help="Textlabels direkt ins Kartenbild zeichnen")
     parser.add_argument("--hud", action="store_true", help="HUD direkt ins Kartenbild zeichnen")
     parser.add_argument("--no-paths", action="store_true")
+    parser.add_argument(
+        "--game-root",
+        type=str,
+        default="",
+        help="Pfad zur Siedler-5/Gold-Edition. Wenn gesetzt/gefunden, werden lokale Original-GUI-Assets genutzt.",
+    )
+    parser.add_argument("--no-game-assets", action="store_true", help="Keine Original-Spielgrafiken in das Replay kopieren")
+    parser.add_argument("--no-game-icon-overlay", action="store_true", help="Keine Original-Icons in die Kartenframes zeichnen")
     return parser.parse_args()
+
+
+def _candidate_game_roots(explicit: str) -> list[Path]:
+    roots: list[Path] = []
+    if explicit:
+        roots.append(Path(explicit))
+    env_root = os.environ.get("SIEDLER_GAME_ROOT") or os.environ.get("SETTLERS5_ROOT")
+    if env_root:
+        roots.append(Path(env_root))
+    roots.extend(
+        [
+            ROOT_DIR.parent / "Gold edition",
+            ROOT_DIR.parent / "The Settlers 5",
+            ROOT_DIR.parent / "TheSettlers5",
+        ]
+    )
+    seen: set[str] = set()
+    unique: list[Path] = []
+    for root in roots:
+        key = str(root).lower()
+        if key not in seen:
+            seen.add(key)
+            unique.append(root)
+    return unique
+
+
+def _find_game_root(explicit: str) -> Path | None:
+    for root in _candidate_game_roots(explicit):
+        if (root / "base" / "shr" / "graphics").exists():
+            return root
+    return None
+
+
+def _copy_png_tree(src: Path, dst: Path) -> int:
+    if not src.exists():
+        return 0
+    copied = 0
+    for file_path in src.rglob("*.png"):
+        rel = file_path.relative_to(src)
+        target = dst / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if not target.exists() or target.stat().st_mtime < file_path.stat().st_mtime:
+            shutil.copy2(file_path, target)
+        copied += 1
+    return copied
+
+
+def _rel_asset(output_dir: Path, asset_path: Path | None) -> str:
+    if asset_path is None or not asset_path.exists():
+        return ""
+    return asset_path.relative_to(output_dir).as_posix()
+
+
+def _first_existing(*paths: Path) -> Path | None:
+    for path in paths:
+        if path.exists():
+            return path
+    return None
+
+
+def _export_game_assets(output_dir: Path, game_root: Path | None, disabled: bool) -> dict:
+    if disabled or game_root is None:
+        return {"enabled": False, "copied": 0, "assets": {}, "payday_frames": []}
+
+    assets_dir = output_dir / "assets" / "game"
+    gui_roots = {
+        "base_gui": game_root / "base" / "shr" / "graphics" / "Textures" / "GUI",
+        "extra1_gui": game_root / "extra1" / "shr" / "graphics" / "textures" / "GUI",
+        "extra2_gui": game_root / "extra2" / "shr" / "graphics" / "textures" / "GUI",
+    }
+    copied = 0
+    for name, src in gui_roots.items():
+        copied += _copy_png_tree(src, assets_dir / name)
+
+    base_gui = assets_dir / "base_gui"
+    extra2_gui = assets_dir / "extra2_gui"
+    important = {
+        "bg_top": _first_existing(base_gui / "bg_top.png", extra2_gui / "bg_top.png"),
+        "bg_bottom": _first_existing(base_gui / "bg_bottom_dbg.png", base_gui / "bg_bottom.png"),
+        "bg_window": _first_existing(base_gui / "bg_windowComplete.png", base_gui / "bg_statistics.png"),
+        "bg_window_mm": _first_existing(base_gui / "bg_windowComplete_mm.png", base_gui / "minimapBGlarge.png"),
+        "bg_tooltip": _first_existing(base_gui / "bg_tooltip.png", base_gui / "bg_tooltip_msg.png"),
+        "slider": _first_existing(base_gui / "bg_slider.png"),
+        "gold": _first_existing(base_gui / "i_res_gold.png", base_gui / "i_res_gold_large.png"),
+        "wood": _first_existing(base_gui / "i_res_wood.png", base_gui / "i_res_wood_large.png"),
+        "stone": _first_existing(base_gui / "i_res_stone.png", base_gui / "i_res_stone_large.png"),
+        "mud": _first_existing(base_gui / "i_res_mud.png", base_gui / "i_res_mud_large.png"),
+        "iron": _first_existing(base_gui / "i_res_iron.png", base_gui / "i_res_iron_large.png"),
+        "sulfur": _first_existing(base_gui / "i_res_sulfur.png", base_gui / "i_res_sulfur_large.png"),
+        "serf": _first_existing(base_gui / "b_select_serf.png", base_gui / "MO_CU_Serf.png"),
+        "worker": _first_existing(base_gui / "i_workers.png", base_gui / "b_units_worker.png"),
+        "site": _first_existing(base_gui / "b_generic_building.png"),
+        "headquarter": _first_existing(base_gui / "b_headquarter.png"),
+        "university": _first_existing(base_gui / "b_civil_university.png", extra2_gui / "b_civil_university.png"),
+        "monastery": _first_existing(base_gui / "b_civil_church.png"),
+        "village": _first_existing(base_gui / "b_civil_keep.png"),
+        "farm": _first_existing(base_gui / "i_res_farms.png"),
+        "residence": _first_existing(base_gui / "i_res_residences.png"),
+        "mine": _first_existing(base_gui / "b_small_generic.png", base_gui / "b_generic_building.png"),
+        "minimap_bg": _first_existing(base_gui / "minimapBGlarge.png", base_gui / "bg_windowComplete_mm.png"),
+    }
+    payday_frames = sorted(base_gui.glob("payday*.png"))
+    return {
+        "enabled": copied > 0,
+        "copied": copied,
+        "root": str(game_root),
+        "assets": {name: _rel_asset(output_dir, path) for name, path in important.items()},
+        "payday_frames": [_rel_asset(output_dir, path) for path in payday_frames],
+    }
 
 
 def _timeline_entry(env, frame_name: str, decision: int, action_label: str) -> dict:
@@ -86,6 +204,117 @@ def _timeline_entry(env, frame_name: str, decision: int, action_label: str) -> d
     }
 
 
+_ICON_CACHE: dict[tuple[str, int], Image.Image] = {}
+
+
+def _asset_path_for_render(args, key: str) -> Path | None:
+    manifest = getattr(args, "_game_assets", None) or {}
+    rel_path = (manifest.get("assets") or {}).get(key) or ""
+    if not rel_path:
+        return None
+    path = Path(getattr(args, "_output_dir", ".")) / rel_path
+    return path if path.exists() else None
+
+
+def _load_render_icon(args, key: str, size: int) -> Image.Image | None:
+    path = _asset_path_for_render(args, key)
+    if path is None:
+        return None
+    cache_key = (str(path), int(size))
+    cached = _ICON_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+    try:
+        icon = Image.open(path).convert("RGBA")
+    except Exception:
+        return None
+    w, h = icon.size
+    if h > w and w > 0:
+        icon = icon.crop((0, 0, w, min(h, w)))
+    elif w > h and h > 0:
+        left = max(0, (w - h) // 2)
+        icon = icon.crop((left, 0, left + h, h))
+    icon.thumbnail((size, size), Image.Resampling.LANCZOS)
+    _ICON_CACHE[cache_key] = icon
+    return icon
+
+
+def _building_icon_key(building_name: str) -> str:
+    normalized = replay.get_base_building_name(building_name).lower()
+    if "hauptquartier" in normalized or "headquarter" in normalized:
+        return "headquarter"
+    if "hochschule" in normalized or "university" in normalized:
+        return "university"
+    if "kloster" in normalized or "monastery" in normalized:
+        return "monastery"
+    if "dorfzentrum" in normalized or "village" in normalized:
+        return "village"
+    if "wohnhaus" in normalized or "residence" in normalized:
+        return "residence"
+    if "bauernhof" in normalized or "farm" in normalized:
+        return "farm"
+    if "mine" in normalized or "grube" in normalized:
+        return "mine"
+    return "site"
+
+
+def _paste_centered_icon(canvas: Image.Image, icon: Image.Image | None, x: int, y: int) -> None:
+    if icon is None:
+        return
+    canvas.alpha_composite(icon, (int(x - icon.width / 2), int(y - icon.height / 2)))
+
+
+def _overlay_game_icons(env, frame: np.ndarray, args) -> np.ndarray:
+    manifest = getattr(args, "_game_assets", None) or {}
+    if not manifest.get("enabled") or getattr(args, "no_game_icon_overlay", False):
+        return frame
+    if getattr(args, "viewport", "full") != "full":
+        return frame
+
+    grid_h = env.map_manager.grid.height
+    grid_w = env.map_manager.grid.width
+    render_scale = max(1, int(getattr(args, "render_scale", 1) or 1))
+    canvas = Image.fromarray(frame, mode="RGB").convert("RGBA")
+
+    def world_to_frame(x: float, y: float) -> tuple[int, int]:
+        px, py = replay._world_to_px(env, x, y, grid_w, grid_h)
+        return int(px * render_scale), int(py * render_scale)
+
+    # Building icons first, then moving units above them.
+    for key, pos in getattr(env, "building_position_map", {}).items():
+        xy = replay._as_xy(pos)
+        if xy is None:
+            continue
+        building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
+        x, y = world_to_frame(xy[0], xy[1])
+        _paste_centered_icon(canvas, _load_render_icon(args, _building_icon_key(building_name), 34), x, y)
+
+    for site in getattr(env, "construction_sites", []):
+        xy = replay._as_xy(site.get("position"))
+        if xy is None:
+            continue
+        x, y = world_to_frame(xy[0], xy[1])
+        _paste_centered_icon(canvas, _load_render_icon(args, "site", 30), x, y)
+
+    worker_icon = _load_render_icon(args, "worker", 18)
+    for worker in getattr(env.workforce_manager, "workers", []):
+        xy = replay._as_xy(getattr(worker, "position", None))
+        if xy is None:
+            continue
+        x, y = world_to_frame(xy[0], xy[1])
+        _paste_centered_icon(canvas, worker_icon, x, y)
+
+    serf_icon = _load_render_icon(args, "serf", 20)
+    for serf in getattr(env.production_system, "serfs", []):
+        xy = replay._as_xy(getattr(serf, "position", None))
+        if xy is None:
+            continue
+        x, y = world_to_frame(xy[0], xy[1])
+        _paste_centered_icon(canvas, serf_icon, x, y)
+
+    return np.asarray(canvas.convert("RGB"), dtype=np.uint8)
+
+
 def _render_frame(env, base, decision: int, total: int, action_label: str, args) -> np.ndarray:
     frame = replay._draw_frame(
         env,
@@ -104,11 +333,15 @@ def _render_frame(env, base, decision: int, total: int, action_label: str, args)
     )
     frame = replay._apply_viewport(frame, args.viewport)
     frame = replay._scale_frame(frame, args.render_scale)
+    frame = _overlay_game_icons(env, frame, args)
     return frame
 
 
-def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int) -> None:
+def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int, game_assets: dict | None = None) -> None:
     timeline_json = json.dumps(timeline, ensure_ascii=False).replace("</", "<\\/")
+    game_assets = game_assets or {"enabled": False, "assets": {}, "payday_frames": []}
+    game_assets_json = json.dumps(game_assets, ensure_ascii=False).replace("</", "<\\/")
+    assets = game_assets.get("assets") or {}
     title = "Siedler Expert Opening Replay"
     html_text = """<!doctype html>
 <html lang="de">
@@ -151,6 +384,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
         linear-gradient(90deg, #1e1711, #3c2819 18%, #241910 100%);
       border-bottom: 2px solid #0f0b08;
       box-shadow: 0 2px 0 rgba(255,255,255,.08) inset, 0 3px 14px rgba(0,0,0,.45);
+    }
+    body.has-game-assets .resourcebar {
+      background-image: linear-gradient(180deg, rgba(24,15,7,.28), rgba(24,15,7,.08)), url("__ASSET_BG_TOP__");
+      background-size: 100% 100%, 100% 100%;
+      background-position: center;
     }
     .crest, .payday, .resource-chip, .toolbutton, select {
       border: 1px solid rgba(238, 210, 148, .45);
@@ -203,6 +441,16 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
       color: #1e160f;
       font: 800 14px/1 system-ui, sans-serif;
     }
+    body.has-game-assets .res-icon {
+      background-color: transparent;
+      background-image: var(--asset-icon);
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      border-radius: 0;
+      color: transparent;
+      box-shadow: none;
+    }
     .resource-chip .name {
       color: #cfbf98;
       font: 700 11px/1.1 system-ui, sans-serif;
@@ -227,6 +475,22 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
       border-radius: 4px;
       background: linear-gradient(180deg, #3d4650, #1b2027);
       color: #e9f1f3;
+    }
+    body.has-game-assets .payday {
+      background-image: linear-gradient(180deg, rgba(13,20,25,.72), rgba(13,20,25,.90)), url("__ASSET_TOOLTIP__");
+      background-size: 100% 100%, 100% 100%;
+    }
+    .payday-icon {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      margin-right: 6px;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,.55));
+    }
+    .payday-info {
+      display: flex;
+      align-items: center;
+      min-width: 0;
     }
     .payday .label {
       color: #b6c4ca;
@@ -260,6 +524,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
       background: linear-gradient(180deg, #252d33, #11161a);
       border-bottom: 1px solid #34404a;
       font-family: system-ui, Segoe UI, sans-serif;
+    }
+    body.has-game-assets .controlbar {
+      background-image: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.38)), url("__ASSET_BG_BOTTOM__");
+      background-size: 100% 100%, 100% auto;
+      background-position: center top;
     }
     .toolbutton, select {
       min-height: 32px;
@@ -328,6 +597,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
       box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.35);
       color: #f5ead2;
     }
+    body.has-game-assets .panel,
+    body.has-game-assets .minimap {
+      background-image: linear-gradient(180deg, rgba(31,24,16,.60), rgba(15,12,9,.86)), url("__ASSET_WINDOW__");
+      background-size: 100% 100%, 100% 100%;
+      border-color: rgba(255, 224, 143, .55);
+    }
     .panel {
       padding: 10px 12px;
     }
@@ -388,6 +663,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
       border: 1px solid rgba(255,255,255,.18);
       cursor: crosshair;
     }
+    body.has-game-assets .minimap-inner {
+      background-image: url("__ASSET_MINIMAP_BG__");
+      background-size: 100% 100%;
+      padding: 7px;
+      box-sizing: border-box;
+    }
     #mini {
       display: block;
       width: 100%;
@@ -411,6 +692,26 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
       box-shadow: 0 0 8px rgba(200,105,85,.5);
       vertical-align: middle;
     }
+    .asset-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .asset-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      border-radius: 3px;
+      background: rgba(0,0,0,.24);
+    }
+    .asset-badge img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,.55));
+    }
     .stage.playing .playing-dot {
       background: var(--green);
       animation: pulse 1s infinite;
@@ -421,25 +722,28 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
     }
   </style>
 </head>
-<body>
+<body class="__GAME_ASSET_CLASS__">
   <div class="resourcebar">
     <div class="crest">
       Wintersturm
       <small>Expert Opening Full-Sim</small>
     </div>
     <div class="resources">
-      <div class="resource-chip"><div class="res-icon">T</div><div><div class="name">Taler</div><div id="resTaler" class="value">0</div><div class="raw">Kasse</div></div></div>
-      <div class="resource-chip"><div class="res-icon">H</div><div><div class="name">Holz</div><div id="resHolz" class="value">0</div><div id="rawHolz" class="raw">Roh 0</div></div></div>
-      <div class="resource-chip"><div class="res-icon">S</div><div><div class="name">Stein</div><div id="resStein" class="value">0</div><div id="rawStein" class="raw">Roh 0</div></div></div>
-      <div class="resource-chip"><div class="res-icon">L</div><div><div class="name">Lehm</div><div id="resLehm" class="value">0</div><div id="rawLehm" class="raw">Roh 0</div></div></div>
-      <div class="resource-chip"><div class="res-icon">E</div><div><div class="name">Eisen</div><div id="resEisen" class="value">0</div><div id="rawEisen" class="raw">Roh 0</div></div></div>
-      <div class="resource-chip"><div class="res-icon">G</div><div><div class="name">Schwefel</div><div id="resSchwefel" class="value">0</div><div id="rawSchwefel" class="raw">Roh 0</div></div></div>
+      <div class="resource-chip"><div class="res-icon" style="--asset-icon:url('__ICON_GOLD__')">T</div><div><div class="name">Taler</div><div id="resTaler" class="value">0</div><div class="raw">Kasse</div></div></div>
+      <div class="resource-chip"><div class="res-icon" style="--asset-icon:url('__ICON_WOOD__')">H</div><div><div class="name">Holz</div><div id="resHolz" class="value">0</div><div id="rawHolz" class="raw">Roh 0</div></div></div>
+      <div class="resource-chip"><div class="res-icon" style="--asset-icon:url('__ICON_STONE__')">S</div><div><div class="name">Stein</div><div id="resStein" class="value">0</div><div id="rawStein" class="raw">Roh 0</div></div></div>
+      <div class="resource-chip"><div class="res-icon" style="--asset-icon:url('__ICON_MUD__')">L</div><div><div class="name">Lehm</div><div id="resLehm" class="value">0</div><div id="rawLehm" class="raw">Roh 0</div></div></div>
+      <div class="resource-chip"><div class="res-icon" style="--asset-icon:url('__ICON_IRON__')">E</div><div><div class="name">Eisen</div><div id="resEisen" class="value">0</div><div id="rawEisen" class="raw">Roh 0</div></div></div>
+      <div class="resource-chip"><div class="res-icon" style="--asset-icon:url('__ICON_SULFUR__')">G</div><div><div class="name">Schwefel</div><div id="resSchwefel" class="value">0</div><div id="rawSchwefel" class="raw">Roh 0</div></div></div>
     </div>
     <div class="payday">
-      <div>
-        <div class="label">Zahltag</div>
-        <div id="paydayMain" class="main">nicht gesetzt</div>
-        <div id="paydaySub" class="sub">erster Worker fehlt</div>
+      <div class="payday-info">
+        <img id="paydayIcon" class="payday-icon" src="__PAYDAY_ICON__" alt="">
+        <div>
+          <div class="label">Zahltag</div>
+          <div id="paydayMain" class="main">nicht gesetzt</div>
+          <div id="paydaySub" class="sub">erster Worker fehlt</div>
+        </div>
       </div>
       <div>
         <div class="label">Steuer</div>
@@ -472,6 +776,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
           <div class="stat"><b id="statSerfs">0</b><span>Serfs</span></div>
           <div class="stat"><b id="statWorkers">0</b><span>Worker</span></div>
         </div>
+        <div class="asset-strip">
+          <div class="asset-badge"><img src="__ICON_SERF__" alt="Serf"></div>
+          <div class="asset-badge"><img src="__ICON_WORKER__" alt="Worker"></div>
+          <div class="asset-badge"><img src="__ICON_UNIVERSITY__" alt="Hochschule"></div>
+          <div class="asset-badge"><img src="__ICON_HEADQUARTER__" alt="Hauptquartier"></div>
+        </div>
         <button class="toolbutton" id="fit" style="margin-top:10px;">Ansicht reset</button>
       </div>
       <div class="minimap">
@@ -485,6 +795,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
   </div>
   <script>
     const timeline = __TIMELINE__;
+    const gameAssets = __GAME_ASSETS__;
+    const paydayFrames = gameAssets.payday_frames || [];
     const MAP_WIDTH = __WIDTH__;
     const MAP_HEIGHT = __HEIGHT__;
     const img = document.getElementById('map');
@@ -498,6 +810,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
     const headline = document.getElementById('headline');
     const action = document.getElementById('action');
     const zoomLevel = document.getElementById('zoomLevel');
+    const paydayIcon = document.getElementById('paydayIcon');
     const resIds = {
       taler: document.getElementById('resTaler'),
       holz: document.getElementById('resHolz'),
@@ -566,6 +879,16 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
     function updatePayday(f) {
       const main = document.getElementById('paydayMain');
       const sub = document.getElementById('paydaySub');
+      if (paydayFrames.length && paydayIcon) {
+        const cycle = 120;
+        const remaining = f.payday_countdown === null || f.payday_countdown === undefined ? cycle : Number(f.payday_countdown);
+        const phase = ((cycle - remaining) % cycle + cycle) % cycle;
+        const frameIdx = Math.floor((phase / cycle) * paydayFrames.length);
+        paydayIcon.src = paydayFrames[Math.max(0, Math.min(paydayFrames.length - 1, frameIdx))];
+        paydayIcon.style.display = '';
+      } else if (paydayIcon && !paydayIcon.getAttribute('src')) {
+        paydayIcon.style.display = 'none';
+      }
       if (f.next_payday == null) {
         main.textContent = 'nicht gesetzt';
         sub.textContent = 'Timer startet mit erstem Worker-Gebaeude';
@@ -704,10 +1027,32 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int)
         "__WIDTH__": str(int(width)),
         "__HEIGHT__": str(int(height)),
         "__MAX_INDEX__": str(max(0, len(timeline) - 1)),
+        "__GAME_ASSET_CLASS__": "has-game-assets" if game_assets.get("enabled") else "",
     }
+    blank_asset = "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+    asset_replacements = {
+        "__ASSET_BG_TOP__": assets.get("bg_top") or blank_asset,
+        "__ASSET_BG_BOTTOM__": assets.get("bg_bottom") or blank_asset,
+        "__ASSET_WINDOW__": assets.get("bg_window") or blank_asset,
+        "__ASSET_MINIMAP_BG__": assets.get("minimap_bg") or blank_asset,
+        "__ASSET_TOOLTIP__": assets.get("bg_tooltip") or blank_asset,
+        "__ICON_GOLD__": assets.get("gold") or blank_asset,
+        "__ICON_WOOD__": assets.get("wood") or blank_asset,
+        "__ICON_STONE__": assets.get("stone") or blank_asset,
+        "__ICON_MUD__": assets.get("mud") or blank_asset,
+        "__ICON_IRON__": assets.get("iron") or blank_asset,
+        "__ICON_SULFUR__": assets.get("sulfur") or blank_asset,
+        "__ICON_SERF__": assets.get("serf") or blank_asset,
+        "__ICON_WORKER__": assets.get("worker") or blank_asset,
+        "__ICON_UNIVERSITY__": assets.get("university") or blank_asset,
+        "__ICON_HEADQUARTER__": assets.get("headquarter") or blank_asset,
+        "__PAYDAY_ICON__": (game_assets.get("payday_frames") or [blank_asset])[0],
+    }
+    replacements.update({key: html.escape(value, quote=True) for key, value in asset_replacements.items()})
     for key, value in replacements.items():
         html_text = html_text.replace(key, value)
     html_text = html_text.replace("__TIMELINE__", timeline_json)
+    html_text = html_text.replace("__GAME_ASSETS__", game_assets_json)
     (output_dir / "index.html").write_text(html_text, encoding="utf-8")
 
 
@@ -721,6 +1066,10 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     frames_dir = output_dir / "frames"
     frames_dir.mkdir(parents=True, exist_ok=True)
+    game_root = _find_game_root(args.game_root)
+    game_assets = _export_game_assets(output_dir, game_root, bool(args.no_game_assets))
+    args._game_assets = game_assets
+    args._output_dir = output_dir
 
     env = SiedlerScharfschuetzenEnv(render_mode=None, use_spatial_obs=False)
     env.reset(seed=args.seed)
@@ -755,11 +1104,15 @@ def main() -> None:
         timeline.append(_timeline_entry(env, frame_name, decisions, last_action))
 
     (output_dir / "timeline.json").write_text(json.dumps(timeline, indent=2, ensure_ascii=False), encoding="utf-8")
-    _write_html(output_dir, timeline, width, height)
+    _write_html(output_dir, timeline, width, height, game_assets=game_assets)
 
     print(f"Interactive replay: {output_dir / 'index.html'}")
     print(f"Frames: {len(timeline)}")
     print(f"Last sim time: {timeline[-1]['time'] if timeline else 0}s")
+    if game_assets.get("enabled"):
+        print(f"Game assets: {game_assets.get('copied', 0)} PNGs from {game_assets.get('root', '')}")
+    else:
+        print("Game assets: disabled or not found")
 
 
 if __name__ == "__main__":

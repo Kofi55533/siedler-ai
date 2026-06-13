@@ -12,13 +12,19 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 import unicodedata
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable, Optional, Tuple, Dict, List
 
 import imageio.v2 as imageio
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 import pathfinding
 from environment import (
@@ -30,6 +36,7 @@ from environment import (
     SiedlerScharfschuetzenEnv,
     get_base_building_name,
 )
+from expert_opening import ExpertOpeningController
 from worker_simulation import WorkerState
 
 
@@ -250,6 +257,24 @@ def _run_wait_decision(env: SiedlerScharfschuetzenEnv, rng: np.random.Generator)
     if result is not None:
         return result
     return _run_random_decision(env, rng)
+
+
+def _run_expert_decision(env: SiedlerScharfschuetzenEnv, controller: ExpertOpeningController):
+    reason = ""
+    action = controller.act(env)
+    if getattr(controller, "active_plan", None) is not None:
+        reason = str(controller.active_plan.reason or "")
+    obs, reward, done, trunc, info = env.step(action)
+
+    while info.get("multi_step") and not done and not trunc:
+        action = controller.act(env)
+        obs, reward, done, trunc, info = env.step(action)
+
+    controller.observe_step(info)
+    if reason:
+        info["action_reason"] = reason
+        info["action_name"] = f"{info.get('action_name', 'unknown')} | {reason}"
+    return obs, reward, done, trunc, info
 
 
 def _try_buy_serf(env: SiedlerScharfschuetzenEnv, rng: np.random.Generator):
@@ -551,7 +576,10 @@ def _run_one_decision(
     rng: np.random.Generator,
     strategy: str,
     opening_state: Optional[OpeningPolicyState],
+    expert_controller: Optional[ExpertOpeningController] = None,
 ):
+    if strategy == "expert_opening":
+        return _run_expert_decision(env, expert_controller or ExpertOpeningController())
     if strategy == "opening_v1":
         return _run_opening_decision(env, rng, opening_state or OpeningPolicyState())
     return _run_random_decision(env, rng)
@@ -687,6 +715,7 @@ def _draw_frame(
     show_worker_targets: bool = True,
     show_refiner_trips: bool = True,
     max_refiner_trips: int = 120,
+    show_hud: bool = True,
 ) -> np.ndarray:
     grid_h = env.map_manager.grid.height
     grid_w = env.map_manager.grid.width
@@ -860,16 +889,16 @@ def _draw_frame(
                 tx, ty = _world_to_px(env, tgt[0], tgt[1], grid_w, grid_h)
                 draw.ellipse((tx - 2, ty - 2, tx + 2, ty + 2), outline=(255, 200, 120, 180), width=1)
 
-    # HUD
-    hud_lines = [
-        f"step {step_idx}/{total_steps}  time {env.current_time}s",
-        f"action {action_label}",
-        f"buildings {len(env.building_position_map)}  workers {len(env.workforce_manager.workers)}  serfs {len(env.production_system.serfs)}",
-        f"res HolzRoh={int(env.resources.get('HolzRoh', 0))} EisenRoh={int(env.resources.get('EisenRoh', 0))} Taler={int(env.resources.get('Taler', 0))}",
-    ]
-    hud_text = "\n".join(hud_lines)
-    draw.rectangle((6, 6, 620, 82), fill=(0, 0, 0, 155))
-    draw.text((12, 10), hud_text, fill=(255, 255, 255, 230), font=font)
+    if show_hud:
+        hud_lines = [
+            f"step {step_idx}/{total_steps}  time {env.current_time}s",
+            f"action {action_label}",
+            f"buildings {len(env.building_position_map)}  workers {len(env.workforce_manager.workers)}  serfs {len(env.production_system.serfs)}",
+            f"res HolzRoh={int(env.resources.get('HolzRoh', 0))} EisenRoh={int(env.resources.get('EisenRoh', 0))} Taler={int(env.resources.get('Taler', 0))}",
+        ]
+        hud_text = "\n".join(hud_lines)
+        draw.rectangle((6, 6, 620, 82), fill=(0, 0, 0, 155))
+        draw.text((12, 10), hud_text, fill=(255, 255, 255, 230), font=font)
 
     return np.asarray(img, dtype=np.uint8)
 
@@ -890,6 +919,49 @@ def _apply_viewport(frame: np.ndarray, viewport: str) -> np.ndarray:
     return np.asarray(resized, dtype=np.uint8)
 
 
+def _scale_frame(frame: np.ndarray, scale: int) -> np.ndarray:
+    scale = max(1, int(scale))
+    if scale <= 1:
+        return frame
+    h, w = frame.shape[:2]
+    img = Image.fromarray(frame, mode="RGB")
+    img = img.resize((w * scale, h * scale), Image.Resampling.NEAREST)
+    return np.asarray(img, dtype=np.uint8)
+
+
+def _parse_snapshot_times(raw: str) -> List[int]:
+    result: List[int] = []
+    for part in str(raw or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            result.append(max(0, int(part)))
+        except ValueError:
+            continue
+    return sorted(set(result))
+
+
+def _maybe_write_snapshot(
+    frame: np.ndarray,
+    env: SiedlerScharfschuetzenEnv,
+    snapshot_dir: str,
+    snapshot_times: List[int],
+    written: set,
+) -> None:
+    if not snapshot_dir or not snapshot_times:
+        return
+    current_time = int(getattr(env, "current_time", 0))
+    due = [t for t in snapshot_times if t <= current_time and t not in written]
+    if not due:
+        return
+    os.makedirs(snapshot_dir, exist_ok=True)
+    for target_time in due:
+        out_path = os.path.join(snapshot_dir, f"expert_opening_t{target_time:04d}.png")
+        Image.fromarray(frame, mode="RGB").save(out_path)
+        written.add(target_time)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Render MP4 replay fuer Siedler-Env")
     parser.add_argument("--steps", type=int, default=1800, help="Anzahl Simulations-Schritte (z.B. 1800)")
@@ -899,6 +971,31 @@ def parse_args():
     parser.add_argument("--output", type=str, default="replay_player1.mp4", help="Output MP4 Pfad")
     parser.add_argument("--background", type=str, default="", help="Optionales Player-PNG als Hintergrund")
     parser.add_argument(
+        "--sim-mode",
+        type=str,
+        choices=["", "fast_train", "full_sim"],
+        default="",
+        help="Simulationsmodus. Leer = Env-Default, expert_opening nutzt automatisch full_sim.",
+    )
+    parser.add_argument(
+        "--render-scale",
+        type=int,
+        default=1,
+        help="Pixel-Upscale fuer Video/Snapshots. 4 ist gut zum Pruefen.",
+    )
+    parser.add_argument(
+        "--snapshot-dir",
+        type=str,
+        default="",
+        help="Optionaler Ordner fuer PNG-Snapshots bei --snapshot-times.",
+    )
+    parser.add_argument(
+        "--snapshot-times",
+        type=str,
+        default="",
+        help="Kommagetrennte Sim-Zeiten fuer PNG-Snapshots, z.B. 0,30,76,147,195,196.",
+    )
+    parser.add_argument(
         "--background-crop-p1",
         action="store_true",
         help="Falls --background eine Vollkarten-PNG ist: auf P1-Quadrant (oben rechts) croppen",
@@ -906,9 +1003,9 @@ def parse_args():
     parser.add_argument(
         "--strategy",
         type=str,
-        choices=["opening_v1", "random"],
-        default="opening_v1",
-        help="Policy fuer Entscheidungen: opening_v1 (dein beschriebener Start) oder random",
+        choices=["expert_opening", "opening_v1", "random"],
+        default="expert_opening",
+        help="Policy fuer Entscheidungen: expert_opening, opening_v1 oder random",
     )
     parser.add_argument(
         "--viewport",
@@ -938,6 +1035,7 @@ def parse_args():
         action="store_true",
         help="Keine Refinery-Transportpfade zeichnen",
     )
+    parser.add_argument("--no-hud", action="store_true", help="HUD mit Zeit/Aktion/Ressourcen nicht zeichnen")
     parser.add_argument(
         "--max-refiner-trips",
         type=int,
@@ -961,6 +1059,14 @@ def parse_args():
 
 def main():
     args = parse_args()
+    sim_mode = str(args.sim_mode or "").strip()
+    if not sim_mode and args.strategy == "expert_opening":
+        sim_mode = "full_sim"
+    if sim_mode:
+        os.environ["SIEDLER_SIM_MODE"] = sim_mode
+        if sim_mode == "full_sim":
+            os.environ["SIEDLER_DISABLE_RUNTIME_PATHING"] = "0"
+
     global MAX_ASSIGN_QUANTITY_INDEX
     if args.assign_qty_max is not None and int(args.assign_qty_max) >= 0:
         MAX_ASSIGN_QUANTITY_INDEX = int(args.assign_qty_max)
@@ -972,6 +1078,9 @@ def main():
     env.reset(seed=args.seed)
     rng = np.random.default_rng(args.seed)
     opening_state = OpeningPolicyState() if args.strategy == "opening_v1" else None
+    expert_controller = ExpertOpeningController() if args.strategy == "expert_opening" else None
+    snapshot_times = _parse_snapshot_times(args.snapshot_times)
+    written_snapshots = set()
 
     base = _make_base_image(env, args.background or None)
     out_dir = os.path.dirname(os.path.abspath(args.output))
@@ -1002,15 +1111,18 @@ def main():
             show_worker_targets=not args.no_worker_targets,
             show_refiner_trips=not args.no_refiner_trips,
             max_refiner_trips=args.max_refiner_trips,
+            show_hud=not args.no_hud,
         )
         frame0 = _apply_viewport(frame0, args.viewport)
+        frame0 = _scale_frame(frame0, args.render_scale)
         writer.append_data(frame0)
+        _maybe_write_snapshot(frame0, env, args.snapshot_dir, snapshot_times, written_snapshots)
 
         decisions = 0
         done = False
         trunc = False
         while decisions < args.steps and not done and not trunc:
-            result = _run_one_decision(env, rng, args.strategy, opening_state)
+            result = _run_one_decision(env, rng, args.strategy, opening_state, expert_controller)
             if result is None:
                 break
             _, _, done, trunc, info = result
@@ -1030,9 +1142,12 @@ def main():
                     show_worker_targets=not args.no_worker_targets,
                     show_refiner_trips=not args.no_refiner_trips,
                     max_refiner_trips=args.max_refiner_trips,
+                    show_hud=not args.no_hud,
                 )
                 frame = _apply_viewport(frame, args.viewport)
+                frame = _scale_frame(frame, args.render_scale)
                 writer.append_data(frame)
+                _maybe_write_snapshot(frame, env, args.snapshot_dir, snapshot_times, written_snapshots)
     finally:
         writer.close()
 
@@ -1040,7 +1155,10 @@ def main():
     print(f"Schritte simuliert: {decisions}")
     print(f"Frame-Intervall: {max(1, args.frame_every)}")
     print(f"Strategie: {args.strategy}")
+    print(f"Simulation mode: {env.sim_mode}")
     print(f"Viewport: {args.viewport}")
+    if args.snapshot_dir:
+        print(f"Snapshots: {args.snapshot_dir}")
 
 
 if __name__ == "__main__":

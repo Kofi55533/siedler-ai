@@ -31,6 +31,7 @@ checkpoint*/
 # Logs
 *.log
 tensorboard/
+analysis/replays/
 
 # Daten-Caches
 *.npy

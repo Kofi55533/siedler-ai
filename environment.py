@@ -75,6 +75,7 @@ SOURCE_CATEGORIES = {
     4: "Lehm",
     5: "Schwefel",
     6: "Baustelle",
+    7: "Freier Trupp",
 }
 
 TARGET_CATEGORIES = {
@@ -107,13 +108,14 @@ POSITION_MODES = {
 }
 
 MAX_SPECIFIC_OPTIONS = 28  # Max(6 Holz-Zonen, 5 Eisen, 10 Baustellen, 28 GebÃƒÆ’Ã‚Â¤ude)
+MAX_COMPLETED_SERF_COHORTS = MAX_SPECIFIC_OPTIONS
 WOOD_TOPK_PER_ZONE = 8
 MAX_WOOD_ZONE_ACTIONS = 18
 MAX_WOOD_SPECIFIC_OPTIONS = WOOD_TOPK_PER_ZONE * MAX_WOOD_ZONE_ACTIONS
 MAX_POSITION_SLOTS = 2200
 POSITION_GROUP_SIZE = 50
 POSITION_GROUP_COUNT = (MAX_POSITION_SLOTS + POSITION_GROUP_SIZE - 1) // POSITION_GROUP_SIZE
-QUANTITY_VALUES = [1, 2, 3, 5, 10, 20]
+QUANTITY_VALUES = [1, 2, 3, 4, 5, 8, 10, 16, 20]
 
 # Forschungs-GebÃƒÆ’Ã‚Â¤ude: In welchem GebÃƒÆ’Ã‚Â¤ude wird welche Technologie erforscht?
 # Jede Technologie hat ein "requires_building" - wir gruppieren nach Basis-GebÃƒÆ’Ã‚Â¤ude
@@ -2244,6 +2246,8 @@ DEFAULT_REWARD_PROFILE = {
     "step_goal_resource_progress_bonus": 0.0,
     # Economy shaping on income growth.
     "step_delta_taler_income_bonus": 0.0,
+    # Ordered Wintersturm expert-opening milestones from the provided human build order.
+    "step_expert_opening_milestone_bonus": 0.0,
     "step_time_penalty": 0.0,
     # Event rewards for serf economy growth (episode high-water marks).
     "action_buy_serf_growth_bonus": 0.0,
@@ -2315,6 +2319,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_step_potential_units = 0
         self._last_step_unlock_progress = 0.0
         self._last_unlock_milestone_level = 0
+        self._last_expert_opening_milestone_level = 0
+        self._expert_opening_start_base_counts: Dict[str, int] = {}
         self._best_step_taxable_workers = 0.0
         self._last_scharf_research_progress = 0.0
         self._last_scharf_construction_progress = 0.0
@@ -2336,6 +2342,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._best_total_leibeigene = 0
         self._pending_spawned_unassigned_serfs = 0
         self._construction_freed_serfs = 0  # Serfs die gerade ein Gebaeude fertiggestellt haben
+        self._next_serf_id = 1
+        self._next_free_serf_cohort_id = 1
+        self.free_serf_cohorts: List[dict] = []
+        self._selected_source_serf_ids: Optional[Set[int]] = None
         self._scharf_required_buildings, self._scharf_required_techs = self._get_scharf_requirements()
 
         # GebÃƒÆ’Ã‚Â¤ude-Listen fÃƒÆ’Ã‚Â¼r Actions
@@ -2509,8 +2519,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             ActionPhase.TECH_BUILDING: spaces.Discrete(len(RESEARCH_BUILDINGS)),  # 13 Forschungs-GebÃƒÆ’Ã‚Â¤ude
             ActionPhase.TECH: spaces.Discrete(MAX_TECHS_PER_BUILDING),  # max 17 (Hochschule)
             ActionPhase.SOLDIER: spaces.Discrete(len(self.soldier_types)),
-            ActionPhase.QUANTITY: spaces.Discrete(6),
-            ActionPhase.SOURCE_CATEGORY: spaces.Discrete(len(SOURCE_CATEGORIES)),  # 7
+            ActionPhase.QUANTITY: spaces.Discrete(len(QUANTITY_VALUES)),
+            ActionPhase.SOURCE_CATEGORY: spaces.Discrete(len(SOURCE_CATEGORIES)),
             ActionPhase.SOURCE_SPECIFIC: spaces.Discrete(self.source_specific_size),
             ActionPhase.TARGET_CATEGORY: spaces.Discrete(len(TARGET_CATEGORIES)),  # 8
             ActionPhase.TARGET_SPECIFIC: spaces.Discrete(self.target_specific_size),
@@ -2836,7 +2846,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.construction_sites = []
         self.next_site_id = 0
 
-        # Serf-Tracking (vereinfacht - keine IDs mehr nÃƒÆ’Ã‚Â¶tig)
+        # Serf-Tracking: stabile IDs und freie Trupps fuer exakte Folgeauftraege.
+        self._next_serf_id = 1
+        self._next_free_serf_cohort_id = 1
+        self.free_serf_cohorts = []
+        self._selected_source_serf_ids = None
 
         self.researched_techs = set()
         # Auto-Forschung (z.B. GT_Beautification) direkt setzen
@@ -3060,6 +3074,21 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         # StartgebÃƒÆ’Ã‚Â¤ude aus Map-Logik registrieren (HQ + gebaute DZ-Slots)
         self._register_starting_buildings()
+        self._expert_opening_start_base_counts = {
+            self._normalize_building_name(base): self._get_completed_base_count(base)
+            for base in {
+                "Dorfzentrum",
+                "Wohnhaus",
+                "Bauernhof",
+                "Hochschule",
+                "Kloster",
+                "Lehmhütte",
+                "Steinmine",
+                "Lehmmine",
+                "Eisenmine",
+                "Schwefelmine",
+            }
+        }
         self._walkable_dirty = True
         self._walkable_ratio = 0.0
         self._dynamic_blocked_ratio = 0.0
@@ -3082,6 +3111,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 position=Position(x=hq_pos.x, y=hq_pos.y),
                 target_resource=None,  # Idle serf
             )
+            self._ensure_serf_identity(serf)
             self.production_system.serfs.append(serf)
 
         
@@ -3161,6 +3191,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_goal_resource_progress = self._get_goal_resource_progress_metric(target_tier=step_potential_tier)
         self._last_scharfschuetzen_count = int(self.scharfschuetzen)
         self._last_taler_income_per_cycle = float(self._get_taler_income_per_cycle())
+        self._last_expert_opening_milestone_level = self._get_expert_opening_milestone_level()
 
         use_step_cumulative = float(
             self.reward_profile.get("step_potential_use_cumulative_earnings", 1.0)
@@ -4240,6 +4271,103 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         upgrade_to = buildings_db.get(building, {}).get("upgrade_to")
         required_buildings, _ = self._get_scharf_requirements_for_tier(self._get_goal_training_tier())
         return bool(upgrade_to and upgrade_to in required_buildings)
+
+    def _base_name_matches(self, building: str, base_name: str) -> bool:
+        return self._normalize_building_name(get_base_building_name(str(building))) == self._normalize_building_name(base_name)
+
+    def _get_completed_base_count(self, base_name: str) -> int:
+        target = self._normalize_building_name(base_name)
+        total = 0
+        for building, count in self.buildings.items():
+            if self._normalize_building_name(get_base_building_name(str(building))) == target:
+                total += int(count or 0)
+        return int(total)
+
+    def _get_started_base_count(self, base_name: str) -> int:
+        target = self._normalize_building_name(base_name)
+        total = self._get_completed_base_count(base_name)
+        for site in getattr(self, "construction_sites", []):
+            building = site.get("building", "")
+            if self._normalize_building_name(get_base_building_name(str(building))) == target:
+                total += 1
+        for item in getattr(self, "construction_queue", []):
+            if not item:
+                continue
+            building = item[0]
+            if self._normalize_building_name(get_base_building_name(str(building))) == target:
+                total += 1
+        for item in getattr(self, "upgrade_queue", []):
+            if len(item) < 2:
+                continue
+            new_building = item[1]
+            if self._normalize_building_name(get_base_building_name(str(new_building))) == target:
+                total += 1
+        return int(total)
+
+    def _get_started_base_delta(self, base_name: str) -> int:
+        start = int(
+            getattr(self, "_expert_opening_start_base_counts", {}).get(
+                self._normalize_building_name(base_name),
+                0,
+            )
+        )
+        return max(0, self._get_started_base_count(base_name) - start)
+
+    def _get_completed_base_delta(self, base_name: str) -> int:
+        start = int(
+            getattr(self, "_expert_opening_start_base_counts", {}).get(
+                self._normalize_building_name(base_name),
+                0,
+            )
+        )
+        return max(0, self._get_completed_base_count(base_name) - start)
+
+    def _is_tech_started_or_completed(self, tech_name: str) -> bool:
+        return tech_name in self.researched_techs or any(
+            tech == tech_name for tech, _remaining in getattr(self, "current_researches", [])
+        )
+
+    def _get_expert_opening_milestone_level(self) -> int:
+        """Geordnete Expert-Eröffnung fuer Wintersturm nach der vom Nutzer gelieferten Linie."""
+        checks = [
+            lambda: int(self.total_leibeigene) >= 9,
+            lambda: (
+                self._get_started_base_delta("Eisenmine") >= 1
+                and self._get_started_base_delta("Schwefelmine") >= 1
+                and self._get_started_base_delta("Steinmine") >= 1
+                and self._get_started_base_delta("Lehmmine") >= 1
+                and self._get_started_base_delta("Hochschule") >= 1
+            ),
+            lambda: self._get_started_base_delta("Hochschule") >= 2,
+            lambda: self._is_tech_started_or_completed("Bildung"),
+            lambda: (
+                self._get_completed_base_delta("Eisenmine") >= 2
+                and self._get_completed_base_delta("Schwefelmine") >= 2
+                and self._get_completed_base_delta("Steinmine") >= 1
+                and self._get_completed_base_delta("Lehmmine") >= 1
+            ),
+            lambda: self._get_started_base_delta("Kloster") >= 1,
+            lambda: self._get_completed_base_delta("Kloster") >= 1,
+            lambda: self._get_started_base_delta("Dorfzentrum") >= 1,
+            lambda: self._get_completed_base_delta("Dorfzentrum") >= 1,
+            lambda: self._is_tech_started_or_completed("Konstruktion"),
+            lambda: int(self.total_leibeigene) >= 16,
+            lambda: int(self.total_leibeigene) >= 25,
+            lambda: (
+                self._get_started_base_delta("Wohnhaus") >= 1
+                and self._get_started_base_delta("Bauernhof") >= 1
+            ),
+            lambda: self._is_tech_started_or_completed("Alchimie"),
+            lambda: self._get_started_base_delta("Lehmhütte") >= 1,
+            lambda: self._get_started_base_delta("Lehmhütte") >= 2,
+            lambda: self._get_started_base_delta("Lehmhütte") >= 3,
+        ]
+        level = 0
+        for check in checks:
+            if not bool(check()):
+                break
+            level += 1
+        return int(level)
 
     def _get_goal_tree_target_indices(self) -> Set[int]:
         limit = int(max(0, round(float(self.reward_profile.get("goal_pruning_max_tree_targets", 32.0)))))
@@ -6397,7 +6525,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         assigned = 0
         tree_idx = 0
-        for serf in self.production_system.serfs:
+        for serf in self._iter_idle_serfs_for_assignment():
             if assigned >= batch_size:
                 break
             if serf.is_idle():
@@ -6504,7 +6632,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         assigned = 0
         tree_idx = 0
-        for serf in self.production_system.serfs:
+        for serf in self._iter_idle_serfs_for_assignment():
             if assigned >= batch_size:
                 break
             if serf.is_idle():
@@ -6623,7 +6751,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         target_pos = Position(x=tree["x"], y=tree["y"])
         zone_name = tree.get("zone")
         assigned = 0
-        for serf in self.production_system.serfs:
+        for serf in self._iter_idle_serfs_for_assignment(target_pos):
             if assigned >= batch_size:
                 break
             if serf.is_idle():
@@ -7129,7 +7257,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 return 0
 
             assigned = 0
-            for serf in self.production_system.serfs:
+            for serf in self._iter_idle_serfs_for_assignment(Position(x=shaft["x"], y=shaft["y"])):
                 if assigned >= actual_quantity:
                     break
                 if serf.is_idle():
@@ -7169,7 +7297,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 return 0
 
             assigned = 0
-            for serf in self.production_system.serfs:
+            for serf in self._iter_idle_serfs_for_assignment(Position(x=deposit["x"], y=deposit["y"])):
                 if assigned >= actual_quantity:
                     break
                 if serf.is_idle():
@@ -7809,14 +7937,235 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.resource_workers[resource_name] = max(0, self.resource_workers.get(resource_name, 0) - recalled)
 
     # --- BAUSTELLEN-SYSTEM ---
-    def _select_idle_serfs_nearest_to(self, target_pos: Position, limit: int) -> List[Serf]:
+    def _ensure_serf_identity(self, serf: Serf) -> int:
+        """Vergibt bei Bedarf eine stabile ID fuer exakte Serf-Quellwahl."""
+        sid = getattr(serf, "serf_id", None)
+        if sid is not None:
+            return int(sid)
+        sid = int(getattr(self, "_next_serf_id", 1))
+        self._next_serf_id = sid + 1
+        serf.serf_id = sid
+        return sid
+
+    def _get_serf_by_id(self, serf_id: int) -> Optional[Serf]:
+        target_id = int(serf_id)
+        for serf in getattr(getattr(self, "production_system", None), "serfs", []):
+            if self._ensure_serf_identity(serf) == target_id:
+                return serf
+        return None
+
+    def _active_source_serf_filter(self) -> Optional[Set[int]]:
+        ids = getattr(self, "_selected_source_serf_ids", None)
+        if not ids:
+            return None
+        return {int(sid) for sid in ids}
+
+    def _cleanup_free_serf_cohorts(self) -> None:
+        """Entfernt Serfs aus freien Trupps, sobald sie nicht mehr idle sind."""
+        cohorts = getattr(self, "free_serf_cohorts", None)
+        if not cohorts:
+            self.free_serf_cohorts = []
+            return
+
+        production_system = getattr(self, "production_system", None)
+        alive_idle_ids = {
+            self._ensure_serf_identity(serf)
+            for serf in getattr(production_system, "serfs", [])
+            if serf.is_idle()
+        }
+        cleaned = []
+        for cohort in cohorts:
+            serf_ids = [
+                int(sid)
+                for sid in cohort.get("serf_ids", [])
+                if int(sid) in alive_idle_ids
+            ]
+            if not serf_ids:
+                continue
+            cohort = dict(cohort)
+            cohort["serf_ids"] = serf_ids
+            cohort["count"] = len(serf_ids)
+            cleaned.append(cohort)
+        self.free_serf_cohorts = cleaned[-MAX_COMPLETED_SERF_COHORTS:]
+
+    def _remove_serfs_from_free_cohorts(self, serf_ids: Set[int]) -> None:
+        if not serf_ids:
+            return
+        self._cleanup_free_serf_cohorts()
+        remove_ids = {int(sid) for sid in serf_ids}
+        cleaned = []
+        for cohort in getattr(self, "free_serf_cohorts", []):
+            kept_ids = [int(sid) for sid in cohort.get("serf_ids", []) if int(sid) not in remove_ids]
+            if not kept_ids:
+                continue
+            cohort = dict(cohort)
+            cohort["serf_ids"] = kept_ids
+            cohort["count"] = len(kept_ids)
+            cleaned.append(cohort)
+        self.free_serf_cohorts = cleaned
+        self._can_cache = {}
+
+    def _preferred_wood_zone_for_building(self, building: str) -> Optional[str]:
+        base_name = get_base_building_name(str(building or ""))
+        preferred_tokens = {
+            "Eisenmine": ("Eisenmine", "Eisen"),
+            "Steinmine": ("Steinmine", "Stein"),
+            "Lehmmine": ("Lehmmine", "Lehm"),
+            "Schwefelmine": ("Schwefelmine", "Schwefel"),
+        }.get(base_name, ())
+        for token in preferred_tokens:
+            for zone_name in getattr(self, "wood_zone_names", []):
+                if token.lower() in str(zone_name).lower():
+                    return zone_name
+        return None
+
+    def _register_free_serf_cohort(
+        self,
+        label: str,
+        serfs: List[Serf],
+        position: Optional[dict] = None,
+        building: str = "",
+        base: str = "",
+        site_id: int = -1,
+        preferred_wood_zone: Optional[str] = None,
+    ) -> None:
+        serf_ids = [self._ensure_serf_identity(serf) for serf in serfs if serf.is_idle()]
+        if not serf_ids:
+            return
+        pos = position or {}
+        if isinstance(pos, dict):
+            position = {"x": int(round(pos.get("x", 0))), "y": int(round(pos.get("y", 0)))}
+        elif isinstance(pos, (list, tuple)) and len(pos) >= 2:
+            position = {"x": int(round(pos[0])), "y": int(round(pos[1]))}
+        else:
+            position = {"x": int(round(self.hq_position[0])), "y": int(round(self.hq_position[1]))}
+        building = str(building or "")
+        base_name = str(base or get_base_building_name(building) or label)
+        cohort_id = int(getattr(self, "_next_free_serf_cohort_id", 1))
+        self._next_free_serf_cohort_id = cohort_id + 1
+        cohort = {
+            "cohort_id": cohort_id,
+            "label": label or f"{base_name}@{position['x']},{position['y']}",
+            "building": building,
+            "base": base_name,
+            "site_id": int(site_id),
+            "position": position,
+            "serf_ids": serf_ids,
+            "count": len(serf_ids),
+            "created_time": int(getattr(self, "current_time", 0)),
+            "preferred_wood_zone": preferred_wood_zone,
+        }
+        self._cleanup_free_serf_cohorts()
+        self.free_serf_cohorts.append(cohort)
+        self.free_serf_cohorts = self.free_serf_cohorts[-MAX_COMPLETED_SERF_COHORTS:]
+        self._can_cache = {}
+
+    def _register_completed_site_cohort(self, site: dict, serfs: List[Serf]) -> None:
+        building = str(site.get("building", ""))
+        base_name = get_base_building_name(building)
+        pos = site.get("position") or {}
+        if isinstance(pos, dict):
+            x = int(round(pos.get("x", self.hq_position[0])))
+            y = int(round(pos.get("y", self.hq_position[1])))
+        elif isinstance(pos, (list, tuple)) and len(pos) >= 2:
+            x = int(round(pos[0]))
+            y = int(round(pos[1]))
+        else:
+            x = int(round(self.hq_position[0]))
+            y = int(round(self.hq_position[1]))
+        self._register_free_serf_cohort(
+            label=f"{base_name}@{x},{y}",
+            serfs=serfs,
+            position={"x": x, "y": y},
+            building=building,
+            base=base_name,
+            site_id=int(site.get("site_id", -1)),
+            preferred_wood_zone=self._preferred_wood_zone_for_building(building),
+        )
+
+    def _register_spawned_serf_cohort(self, serfs: List[Serf]) -> None:
+        if not serfs:
+            return
+        x = int(round(self.hq_position[0]))
+        y = int(round(self.hq_position[1]))
+        self._register_free_serf_cohort(
+            label=f"Rekrutiert@{x},{y}",
+            serfs=serfs,
+            position={"x": x, "y": y},
+            building="buy_serf",
+            base="Rekrutiert",
+            site_id=-1,
+            preferred_wood_zone=None,
+        )
+
+    def _get_free_serf_cohort(self, src_spec: int) -> Optional[dict]:
+        self._cleanup_free_serf_cohorts()
+        idx = int(src_spec)
+        cohorts = getattr(self, "free_serf_cohorts", [])
+        if idx < 0 or idx >= len(cohorts):
+            return None
+        return cohorts[idx]
+
+    def _count_free_serf_cohort(self, src_spec: int) -> int:
+        cohort = self._get_free_serf_cohort(src_spec)
+        if not cohort:
+            return 0
+        return int(cohort.get("count", 0) or 0)
+
+    def _take_serfs_from_free_cohort(
+        self,
+        src_spec: int,
+        quantity: int,
+        target_pos: Optional[Position] = None,
+    ) -> List[Serf]:
+        cohort = self._get_free_serf_cohort(src_spec)
+        if not cohort:
+            return []
+        candidates = []
+        for order_idx, sid in enumerate(cohort.get("serf_ids", [])):
+            serf = self._get_serf_by_id(int(sid))
+            if serf is None or not serf.is_idle():
+                continue
+            dist = serf.position.distance_to(target_pos) if target_pos is not None else 0.0
+            candidates.append((float(dist), order_idx, serf))
+        candidates.sort(key=lambda item: (item[0], item[1]))
+        selected = [serf for _, _, serf in candidates[:max(0, int(quantity))]]
+        self._remove_serfs_from_free_cohorts({self._ensure_serf_identity(serf) for serf in selected})
+        return selected
+
+    def _iter_idle_serfs_for_assignment(self, target_pos: Optional[Position] = None) -> List[Serf]:
+        allowed_ids = self._active_source_serf_filter()
+        candidates = []
+        for idx, serf in enumerate(self.production_system.serfs):
+            if not serf.is_idle():
+                continue
+            sid = self._ensure_serf_identity(serf)
+            if allowed_ids is not None and sid not in allowed_ids:
+                continue
+            dist = serf.position.distance_to(target_pos) if target_pos is not None else 0.0
+            candidates.append((float(dist), idx, serf))
+        candidates.sort(key=lambda item: (item[0], item[1]))
+        return [serf for _, _, serf in candidates]
+
+    def _select_idle_serfs_nearest_to(
+        self,
+        target_pos: Position,
+        limit: int,
+        allowed_serf_ids: Optional[Set[int]] = None,
+    ) -> List[Serf]:
         """Waehlt freie Leibeigene deterministisch nach Naehe zum Ziel."""
         limit = max(0, int(limit))
         if limit <= 0:
             return []
+        active_ids = self._active_source_serf_filter() if allowed_serf_ids is None else {
+            int(sid) for sid in allowed_serf_ids
+        }
         candidates = []
         for idx, serf in enumerate(self.production_system.serfs):
             if not serf.is_idle():
+                continue
+            sid = self._ensure_serf_identity(serf)
+            if active_ids is not None and sid not in active_ids:
                 continue
             dist = serf.position.distance_to(target_pos)
             candidates.append((float(dist), idx, serf))
@@ -7898,15 +8247,20 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         self.free_leibeigene += recalled
 
-    def _release_serfs_from_site(self, site: dict):
+    def _release_serfs_from_site(self, site: dict, register_cohort: bool = True):
         """Gibt alle Serfs einer fertiggestellten Baustelle frei."""
-        released = 0
+        released_serfs: List[Serf] = []
         for serf in self.production_system.serfs:
             if serf.build_site_id == site["site_id"]:
                 serf.stop()
-                released += 1
+                self._ensure_serf_identity(serf)
+                released_serfs.append(serf)
+        released = len(released_serfs)
         self.free_leibeigene += released
+        self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
         self._construction_freed_serfs = max(0, getattr(self, "_construction_freed_serfs", 0)) + released
+        if register_cohort and released_serfs:
+            self._register_completed_site_cohort(site, released_serfs)
 
     def _consume_free_serfs(self, n: int):
         """Reduziert free_leibeigene und aktualisiert Herkunfts-Tracking-Counter.
@@ -7920,6 +8274,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Dann "von Bau befreite" Serfs verbrauchen
         consume_construction = min(remaining, max(0, int(getattr(self, "_construction_freed_serfs", 0))))
         self._construction_freed_serfs = max(0, self._construction_freed_serfs - consume_construction)
+        self._cleanup_free_serf_cohorts()
 
     def _get_active_construction_sites(self) -> int:
         """Gibt Anzahl aktiver Baustellen zurÃƒÆ’Ã‚Â¼ck."""
@@ -8142,6 +8497,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         step_delta_taler_income = float(taler_income_per_cycle_now) - float(
             self._last_taler_income_per_cycle
         )
+        expert_opening_milestone_level_now = self._get_expert_opening_milestone_level()
+        step_new_expert_opening_milestones = max(
+            0,
+            int(expert_opening_milestone_level_now) - int(self._last_expert_opening_milestone_level),
+        )
 
         step_positive_only = float(self.reward_profile.get("step_delta_positive_only", 1.0)) > 0.0
         if step_positive_only:
@@ -8187,6 +8547,9 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         step_reward += step_delta_taler_income * float(
             self.reward_profile.get("step_delta_taler_income_bonus", 0.0)
         )
+        step_reward += float(step_new_expert_opening_milestones) * float(
+            self.reward_profile.get("step_expert_opening_milestone_bonus", 0.0)
+        )
         if step_path_ready:
             step_reward += float(self.reward_profile.get("step_path_ready_bonus", 0.0))
         if step_unlock_recruitable:
@@ -8209,6 +8572,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         info["step_taxable_workers"] = float(taxable_workers_now)
         info["step_taler_income_per_cycle"] = float(taler_income_per_cycle_now)
         info["step_delta_taler_income"] = float(step_delta_taler_income)
+        info["step_expert_opening_milestone_level"] = int(expert_opening_milestone_level_now)
+        info["step_new_expert_opening_milestones"] = int(step_new_expert_opening_milestones)
         info["step_delta_potential"] = float(step_delta_potential)
         info["step_unlock_progress_metric"] = float(step_unlock_progress_now)
         info["step_unlock_milestone_level"] = int(step_unlock_milestone_level_now)
@@ -8254,6 +8619,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self._last_goal_resource_progress = float(goal_resource_progress_now)
         self._last_scharfschuetzen_count = int(scharfschuetzen_now)
         self._last_taler_income_per_cycle = float(taler_income_per_cycle_now)
+        self._last_expert_opening_milestone_level = int(expert_opening_milestone_level_now)
 
         terminated = self.current_time >= self.max_time
         terminal_potential_reward = 0.0
@@ -8626,6 +8992,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             0, min(int(getattr(self, "_construction_freed_serfs", 0)),
                    free - self._pending_spawned_unassigned_serfs)
         )
+        self._cleanup_free_serf_cohorts()
 
     def _build_and_assign(
         self,
@@ -8712,6 +9079,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         target_site["serfs_assigned"] += assigned
         self.free_leibeigene = max(0, self.free_leibeigene - assigned)
         self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
+        self._cleanup_free_serf_cohorts()
         return int(assigned)
 
     def _recall_serfs_from_construction_site(self, site_index: int, quantity: int) -> int:
@@ -8736,6 +9104,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             return 0
         if src_cat == 0:
             return min(quantity, self.free_leibeigene)
+        if src_cat == 7:
+            return min(quantity, self._count_free_serf_cohort(src_spec))
         if src_cat == 1:
             tree_idx = self._get_wood_zone_rank_tree_index(src_spec, quantity, mode="recall")
             if tree_idx is None:
@@ -8762,6 +9132,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         if src_cat == 0:
             return self._select_idle_serfs_nearest_to(build_pos, quantity)
+        if src_cat == 7:
+            return self._take_serfs_from_free_cohort(src_spec, quantity, build_pos)
 
         selected: List[Serf] = []
 
@@ -8910,6 +9282,70 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         return []
 
+    def _get_assignment_target_position(
+        self,
+        tgt_cat: int,
+        tgt_spec: int,
+        quantity: int,
+        selections: dict,
+    ) -> Position:
+        if tgt_cat == 1:
+            tree_idx = self._get_wood_zone_rank_tree_index(
+                tgt_spec,
+                quantity,
+                mode="assign",
+                available_free_override=self._get_available_free_for_assign(
+                    self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0),
+                    quantity,
+                ),
+            )
+            if tree_idx is not None and 0 <= tree_idx < len(self.tree_list_internal):
+                tree = self.tree_list_internal[tree_idx]
+                return Position(x=tree["x"], y=tree["y"])
+
+        if tgt_cat in CATEGORY_AREA_MAP:
+            area = self._resolve_area(tgt_cat, tgt_spec)
+            if area in SHAFT_AREA_TO_SLOT:
+                category, slot_idx = SHAFT_AREA_TO_SLOT[area]
+                shafts = self.shaft_categories.get(category, {}).get("shafts", [])
+                if 0 <= slot_idx < len(shafts):
+                    shaft = shafts[slot_idx]
+                    return Position(x=shaft["x"], y=shaft["y"])
+            if area in DEPOSIT_AREA_TO_SLOT:
+                category, slot_idx = DEPOSIT_AREA_TO_SLOT[area]
+                deposits = self.deposit_categories.get(category, {}).get("deposits", [])
+                if 0 <= slot_idx < len(deposits):
+                    deposit = deposits[slot_idx]
+                    return Position(x=deposit["x"], y=deposit["y"])
+
+        if tgt_cat == 6 and 0 <= tgt_spec < len(self.construction_sites):
+            pos = self.construction_sites[tgt_spec].get("position")
+            if isinstance(pos, dict):
+                return Position(x=pos.get("x", self.hq_position[0]), y=pos.get("y", self.hq_position[1]))
+
+        if tgt_cat == 7 and tgt_spec < len(self.buildable_buildings):
+            building = self.buildable_buildings[tgt_spec]
+            build_pos = self._select_build_position(building, selections)
+            if build_pos is not None:
+                return Position(x=build_pos["x"], y=build_pos["y"])
+
+        return Position(x=self.hq_position[0], y=self.hq_position[1])
+
+    def _take_serfs_from_source_for_assignment(
+        self,
+        src_cat: int,
+        src_spec: int,
+        quantity: int,
+        target_pos: Position,
+    ) -> List[Serf]:
+        """Nimmt konkrete Serfs aus einer Quelle fuer eine anschliessende Zielzuweisung."""
+        quantity = max(0, int(quantity))
+        if quantity <= 0:
+            return []
+        if src_cat == 0:
+            return self._select_idle_serfs_nearest_to(target_pos, quantity, allowed_serf_ids=None)
+        return self._take_serfs_from_source_for_build(src_cat, src_spec, quantity, target_pos)
+
     def _assign_serfs_to_selection(self, tgt_cat: int, tgt_spec: int, quantity: int, selections: dict) -> float:
         quantity = max(0, int(quantity))
         if quantity <= 0:
@@ -9008,9 +9444,15 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         elif action_name == "buy_serf":
             quantity = self._get_selected_batch_size_from_selections(selections)
             reward = 0.0
+            bought_serfs: List[Serf] = []
             for _ in range(quantity):
                 if self._can_buy_serf():
+                    before_count = len(self.production_system.serfs)
                     reward += self._buy_serf()
+                    if len(self.production_system.serfs) > before_count:
+                        bought_serfs.append(self.production_system.serfs[-1])
+            if bought_serfs:
+                self._register_spawned_serf_cohort(bought_serfs)
             return reward
         elif action_name == "dismiss_serf":
             src_cat = self._to_int_choice(selections.get(ActionPhase.SOURCE_CATEGORY, 0), 0)
@@ -9034,18 +9476,42 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             qty_idx = self._to_int_choice(selections.get(ActionPhase.QUANTITY, 0), 0)
             tgt_cat = self._to_int_choice(selections.get(ActionPhase.TARGET_CATEGORY, 0), 0)
             tgt_spec = self._to_int_choice(selections.get(ActionPhase.TARGET_SPECIFIC, 0), 0)
-            quantity = [1, 2, 3, 5, 10, 20][min(qty_idx, 5)]
+            quantity = self._get_selected_batch_size_from_selections(selections)
             self._serf_areas_dirty = True  # Serf-Zuweisung ändert Areas
-            if src_cat == 0:
-                free_before = int(self.free_leibeigene)
-                reward = float(self._assign_serfs_to_selection(tgt_cat, tgt_spec, quantity, selections))
-                assigned_from_free = max(0, free_before - int(self.free_leibeigene))
-                reward += self._reward_for_assigning_spawned_serfs(assigned_from_free)
-                return reward
             if tgt_cat == 0:
                 return 0.0
-            moved = self._recall_serfs_from_selection(src_cat, src_spec, quantity)
-            return self._assign_serfs_to_selection(tgt_cat, tgt_spec, moved, selections)
+            if quantity <= 0 or not self._can_use_source_batch(src_cat, src_spec, quantity):
+                return 0.0
+
+            target_pos = self._get_assignment_target_position(tgt_cat, tgt_spec, quantity, selections)
+            selected_serfs = self._take_serfs_from_source_for_assignment(
+                src_cat,
+                src_spec,
+                quantity,
+                target_pos,
+            )
+            if not selected_serfs:
+                return 0.0
+
+            selected_ids = {self._ensure_serf_identity(serf) for serf in selected_serfs}
+            previous_filter = getattr(self, "_selected_source_serf_ids", None)
+            free_before = int(self.free_leibeigene)
+            self._selected_source_serf_ids = selected_ids
+            try:
+                reward = float(
+                    self._assign_serfs_to_selection(
+                        tgt_cat,
+                        tgt_spec,
+                        len(selected_serfs),
+                        selections,
+                    )
+                )
+            finally:
+                self._selected_source_serf_ids = previous_filter
+            if src_cat == 0:
+                assigned_from_free = max(0, free_before - int(self.free_leibeigene))
+                reward += self._reward_for_assigning_spawned_serfs(assigned_from_free)
+            return reward
         elif action_name == "demolish":
             building_idx = self._to_int_choice(selections.get(ActionPhase.BUILDING, 0), 0)
             if building_idx < len(self.demolishable_buildings):
@@ -9233,6 +9699,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         target_site["serfs_assigned"] += assigned
         self.free_leibeigene = max(0, self.free_leibeigene - assigned)
         self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
+        self._cleanup_free_serf_cohorts()
         return int(assigned)
 
     def _get_local_action_mask_raw(self) -> np.ndarray:
@@ -10308,8 +10775,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             src_cat = int(self.pending_selections.get(ActionPhase.SOURCE_CATEGORY, 0) or 0)
             src_spec = int(self.pending_selections.get(ActionPhase.SOURCE_SPECIFIC, 0) or 0)
             for i, batch_size in enumerate(QUANTITY_VALUES):
-                if batch_size not in {1, 2, 3}:
-                    continue
                 mask[i] = (
                     batch_size <= MAX_ACTIVE_BUILDERS_PER_SITE
                     and self._can_use_source_batch(src_cat, src_spec, batch_size)
@@ -10320,8 +10785,6 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             src_cat = int(self.pending_selections.get(ActionPhase.SOURCE_CATEGORY, 0) or 0)
             src_spec = int(self.pending_selections.get(ActionPhase.SOURCE_SPECIFIC, 0) or 0)
             for i, batch_size in enumerate(QUANTITY_VALUES):
-                if batch_size not in {1, 3, 5}:
-                    continue
                 if not self._can_use_source_batch(src_cat, src_spec, batch_size):
                     continue
                 if self.current_flow == "dismiss_serf":
@@ -10367,6 +10830,8 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             if src_spec < 0 or src_spec >= len(self.construction_sites):
                 return False
             return int(self.construction_sites[src_spec].get("serfs_assigned", 0) or 0) >= batch_size
+        if src_cat == 7:
+            return self._count_free_serf_cohort(src_spec) >= batch_size
         return False
 
     def _has_nonfree_source_for_batch(self, batch_size: int) -> bool:
@@ -10376,6 +10841,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             return bool(cached)
         if batch_size <= 0:
             return self._set_can_cache(cache_key, False)
+        self._cleanup_free_serf_cohorts()
         if self.wood_serfs >= batch_size and any(tree.get("serfs_assigned", 0) >= batch_size for tree in self.tree_list_internal):
             return self._set_can_cache(cache_key, True)
         for cat_idx in range(2, 6):
@@ -10383,6 +10849,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                 if self._can_recall_from_specific_area(area, batch_size):
                     return self._set_can_cache(cache_key, True)
         if any(int(site.get("serfs_assigned", 0) or 0) >= batch_size for site in self.construction_sites):
+            return self._set_can_cache(cache_key, True)
+        if any(
+            int(cohort.get("count", 0) or 0) >= batch_size
+            for cohort in getattr(self, "free_serf_cohorts", [])
+        ):
             return self._set_can_cache(cache_key, True)
         return self._set_can_cache(cache_key, False)
 
@@ -10502,6 +10973,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             mask[cat_idx] = any(self._can_recall_from_specific_area(area, batch_size) for area in areas)
         # 6=Baustelle: nur wenn Serfs an Baustellen
         mask[6] = any(site.get("serfs_assigned", 0) >= batch_size for site in self.construction_sites)
+        # 7=Freier Trupp: zusammenhaengend rekrutiert oder aus einer Baustelle freigeworden.
+        if self.current_flow in {"assign_serf", "build"}:
+            self._cleanup_free_serf_cohorts()
+            mask[7] = any(
+                int(cohort.get("count", 0) or 0) >= batch_size
+                for cohort in getattr(self, "free_serf_cohorts", [])
+            )
         if not mask.any():
             mask[0] = True  # Fallback
         return mask
@@ -10526,6 +11004,11 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         elif cat == 6:  # Baustelle
             for i, site in enumerate(self.construction_sites[:self.source_specific_size]):
                 if site.get("serfs_assigned", 0) >= batch_size:
+                    mask[i] = True
+        elif cat == 7:  # Freier Trupp
+            self._cleanup_free_serf_cohorts()
+            for i, cohort in enumerate(getattr(self, "free_serf_cohorts", [])[:self.source_specific_size]):
+                if int(cohort.get("count", 0) or 0) >= batch_size:
                     mask[i] = True
         if not mask.any():
             mask[0] = True
@@ -10879,9 +11362,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
         self._pending_spawned_unassigned_serfs = max(0, int(self._pending_spawned_unassigned_serfs)) + 1
 
-        # Neuen Serf erstellen (vereinfacht - keine IDs mehr)
+        # Neuen Serf erstellen und eindeutig identifizierbar machen.
         hq_pos = Position(x=self.hq_position[0], y=self.hq_position[1])
         serf = Serf(position=Position(x=hq_pos.x, y=hq_pos.y), target_resource=None)
+        self._ensure_serf_identity(serf)
         self.production_system.serfs.append(serf)
 
         return self._reward_for_buy_serf_growth()
@@ -11049,6 +11533,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             self.production_system.serfs.pop(serf_idx)
 
         self._decrement_area_counters_for_dismiss(area)
+        self._cleanup_free_serf_cohorts()
         return 0.0
 
     def _dismiss_serf(self):
@@ -11074,6 +11559,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
             if serf.is_idle():
                 self.production_system.serfs.pop(i)
                 break
+        self._cleanup_free_serf_cohorts()
 
         return 0.0  # MINIMALER REWARD
 
@@ -11091,7 +11577,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         building = site.get("building", "")
         b_info = buildings_db.get(building, {})
         self._refund_costs(b_info.get("cost", {}))
-        self._release_serfs_from_site(site)
+        self._release_serfs_from_site(site, register_cohort=False)
         self.serf_areas[SerfArea.FREE]["count"] = self.free_leibeigene
 
         pos = site.get("position")
@@ -11478,7 +11964,7 @@ class SiedlerScharfschuetzenEnv(gym.Env):
                     # Bei GebÃƒÆ’Ã‚Â¤ude-Fertigstellung Worker/Mine/Refiner erstellen
                     self._on_building_completed(building, pos, pos_key=pos_key)
                     # Serfs werden frei
-                    self._release_serfs_from_site(site)
+                    self._release_serfs_from_site(site, register_cohort=True)
                     self._serf_areas_dirty = True  # Recount nach Baufertigstellung
                     completed_sites.append(i)
 

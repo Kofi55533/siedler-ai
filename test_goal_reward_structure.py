@@ -96,6 +96,37 @@ def test_sparse_profile_is_no_longer_zero_reward():
     assert profile["reward_profile"]["terminal_potential_use_cumulative_earnings"] == pytest.approx(0.0)
 
 
+def test_expert_opening_milestone_reward_is_ordered_and_once():
+    env = SiedlerScharfschuetzenEnv(
+        use_spatial_obs=False,
+        reward_profile={
+            "step_expert_opening_milestone_bonus": 4.0,
+            "step_delta_positive_only": 1.0,
+        },
+    )
+    env.reset(seed=0)
+
+    # Later buildings alone must not score before the opening reaches 9 serfs.
+    env.buildings["Wohnhaus_1"] = env.buildings.get("Wohnhaus_1", 0) + 1
+    assert env._get_expert_opening_milestone_level() == 0
+
+    env.total_leibeigene = 9
+    env.free_leibeigene = 9
+    env.serf_areas[next(area for area in env.serf_areas if area.name == "FREE")]["count"] = 9
+
+    _, reward, terminated, truncated, info = env.step(WAIT_ACTION)
+
+    assert terminated is False
+    assert truncated is False
+    assert info["step_expert_opening_milestone_level"] == 1
+    assert info["step_new_expert_opening_milestones"] == 1
+    assert reward == pytest.approx(4.0)
+
+    _, reward_again, _, _, info_again = env.step(WAIT_ACTION)
+    assert info_again["step_new_expert_opening_milestones"] == 0
+    assert reward_again == pytest.approx(0.0)
+
+
 def test_step_requirement_and_path_bonuses_fire_once():
     env = SiedlerScharfschuetzenEnv(
         use_spatial_obs=False,
@@ -161,6 +192,7 @@ def test_terminal_path_ready_bonus_applies_without_resource_potential():
 
 def test_guided_profile_prunes_noisy_actions_and_decorations():
     profile = get_train_profile("guided_v1")
+    assert profile["reward_profile"]["step_expert_opening_milestone_bonus"] > 0.0
     env = SiedlerScharfschuetzenEnv(
         use_spatial_obs=False,
         reward_profile=profile["reward_profile"],

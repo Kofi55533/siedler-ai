@@ -23,6 +23,7 @@ from environment import (
     MAIN_ACTIONS,
     MAXIMUM_FAITH,
     POSITION_MODES,
+    QUANTITY_VALUES,
     WOOD_TOPK_PER_ZONE,
     SNOW_MOVE_SPEED_FACTOR,
     ActionPhase,
@@ -126,6 +127,135 @@ def _grant_free_serfs(env, count=10):
     env._pending_spawned_unassigned_serfs = 0
     env._best_total_leibeigene = max(int(env._best_total_leibeigene), int(env.total_leibeigene))
     env._can_cache = {}
+
+
+def _first_assignable_wood_specific(env, batch_size):
+    available_free = max(int(env.free_leibeigene), int(batch_size))
+    for specific_idx in range(env.target_specific_size):
+        tree_idx = env._get_wood_zone_rank_tree_index(
+            specific_idx,
+            batch_size,
+            mode="assign",
+            available_free_override=available_free,
+        )
+        if tree_idx is not None:
+            return specific_idx
+    raise AssertionError("No assignable wood target found")
+
+
+def test_spawned_serf_cohort_can_be_split_for_exact_assignment():
+    env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
+    env.reset(seed=1)
+    env.resources["Taler"] = 50_000
+    env.buildings["Dorfzentrum_1"] = max(4, env.buildings.get("Dorfzentrum_1", 0))
+    env._can_cache = {}
+
+    env._execute_action("buy_serf", {ActionPhase.QUANTITY: 2})  # QUANTITY_VALUES[2] == 3
+
+    assert env.total_leibeigene == 3
+    assert env.free_leibeigene == 3
+    assert len(env.free_serf_cohorts) == 1
+    assert env.free_serf_cohorts[0]["base"] == "Rekrutiert"
+    original_ids = set(env.free_serf_cohorts[0]["serf_ids"])
+    assert len(original_ids) == 3
+
+    env.current_flow = "assign_serf"
+    env.current_phase = ActionPhase.QUANTITY
+    env.pending_selections = {ActionPhase.SOURCE_CATEGORY: 7, ActionPhase.SOURCE_SPECIFIC: 0}
+    qty_mask = env._mask_quantity()
+    assert qty_mask[QUANTITY_VALUES.index(2)]
+    assert not qty_mask[QUANTITY_VALUES.index(4)]
+    env.current_flow = None
+    env.current_phase = ActionPhase.MAIN
+    env.pending_selections = {}
+
+    wood_specific = _first_assignable_wood_specific(env, batch_size=2)
+    env._execute_action(
+        "assign_serf",
+        {
+            ActionPhase.SOURCE_CATEGORY: 7,
+            ActionPhase.SOURCE_SPECIFIC: 0,
+            ActionPhase.QUANTITY: 1,  # QUANTITY_VALUES[1] == 2
+            ActionPhase.TARGET_CATEGORY: 1,
+            ActionPhase.TARGET_SPECIFIC: wood_specific,
+        },
+    )
+
+    assert env.wood_serfs == 2
+    assert env.free_leibeigene == 1
+    assert len(env.free_serf_cohorts) == 1
+    remaining_ids = set(env.free_serf_cohorts[0]["serf_ids"])
+    assert len(remaining_ids) == 1
+    assert remaining_ids < original_ids
+
+
+def test_completed_building_cohort_can_partially_build_next_site():
+    env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
+    env.reset(seed=2)
+    _grant_abundant_resources(env)
+    _grant_free_serfs(env, 4)
+
+    from worker_simulation import Position
+
+    source_site = {
+        "building": "Kloster_1",
+        "position": {"x": int(env.hq_position[0] + 1200), "y": int(env.hq_position[1] + 800)},
+        "total_time": 140.0,
+        "remaining_work": 0.0,
+        "serfs_assigned": 0,
+        "site_id": 1001,
+    }
+    env.construction_sites.append(source_site)
+    source_pos = Position(x=source_site["position"]["x"], y=source_site["position"]["y"])
+    builders = env._select_idle_serfs_nearest_to(source_pos, 4)
+    assert len(builders) == 4
+    assert env._assign_specific_serfs_to_construction_site(builders, 0, quantity=4) == 4
+
+    env._release_serfs_from_site(source_site, register_cohort=True)
+
+    assert len(env.free_serf_cohorts) == 1
+    assert env.free_serf_cohorts[0]["base"] == "Kloster"
+    source_ids = set(env.free_serf_cohorts[0]["serf_ids"])
+    assert len(source_ids) == 4
+
+    env.current_flow = "build"
+    env.current_phase = ActionPhase.QUANTITY
+    env.pending_selections = {ActionPhase.SOURCE_CATEGORY: 7, ActionPhase.SOURCE_SPECIFIC: 0}
+    qty_mask = env._mask_quantity()
+    assert qty_mask[QUANTITY_VALUES.index(4)]
+    env.current_flow = None
+    env.current_phase = ActionPhase.MAIN
+    env.pending_selections = {}
+
+    building = "Wohnhaus_1"
+    category_idx = env._get_build_category_index(building)
+    category_buildings = env._get_buildings_for_build_category(category_idx)
+    env._execute_action(
+        "build",
+        {
+            ActionPhase.SOURCE_CATEGORY: 7,
+            ActionPhase.SOURCE_SPECIFIC: 0,
+            ActionPhase.QUANTITY: 1,  # QUANTITY_VALUES[1] == 2
+            ActionPhase.BUILD_CATEGORY: category_idx,
+            ActionPhase.BUILDING: category_buildings.index(building),
+            ActionPhase.POSITION_MODE: 0,
+            ActionPhase.POSITION_GROUP: 0,
+            ActionPhase.POSITION_INDEX: 0,
+        },
+    )
+
+    newest_site = env.construction_sites[-1]
+    assert newest_site["building"] == building
+    assert newest_site["serfs_assigned"] == 2
+    assigned_ids = {
+        env._ensure_serf_identity(serf)
+        for serf in env.production_system.serfs
+        if serf.build_site_id == newest_site["site_id"]
+    }
+    assert len(assigned_ids) == 2
+    assert assigned_ids <= source_ids
+    assert len(env.free_serf_cohorts) == 1
+    assert set(env.free_serf_cohorts[0]["serf_ids"]) == source_ids - assigned_ids
 
 
 def _grant_abundant_resources(env):

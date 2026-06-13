@@ -289,6 +289,7 @@ class Serf:
     position: Position
     target_resource: Optional[ResourceType] = None
     target_position: Optional[Position] = None
+    serf_id: Optional[int] = None  # Stable environment-side identity for exact source selection.
     extraction_timer: float = 0.0
     state: SerfState = SerfState.IDLE
     speed: int = 400  # Serf-Geschwindigkeit (aus PU_Serf.xml: Speed=400)

@@ -862,6 +862,26 @@ def _get_spatial_size():
     return 128
 
 
+def _get_int_env(name: str, default: int, minimum: int = 0) -> int:
+    raw = os.environ.get(name)
+    if raw is None or str(raw).strip() == "":
+        return int(default)
+    try:
+        return max(int(minimum), int(raw))
+    except (TypeError, ValueError):
+        return int(default)
+
+
+def _get_float_env(name: str, default: float, minimum: float = 0.0) -> float:
+    raw = os.environ.get(name)
+    if raw is None or str(raw).strip() == "":
+        return float(default)
+    try:
+        return max(float(minimum), float(raw))
+    except (TypeError, ValueError):
+        return float(default)
+
+
 def _get_env_init_param_names() -> set:
     try:
         sig = inspect.signature(SiedlerScharfschuetzenEnv.__init__)
@@ -1256,10 +1276,12 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
             resume_path, resume_steps = _find_latest_checkpoint(save_path)
 
     model = None
+    loaded_from_checkpoint = False
     if resume_path:
         try:
             print(f"Resume: lade Checkpoint {resume_path}")
             model = model_cls.load(resume_path, env=env, device=device)
+            loaded_from_checkpoint = True
             if hasattr(model, "count_completed_actions_only"):
                 model.count_completed_actions_only = _count_completed_action_steps()
             loaded_steps = int(getattr(model, "num_timesteps", 0) or 0)
@@ -1289,6 +1311,58 @@ def train(config: dict = None, save_path: str = "./siedler_model", profile_name:
             tensorboard_log=(f"{save_path}/tensorboard/" if tensorboard_enabled else None),
             count_completed_actions_only=_count_completed_action_steps(),
         )
+
+    bc_enabled = _env_truthy(os.environ.get("SIEDLER_BC_PRETRAIN", "1"))
+    if bc_enabled and not loaded_from_checkpoint:
+        try:
+            from expert_opening import behavior_cloning_pretrain
+
+            bc_env = _create_env_instance(
+                player_id=1,
+                use_spatial_obs=use_spatial_obs,
+                spatial_size=spatial_size,
+                reward_profile=reward_profile,
+            )
+            bc_episodes = _get_int_env("SIEDLER_BC_EPISODES", 2, minimum=1)
+            bc_max_micro_steps = _get_int_env("SIEDLER_BC_MAX_MICRO_STEPS", 2500, minimum=1)
+            bc_max_completed = _get_int_env("SIEDLER_BC_MAX_COMPLETED_ACTIONS", 220, minimum=1)
+            bc_epochs = _get_int_env("SIEDLER_BC_EPOCHS", 3, minimum=1)
+            bc_batch_size = _get_int_env("SIEDLER_BC_BATCH_SIZE", 512, minimum=1)
+            bc_lr = _get_float_env("SIEDLER_BC_LR", min(float(config["learning_rate"]), 1e-4), minimum=1e-7)
+            bc_seed = _get_int_env("SIEDLER_BC_SEED", 123, minimum=0)
+
+            print(
+                "Behavior Cloning: sammle Expert-Opening-Demos "
+                f"(episodes={bc_episodes}, epochs={bc_epochs}, batch={bc_batch_size})"
+            )
+            bc_stats = behavior_cloning_pretrain(
+                model,
+                bc_env,
+                episodes=bc_episodes,
+                max_micro_steps=bc_max_micro_steps,
+                max_completed_actions=bc_max_completed,
+                epochs=bc_epochs,
+                batch_size=bc_batch_size,
+                learning_rate=bc_lr,
+                seed=bc_seed,
+            )
+            try:
+                bc_env.close()
+            except Exception:
+                pass
+            print(
+                "Behavior Cloning fertig: "
+                f"samples={int(bc_stats['samples'])}, "
+                f"loss={bc_stats['loss_start']:.4f}->{bc_stats['loss_end']:.4f}, "
+                f"avg_completed={bc_stats['avg_completed_actions']:.1f}, "
+                f"fallbacks={int(bc_stats['fallback_actions'])}"
+            )
+        except Exception as exc:
+            print(f"Behavior Cloning uebersprungen/fehlgeschlagen: {exc}")
+    elif bc_enabled and loaded_from_checkpoint:
+        print("Behavior Cloning: uebersprungen, weil ein Checkpoint resumed wurde.")
+    else:
+        print("Behavior Cloning: deaktiviert (SIEDLER_BC_PRETRAIN=0).")
 
     print("\nTraining startet...")
     print("(Checkpoints werden automatisch gespeichert)")

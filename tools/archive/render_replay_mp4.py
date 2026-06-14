@@ -716,52 +716,69 @@ def _draw_frame(
     show_refiner_trips: bool = True,
     max_refiner_trips: int = 120,
     show_hud: bool = True,
+    show_debug_markers: bool = True,
 ) -> np.ndarray:
     grid_h = env.map_manager.grid.height
     grid_w = env.map_manager.grid.width
+    base_h, base_w = base.shape[:2]
+    px_scale_x = float(base_w) / max(1.0, float(grid_w))
+    px_scale_y = float(base_h) / max(1.0, float(grid_h))
+
+    def to_px(x: float, y: float) -> Tuple[int, int]:
+        gx, gy = _world_to_px(env, x, y, grid_w, grid_h)
+        px = max(0, min(base_w - 1, int(round(gx * px_scale_x))))
+        py = max(0, min(base_h - 1, int(round(gy * px_scale_y))))
+        return px, py
+
+    def px_len_x(world_len: float) -> int:
+        return max(1, int(round((float(world_len) / pathfinding.SCALE_X) * px_scale_x)))
+
+    def px_len_y(world_len: float) -> int:
+        return max(1, int(round((float(world_len) / pathfinding.SCALE_Y) * px_scale_y)))
 
     img = Image.fromarray(base.copy(), mode="RGB")
     draw = ImageDraw.Draw(img, mode="RGBA")
     font = ImageFont.load_default()
 
     # Ressourcen-Labels (Deposits / Shafts / Mine-Slots)
-    for category, cat_data in getattr(env, "deposit_categories", {}).items():
-        deposits = cat_data.get("deposits", [])
-        for idx, dep in enumerate(deposits, start=1):
-            if dep.get("remaining", 0) <= 0:
-                continue
-            x, y = _world_to_px(env, dep.get("x", 0), dep.get("y", 0), grid_w, grid_h)
-            draw.rectangle((x - 2, y - 2, x + 2, y + 2), fill=(250, 225, 80, 230))
-            if label_entities:
-                draw.text((x + 3, y - 9), f"D-{category[:1]}{idx}", fill=(255, 245, 180, 230), font=font)
+    if show_debug_markers:
+        for category, cat_data in getattr(env, "deposit_categories", {}).items():
+            deposits = cat_data.get("deposits", [])
+            for idx, dep in enumerate(deposits, start=1):
+                if dep.get("remaining", 0) <= 0:
+                    continue
+                x, y = to_px(dep.get("x", 0), dep.get("y", 0))
+                draw.rectangle((x - 2, y - 2, x + 2, y + 2), fill=(250, 225, 80, 230))
+                if label_entities:
+                    draw.text((x + 3, y - 9), f"D-{category[:1]}{idx}", fill=(255, 245, 180, 230), font=font)
 
-    for category, cat_data in getattr(env, "shaft_categories", {}).items():
-        shafts = cat_data.get("shafts", [])
-        for idx, shaft in enumerate(shafts, start=1):
-            if shaft.get("remaining", 0) <= 0:
-                continue
-            x, y = _world_to_px(env, shaft.get("x", 0), shaft.get("y", 0), grid_w, grid_h)
-            draw.rectangle((x - 2, y - 2, x + 2, y + 2), fill=(255, 180, 70, 230))
-            if label_entities:
-                draw.text((x + 3, y + 2), f"S-{category[:1]}{idx}", fill=(255, 215, 140, 230), font=font)
+        for category, cat_data in getattr(env, "shaft_categories", {}).items():
+            shafts = cat_data.get("shafts", [])
+            for idx, shaft in enumerate(shafts, start=1):
+                if shaft.get("remaining", 0) <= 0:
+                    continue
+                x, y = to_px(shaft.get("x", 0), shaft.get("y", 0))
+                draw.rectangle((x - 2, y - 2, x + 2, y + 2), fill=(255, 180, 70, 230))
+                if label_entities:
+                    draw.text((x + 3, y + 2), f"S-{category[:1]}{idx}", fill=(255, 215, 140, 230), font=font)
 
-    for mine_type, slots in getattr(env, "mine_positions", {}).items():
-        built_set = set()
-        for pos in getattr(env, "built_mines", {}).get(mine_type, []):
-            if isinstance(pos, dict):
-                built_set.add((int(round(pos.get("x", 0))), int(round(pos.get("y", 0)))))
-            else:
-                built_set.add((int(round(pos[0])), int(round(pos[1]))))
-        for idx, slot in enumerate(slots, start=1):
-            sx = slot.get("x", 0) if isinstance(slot, dict) else slot[0]
-            sy = slot.get("y", 0) if isinstance(slot, dict) else slot[1]
-            x, y = _world_to_px(env, sx, sy, grid_w, grid_h)
-            is_built = (int(round(sx)), int(round(sy))) in built_set
-            color = (255, 90, 90, 230) if is_built else (210, 90, 90, 150)
-            draw.rectangle((x - 3, y - 3, x + 3, y + 3), outline=color, width=1)
-            if label_entities:
-                status = "B" if is_built else "F"
-                draw.text((x + 3, y - 10), f"M-{mine_type[:1]}{idx}{status}", fill=(255, 170, 170, 220), font=font)
+        for mine_type, slots in getattr(env, "mine_positions", {}).items():
+            built_set = set()
+            for pos in getattr(env, "built_mines", {}).get(mine_type, []):
+                if isinstance(pos, dict):
+                    built_set.add((int(round(pos.get("x", 0))), int(round(pos.get("y", 0)))))
+                else:
+                    built_set.add((int(round(pos[0])), int(round(pos[1]))))
+            for idx, slot in enumerate(slots, start=1):
+                sx = slot.get("x", 0) if isinstance(slot, dict) else slot[0]
+                sy = slot.get("y", 0) if isinstance(slot, dict) else slot[1]
+                x, y = to_px(sx, sy)
+                is_built = (int(round(sx)), int(round(sy))) in built_set
+                color = (255, 90, 90, 230) if is_built else (210, 90, 90, 150)
+                draw.rectangle((x - 3, y - 3, x + 3, y + 3), outline=color, width=1)
+                if label_entities:
+                    status = "B" if is_built else "F"
+                    draw.text((x + 3, y - 10), f"M-{mine_type[:1]}{idx}{status}", fill=(255, 170, 170, 220), font=font)
 
     # Gebaeude + Baustellen
     for key, pos in env.building_position_map.items():
@@ -771,22 +788,24 @@ def _draw_frame(
         building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
         base_name = get_base_building_name(building_name)
         bw, bh = BUILDING_FOOTPRINTS.get(base_name, (400, 400))
-        cx, cy = _world_to_px(env, xy[0], xy[1], grid_w, grid_h)
-        rx = max(1, int(round((bw / pathfinding.SCALE_X) / 2.0)))
-        ry = max(1, int(round((bh / pathfinding.SCALE_Y) / 2.0)))
-        draw.rectangle((cx - rx, cy - ry, cx + rx, cy + ry), outline=(255, 90, 90, 220), width=1)
-        if label_entities:
-            draw.text((cx - rx, cy - ry - 9), _short_building_label(base_name), fill=(255, 220, 220, 230), font=font)
+        cx, cy = to_px(xy[0], xy[1])
+        rx = max(1, px_len_x(bw) // 2)
+        ry = max(1, px_len_y(bh) // 2)
+        if show_debug_markers:
+            draw.rectangle((cx - rx, cy - ry, cx + rx, cy + ry), outline=(255, 90, 90, 220), width=1)
+            if label_entities:
+                draw.text((cx - rx, cy - ry - 9), _short_building_label(base_name), fill=(255, 220, 220, 230), font=font)
 
     for site in env.construction_sites:
         xy = _as_xy(site.get("position"))
         if xy is None:
             continue
-        x, y = _world_to_px(env, xy[0], xy[1], grid_w, grid_h)
-        draw.rectangle((x - 3, y - 3, x + 3, y + 3), fill=(255, 170, 40, 230))
-        if label_entities:
-            site_name = _short_building_label(site.get("building", "site"))
-            draw.text((x + 4, y - 9), f"site:{site_name}", fill=(255, 210, 130, 230), font=font)
+        x, y = to_px(xy[0], xy[1])
+        if show_debug_markers:
+            draw.rectangle((x - 3, y - 3, x + 3, y + 3), fill=(255, 170, 40, 230))
+            if label_entities:
+                site_name = _short_building_label(site.get("building", "site"))
+                draw.text((x + 4, y - 9), f"site:{site_name}", fill=(255, 210, 130, 230), font=font)
 
     # Pfade
     if draw_paths:
@@ -795,7 +814,7 @@ def _draw_frame(
             if path_count >= max_paths:
                 break
             points = [
-                _world_to_px(env, x, y, grid_w, grid_h)
+                to_px(x, y)
                 for x, y in _remaining_path_points(worker)
             ]
             if len(points) >= 2:
@@ -806,7 +825,7 @@ def _draw_frame(
             if path_count >= max_paths:
                 break
             points = [
-                _world_to_px(env, x, y, grid_w, grid_h)
+                to_px(x, y)
                 for x, y in _remaining_path_points(serf)
             ]
             if len(points) >= 2:
@@ -814,7 +833,7 @@ def _draw_frame(
                 path_count += 1
 
     # Refiner-Trips (visualisiert den berechneten Rohstoff-Transport)
-    if show_refiner_trips:
+    if show_refiner_trips and show_debug_markers:
         speed_bonus = getattr(env.workforce_manager, "speed_bonus", 0)
         trip_count = 0
         for refiner in env.production_system.refiners.values():
@@ -835,7 +854,7 @@ def _draw_frame(
                 continue
 
             # Pfadlinie
-            line_points = [_world_to_px(env, x, y, grid_w, grid_h) for x, y in points]
+            line_points = [to_px(x, y) for x, y in points]
             if len(line_points) >= 2:
                 draw.line(line_points, fill=(255, 120, 120, 110), width=1)
 
@@ -850,7 +869,7 @@ def _draw_frame(
                 else:
                     d = total * ((1.0 - phase) * 2.0)
                     px, py = _point_along_path(points, cum, total - d)
-                rx, ry = _world_to_px(env, px, py, grid_w, grid_h)
+                rx, ry = to_px(px, py)
                 draw.ellipse((rx - 2, ry - 2, rx + 2, ry + 2), fill=(255, 90, 90, 230))
             trip_count += 1
 
@@ -859,34 +878,36 @@ def _draw_frame(
         xy = _as_xy(getattr(worker, "position", None))
         if xy is None:
             continue
-        x, y = _world_to_px(env, xy[0], xy[1], grid_w, grid_h)
+        x, y = to_px(xy[0], xy[1])
         state_value = getattr(worker.state, "value", str(getattr(worker, "state", "working")))
-        color = _worker_color(state_value) if show_worker_states else (70, 220, 255, 230)
-        draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=color)
-        if label_entities:
-            short_state = state_value[:2].upper()
-            draw.text((x + 2, y - 2), f"W{short_state}", fill=(170, 240, 255, 230), font=font)
-        if show_worker_targets:
+        if show_debug_markers:
+            color = _worker_color(state_value) if show_worker_states else (70, 220, 255, 230)
+            draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=color)
+            if label_entities:
+                short_state = state_value[:2].upper()
+                draw.text((x + 2, y - 2), f"W{short_state}", fill=(170, 240, 255, 230), font=font)
+        if show_worker_targets and show_debug_markers:
             tgt = _as_xy(getattr(worker, "final_destination", None)) or _as_xy(getattr(worker, "target_position", None))
             if tgt is not None:
-                tx, ty = _world_to_px(env, tgt[0], tgt[1], grid_w, grid_h)
+                tx, ty = to_px(tgt[0], tgt[1])
                 draw.ellipse((tx - 2, ty - 2, tx + 2, ty + 2), outline=(120, 220, 255, 180), width=1)
 
     for serf in env.production_system.serfs:
         xy = _as_xy(getattr(serf, "position", None))
         if xy is None:
             continue
-        x, y = _world_to_px(env, xy[0], xy[1], grid_w, grid_h)
+        x, y = to_px(xy[0], xy[1])
         state_value = getattr(serf.state, "value", str(getattr(serf, "state", "idle")))
-        color = _serf_color(state_value) if show_worker_states else (255, 205, 70, 230)
-        draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=color)
-        if label_entities:
-            short_state = state_value[:2].upper()
-            draw.text((x + 2, y + 1), f"S{short_state}", fill=(255, 228, 140, 230), font=font)
-        if show_worker_targets:
+        if show_debug_markers:
+            color = _serf_color(state_value) if show_worker_states else (255, 205, 70, 230)
+            draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=color)
+            if label_entities:
+                short_state = state_value[:2].upper()
+                draw.text((x + 2, y + 1), f"S{short_state}", fill=(255, 228, 140, 230), font=font)
+        if show_worker_targets and show_debug_markers:
             tgt = _as_xy(getattr(serf, "target_position", None))
             if tgt is not None:
-                tx, ty = _world_to_px(env, tgt[0], tgt[1], grid_w, grid_h)
+                tx, ty = to_px(tgt[0], tgt[1])
                 draw.ellipse((tx - 2, ty - 2, tx + 2, ty + 2), outline=(255, 200, 120, 180), width=1)
 
     if show_hud:

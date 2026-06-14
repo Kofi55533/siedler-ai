@@ -399,7 +399,7 @@ def _make_mesh_preview(source: Path, output_dir: Path, thumb_size: int) -> Path 
         py = margin + (point[1] - min_y) * scale
         return px, py
 
-    canvas = Image.new("RGBA", (thumb_size, thumb_size), (14, 17, 18, 255))
+    canvas = Image.new("RGBA", (thumb_size, thumb_size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(canvas, "RGBA")
     colors = [
         (185, 156, 99, 66),
@@ -425,7 +425,7 @@ def _make_mesh_preview(source: Path, output_dir: Path, thumb_size: int) -> Path 
 
     target = output_dir / "meshes" / f"{_safe_name(source)}.png"
     target.parent.mkdir(parents=True, exist_ok=True)
-    canvas.convert("RGB").save(target, quality=92)
+    canvas.save(target)
     return target
 
 

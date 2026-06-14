@@ -23,6 +23,7 @@ if str(ROOT_DIR) not in sys.path:
 from environment import ActionPhase, SiedlerScharfschuetzenEnv
 from expert_opening import ExpertOpeningController
 from tools.archive.export_original_graphics import export_original_graphics_report
+from tools.archive.render_wintersturm_background import render_background as render_wintersturm_background
 from tools.archive import render_replay_mp4 as replay
 
 
@@ -32,7 +33,7 @@ def _parse_args():
     parser.add_argument("--frame-every", type=int, default=1)
     parser.add_argument("--seed", type=int, default=11)
     parser.add_argument("--render-scale", type=int, default=5)
-    parser.add_argument("--background", type=str, default="training_p1_map_preview.png")
+    parser.add_argument("--background", type=str, default="", help="Optionaler Kartenhintergrund. Leer = Wintersturm-Originalkarte automatisch rendern")
     parser.add_argument("--output-dir", type=str, default="analysis/replays/expert_opening_interactive")
     parser.add_argument("--strategy", choices=["expert_opening", "opening_v1", "random"], default="expert_opening")
     parser.add_argument("--sim-mode", choices=["full_sim", "fast_train", ""], default="full_sim")
@@ -41,6 +42,9 @@ def _parse_args():
     parser.add_argument("--labels", action="store_true", help="Textlabels direkt ins Kartenbild zeichnen")
     parser.add_argument("--hud", action="store_true", help="HUD direkt ins Kartenbild zeichnen")
     parser.add_argument("--no-paths", action="store_true")
+    parser.add_argument("--wintersturm-background-size", type=int, default=1536, help="Aufloesung der automatisch gerenderten Wintersturm-Karte")
+    parser.add_argument("--no-wintersturm-background", action="store_true", help="Keine automatisch gerenderte Wintersturm-Karte verwenden")
+    parser.add_argument("--entity-render-mode", choices=["mesh", "gui", "none"], default="mesh", help="Karten-Entitaeten als DFF-Mesh-Sprites, GUI-Icons oder gar nicht ueberblenden")
     parser.add_argument(
         "--game-root",
         type=str,
@@ -48,7 +52,7 @@ def _parse_args():
         help="Pfad zur Siedler-5/Gold-Edition. Wenn gesetzt/gefunden, werden lokale Original-GUI-Assets genutzt.",
     )
     parser.add_argument("--no-game-assets", action="store_true", help="Keine Original-Spielgrafiken in das Replay kopieren")
-    parser.add_argument("--no-game-icon-overlay", action="store_true", help="Keine Original-Icons in die Kartenframes zeichnen")
+    parser.add_argument("--no-game-icon-overlay", action="store_true", help="Keine Original-Entitaets-Overlays in die Kartenframes zeichnen")
     parser.add_argument("--no-original-graphics-report", action="store_true", help="Keinen DFF/DDS/ANM-Originalgrafik-Report erzeugen")
     parser.add_argument("--refresh-original-graphics-report", action="store_true", help="Originalgrafik-Report neu erzeugen, auch wenn er schon existiert")
     return parser.parse_args()
@@ -188,13 +192,16 @@ def _export_original_graphics(
 
     sample_keys = ("serf_idle", "headquarters_1", "university_1", "tree_fir")
     sample_meshes: dict[str, str] = {}
+    mesh_by_key: dict[str, str] = {}
     for entity in manifest.get("entities", []):
         key = str(entity.get("key", ""))
-        if key not in sample_keys:
-            continue
         preview = str(entity.get("mesh_preview", "") or "")
         preview_path = report_dir / preview if preview else None
-        sample_meshes[key] = _rel_asset(output_dir, preview_path)
+        rel_preview = _rel_asset(output_dir, preview_path)
+        if rel_preview:
+            mesh_by_key[key] = rel_preview
+        if key in sample_keys:
+            sample_meshes[key] = rel_preview
 
     return {
         "enabled": bool(manifest.get("enabled")),
@@ -202,8 +209,46 @@ def _export_original_graphics(
         "manifest": _rel_asset(output_dir, manifest_path),
         "summary": manifest.get("summary", {}),
         "sample_meshes": sample_meshes,
+        "mesh_by_key": mesh_by_key,
         "notes": manifest.get("notes", []),
     }
+
+
+def _resolve_replay_background(args, output_dir: Path, game_root: Path | None) -> str:
+    if args.background:
+        return str(args.background)
+    if args.no_wintersturm_background or game_root is None:
+        fallback = ROOT_DIR / "training_p1_map_preview.png"
+        return str(fallback) if fallback.exists() else ""
+
+    target = output_dir / "assets" / "wintersturm_p1_original_map.png"
+    if not target.exists():
+        render_wintersturm_background(
+            game_root,
+            target,
+            size=max(512, int(args.wintersturm_background_size)),
+            draw_objects=True,
+        )
+    return str(target)
+
+
+def _make_html_base_image(env, args) -> np.ndarray:
+    grid_h = env.map_manager.grid.height
+    grid_w = env.map_manager.grid.width
+    render_scale = max(1, int(getattr(args, "render_scale", 1) or 1))
+    background_path = str(getattr(args, "_resolved_background", "") or "")
+    if background_path and Path(background_path).exists():
+        img = Image.open(background_path).convert("RGB")
+        if getattr(env, "_background_crop_p1", False):
+            bw, bh = img.size
+            img = img.crop((bw // 2, 0, bw, bh // 2))
+        target_size = (grid_w * render_scale, grid_h * render_scale)
+        img = img.resize(target_size, Image.Resampling.BILINEAR)
+        args._base_render_scaled = True
+        return np.asarray(img, dtype=np.uint8)
+
+    args._base_render_scaled = False
+    return replay._make_base_image(env, background_path or None)
 
 
 def _timeline_entry(env, frame_name: str, decision: int, action_label: str) -> dict:
@@ -250,7 +295,7 @@ def _timeline_entry(env, frame_name: str, decision: int, action_label: str) -> d
     }
 
 
-_ICON_CACHE: dict[tuple[str, int], Image.Image] = {}
+_ICON_CACHE: dict[tuple[str, int, int], Image.Image] = {}
 
 
 def _asset_path_for_render(args, key: str) -> Path | None:
@@ -262,11 +307,21 @@ def _asset_path_for_render(args, key: str) -> Path | None:
     return path if path.exists() else None
 
 
-def _load_render_icon(args, key: str, size: int) -> Image.Image | None:
-    path = _asset_path_for_render(args, key)
+def _mesh_path_for_render(args, key: str) -> Path | None:
+    manifest = getattr(args, "_game_assets", None) or {}
+    original_graphics = manifest.get("original_graphics") or {}
+    rel_path = (original_graphics.get("mesh_by_key") or {}).get(key) or ""
+    if not rel_path:
+        return None
+    path = Path(getattr(args, "_output_dir", ".")) / rel_path
+    return path if path.exists() else None
+
+
+def _load_render_icon(args, key: str, size: int, *, mesh: bool = False) -> Image.Image | None:
+    path = _mesh_path_for_render(args, key) if mesh else _asset_path_for_render(args, key)
     if path is None:
         return None
-    cache_key = (str(path), int(size))
+    cache_key = (str(path), int(size), int(bool(mesh)))
     cached = _ICON_CACHE.get(cache_key)
     if cached is not None:
         return cached
@@ -283,6 +338,64 @@ def _load_render_icon(args, key: str, size: int) -> Image.Image | None:
     icon.thumbnail((size, size), Image.Resampling.LANCZOS)
     _ICON_CACHE[cache_key] = icon
     return icon
+
+
+def _building_mesh_key(building_name: str) -> str:
+    normalized = replay.get_base_building_name(building_name).lower()
+    if "hauptquartier" in normalized or "headquarter" in normalized:
+        return "headquarters_1"
+    if "hochschule" in normalized or "university" in normalized:
+        return "university_1"
+    if "kloster" in normalized or "monastery" in normalized:
+        return "monastery_1"
+    if "dorfzentrum" in normalized or "village" in normalized:
+        return "village_center_1"
+    if "wohnhaus" in normalized or "residence" in normalized:
+        return "residence_1"
+    if "bauernhof" in normalized or "farm" in normalized:
+        return "farm_1"
+    if "lehm" in normalized:
+        return "clay_mine_1"
+    if "eisen" in normalized:
+        return "iron_mine_1"
+    if "stein" in normalized:
+        return "stone_mine_1"
+    if "schwefel" in normalized or "sulfur" in normalized:
+        return "sulfur_mine_1"
+    if "mine" in normalized or "grube" in normalized:
+        return "generic_mine_site"
+    return "headquarters_1"
+
+
+def _worker_mesh_key(worker) -> str:
+    worker_type = str(getattr(worker, "worker_type", "") or "").lower()
+    if "miner" in worker_type:
+        return "worker_miner"
+    if "sawmill" in worker_type:
+        return "worker_sawmill"
+    if "stone" in worker_type:
+        return "worker_stonecutter"
+    if "brick" in worker_type:
+        return "worker_brickmaker"
+    if "farmer" in worker_type:
+        return "worker_farmer"
+    if "scholar" in worker_type:
+        return "worker_scholar"
+    if "priest" in worker_type:
+        return "worker_priest"
+    return "worker_sawmill"
+
+
+def _serf_mesh_key(serf) -> str:
+    state = str(getattr(getattr(serf, "state", None), "value", getattr(serf, "state", ""))).lower()
+    resource = str(getattr(serf, "assigned_resource", "") or getattr(serf, "resource", "") or "").lower()
+    if "build" in state:
+        return "serf_build"
+    if "wood" in resource or "wood" in state or "holz" in resource:
+        return "serf_wood"
+    if any(token in resource for token in ("stone", "clay", "iron", "sulfur", "stein", "lehm", "eisen", "schwefel")):
+        return "serf_mine"
+    return "serf_idle"
 
 
 def _building_icon_key(building_name: str) -> str:
@@ -312,10 +425,12 @@ def _paste_centered_icon(canvas: Image.Image, icon: Image.Image | None, x: int, 
 
 def _overlay_game_icons(env, frame: np.ndarray, args) -> np.ndarray:
     manifest = getattr(args, "_game_assets", None) or {}
-    if not manifest.get("enabled") or getattr(args, "no_game_icon_overlay", False):
+    mode = str(getattr(args, "entity_render_mode", "mesh") or "mesh")
+    if not manifest.get("enabled") or getattr(args, "no_game_icon_overlay", False) or mode == "none":
         return frame
     if getattr(args, "viewport", "full") != "full":
         return frame
+    use_mesh = mode == "mesh" and bool((manifest.get("original_graphics") or {}).get("mesh_by_key"))
 
     grid_h = env.map_manager.grid.height
     grid_w = env.map_manager.grid.width
@@ -333,29 +448,45 @@ def _overlay_game_icons(env, frame: np.ndarray, args) -> np.ndarray:
             continue
         building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
         x, y = world_to_frame(xy[0], xy[1])
-        _paste_centered_icon(canvas, _load_render_icon(args, _building_icon_key(building_name), 34), x, y)
+        if use_mesh:
+            icon = _load_render_icon(args, _building_mesh_key(building_name), 58, mesh=True)
+        else:
+            icon = _load_render_icon(args, _building_icon_key(building_name), 34)
+        _paste_centered_icon(canvas, icon, x, y)
 
     for site in getattr(env, "construction_sites", []):
         xy = replay._as_xy(site.get("position"))
         if xy is None:
             continue
         x, y = world_to_frame(xy[0], xy[1])
-        _paste_centered_icon(canvas, _load_render_icon(args, "site", 30), x, y)
+        if use_mesh:
+            icon = _load_render_icon(args, _building_mesh_key(site.get("building", "")), 48, mesh=True)
+        else:
+            icon = _load_render_icon(args, "site", 30)
+        _paste_centered_icon(canvas, icon, x, y)
 
-    worker_icon = _load_render_icon(args, "worker", 18)
     for worker in getattr(env.workforce_manager, "workers", []):
         xy = replay._as_xy(getattr(worker, "position", None))
         if xy is None:
             continue
         x, y = world_to_frame(xy[0], xy[1])
+        worker_icon = (
+            _load_render_icon(args, _worker_mesh_key(worker), 24, mesh=True)
+            if use_mesh
+            else _load_render_icon(args, "worker", 18)
+        )
         _paste_centered_icon(canvas, worker_icon, x, y)
 
-    serf_icon = _load_render_icon(args, "serf", 20)
     for serf in getattr(env.production_system, "serfs", []):
         xy = replay._as_xy(getattr(serf, "position", None))
         if xy is None:
             continue
         x, y = world_to_frame(xy[0], xy[1])
+        serf_icon = (
+            _load_render_icon(args, _serf_mesh_key(serf), 24, mesh=True)
+            if use_mesh
+            else _load_render_icon(args, "serf", 20)
+        )
         _paste_centered_icon(canvas, serf_icon, x, y)
 
     return np.asarray(canvas.convert("RGB"), dtype=np.uint8)
@@ -367,7 +498,7 @@ def _render_frame(env, base, decision: int, total: int, action_label: str, args)
         base,
         decision,
         total,
-        draw_paths=not args.no_paths,
+        draw_paths=(not args.no_paths) and bool(args.labels),
         max_paths=1200,
         action_label=action_label,
         label_entities=bool(args.labels),
@@ -376,9 +507,11 @@ def _render_frame(env, base, decision: int, total: int, action_label: str, args)
         show_refiner_trips=True,
         max_refiner_trips=120,
         show_hud=bool(args.hud),
+        show_debug_markers=bool(args.labels or args.hud),
     )
     frame = replay._apply_viewport(frame, args.viewport)
-    frame = replay._scale_frame(frame, args.render_scale)
+    if not bool(getattr(args, "_base_render_scaled", False)):
+        frame = replay._scale_frame(frame, args.render_scale)
     frame = _overlay_game_icons(env, frame, args)
     return frame
 
@@ -431,7 +564,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     body {
       display: grid;
       grid-template-rows: auto auto 1fr;
-      min-width: 860px;
+      min-width: 0;
       overflow: hidden;
     }
     .resourcebar {
@@ -578,7 +711,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }
     .controlbar {
       display: grid;
-      grid-template-columns: auto auto auto minmax(260px, 1fr) auto auto;
+      grid-template-columns: auto auto auto minmax(260px, 1fr) auto auto auto;
       gap: 8px;
       align-items: center;
       padding: 6px 10px;
@@ -853,11 +986,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     <button class="toolbutton" id="next">Weiter</button>
     <input id="slider" type="range" min="0" max="__MAX_INDEX__" value="0">
     <select id="speed">
-      <option value="1200">sehr langsam</option>
-      <option value="700" selected>langsam</option>
-      <option value="350">normal</option>
-      <option value="120">schnell</option>
+      <option value="1500">0.66x</option>
+      <option value="1000" selected>1x Echtzeit</option>
+      <option value="500">2x</option>
+      <option value="250">4x</option>
     </select>
+    <button class="toolbutton" id="fullscreen">Vollbild</button>
     <span class="keycap">Space</span>
   </div>
   <div id="stage" class="stage">
@@ -888,7 +1022,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
             <img src="__MESH_TREE__" alt="Baum Mesh">
           </div>
         </div>
-        <button class="toolbutton" id="fit" style="margin-top:10px;">Ansicht reset</button>
+        <button class="toolbutton" id="fit" style="margin-top:10px;">HQ Kamera</button>
       </div>
       <div class="minimap">
         <div class="minimap-title"><span>Karte</span><span id="zoomLevel">100%</span></div>
@@ -912,6 +1046,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const stage = document.getElementById('stage');
     const slider = document.getElementById('slider');
     const playBtn = document.getElementById('play');
+    const fullscreenBtn = document.getElementById('fullscreen');
     const speed = document.getElementById('speed');
     const headline = document.getElementById('headline');
     const action = document.getElementById('action');
@@ -938,6 +1073,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     let dragging = false;
     let lastX = 0;
     let lastY = 0;
+    const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
+    const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
+    const INITIAL_CAMERA_SCALE = __INITIAL_CAMERA_SCALE__;
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
@@ -980,6 +1118,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       scale = Math.min(sx, sy) * 0.98;
       tx = (stage.clientWidth - MAP_WIDTH * scale) / 2;
       ty = (stage.clientHeight - MAP_HEIGHT * scale) / 2;
+      applyTransform();
+    }
+    function focusInitialCamera() {
+      const fullFit = Math.min(stage.clientWidth / MAP_WIDTH, stage.clientHeight / MAP_HEIGHT);
+      scale = Math.max(fullFit * 1.05, INITIAL_CAMERA_SCALE);
+      tx = stage.clientWidth / 2 - INITIAL_CAMERA_X * scale;
+      ty = stage.clientHeight / 2 - INITIAL_CAMERA_Y * scale;
       applyTransform();
     }
     function updatePayday(f) {
@@ -1026,8 +1171,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       mini.src = f.frame;
       slider.value = idx;
       const lastDecision = timeline[timeline.length - 1].decision;
-      headline.innerHTML = `<span class="playing-dot"></span>t=${f.time}s - Step ${f.decision}/${lastDecision}`;
-      action.textContent = f.action;
+      headline.innerHTML = `<span class="playing-dot"></span>Simzeit ${fmtTime(f.time)}`;
+      action.textContent = `Aktion ${f.decision}/${lastDecision}: ${f.action}`;
       setText('statBuildings', fmt(f.buildings));
       setText('statSites', fmt(f.sites));
       setText('statSerfs', fmt(f.serfs));
@@ -1066,13 +1211,20 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     document.getElementById('prev').onclick = () => step(-1);
     document.getElementById('next').onclick = () => step(1);
     playBtn.onclick = play;
+    fullscreenBtn.onclick = async () => {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    };
     speed.onchange = () => {
       if (!timer) return;
       stopPlayback();
       play();
     };
     slider.oninput = e => show(Number(e.target.value));
-    document.getElementById('fit').onclick = fit;
+    document.getElementById('fit').onclick = focusInitialCamera;
     stage.addEventListener('wheel', e => {
       e.preventDefault();
       const rect = stage.getBoundingClientRect();
@@ -1121,9 +1273,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (e.key === 'ArrowLeft') step(-1);
       if (e.key === 'ArrowRight') step(1);
     });
-    window.addEventListener('resize', fit);
+    window.addEventListener('resize', focusInitialCamera);
     show(0);
-    fit();
+    focusInitialCamera();
   </script>
 </body>
 </html>
@@ -1134,6 +1286,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         "__HEIGHT__": str(int(height)),
         "__MAX_INDEX__": str(max(0, len(timeline) - 1)),
         "__GAME_ASSET_CLASS__": "has-game-assets" if game_assets.get("enabled") else "",
+        "__INITIAL_CAMERA_X__": str(int(round(width * ((41100.0 - 25240.0) / 25240.0)))),
+        "__INITIAL_CAMERA_Y__": str(int(round(height * (23100.0 / 25248.0)))),
+        "__INITIAL_CAMERA_SCALE__": "2.15",
     }
     blank_asset = "data:image/gif;base64,R0lGODlhAQABAAAAACw="
     asset_replacements = {
@@ -1180,6 +1335,7 @@ def main() -> None:
     frames_dir = output_dir / "frames"
     frames_dir.mkdir(parents=True, exist_ok=True)
     game_root = _find_game_root(args.game_root)
+    args._resolved_background = _resolve_replay_background(args, output_dir, game_root)
     game_assets = _export_game_assets(output_dir, game_root, bool(args.no_game_assets))
     game_assets["original_graphics"] = _export_original_graphics(
         output_dir,
@@ -1193,7 +1349,7 @@ def main() -> None:
     env = SiedlerScharfschuetzenEnv(render_mode=None, use_spatial_obs=False)
     env.reset(seed=args.seed)
     rng = np.random.default_rng(args.seed)
-    base = replay._make_base_image(env, args.background)
+    base = _make_html_base_image(env, args)
     controller = ExpertOpeningController() if args.strategy == "expert_opening" else None
     opening_state = replay.OpeningPolicyState() if args.strategy == "opening_v1" else None
 

@@ -373,6 +373,7 @@ def _extract_geometry(data: bytes, chunk_offset: int, chunk_size: int) -> dict |
     offset += 8 * triangle_count
 
     vertices: list[tuple[float, float, float]] = []
+    normals: list[tuple[float, float, float]] = []
     if offset + 24 <= len(payload):
         offset += 16  # bounding sphere center/radius
         has_vertices, has_normals = struct.unpack_from("<II", payload, offset)
@@ -382,7 +383,12 @@ def _extract_geometry(data: bytes, chunk_offset: int, chunk_size: int) -> dict |
                 struct.unpack_from("<fff", payload, offset + index * 12)
                 for index in range(vertex_count)
             ]
-        if has_normals:
+            offset += 12 * vertex_count
+        if has_normals and offset + 12 * vertex_count <= len(payload):
+            normals = [
+                struct.unpack_from("<fff", payload, offset + index * 12)
+                for index in range(vertex_count)
+            ]
             offset += 12 * vertex_count
 
     return {
@@ -395,6 +401,7 @@ def _extract_geometry(data: bytes, chunk_offset: int, chunk_size: int) -> dict |
         "parsed_triangles": triangles,
         "parsed_triangle_materials": triangle_materials,
         "parsed_vertices": vertices,
+        "parsed_normals": normals,
         "parsed_uvs": uvs,
         "material_textures": _extract_material_textures(data, chunk_offset, chunk_size),
     }
@@ -419,6 +426,7 @@ def inspect_dff(path: Path) -> dict:
                 geometry.pop("parsed_triangles", None)
                 geometry.pop("parsed_triangle_materials", None)
                 geometry.pop("parsed_vertices", None)
+                geometry.pop("parsed_normals", None)
                 geometry.pop("parsed_uvs", None)
                 geometries.append(geometry)
     return {
@@ -780,6 +788,13 @@ def _round_float(value: float) -> float:
     return round(float(value), 5)
 
 
+def _normalize_vector(x: float, y: float, z: float) -> tuple[float, float, float]:
+    length = math.sqrt(x * x + y * y + z * z)
+    if length <= 1e-8:
+        return 0.0, 1.0, 0.0
+    return x / length, y / length, z / length
+
+
 def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path | None:
     try:
         meshes = _collect_meshes(source)
@@ -805,11 +820,13 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
     span_z = max(1.0, max_z - min_z)
 
     positions: list[float] = []
+    normals: list[float] = []
     uvs: list[float] = []
     submesh_map: dict[tuple[int, int, str], dict] = {}
     vertex_offset = 0
     for mesh_index, mesh in enumerate(meshes):
         vertices = mesh.get("parsed_vertices", [])
+        mesh_normals = mesh.get("parsed_normals", [])
         mesh_uvs = mesh.get("parsed_uvs", [])
         triangles = mesh.get("parsed_triangles", [])
         triangle_materials = mesh.get("parsed_triangle_materials", [])
@@ -824,6 +841,12 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
                     _round_float(-(float(vertex[1]) - center_y)),
                 ]
             )
+            if vertex_index < len(mesh_normals):
+                normal = mesh_normals[vertex_index]
+                nx, ny, nz = _normalize_vector(float(normal[0]), float(normal[2]), -float(normal[1]))
+                normals.extend([_round_float(nx), _round_float(ny), _round_float(nz)])
+            else:
+                normals.extend([0.0, 1.0, 0.0])
             if vertex_index < len(mesh_uvs):
                 u, v = mesh_uvs[vertex_index]
                 uvs.extend([_round_float(float(u) % 1.0), _round_float(1.0 - (float(v) % 1.0))])
@@ -854,6 +877,7 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
         "source": source.name,
         "format": "s5_dff_static_v1",
         "positions": positions,
+        "normals": normals,
         "uvs": uvs,
         "submeshes": list(submesh_map.values()),
         "bounds": {

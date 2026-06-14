@@ -326,14 +326,29 @@ def _make_terrain3d_payload(env, args) -> dict:
     vertical_scale = 185.0
 
     positions: list[float] = []
+    normals: list[float] = []
     uvs: list[float] = []
     walk_flags: list[int] = []
+    height_y = ((height_s - h_min) / h_span) * vertical_scale - 18.0
+    step_world_x = target_w / max(1, cols - 1)
+    step_world_z = target_h / max(1, rows - 1)
     for row in range(rows):
         z = -target_h / 2.0 + (row / max(1, rows - 1)) * target_h
         for col in range(cols):
             x = -target_w / 2.0 + (col / max(1, cols - 1)) * target_w
-            y = ((float(height_s[row, col]) - h_min) / h_span) * vertical_scale - 18.0
+            y = float(height_y[row, col])
             positions.extend([round(x, 4), round(y, 4), round(z, 4)])
+            left = float(height_y[row, max(0, col - 1)])
+            right = float(height_y[row, min(cols - 1, col + 1)])
+            up = float(height_y[max(0, row - 1), col])
+            down = float(height_y[min(rows - 1, row + 1), col])
+            tangent_x = (2.0 * step_world_x, right - left, 0.0)
+            tangent_z = (0.0, down - up, 2.0 * step_world_z)
+            nx = tangent_z[1] * tangent_x[2] - tangent_z[2] * tangent_x[1]
+            ny = tangent_z[2] * tangent_x[0] - tangent_z[0] * tangent_x[2]
+            nz = tangent_z[0] * tangent_x[1] - tangent_z[1] * tangent_x[0]
+            length = max(1e-8, float(np.sqrt(nx * nx + ny * ny + nz * nz)))
+            normals.extend([round(nx / length, 5), round(ny / length, 5), round(nz / length, 5)])
             uvs.extend([round(col / max(1, cols - 1), 6), round(row / max(1, rows - 1), 6)])
             walk_flags.append(1 if float(walk_s[row, col]) >= 0.5 else 0)
 
@@ -355,6 +370,7 @@ def _make_terrain3d_payload(env, args) -> dict:
         "height_max": round(h_max, 3),
         "vertical_scale": vertical_scale,
         "positions": positions,
+        "normals": normals,
         "uvs": uvs,
         "indices": indices,
         "walkable": walk_flags,
@@ -1773,21 +1789,31 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
 
       const vertexSource = `
         attribute vec3 a_position;
+        attribute vec3 a_normal;
         attribute vec2 a_uv;
         uniform mat4 u_matrix;
+        uniform mat4 u_world;
         varying vec2 v_uv;
+        varying vec3 v_normal;
         void main() {
           v_uv = a_uv;
+          v_normal = normalize((u_world * vec4(a_normal, 0.0)).xyz);
           gl_Position = u_matrix * vec4(a_position, 1.0);
         }
       `;
       const fragmentSource = `
         precision mediump float;
         varying vec2 v_uv;
+        varying vec3 v_normal;
         uniform sampler2D u_texture;
+        uniform vec3 u_light_dir;
+        uniform float u_ambient;
         void main() {
           vec4 color = texture2D(u_texture, v_uv);
           if (color.a < 0.08) discard;
+          float diffuse = max(dot(normalize(v_normal), normalize(u_light_dir)), 0.0);
+          float light = clamp(u_ambient + diffuse * 0.58, 0.32, 1.18);
+          color.rgb *= light;
           gl_FragColor = color;
         }
       `;
@@ -1810,9 +1836,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       }
       const locations = {
         position: gl.getAttribLocation(program, 'a_position'),
+        normal: gl.getAttribLocation(program, 'a_normal'),
         uv: gl.getAttribLocation(program, 'a_uv'),
         matrix: gl.getUniformLocation(program, 'u_matrix'),
+        world: gl.getUniformLocation(program, 'u_world'),
         texture: gl.getUniformLocation(program, 'u_texture'),
+        lightDir: gl.getUniformLocation(program, 'u_light_dir'),
+        ambient: gl.getUniformLocation(program, 'u_ambient'),
       };
 
       const modelCache = new Map();
@@ -1825,11 +1855,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
            MAP_WIDTH / 2, -1,  MAP_HEIGHT / 2,
           -MAP_WIDTH / 2, -1,  MAP_HEIGHT / 2,
         ],
+        [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
         [0, 0, 1, 0, 1, 1, 0, 1],
         [0, 1, 2, 0, 2, 3]
       );
       const terrainMesh = terrain3d.enabled
-        ? createStaticMesh(terrain3d.positions || [], terrain3d.uvs || [], terrain3d.indices || [])
+        ? createStaticMesh(terrain3d.positions || [], terrain3d.normals || [], terrain3d.uvs || [], terrain3d.indices || [])
         : mapQuad;
       const terrainRows = Number(terrain3d.rows || 0);
       const terrainCols = Number(terrain3d.cols || 0);
@@ -1858,10 +1889,16 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         return record;
       }
 
-      function createStaticMesh(positions, uvs, indices) {
+      function createStaticMesh(positions, normals, uvs, indices) {
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+        const normalValues = normals && normals.length === positions.length
+          ? normals
+          : Array.from({ length: positions.length / 3 }, () => [0, 1, 0]).flat();
+        const normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normalValues), gl.STATIC_DRAW);
         const uvBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uvs), gl.STATIC_DRAW);
@@ -1870,7 +1907,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const maxIndex = indices.reduce((max, value) => Math.max(max, Number(value || 0)), 0);
         const useUint32 = Boolean(uintIndexExt) && maxIndex > 65535;
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, useUint32 ? new Uint32Array(indices) : new Uint16Array(indices), gl.STATIC_DRAW);
-        return { positionBuffer, uvBuffer, indexBuffer, indexType: useUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, count: indices.length, maxSpan: Math.max(MAP_WIDTH, MAP_HEIGHT) };
+        return { positionBuffer, normalBuffer, uvBuffer, indexBuffer, indexType: useUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, count: indices.length, maxSpan: Math.max(MAP_WIDTH, MAP_HEIGHT) };
       }
 
       function loadJson(url) {
@@ -1899,6 +1936,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.positions || []), gl.STATIC_DRAW);
+        const normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+        const modelNormals = data.normals && data.normals.length === data.positions.length
+          ? data.normals
+          : Array.from({ length: (data.positions || []).length / 3 }, () => [0, 1, 0]).flat();
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelNormals), gl.STATIC_DRAW);
         const uvBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.uvs || []), gl.STATIC_DRAW);
@@ -1922,6 +1965,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         }
         return {
           positionBuffer,
+          normalBuffer,
           uvBuffer,
           submeshes,
           maxSpan: Number((data.bounds || {}).max_span || 100),
@@ -2039,6 +2083,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         gl.bindBuffer(gl.ARRAY_BUFFER, mesh.positionBuffer);
         gl.enableVertexAttribArray(locations.position);
         gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, mesh.normalBuffer);
+        gl.enableVertexAttribArray(locations.normal);
+        gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, mesh.uvBuffer);
         gl.enableVertexAttribArray(locations.uv);
         gl.vertexAttribPointer(locations.uv, 2, gl.FLOAT, false, 0, 0);
@@ -2046,6 +2093,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
 
       function drawSubmesh(vp, mesh, submesh, matrix) {
         gl.uniformMatrix4fv(locations.matrix, false, m4Multiply(vp, matrix));
+        gl.uniformMatrix4fv(locations.world, false, matrix);
+        gl.uniform3f(locations.lightDir, -0.42, 0.72, 0.54);
+        gl.uniform1f(locations.ambient, 0.48);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, submesh.texture.texture);
         gl.uniform1i(locations.texture, 0);
@@ -2108,6 +2158,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.modelErrors = String(lastStats.modelErrors);
         canvas.dataset.texturesCached = String(lastStats.texturesCached);
         canvas.dataset.terrain = String(lastStats.terrain);
+        canvas.dataset.lighting = "directional_normals";
       }
 
       let renderQueued = false;

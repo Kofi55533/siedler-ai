@@ -36,6 +36,7 @@ RW_GEOMETRY = 0x000F
 RW_CLUMP = 0x0010
 RW_ATOMIC = 0x0014
 RW_GEOMETRY_LIST = 0x001A
+RW_ANIMATION = 0x001B
 
 RW_CONTAINER_TYPES = {
     RW_EXTENSION,
@@ -437,6 +438,70 @@ def inspect_dff(path: Path) -> dict:
         "geometry_count": len(geometries),
         "geometries": geometries,
     }
+
+
+def _animation_role(path: Path) -> str:
+    name = path.stem.lower()
+    if "walk" in name:
+        return "walk"
+    if "run" in name:
+        return "run"
+    if "work" in name or "conveyor" in name or "pit_" in name or "door" in name:
+        return "work"
+    if "idle" in name:
+        return "idle"
+    if "ladder" in name:
+        return "ladder"
+    if "dying" in name or "death" in name:
+        return "death"
+    if "hit" in name:
+        return "hit"
+    if "attack" in name:
+        return "attack"
+    return "other"
+
+
+def inspect_anm(path: Path) -> dict:
+    """Parse the RenderWare ANM chunk header.
+
+    Settlers 5 animation files are RenderWare chunk type 0x1b. The first
+    20 payload bytes are enough to identify interpolation id, keyframe count
+    and original animation duration. Full skinning still needs the matching
+    HAnim hierarchy/skin data from the model.
+    """
+    data = path.read_bytes()
+    chunks = _read_chunks(data, 0, len(data))
+    root = chunks[0] if chunks else None
+    info: dict = {
+        "bytes": path.stat().st_size,
+        "root_chunk_type": int(root[2]) if root else None,
+        "rw_version": f"0x{root[4]:08x}" if root else "",
+        "chunk_count": len(chunks),
+        "role": _animation_role(path),
+        "parsed": False,
+    }
+    if not root or root[2] != RW_ANIMATION or root[3] < 20 or len(data) < 32:
+        return info
+
+    version, interp_id, keyframes, flags, duration = struct.unpack_from("<IIIIf", data, 12)
+    payload_bytes = int(root[3])
+    keyframe_bytes = 0
+    if keyframes > 0:
+        remaining = payload_bytes - 20
+        keyframe_bytes = int(remaining // keyframes) if remaining >= 0 and remaining % keyframes == 0 else 0
+
+    info.update(
+        {
+            "parsed": True,
+            "anim_version": int(version),
+            "interp_id": int(interp_id),
+            "keyframes": int(keyframes),
+            "flags": int(flags),
+            "duration": round(float(duration), 6),
+            "keyframe_bytes": keyframe_bytes,
+        }
+    )
+    return info
 
 
 def _collect_meshes(path: Path) -> list[dict]:
@@ -896,6 +961,48 @@ def _file_entries(game_root: Path, paths: list[Path]) -> list[dict]:
     return [{"name": path.name, "path": _rel_to_game(game_root, path), "bytes": path.stat().st_size} for path in paths]
 
 
+def _animation_file_entries(game_root: Path, paths: list[Path]) -> list[dict]:
+    entries: list[dict] = []
+    for path in paths:
+        entry = {"name": path.name, "path": _rel_to_game(game_root, path), "bytes": path.stat().st_size}
+        try:
+            entry["role"] = _animation_role(path)
+            entry["anm"] = inspect_anm(path)
+        except Exception as exc:
+            entry["role"] = _animation_role(path)
+            entry["anm"] = {"parsed": False, "error": str(exc)}
+        entries.append(entry)
+    return entries
+
+
+def _animation_summary(entries: list[dict]) -> dict:
+    by_role: dict[str, dict] = {}
+    parsed = 0
+    for entry in entries:
+        role = str(entry.get("role") or "other")
+        anm = entry.get("anm") or {}
+        if not anm.get("parsed"):
+            continue
+        parsed += 1
+        duration = float(anm.get("duration") or 0.0)
+        keyframes = int(anm.get("keyframes") or 0)
+        current = by_role.get(role)
+        if current is None:
+            by_role[role] = {
+                "count": 1,
+                "min_duration": round(duration, 6),
+                "max_duration": round(duration, 6),
+                "max_keyframes": keyframes,
+                "sample": entry.get("name", ""),
+            }
+            continue
+        current["count"] = int(current.get("count", 0)) + 1
+        current["min_duration"] = round(min(float(current.get("min_duration", duration)), duration), 6)
+        current["max_duration"] = round(max(float(current.get("max_duration", duration)), duration), 6)
+        current["max_keyframes"] = max(int(current.get("max_keyframes", 0)), keyframes)
+    return {"files": len(entries), "parsed": parsed, "by_role": by_role}
+
+
 def _status_for(models: list[Path], textures: list[Path], animations: list[Path], gui: list[Path]) -> str:
     if models and textures and animations:
         return "model_texture_animation"
@@ -934,6 +1041,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         sprite_preview = _make_textured_sprite(models[0], game_root, output_dir, thumb_size) if models else None
         model_3d = _make_model3d_json(models[0], game_root, output_dir) if models else None
         dff_info = inspect_dff(models[0]) if models else None
+        animation_files = _animation_file_entries(game_root, animations)
 
         entities.append(
             {
@@ -943,7 +1051,8 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
                 "status": _status_for(models, textures, animations, gui),
                 "model_files": _file_entries(game_root, models),
                 "texture_files": _file_entries(game_root, textures),
-                "animation_files": _file_entries(game_root, animations),
+                "animation_files": animation_files,
+                "animation_summary": _animation_summary(animation_files),
                 "gui_files": _file_entries(game_root, gui),
                 "texture_preview": _rel_to_output(output_dir, texture_preview),
                 "mesh_preview": _rel_to_output(output_dir, mesh_preview),
@@ -963,6 +1072,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         "with_mesh_preview": sum(1 for entity in entities if entity["mesh_preview"]),
         "with_sprite_preview": sum(1 for entity in entities if entity["sprite_preview"]),
         "with_texture_preview": sum(1 for entity in entities if entity["texture_preview"]),
+        "with_animation_metadata": sum(1 for entity in entities if (entity.get("animation_summary") or {}).get("parsed", 0) > 0),
     }
     manifest = {
         "enabled": True,
@@ -975,7 +1085,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
             "DFF static sprite previews are projected from original model geometry and affine-mapped from original DDS textures.",
             "DFF static geometry is exported as WebGL-ready JSON plus local PNG textures for the replay 3D mode.",
             "DFF mesh previews are also kept as untextured geometry-debug projections.",
-            "ANM files are inventoried; full skeletal/object animation playback still requires a RenderWare animation renderer.",
+            "ANM RenderWare headers are parsed for role, duration and keyframe counts; full skeletal/object skinning still requires a HAnim renderer.",
         ],
     }
     (output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -988,6 +1098,22 @@ def _short_file_list(files: list[dict], limit: int = 6) -> str:
     if len(files) > limit:
         names.append(f"+{len(files) - limit} weitere")
     return ", ".join(names) if names else "fehlt"
+
+
+def _short_animation_summary(summary: dict) -> str:
+    if not summary or not summary.get("parsed"):
+        return "fehlt"
+    parts = []
+    for role, data in sorted((summary.get("by_role") or {}).items()):
+        count = int(data.get("count", 0))
+        min_duration = float(data.get("min_duration", 0.0))
+        max_duration = float(data.get("max_duration", 0.0))
+        if abs(max_duration - min_duration) < 0.001:
+            duration_text = f"{max_duration:.2f}s"
+        else:
+            duration_text = f"{min_duration:.2f}-{max_duration:.2f}s"
+        parts.append(f"{html.escape(role)}: {count}x {duration_text}")
+    return ", ".join(parts[:6]) if parts else "fehlt"
 
 
 def _write_html(output_dir: Path, manifest: dict) -> None:
@@ -1006,6 +1132,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
         geometry_count = dff.get("geometry_count", 0)
         vertices = sum(int(g.get("vertices", 0)) for g in dff.get("geometries", []))
         triangles = sum(int(g.get("triangles", 0)) for g in dff.get("geometries", []))
+        animation_summary = entity.get("animation_summary") or {}
         rows.append(
             f"""
             <article class="card">
@@ -1020,6 +1147,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
                 <dt>DFF</dt><dd>{_short_file_list(entity.get("model_files") or [])}</dd>
                 <dt>DDS/PNG</dt><dd>{_short_file_list(entity.get("texture_files") or [])}</dd>
                 <dt>ANM</dt><dd>{_short_file_list(entity.get("animation_files") or [])}</dd>
+                <dt>ANM-Timing</dt><dd>{_short_animation_summary(animation_summary)}</dd>
                 <dt>GUI</dt><dd>{_short_file_list(entity.get("gui_files") or [])}</dd>
                 <dt>Geometrie</dt><dd>{geometry_count} Chunks, {vertices} Vertices, {triangles} Dreiecke</dd>
                 <dt>WebGL</dt><dd>{html.escape(model_3d) if model_3d else "fehlt"}</dd>
@@ -1062,6 +1190,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
       <span>Modelle: {int(summary.get("with_model", 0))}</span>
       <span>Texturen: {int(summary.get("with_texture", 0))}</span>
       <span>Animationen: {int(summary.get("with_animation", 0))}</span>
+      <span>ANM-Metadaten: {int(summary.get("with_animation_metadata", 0))}</span>
       <span>WebGL-Modelle: {int(summary.get("with_model_3d", 0))}</span>
       <span>Sprites: {int(summary.get("with_sprite_preview", 0))}</span>
       <span>Mesh-Previews: {int(summary.get("with_mesh_preview", 0))}</span>

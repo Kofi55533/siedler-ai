@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import math
 import os
 import shutil
 import sys
@@ -185,6 +186,33 @@ def _export_game_assets(output_dir: Path, game_root: Path | None, disabled: bool
     }
 
 
+def _compact_animation_manifest(entries: list[dict]) -> dict:
+    by_role: dict[str, dict] = {}
+    files: list[dict] = []
+    for entry in entries:
+        role = str(entry.get("role") or (entry.get("anm") or {}).get("role") or "other")
+        anm = entry.get("anm") or {}
+        record = {
+            "name": str(entry.get("name") or ""),
+            "role": role,
+            "duration": float(anm.get("duration") or 0.0),
+            "keyframes": int(anm.get("keyframes") or 0),
+            "keyframe_bytes": int(anm.get("keyframe_bytes") or 0),
+            "parsed": bool(anm.get("parsed")),
+        }
+        files.append(record)
+        if not record["parsed"]:
+            continue
+        existing = by_role.get(role)
+        if existing is None or (
+            role in {"walk", "run", "work"}
+            and record["duration"] > 0
+            and record["keyframes"] >= int(existing.get("keyframes", 0))
+        ):
+            by_role[role] = record
+    return {"files": files, "by_role": by_role}
+
+
 def _export_original_graphics(
     output_dir: Path,
     game_root: Path | None,
@@ -212,8 +240,10 @@ def _export_original_graphics(
     mesh_by_key: dict[str, str] = {}
     model3d_by_key: dict[str, str] = {}
     embedded_model3d: dict[str, dict] = {}
+    animation_by_key: dict[str, dict] = {}
     for entity in manifest.get("entities", []):
         key = str(entity.get("key", ""))
+        animation_by_key[key] = _compact_animation_manifest(entity.get("animation_files") or [])
         model_3d = str(entity.get("model_3d", "") or "")
         model_3d_path = report_dir / model_3d if model_3d else None
         rel_model_3d = _rel_asset(output_dir, model_3d_path)
@@ -251,6 +281,7 @@ def _export_original_graphics(
         "mesh_by_key": mesh_by_key,
         "model3d_by_key": model3d_by_key,
         "embedded_model3d": embedded_model3d,
+        "animation_by_key": animation_by_key,
         "notes": manifest.get("notes", []),
     }
 
@@ -388,6 +419,44 @@ def _frame_xy(env, args, x: float, y: float) -> tuple[int, int]:
 def _entity_snapshot(env, args) -> list[dict]:
     entities: list[dict] = []
 
+    def frame_xy_from_position(xy) -> tuple[int, int] | None:
+        pos = replay._as_xy(xy)
+        if pos is None:
+            return None
+        return _frame_xy(env, args, pos[0], pos[1])
+
+    def target_for_object(obj, state: str = ""):
+        for attr in ("target_position", "waypoint", "final_destination"):
+            xy = replay._as_xy(getattr(obj, attr, None))
+            if xy is not None:
+                return xy
+        state_l = state.lower()
+        if "working" in state_l or state_l == "working":
+            route = getattr(obj, "work_route", None) or []
+            route_index = int(getattr(obj, "work_route_index", 0) or 0)
+            if 0 <= route_index < len(route):
+                xy = replay._as_xy(route[route_index])
+                if xy is not None:
+                    return xy
+        for attr in ("supplier_position", "workplace_position", "assigned_farm", "assigned_residence"):
+            value = getattr(obj, attr, None)
+            xy = replay._as_xy(getattr(value, "position", value))
+            if xy is not None:
+                return xy
+        return None
+
+    def animation_role(kind: str, state: str, sprite_key: str) -> str:
+        state_l = state.lower()
+        if "walking" in state_l:
+            return "walk"
+        if any(token in state_l for token in ("building", "construction", "extracting", "working", "eating", "resting", "camping")):
+            return "work"
+        if kind in {"building", "site"}:
+            return "built"
+        if sprite_key in {"serf_wood", "serf_build", "serf_mine"} and state_l:
+            return "work"
+        return "idle"
+
     def add_entity(
         entity_id: str,
         kind: str,
@@ -397,24 +466,35 @@ def _entity_snapshot(env, args) -> list[dict]:
         label: str,
         state: str = "",
         anchor_y: float = 0.72,
+        target_xy=None,
     ) -> None:
         pos = replay._as_xy(xy)
         if pos is None:
             return
         px, py = _frame_xy(env, args, pos[0], pos[1])
-        entities.append(
-            {
-                "id": entity_id,
-                "kind": kind,
-                "sprite_key": sprite_key,
-                "x": px,
-                "y": py,
-                "size": int(size),
-                "label": label,
-                "state": state,
-                "anchor_y": float(anchor_y),
-            }
-        )
+        record = {
+            "id": entity_id,
+            "kind": kind,
+            "sprite_key": sprite_key,
+            "x": px,
+            "y": py,
+            "size": int(size),
+            "label": label,
+            "state": state,
+            "anchor_y": float(anchor_y),
+            "anim_role": animation_role(kind, state, sprite_key),
+            "anim_seed": sum((idx + 1) * ord(char) for idx, char in enumerate(entity_id)) % 1000,
+        }
+        target_frame = frame_xy_from_position(target_xy)
+        if target_frame is not None:
+            tx, ty = target_frame
+            record["target_x"] = tx
+            record["target_y"] = ty
+            dx = tx - px
+            dy = ty - py
+            if abs(dx) + abs(dy) > 0.5:
+                record["angle"] = round(math.atan2(dx, dy), 5)
+        entities.append(record)
 
     for key, pos in getattr(env, "building_position_map", {}).items():
         building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
@@ -456,6 +536,7 @@ def _entity_snapshot(env, args) -> list[dict]:
             f"{worker_type} {state}",
             state,
             0.84,
+            target_for_object(worker, state),
         )
 
     for index, serf in enumerate(getattr(env.production_system, "serfs", [])):
@@ -470,6 +551,7 @@ def _entity_snapshot(env, args) -> list[dict]:
             f"Serf {serf_id if serf_id is not None else index} {state}",
             state,
             0.84,
+            target_for_object(serf, state),
         )
 
     entities.sort(key=lambda item: (int(item["y"]), 0 if item["kind"] in {"building", "site"} else 1, item["id"]))
@@ -1643,6 +1725,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const meshByKey = originalGraphics.mesh_by_key || {};
     const model3dByKey = originalGraphics.model3d_by_key || {};
     const embeddedModel3d = originalGraphics.embedded_model3d || {};
+    const animationByKey = originalGraphics.animation_by_key || {};
     const assetByKey = gameAssets.assets || {};
     const terrain3d = gameAssets.terrain3d || { enabled: false };
     const paydayFrames = gameAssets.payday_frames || [];
@@ -1707,6 +1790,28 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
     const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
     const INITIAL_CAMERA_SCALE = __INITIAL_CAMERA_SCALE__;
+    window.replayDebug = {
+      timeline,
+      gameAssets,
+      get index() { return idx; },
+      get mode3d() { return mode3d; },
+      stats() {
+        const canvas = document.getElementById('webglScene');
+        return {
+          index: idx,
+          time: (timeline[idx] || {}).time,
+          mode3d,
+          drawnModels: canvas && canvas.dataset.drawnModels,
+          totalEntities: canvas && canvas.dataset.totalEntities,
+          modelsLoaded: canvas && canvas.dataset.modelsLoaded,
+          modelErrors: canvas && canvas.dataset.modelErrors,
+          terrain: canvas && canvas.dataset.terrain,
+          lighting: canvas && canvas.dataset.lighting,
+          animation: canvas && canvas.dataset.animation,
+          animationKeys: canvas && canvas.dataset.animationKeys,
+        };
+      },
+    };
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
@@ -2036,13 +2141,51 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           -dot(x, eye), -dot(y, eye), -dot(z, eye), 1,
         ]);
       }
-      function m4TranslateScale(x, y, z, s) {
+      function m4Transform(x, y, z, s, yaw = 0, scaleY = 1) {
+        const c = Math.cos(yaw);
+        const r = Math.sin(yaw);
+        const sy = s * Math.max(0.25, Number(scaleY || 1));
         return new Float32Array([
-          s, 0, 0, 0,
-          0, s, 0, 0,
-          0, 0, s, 0,
+          c * s, 0, -r * s, 0,
+          0, sy, 0, 0,
+          r * s, 0, c * s, 0,
           x, y, z, 1,
         ]);
+      }
+      function animationInfoFor(entity) {
+        const role = String(entity.anim_role || '').toLowerCase();
+        const entry = animationByKey[entity.sprite_key] || {};
+        const byRole = entry.by_role || {};
+        return byRole[role] || byRole.walk || byRole.work || byRole.idle || null;
+      }
+      function defaultAnimationDuration(role) {
+        if (role === 'walk') return 1.0;
+        if (role === 'run') return 0.7;
+        if (role === 'work') return 1.2;
+        return 2.4;
+      }
+      function entityMotion(entity, frameTime) {
+        const role = String(entity.anim_role || '').toLowerCase();
+        const state = String(entity.state || '').toLowerCase();
+        const info = animationInfoFor(entity);
+        const duration = Math.max(0.18, Number((info && info.duration) || defaultAnimationDuration(role)));
+        const seed = Number(entity.anim_seed || 0) / 1000;
+        const phase = (((Number(frameTime || 0) + seed) % duration) / duration) * Math.PI * 2;
+        let yaw = Number(entity.angle || 0);
+        let y = 0;
+        let scaleY = 1;
+        if (role === 'walk' || role === 'run' || state.includes('walking')) {
+          const stride = role === 'run' ? 2.5 : 2.0;
+          y = Math.abs(Math.sin(phase * stride)) * (role === 'run' ? 5.0 : 3.4);
+          scaleY = 1.0 + Math.sin(phase * stride + 1.1) * 0.025;
+        } else if (role === 'work' || state.includes('working') || state.includes('building') || state.includes('extracting')) {
+          yaw += Math.sin(phase) * 0.11;
+          y = Math.max(0, Math.sin(phase * 2.0)) * 1.8;
+          scaleY = 1.0 + Math.sin(phase * 2.0 + 0.6) * 0.018;
+        } else if (role === 'idle') {
+          scaleY = 1.0 + Math.sin(phase) * 0.01;
+        }
+        return { yaw, y, scaleY, duration, source: info ? info.name : '' };
       }
       function terrainHeightAt(frameX, frameY) {
         if (!terrain3d.enabled || !terrainRows || !terrainCols || !terrainPositions.length) return 0;
@@ -2135,7 +2278,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           const worldZ = Number(entity.y || 0) - MAP_HEIGHT / 2;
           const groundY = terrainHeightAt(entity.x, entity.y);
           const modelScale = Math.max(0.08, (Number(entity.size || 32) * 1.45) / Math.max(1, model.maxSpan));
-          const matrix = m4TranslateScale(worldX, groundY, worldZ, modelScale);
+          const motion = entityMotion(entity, frame && frame.time);
+          const matrix = m4Transform(worldX, groundY + motion.y, worldZ, modelScale, motion.yaw, motion.scaleY);
           for (const submesh of model.submeshes) {
             if (submesh.count > 0) drawSubmesh(vp, model, submesh, matrix);
           }
@@ -2149,6 +2293,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           modelErrors: Array.from(modelCache.values()).filter(record => record.error).length,
           texturesCached: textureCache.size,
           terrain: terrain3d.enabled ? `${terrainRows}x${terrainCols}` : 'flat',
+          animation: Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion',
           canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight],
         };
         canvas.dataset.drawnModels = String(lastStats.drawnModels);
@@ -2159,6 +2304,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.texturesCached = String(lastStats.texturesCached);
         canvas.dataset.terrain = String(lastStats.terrain);
         canvas.dataset.lighting = "directional_normals";
+        canvas.dataset.animation = String(lastStats.animation);
+        canvas.dataset.animationKeys = String(Object.keys(animationByKey).length);
       }
 
       let renderQueued = false;
@@ -2526,8 +2673,20 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       focusInitialCamera();
       if (renderer3d) renderer3d.requestRender();
     });
+    function applyStartupParams() {
+      const params = new URLSearchParams(window.location.search || '');
+      const requestedFrame = Number(params.get('frame') || params.get('idx') || 0);
+      if (Number.isFinite(requestedFrame) && requestedFrame > 0) {
+        show(clamp(Math.round(requestedFrame), 0, Math.max(0, timeline.length - 1)));
+      }
+      const requestedMode = String(params.get('mode') || params.get('view') || '').toLowerCase();
+      if ((requestedMode === '3d' || params.get('3d') === '1') && !mode3d) {
+        mode3dBtn.onclick();
+      }
+    }
     show(0);
     focusInitialCamera();
+    applyStartupParams();
   </script>
 </body>
 </html>

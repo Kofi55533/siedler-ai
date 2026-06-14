@@ -22,6 +22,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from environment import ActionPhase, SiedlerScharfschuetzenEnv
 from expert_opening import ExpertOpeningController
+from tools.archive.export_original_graphics import export_original_graphics_report
 from tools.archive import render_replay_mp4 as replay
 
 
@@ -48,6 +49,8 @@ def _parse_args():
     )
     parser.add_argument("--no-game-assets", action="store_true", help="Keine Original-Spielgrafiken in das Replay kopieren")
     parser.add_argument("--no-game-icon-overlay", action="store_true", help="Keine Original-Icons in die Kartenframes zeichnen")
+    parser.add_argument("--no-original-graphics-report", action="store_true", help="Keinen DFF/DDS/ANM-Originalgrafik-Report erzeugen")
+    parser.add_argument("--refresh-original-graphics-report", action="store_true", help="Originalgrafik-Report neu erzeugen, auch wenn er schon existiert")
     return parser.parse_args()
 
 
@@ -63,6 +66,9 @@ def _candidate_game_roots(explicit: str) -> list[Path]:
             ROOT_DIR.parent / "Gold edition",
             ROOT_DIR.parent / "The Settlers 5",
             ROOT_DIR.parent / "TheSettlers5",
+            Path.home() / "Desktop" / "Gold edition",
+            Path.home() / "Desktop" / "The Settlers 5",
+            Path.home() / "Desktop" / "TheSettlers5",
         ]
     )
     seen: set[str] = set()
@@ -157,6 +163,46 @@ def _export_game_assets(output_dir: Path, game_root: Path | None, disabled: bool
         "root": str(game_root),
         "assets": {name: _rel_asset(output_dir, path) for name, path in important.items()},
         "payday_frames": [_rel_asset(output_dir, path) for path in payday_frames],
+    }
+
+
+def _export_original_graphics(
+    output_dir: Path,
+    game_root: Path | None,
+    disabled: bool,
+    refresh: bool,
+) -> dict:
+    if disabled or game_root is None:
+        return {"enabled": False}
+
+    report_dir = output_dir / "original_graphics"
+    manifest_path = report_dir / "manifest.json"
+    index_path = report_dir / "index.html"
+    if manifest_path.exists() and index_path.exists() and not refresh:
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            manifest = export_original_graphics_report(game_root, report_dir, thumb_size=220)
+    else:
+        manifest = export_original_graphics_report(game_root, report_dir, thumb_size=220)
+
+    sample_keys = ("serf_idle", "headquarters_1", "university_1", "tree_fir")
+    sample_meshes: dict[str, str] = {}
+    for entity in manifest.get("entities", []):
+        key = str(entity.get("key", ""))
+        if key not in sample_keys:
+            continue
+        preview = str(entity.get("mesh_preview", "") or "")
+        preview_path = report_dir / preview if preview else None
+        sample_meshes[key] = _rel_asset(output_dir, preview_path)
+
+    return {
+        "enabled": bool(manifest.get("enabled")),
+        "index": _rel_asset(output_dir, index_path),
+        "manifest": _rel_asset(output_dir, manifest_path),
+        "summary": manifest.get("summary", {}),
+        "sample_meshes": sample_meshes,
+        "notes": manifest.get("notes", []),
     }
 
 
@@ -342,6 +388,21 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     game_assets = game_assets or {"enabled": False, "assets": {}, "payday_frames": []}
     game_assets_json = json.dumps(game_assets, ensure_ascii=False).replace("</", "<\\/")
     assets = game_assets.get("assets") or {}
+    original_graphics = game_assets.get("original_graphics") or {}
+    graphics_summary_data = original_graphics.get("summary") or {}
+    sample_meshes = original_graphics.get("sample_meshes") or {}
+    if original_graphics.get("enabled"):
+        graphics_report_class = ""
+        graphics_report_link = original_graphics.get("index") or "#"
+        graphics_report_summary = (
+            f"{int(graphics_summary_data.get('with_model', 0))} Modelle, "
+            f"{int(graphics_summary_data.get('with_texture', 0))} Texturen, "
+            f"{int(graphics_summary_data.get('with_animation', 0))} Animationsgruppen"
+        )
+    else:
+        graphics_report_class = "hidden"
+        graphics_report_link = "#"
+        graphics_report_summary = "Originalgrafik-Report nicht erzeugt"
     title = "Siedler Expert Opening Replay"
     html_text = """<!doctype html>
 <html lang="de">
@@ -712,6 +773,41 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       object-fit: contain;
       filter: drop-shadow(0 1px 2px rgba(0,0,0,.55));
     }
+    .graphics-report {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      background: rgba(0,0,0,.23);
+      border: 1px solid rgba(238, 210, 148, .24);
+    }
+    .graphics-report.hidden {
+      display: none;
+    }
+    .graphics-report a {
+      color: #ffe39d;
+      font: 700 12px/1.2 system-ui, sans-serif;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .graphics-report p {
+      margin: 4px 0 7px;
+      color: #d8c59c;
+      font: 12px/1.35 system-ui, sans-serif;
+    }
+    .mesh-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+    .mesh-strip img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      background: #0d1010;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 3px;
+    }
     .stage.playing .playing-dot {
       background: var(--green);
       animation: pulse 1s infinite;
@@ -781,6 +877,16 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           <div class="asset-badge"><img src="__ICON_WORKER__" alt="Worker"></div>
           <div class="asset-badge"><img src="__ICON_UNIVERSITY__" alt="Hochschule"></div>
           <div class="asset-badge"><img src="__ICON_HEADQUARTER__" alt="Hauptquartier"></div>
+        </div>
+        <div class="graphics-report __GRAPHICS_REPORT_CLASS__">
+          <a href="__GRAPHICS_REPORT_LINK__" target="_blank" rel="noreferrer">Originalgrafik-Report</a>
+          <p>__GRAPHICS_REPORT_SUMMARY__</p>
+          <div class="mesh-strip">
+            <img src="__MESH_SERF__" alt="Serf Mesh">
+            <img src="__MESH_HEADQUARTER__" alt="HQ Mesh">
+            <img src="__MESH_UNIVERSITY__" alt="Hochschule Mesh">
+            <img src="__MESH_TREE__" alt="Baum Mesh">
+          </div>
         </div>
         <button class="toolbutton" id="fit" style="margin-top:10px;">Ansicht reset</button>
       </div>
@@ -1047,6 +1153,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         "__ICON_UNIVERSITY__": assets.get("university") or blank_asset,
         "__ICON_HEADQUARTER__": assets.get("headquarter") or blank_asset,
         "__PAYDAY_ICON__": (game_assets.get("payday_frames") or [blank_asset])[0],
+        "__GRAPHICS_REPORT_CLASS__": graphics_report_class,
+        "__GRAPHICS_REPORT_LINK__": graphics_report_link,
+        "__GRAPHICS_REPORT_SUMMARY__": graphics_report_summary,
+        "__MESH_SERF__": sample_meshes.get("serf_idle") or blank_asset,
+        "__MESH_HEADQUARTER__": sample_meshes.get("headquarters_1") or blank_asset,
+        "__MESH_UNIVERSITY__": sample_meshes.get("university_1") or blank_asset,
+        "__MESH_TREE__": sample_meshes.get("tree_fir") or blank_asset,
     }
     replacements.update({key: html.escape(value, quote=True) for key, value in asset_replacements.items()})
     for key, value in replacements.items():
@@ -1068,6 +1181,12 @@ def main() -> None:
     frames_dir.mkdir(parents=True, exist_ok=True)
     game_root = _find_game_root(args.game_root)
     game_assets = _export_game_assets(output_dir, game_root, bool(args.no_game_assets))
+    game_assets["original_graphics"] = _export_original_graphics(
+        output_dir,
+        game_root,
+        bool(args.no_game_assets or args.no_original_graphics_report),
+        bool(args.refresh_original_graphics_report),
+    )
     args._game_assets = game_assets
     args._output_dir = output_dir
 
@@ -1113,6 +1232,9 @@ def main() -> None:
         print(f"Game assets: {game_assets.get('copied', 0)} PNGs from {game_assets.get('root', '')}")
     else:
         print("Game assets: disabled or not found")
+    original_graphics = game_assets.get("original_graphics") or {}
+    if original_graphics.get("enabled"):
+        print(f"Original graphics report: {output_dir / original_graphics.get('index', '')}")
 
 
 if __name__ == "__main__":

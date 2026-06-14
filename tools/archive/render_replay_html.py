@@ -210,8 +210,20 @@ def _export_original_graphics(
     sample_meshes: dict[str, str] = {}
     sprite_by_key: dict[str, str] = {}
     mesh_by_key: dict[str, str] = {}
+    model3d_by_key: dict[str, str] = {}
+    embedded_model3d: dict[str, dict] = {}
     for entity in manifest.get("entities", []):
         key = str(entity.get("key", ""))
+        model_3d = str(entity.get("model_3d", "") or "")
+        model_3d_path = report_dir / model_3d if model_3d else None
+        rel_model_3d = _rel_asset(output_dir, model_3d_path)
+        if rel_model_3d:
+            model3d_by_key[key] = rel_model_3d
+            try:
+                embedded_model3d[rel_model_3d] = json.loads((output_dir / rel_model_3d).read_text(encoding="utf-8"))
+            except Exception:
+                pass
+
         sprite = str(entity.get("sprite_preview", "") or "")
         sprite_path = report_dir / sprite if sprite else None
         rel_sprite = _rel_asset(output_dir, sprite_path)
@@ -237,6 +249,8 @@ def _export_original_graphics(
         "sample_meshes": sample_meshes,
         "sprite_by_key": sprite_by_key,
         "mesh_by_key": mesh_by_key,
+        "model3d_by_key": model3d_by_key,
+        "embedded_model3d": embedded_model3d,
         "notes": manifest.get("notes", []),
     }
 
@@ -905,7 +919,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }
     .controlbar {
       display: grid;
-      grid-template-columns: auto auto auto minmax(260px, 1fr) auto auto auto;
+      grid-template-columns: auto auto auto minmax(260px, 1fr) auto auto auto auto;
       gap: 8px;
       align-items: center;
       padding: 6px 10px;
@@ -976,6 +990,20 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       user-select: none;
       -webkit-user-drag: none;
       filter: saturate(1.05) contrast(1.03);
+    }
+    #webglScene {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      background: #080b0c;
+    }
+    .stage.mode3d #world {
+      display: none;
+    }
+    .stage.mode3d #webglScene {
+      display: block;
     }
     .entity-layer {
       position: absolute;
@@ -1429,6 +1457,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       <option value="250">4x</option>
     </select>
     <button class="toolbutton" id="fullscreen">Vollbild</button>
+    <button class="toolbutton" id="mode3d">3D</button>
     <span class="keycap">Space</span>
   </div>
   <div id="stage" class="stage">
@@ -1436,6 +1465,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       <img id="map" src="" width="__WIDTH__" height="__HEIGHT__" alt="Replay frame">
       <div id="entityLayer" class="entity-layer"></div>
     </div>
+    <canvas id="webglScene"></canvas>
     <div class="screen-message">
       <img id="messageIcon" src="__ICON_ONSCREEN_WORKER__" alt="">
       <div id="messageText">Expert Opening bereit</div>
@@ -1522,15 +1552,19 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
   <script>
     const timeline = __TIMELINE__;
     const gameAssets = __GAME_ASSETS__;
+    window.gameAssets = gameAssets;
     const originalGraphics = gameAssets.original_graphics || {};
     const spriteByKey = originalGraphics.sprite_by_key || {};
     const meshByKey = originalGraphics.mesh_by_key || {};
+    const model3dByKey = originalGraphics.model3d_by_key || {};
+    const embeddedModel3d = originalGraphics.embedded_model3d || {};
     const assetByKey = gameAssets.assets || {};
     const paydayFrames = gameAssets.payday_frames || [];
     const MAP_WIDTH = __WIDTH__;
     const MAP_HEIGHT = __HEIGHT__;
     const world = document.getElementById('world');
     const img = document.getElementById('map');
+    const webglScene = document.getElementById('webglScene');
     const entityLayer = document.getElementById('entityLayer');
     const mini = document.getElementById('mini');
     const miniBox = document.getElementById('miniBox');
@@ -1539,6 +1573,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const slider = document.getElementById('slider');
     const playBtn = document.getElementById('play');
     const fullscreenBtn = document.getElementById('fullscreen');
+    const mode3dBtn = document.getElementById('mode3d');
     const speed = document.getElementById('speed');
     const headline = document.getElementById('headline');
     const action = document.getElementById('action');
@@ -1581,6 +1616,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     let mouseY = 0;
     let edgePanActive = false;
     let edgePanFrame = null;
+    let mode3d = false;
+    let renderer3d = null;
     const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
     const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
     const INITIAL_CAMERA_SCALE = __INITIAL_CAMERA_SCALE__;
@@ -1619,6 +1656,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     function applyTransform() {
       world.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
       updateMinimap();
+      if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
     }
     function panBy(dx, dy) {
       tx += dx;
@@ -1657,6 +1695,346 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }
     function entitySpriteSrc(entity) {
       return spriteByKey[entity.sprite_key] || meshByKey[entity.sprite_key] || entityFallbackAsset(entity.kind);
+    }
+    function createReplay3DRenderer(canvas) {
+      const gl = canvas.getContext('webgl', { alpha: false, antialias: true });
+      if (!gl) return null;
+      const uintIndexExt = gl.getExtension('OES_element_index_uint');
+
+      const vertexSource = `
+        attribute vec3 a_position;
+        attribute vec2 a_uv;
+        uniform mat4 u_matrix;
+        varying vec2 v_uv;
+        void main() {
+          v_uv = a_uv;
+          gl_Position = u_matrix * vec4(a_position, 1.0);
+        }
+      `;
+      const fragmentSource = `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform sampler2D u_texture;
+        void main() {
+          vec4 color = texture2D(u_texture, v_uv);
+          if (color.a < 0.08) discard;
+          gl_FragColor = color;
+        }
+      `;
+
+      function compile(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          throw new Error(gl.getShaderInfoLog(shader) || 'shader compile failed');
+        }
+        return shader;
+      }
+      const program = gl.createProgram();
+      gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program) || 'program link failed');
+      }
+      const locations = {
+        position: gl.getAttribLocation(program, 'a_position'),
+        uv: gl.getAttribLocation(program, 'a_uv'),
+        matrix: gl.getUniformLocation(program, 'u_matrix'),
+        texture: gl.getUniformLocation(program, 'u_texture'),
+      };
+
+      const modelCache = new Map();
+      const textureCache = new Map();
+      let lastStats = { drawnModels: 0, totalEntities: 0, modelsCached: 0, texturesCached: 0, canvas: [0, 0] };
+      const mapQuad = createStaticMesh(
+        [
+          -MAP_WIDTH / 2, -1, -MAP_HEIGHT / 2,
+           MAP_WIDTH / 2, -1, -MAP_HEIGHT / 2,
+           MAP_WIDTH / 2, -1,  MAP_HEIGHT / 2,
+          -MAP_WIDTH / 2, -1,  MAP_HEIGHT / 2,
+        ],
+        [0, 0, 1, 0, 1, 1, 0, 1],
+        [0, 1, 2, 0, 2, 3]
+      );
+
+      function createTexture(url) {
+        if (textureCache.has(url)) return textureCache.get(url);
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([82, 91, 74, 255]));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        const record = { texture, loaded: false };
+        textureCache.set(url, record);
+        const image = new Image();
+        image.onload = () => {
+          gl.bindTexture(gl.TEXTURE_2D, texture);
+          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+          record.loaded = true;
+          if (mode3d) render(timeline[idx]);
+        };
+        image.src = url;
+        return record;
+      }
+
+      function createStaticMesh(positions, uvs, indices) {
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+        const uvBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uvs), gl.STATIC_DRAW);
+        const indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        const maxIndex = indices.reduce((max, value) => Math.max(max, Number(value || 0)), 0);
+        const useUint32 = Boolean(uintIndexExt) && maxIndex > 65535;
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, useUint32 ? new Uint32Array(indices) : new Uint16Array(indices), gl.STATIC_DRAW);
+        return { positionBuffer, uvBuffer, indexBuffer, indexType: useUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, count: indices.length, maxSpan: Math.max(MAP_WIDTH, MAP_HEIGHT) };
+      }
+
+      function loadJson(url) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', url, true);
+          xhr.overrideMimeType('application/json');
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                resolve(JSON.parse(xhr.responseText));
+              } catch (error) {
+                reject(error);
+              }
+            } else {
+              reject(new Error(`HTTP ${xhr.status} ${url}`));
+            }
+          };
+          xhr.onerror = () => reject(new Error(`XHR failed ${url}`));
+          xhr.send();
+        });
+      }
+
+      async function loadModel(modelUrl) {
+        const data = embeddedModel3d[modelUrl] || await loadJson(modelUrl);
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.positions || []), gl.STATIC_DRAW);
+        const uvBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.uvs || []), gl.STATIC_DRAW);
+        const root = modelUrl.slice(0, modelUrl.indexOf('/models3d/') + 1);
+        const submeshes = [];
+        for (const submesh of (data.submeshes || [])) {
+          const indexBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+          const rawIndices = submesh.indices || [];
+          const maxIndex = rawIndices.reduce((max, value) => Math.max(max, Number(value || 0)), 0);
+          const useUint32 = Boolean(uintIndexExt) && maxIndex > 65535;
+          const indices = useUint32 ? new Uint32Array(rawIndices) : new Uint16Array(rawIndices);
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+          const textureUrl = submesh.texture ? root + submesh.texture : '';
+          submeshes.push({
+            indexBuffer,
+            count: indices.length,
+            indexType: useUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT,
+            texture: createTexture(textureUrl || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='),
+          });
+        }
+        return {
+          positionBuffer,
+          uvBuffer,
+          submeshes,
+          maxSpan: Number((data.bounds || {}).max_span || 100),
+        };
+      }
+
+      function ensureModel(modelUrl) {
+        if (!modelUrl) return null;
+        if (!modelCache.has(modelUrl)) {
+          const record = { loaded: false, model: null };
+          modelCache.set(modelUrl, record);
+          loadModel(modelUrl)
+            .then(model => {
+              record.loaded = true;
+              record.model = model;
+              canvas.dataset.loadCompletions = String(Number(canvas.dataset.loadCompletions || 0) + 1);
+              if (mode3d) render(timeline[idx]);
+            })
+            .catch(error => {
+              record.loaded = false;
+              record.error = String(error && error.message || error || 'model load failed');
+              canvas.dataset.loadErrors = String(Number(canvas.dataset.loadErrors || 0) + 1);
+              console.warn('3D model load failed', modelUrl, record.error);
+            });
+        }
+        return modelCache.get(modelUrl);
+      }
+
+      function m4Multiply(a, b) {
+        const out = new Float32Array(16);
+        for (let col = 0; col < 4; col++) {
+          for (let row = 0; row < 4; row++) {
+            out[col * 4 + row] =
+              a[0 * 4 + row] * b[col * 4 + 0] +
+              a[1 * 4 + row] * b[col * 4 + 1] +
+              a[2 * 4 + row] * b[col * 4 + 2] +
+              a[3 * 4 + row] * b[col * 4 + 3];
+          }
+        }
+        return out;
+      }
+      function m4Ortho(left, right, bottom, top, near, far) {
+        return new Float32Array([
+          2 / (right - left), 0, 0, 0,
+          0, 2 / (top - bottom), 0, 0,
+          0, 0, -2 / (far - near), 0,
+          -(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1,
+        ]);
+      }
+      function normalize(v) {
+        const len = Math.hypot(v[0], v[1], v[2]) || 1;
+        return [v[0] / len, v[1] / len, v[2] / len];
+      }
+      function cross(a, b) {
+        return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+      }
+      function dot(a, b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      }
+      function m4LookAt(eye, target, up) {
+        const z = normalize([eye[0] - target[0], eye[1] - target[1], eye[2] - target[2]]);
+        const x = normalize(cross(up, z));
+        const y = cross(z, x);
+        return new Float32Array([
+          x[0], y[0], z[0], 0,
+          x[1], y[1], z[1], 0,
+          x[2], y[2], z[2], 0,
+          -dot(x, eye), -dot(y, eye), -dot(z, eye), 1,
+        ]);
+      }
+      function m4TranslateScale(x, y, z, s) {
+        return new Float32Array([
+          s, 0, 0, 0,
+          0, s, 0, 0,
+          0, 0, s, 0,
+          x, y, z, 1,
+        ]);
+      }
+
+      function resize() {
+        const width = Math.max(1, stage.clientWidth);
+        const height = Math.max(1, stage.clientHeight);
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const targetW = Math.floor(width * dpr);
+        const targetH = Math.floor(height * dpr);
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.width = targetW;
+          canvas.height = targetH;
+        }
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+
+      function cameraMatrix() {
+        const centerX = (stage.clientWidth / 2 - tx) / scale - MAP_WIDTH / 2;
+        const centerZ = (stage.clientHeight / 2 - ty) / scale - MAP_HEIGHT / 2;
+        const viewW = stage.clientWidth / Math.max(0.1, scale);
+        const viewH = stage.clientHeight / Math.max(0.1, scale);
+        const eye = [centerX - viewH * 0.42, Math.max(420, viewH * 0.72), centerZ + viewH * 0.68];
+        const target = [centerX, 0, centerZ];
+        const view = m4LookAt(eye, target, [0, 1, 0]);
+        const proj = m4Ortho(-viewW / 2, viewW / 2, -viewH / 2, viewH / 2, 1, 6000);
+        return m4Multiply(proj, view);
+      }
+
+      function bindMesh(mesh) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, mesh.positionBuffer);
+        gl.enableVertexAttribArray(locations.position);
+        gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, mesh.uvBuffer);
+        gl.enableVertexAttribArray(locations.uv);
+        gl.vertexAttribPointer(locations.uv, 2, gl.FLOAT, false, 0, 0);
+      }
+
+      function drawSubmesh(vp, mesh, submesh, matrix) {
+        gl.uniformMatrix4fv(locations.matrix, false, m4Multiply(vp, matrix));
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, submesh.texture.texture);
+        gl.uniform1i(locations.texture, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, submesh.indexBuffer);
+        gl.drawElements(gl.TRIANGLES, submesh.count, submesh.indexType || gl.UNSIGNED_SHORT, 0);
+      }
+
+      function render(frame) {
+        resize();
+        gl.useProgram(program);
+        gl.enable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.disable(gl.CULL_FACE);
+        gl.clearColor(0.03, 0.04, 0.04, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        const vp = cameraMatrix();
+
+        bindMesh(mapQuad);
+        const mapTexture = createTexture((frame && frame.frame) || '');
+        drawSubmesh(vp, mapQuad, { indexBuffer: mapQuad.indexBuffer, count: mapQuad.count, texture: mapTexture }, new Float32Array([
+          1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, 1, 0,
+          0, 0, 0, 1,
+        ]));
+
+        const entities = ((frame && frame.entities) || []).slice().sort((a, b) => Number(a.y || 0) - Number(b.y || 0));
+        let drawnModels = 0;
+        for (const entity of entities) {
+          const modelUrl = model3dByKey[entity.sprite_key];
+          const record = ensureModel(modelUrl);
+          if (!record || !record.loaded || !record.model) continue;
+          const model = record.model;
+          bindMesh(model);
+          const worldX = Number(entity.x || 0) - MAP_WIDTH / 2;
+          const worldZ = Number(entity.y || 0) - MAP_HEIGHT / 2;
+          const modelScale = Math.max(0.08, (Number(entity.size || 32) * 1.45) / Math.max(1, model.maxSpan));
+          const matrix = m4TranslateScale(worldX, 0, worldZ, modelScale);
+          for (const submesh of model.submeshes) {
+            if (submesh.count > 0) drawSubmesh(vp, model, submesh, matrix);
+          }
+          drawnModels += 1;
+        }
+        lastStats = {
+          drawnModels,
+          totalEntities: entities.length,
+          modelsCached: modelCache.size,
+          modelsLoaded: Array.from(modelCache.values()).filter(record => record.loaded).length,
+          modelErrors: Array.from(modelCache.values()).filter(record => record.error).length,
+          texturesCached: textureCache.size,
+          canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight],
+        };
+        canvas.dataset.drawnModels = String(lastStats.drawnModels);
+        canvas.dataset.totalEntities = String(lastStats.totalEntities);
+        canvas.dataset.modelsCached = String(lastStats.modelsCached);
+        canvas.dataset.modelsLoaded = String(lastStats.modelsLoaded);
+        canvas.dataset.modelErrors = String(lastStats.modelErrors);
+        canvas.dataset.texturesCached = String(lastStats.texturesCached);
+      }
+
+      let renderQueued = false;
+      function requestRender() {
+        if (!mode3d || renderQueued) return;
+        renderQueued = true;
+        requestAnimationFrame(() => {
+          renderQueued = false;
+          render(timeline[idx]);
+        });
+      }
+
+      return { render, requestRender, stats: () => lastStats };
     }
     function selectionFallbackSrc(entity) {
       if (!entity) return assetByKey.serf || '';
@@ -1827,6 +2205,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       updatePayday(f);
       updateEntities(f);
       updateMinimap();
+      if (mode3d && renderer3d) renderer3d.render(f);
     }
     function step(delta) {
       show(idx + delta);
@@ -1884,6 +2263,31 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         await document.documentElement.requestFullscreen();
       } else {
         await document.exitFullscreen();
+      }
+    };
+    mode3dBtn.onclick = () => {
+      mode3d = !mode3d;
+      stage.classList.toggle('mode3d', mode3d);
+      mode3dBtn.textContent = mode3d ? '2D' : '3D';
+      mode3dBtn.classList.toggle('active', mode3d);
+      if (mode3d && !renderer3d) {
+        try {
+          renderer3d = createReplay3DRenderer(webglScene);
+          window.replay3dRenderer = renderer3d;
+          webglScene.dataset.modelKeys = String(Object.keys(model3dByKey).length);
+        } catch (error) {
+          mode3d = false;
+          stage.classList.remove('mode3d');
+          mode3dBtn.textContent = '3D';
+          setMessage('WebGL konnte nicht gestartet werden', assetByKey.onscreen_worker || assetByKey.worker || '');
+          return;
+        }
+      }
+      if (mode3d && renderer3d) {
+        renderer3d.render(timeline[idx]);
+        setMessage('3D-Ansicht aktiv', assetByKey.onscreen_worker || assetByKey.worker || '');
+      } else {
+        setMessage('2D-Ansicht aktiv', assetByKey.onscreen_worker || assetByKey.worker || '');
       }
     };
     speed.onchange = () => {
@@ -1981,7 +2385,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (key === '-') zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1 / 1.18);
       if (key === 'escape') selectEntity(null, false);
     });
-    window.addEventListener('resize', focusInitialCamera);
+    window.addEventListener('resize', () => {
+      focusInitialCamera();
+      if (renderer3d) renderer3d.requestRender();
+    });
     show(0);
     focusInitialCamera();
   </script>

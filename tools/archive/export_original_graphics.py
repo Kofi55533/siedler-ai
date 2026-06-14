@@ -759,6 +759,115 @@ def _make_textured_sprite(source: Path, game_root: Path, output_dir: Path, thumb
     return target
 
 
+def _convert_texture_for_web(source: Path | None, output_dir: Path, max_size: int = 1024) -> Path | None:
+    if source is None:
+        return None
+    target = output_dir / "textures_web" / f"{_safe_name(source)}.png"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists() and target.stat().st_mtime >= source.stat().st_mtime:
+        return target
+    try:
+        image = Image.open(source).convert("RGBA")
+    except Exception:
+        return None
+    if max(image.size) > max_size:
+        image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+    image.save(target)
+    return target
+
+
+def _round_float(value: float) -> float:
+    return round(float(value), 5)
+
+
+def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path | None:
+    try:
+        meshes = _collect_meshes(source)
+    except Exception:
+        return None
+    if not meshes:
+        return None
+
+    all_vertices = [vertex for mesh in meshes for vertex in mesh.get("parsed_vertices", [])]
+    if not all_vertices:
+        return None
+
+    min_x = min(float(v[0]) for v in all_vertices)
+    max_x = max(float(v[0]) for v in all_vertices)
+    min_y = min(float(v[1]) for v in all_vertices)
+    max_y = max(float(v[1]) for v in all_vertices)
+    min_z = min(float(v[2]) for v in all_vertices)
+    max_z = max(float(v[2]) for v in all_vertices)
+    center_x = (min_x + max_x) / 2.0
+    center_y = (min_y + max_y) / 2.0
+    span_x = max(1.0, max_x - min_x)
+    span_y = max(1.0, max_y - min_y)
+    span_z = max(1.0, max_z - min_z)
+
+    positions: list[float] = []
+    uvs: list[float] = []
+    submesh_map: dict[tuple[int, int, str], dict] = {}
+    vertex_offset = 0
+    for mesh_index, mesh in enumerate(meshes):
+        vertices = mesh.get("parsed_vertices", [])
+        mesh_uvs = mesh.get("parsed_uvs", [])
+        triangles = mesh.get("parsed_triangles", [])
+        triangle_materials = mesh.get("parsed_triangle_materials", [])
+        material_textures = [str(name or "") for name in (mesh.get("material_textures") or [])]
+
+        for vertex_index, vertex in enumerate(vertices):
+            # WebGL scene is Y-up. The original DFF local X/Y plane becomes X/Z, original Z becomes height.
+            positions.extend(
+                [
+                    _round_float(float(vertex[0]) - center_x),
+                    _round_float(float(vertex[2]) - min_z),
+                    _round_float(-(float(vertex[1]) - center_y)),
+                ]
+            )
+            if vertex_index < len(mesh_uvs):
+                u, v = mesh_uvs[vertex_index]
+                uvs.extend([_round_float(float(u) % 1.0), _round_float(1.0 - (float(v) % 1.0))])
+            else:
+                uvs.extend([0.0, 0.0])
+
+        for triangle_index, (v1, v2, v3) in enumerate(triangles):
+            material_index = triangle_materials[triangle_index] if triangle_index < len(triangle_materials) else 0
+            texture_name = material_textures[material_index] if 0 <= material_index < len(material_textures) else source.stem
+            key = (mesh_index, int(material_index), texture_name or source.stem)
+            if key not in submesh_map:
+                texture_source = _find_texture_by_name(game_root, texture_name or source.stem)
+                texture_png = _convert_texture_for_web(texture_source, output_dir)
+                submesh_map[key] = {
+                    "name": f"mesh{mesh_index}_mat{int(material_index)}",
+                    "material_index": int(material_index),
+                    "texture_name": texture_name or source.stem,
+                    "texture": _rel_to_output(output_dir, texture_png),
+                    "indices": [],
+                }
+            submesh_map[key]["indices"].extend([vertex_offset + int(v1), vertex_offset + int(v2), vertex_offset + int(v3)])
+
+        vertex_offset += len(vertices)
+
+    target = output_dir / "models3d" / f"{_safe_name(source)}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "source": source.name,
+        "format": "s5_dff_static_v1",
+        "positions": positions,
+        "uvs": uvs,
+        "submeshes": list(submesh_map.values()),
+        "bounds": {
+            "min": [_round_float(min_x), _round_float(min_y), _round_float(min_z)],
+            "max": [_round_float(max_x), _round_float(max_y), _round_float(max_z)],
+            "span": [_round_float(span_x), _round_float(span_y), _round_float(span_z)],
+            "max_span": _round_float(max(span_x, span_y, span_z)),
+        },
+        "notes": "Static DFF geometry converted for the local WebGL replay renderer; ANM animation tracks are not applied here.",
+    }
+    target.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    return target
+
+
 def _file_entries(game_root: Path, paths: list[Path]) -> list[dict]:
     return [{"name": path.name, "path": _rel_to_game(game_root, path), "bytes": path.stat().st_size} for path in paths]
 
@@ -799,6 +908,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         texture_preview = _make_dds_preview(textures[0], output_dir, thumb_size) if textures and textures[0].suffix.lower() == ".dds" else None
         mesh_preview = _make_mesh_preview(models[0], output_dir, thumb_size) if models else None
         sprite_preview = _make_textured_sprite(models[0], game_root, output_dir, thumb_size) if models else None
+        model_3d = _make_model3d_json(models[0], game_root, output_dir) if models else None
         dff_info = inspect_dff(models[0]) if models else None
 
         entities.append(
@@ -814,6 +924,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
                 "texture_preview": _rel_to_output(output_dir, texture_preview),
                 "mesh_preview": _rel_to_output(output_dir, mesh_preview),
                 "sprite_preview": _rel_to_output(output_dir, sprite_preview),
+                "model_3d": _rel_to_output(output_dir, model_3d),
                 "dff": dff_info,
             }
         )
@@ -824,6 +935,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         "with_texture": sum(1 for entity in entities if entity["texture_files"]),
         "with_animation": sum(1 for entity in entities if entity["animation_files"]),
         "with_gui": sum(1 for entity in entities if entity["gui_files"]),
+        "with_model_3d": sum(1 for entity in entities if entity["model_3d"]),
         "with_mesh_preview": sum(1 for entity in entities if entity["mesh_preview"]),
         "with_sprite_preview": sum(1 for entity in entities if entity["sprite_preview"]),
         "with_texture_preview": sum(1 for entity in entities if entity["texture_preview"]),
@@ -837,6 +949,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         "notes": [
             "DDS texture atlases are converted to local PNG previews.",
             "DFF static sprite previews are projected from original model geometry and affine-mapped from original DDS textures.",
+            "DFF static geometry is exported as WebGL-ready JSON plus local PNG textures for the replay 3D mode.",
             "DFF mesh previews are also kept as untextured geometry-debug projections.",
             "ANM files are inventoried; full skeletal/object animation playback still requires a RenderWare animation renderer.",
         ],
@@ -861,6 +974,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
         texture_preview = entity.get("texture_preview") or ""
         mesh_preview = entity.get("mesh_preview") or ""
         sprite_preview = entity.get("sprite_preview") or ""
+        model_3d = entity.get("model_3d") or ""
         texture_img = f'<img src="{html.escape(texture_preview)}" alt="Textur">' if texture_preview else '<div class="empty">keine Textur</div>'
         mesh_img = f'<img src="{html.escape(mesh_preview)}" alt="Mesh">' if mesh_preview else '<div class="empty">kein Mesh</div>'
         sprite_img = f'<img src="{html.escape(sprite_preview)}" alt="Sprite">' if sprite_preview else '<div class="empty">kein Sprite</div>'
@@ -884,6 +998,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
                 <dt>ANM</dt><dd>{_short_file_list(entity.get("animation_files") or [])}</dd>
                 <dt>GUI</dt><dd>{_short_file_list(entity.get("gui_files") or [])}</dd>
                 <dt>Geometrie</dt><dd>{geometry_count} Chunks, {vertices} Vertices, {triangles} Dreiecke</dd>
+                <dt>WebGL</dt><dd>{html.escape(model_3d) if model_3d else "fehlt"}</dd>
               </dl>
             </article>
             """
@@ -923,6 +1038,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
       <span>Modelle: {int(summary.get("with_model", 0))}</span>
       <span>Texturen: {int(summary.get("with_texture", 0))}</span>
       <span>Animationen: {int(summary.get("with_animation", 0))}</span>
+      <span>WebGL-Modelle: {int(summary.get("with_model_3d", 0))}</span>
       <span>Sprites: {int(summary.get("with_sprite_preview", 0))}</span>
       <span>Mesh-Previews: {int(summary.get("with_mesh_preview", 0))}</span>
     </div>

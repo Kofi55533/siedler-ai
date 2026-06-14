@@ -44,7 +44,7 @@ def _parse_args():
     parser.add_argument("--no-paths", action="store_true")
     parser.add_argument("--wintersturm-background-size", type=int, default=1536, help="Aufloesung der automatisch gerenderten Wintersturm-Karte")
     parser.add_argument("--no-wintersturm-background", action="store_true", help="Keine automatisch gerenderte Wintersturm-Karte verwenden")
-    parser.add_argument("--entity-render-mode", choices=["mesh", "gui", "none"], default="mesh", help="Karten-Entitaeten als DFF-Mesh-Sprites, GUI-Icons oder gar nicht ueberblenden")
+    parser.add_argument("--entity-render-mode", choices=["sprite", "mesh", "gui", "none"], default="sprite", help="Karten-Entitaeten als DFF/DDS-Sprites, DFF-Mesh-Sprites, GUI-Icons oder gar nicht ueberblenden")
     parser.add_argument(
         "--game-root",
         type=str,
@@ -191,10 +191,20 @@ def _export_original_graphics(
         manifest = export_original_graphics_report(game_root, report_dir, thumb_size=220)
 
     sample_keys = ("serf_idle", "headquarters_1", "university_1", "tree_fir")
+    sample_sprites: dict[str, str] = {}
     sample_meshes: dict[str, str] = {}
+    sprite_by_key: dict[str, str] = {}
     mesh_by_key: dict[str, str] = {}
     for entity in manifest.get("entities", []):
         key = str(entity.get("key", ""))
+        sprite = str(entity.get("sprite_preview", "") or "")
+        sprite_path = report_dir / sprite if sprite else None
+        rel_sprite = _rel_asset(output_dir, sprite_path)
+        if rel_sprite:
+            sprite_by_key[key] = rel_sprite
+        if key in sample_keys:
+            sample_sprites[key] = rel_sprite
+
         preview = str(entity.get("mesh_preview", "") or "")
         preview_path = report_dir / preview if preview else None
         rel_preview = _rel_asset(output_dir, preview_path)
@@ -208,7 +218,9 @@ def _export_original_graphics(
         "index": _rel_asset(output_dir, index_path),
         "manifest": _rel_asset(output_dir, manifest_path),
         "summary": manifest.get("summary", {}),
+        "sample_sprites": sample_sprites,
         "sample_meshes": sample_meshes,
+        "sprite_by_key": sprite_by_key,
         "mesh_by_key": mesh_by_key,
         "notes": manifest.get("notes", []),
     }
@@ -317,11 +329,26 @@ def _mesh_path_for_render(args, key: str) -> Path | None:
     return path if path.exists() else None
 
 
-def _load_render_icon(args, key: str, size: int, *, mesh: bool = False) -> Image.Image | None:
-    path = _mesh_path_for_render(args, key) if mesh else _asset_path_for_render(args, key)
+def _sprite_path_for_render(args, key: str) -> Path | None:
+    manifest = getattr(args, "_game_assets", None) or {}
+    original_graphics = manifest.get("original_graphics") or {}
+    rel_path = (original_graphics.get("sprite_by_key") or {}).get(key) or ""
+    if not rel_path:
+        return None
+    path = Path(getattr(args, "_output_dir", ".")) / rel_path
+    return path if path.exists() else None
+
+
+def _load_render_icon(args, key: str, size: int, *, mesh: bool = False, sprite: bool = False) -> Image.Image | None:
+    if sprite:
+        path = _sprite_path_for_render(args, key)
+    elif mesh:
+        path = _mesh_path_for_render(args, key)
+    else:
+        path = _asset_path_for_render(args, key)
     if path is None:
         return None
-    cache_key = (str(path), int(size), int(bool(mesh)))
+    cache_key = (str(path), int(size), "sprite" if sprite else "mesh" if mesh else "asset")
     cached = _ICON_CACHE.get(cache_key)
     if cached is not None:
         return cached
@@ -417,6 +444,21 @@ def _building_icon_key(building_name: str) -> str:
     return "site"
 
 
+def _building_sprite_size(building_name: str, *, construction: bool = False) -> int:
+    key = _building_mesh_key(building_name)
+    if key == "headquarters_1":
+        size = 112
+    elif key in {"university_1", "monastery_1", "village_center_1"}:
+        size = 92
+    elif key in {"residence_1", "farm_1"}:
+        size = 72
+    elif "mine" in key:
+        size = 68
+    else:
+        size = 78
+    return int(size * 0.82) if construction else size
+
+
 def _paste_centered_icon(canvas: Image.Image, icon: Image.Image | None, x: int, y: int) -> None:
     if icon is None:
         return
@@ -425,12 +467,14 @@ def _paste_centered_icon(canvas: Image.Image, icon: Image.Image | None, x: int, 
 
 def _overlay_game_icons(env, frame: np.ndarray, args) -> np.ndarray:
     manifest = getattr(args, "_game_assets", None) or {}
-    mode = str(getattr(args, "entity_render_mode", "mesh") or "mesh")
+    mode = str(getattr(args, "entity_render_mode", "sprite") or "sprite")
     if not manifest.get("enabled") or getattr(args, "no_game_icon_overlay", False) or mode == "none":
         return frame
     if getattr(args, "viewport", "full") != "full":
         return frame
-    use_mesh = mode == "mesh" and bool((manifest.get("original_graphics") or {}).get("mesh_by_key"))
+    original_graphics = manifest.get("original_graphics") or {}
+    use_sprite = mode == "sprite" and bool(original_graphics.get("sprite_by_key"))
+    use_mesh = mode == "mesh" and bool(original_graphics.get("mesh_by_key"))
 
     grid_h = env.map_manager.grid.height
     grid_w = env.map_manager.grid.width
@@ -448,8 +492,14 @@ def _overlay_game_icons(env, frame: np.ndarray, args) -> np.ndarray:
             continue
         building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
         x, y = world_to_frame(xy[0], xy[1])
-        if use_mesh:
-            icon = _load_render_icon(args, _building_mesh_key(building_name), 58, mesh=True)
+        graphics_key = _building_mesh_key(building_name)
+        if use_sprite:
+            icon = (
+                _load_render_icon(args, graphics_key, _building_sprite_size(building_name), sprite=True)
+                or _load_render_icon(args, graphics_key, _building_sprite_size(building_name), mesh=True)
+            )
+        elif use_mesh:
+            icon = _load_render_icon(args, graphics_key, 58, mesh=True)
         else:
             icon = _load_render_icon(args, _building_icon_key(building_name), 34)
         _paste_centered_icon(canvas, icon, x, y)
@@ -459,8 +509,15 @@ def _overlay_game_icons(env, frame: np.ndarray, args) -> np.ndarray:
         if xy is None:
             continue
         x, y = world_to_frame(xy[0], xy[1])
-        if use_mesh:
-            icon = _load_render_icon(args, _building_mesh_key(site.get("building", "")), 48, mesh=True)
+        building_name = str(site.get("building", ""))
+        graphics_key = _building_mesh_key(building_name)
+        if use_sprite:
+            icon = (
+                _load_render_icon(args, graphics_key, _building_sprite_size(building_name, construction=True), sprite=True)
+                or _load_render_icon(args, graphics_key, _building_sprite_size(building_name, construction=True), mesh=True)
+            )
+        elif use_mesh:
+            icon = _load_render_icon(args, graphics_key, 48, mesh=True)
         else:
             icon = _load_render_icon(args, "site", 30)
         _paste_centered_icon(canvas, icon, x, y)
@@ -470,11 +527,17 @@ def _overlay_game_icons(env, frame: np.ndarray, args) -> np.ndarray:
         if xy is None:
             continue
         x, y = world_to_frame(xy[0], xy[1])
-        worker_icon = (
-            _load_render_icon(args, _worker_mesh_key(worker), 24, mesh=True)
-            if use_mesh
-            else _load_render_icon(args, "worker", 18)
-        )
+        graphics_key = _worker_mesh_key(worker)
+        if use_sprite:
+            worker_icon = (
+                _load_render_icon(args, graphics_key, 34, sprite=True)
+                or _load_render_icon(args, graphics_key, 28, mesh=True)
+                or _load_render_icon(args, "worker", 18)
+            )
+        elif use_mesh:
+            worker_icon = _load_render_icon(args, graphics_key, 24, mesh=True)
+        else:
+            worker_icon = _load_render_icon(args, "worker", 18)
         _paste_centered_icon(canvas, worker_icon, x, y)
 
     for serf in getattr(env.production_system, "serfs", []):
@@ -482,11 +545,17 @@ def _overlay_game_icons(env, frame: np.ndarray, args) -> np.ndarray:
         if xy is None:
             continue
         x, y = world_to_frame(xy[0], xy[1])
-        serf_icon = (
-            _load_render_icon(args, _serf_mesh_key(serf), 24, mesh=True)
-            if use_mesh
-            else _load_render_icon(args, "serf", 20)
-        )
+        graphics_key = _serf_mesh_key(serf)
+        if use_sprite:
+            serf_icon = (
+                _load_render_icon(args, graphics_key, 34, sprite=True)
+                or _load_render_icon(args, graphics_key, 28, mesh=True)
+                or _load_render_icon(args, "serf", 20)
+            )
+        elif use_mesh:
+            serf_icon = _load_render_icon(args, graphics_key, 24, mesh=True)
+        else:
+            serf_icon = _load_render_icon(args, "serf", 20)
         _paste_centered_icon(canvas, serf_icon, x, y)
 
     return np.asarray(canvas.convert("RGB"), dtype=np.uint8)
@@ -523,6 +592,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     assets = game_assets.get("assets") or {}
     original_graphics = game_assets.get("original_graphics") or {}
     graphics_summary_data = original_graphics.get("summary") or {}
+    sample_sprites = original_graphics.get("sample_sprites") or {}
     sample_meshes = original_graphics.get("sample_meshes") or {}
     if original_graphics.get("enabled"):
         graphics_report_class = ""
@@ -530,6 +600,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         graphics_report_summary = (
             f"{int(graphics_summary_data.get('with_model', 0))} Modelle, "
             f"{int(graphics_summary_data.get('with_texture', 0))} Texturen, "
+            f"{int(graphics_summary_data.get('with_sprite_preview', 0))} Sprites, "
             f"{int(graphics_summary_data.get('with_animation', 0))} Animationsgruppen"
         )
     else:
@@ -1311,10 +1382,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         "__GRAPHICS_REPORT_CLASS__": graphics_report_class,
         "__GRAPHICS_REPORT_LINK__": graphics_report_link,
         "__GRAPHICS_REPORT_SUMMARY__": graphics_report_summary,
-        "__MESH_SERF__": sample_meshes.get("serf_idle") or blank_asset,
-        "__MESH_HEADQUARTER__": sample_meshes.get("headquarters_1") or blank_asset,
-        "__MESH_UNIVERSITY__": sample_meshes.get("university_1") or blank_asset,
-        "__MESH_TREE__": sample_meshes.get("tree_fir") or blank_asset,
+        "__MESH_SERF__": sample_sprites.get("serf_idle") or sample_meshes.get("serf_idle") or blank_asset,
+        "__MESH_HEADQUARTER__": sample_sprites.get("headquarters_1") or sample_meshes.get("headquarters_1") or blank_asset,
+        "__MESH_UNIVERSITY__": sample_sprites.get("university_1") or sample_meshes.get("university_1") or blank_asset,
+        "__MESH_TREE__": sample_sprites.get("tree_fir") or sample_meshes.get("tree_fir") or blank_asset,
     }
     replacements.update({key: html.escape(value, quote=True) for key, value in asset_replacements.items()})
     for key, value in replacements.items():

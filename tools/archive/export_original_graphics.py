@@ -49,6 +49,9 @@ RW_CONTAINER_TYPES = {
     RW_GEOMETRY_LIST,
 }
 
+_TEXTURE_INDEX_CACHE: dict[str, dict[str, Path]] = {}
+_TEXTURE_IMAGE_CACHE: dict[str, Image.Image | None] = {}
+
 
 @dataclass(frozen=True)
 class EntitySpec:
@@ -275,6 +278,59 @@ def _read_chunks(data: bytes, start: int, end: int, depth: int = 0) -> list[tupl
     return chunks
 
 
+def _read_immediate_chunks(data: bytes, start: int, end: int) -> list[tuple[int, int, int, int]]:
+    chunks: list[tuple[int, int, int, int]] = []
+    offset = start
+    while offset + 12 <= end:
+        chunk_type, size, version = struct.unpack_from("<III", data, offset)
+        payload_end = offset + 12 + size
+        if payload_end > end:
+            break
+        chunks.append((offset, chunk_type, size, version))
+        offset = payload_end
+    return chunks
+
+
+def _decode_rw_string(data: bytes, offset: int, size: int) -> str:
+    raw = data[offset + 12 : offset + 12 + size].split(b"\x00", 1)[0].strip()
+    if not raw:
+        return ""
+    for encoding in ("utf-8", "cp1252", "latin-1"):
+        try:
+            return raw.decode(encoding).strip()
+        except UnicodeDecodeError:
+            continue
+    return ""
+
+
+def _extract_material_textures(data: bytes, chunk_offset: int, chunk_size: int) -> list[str]:
+    payload_start = chunk_offset + 12
+    payload_end = payload_start + chunk_size
+    textures: list[str] = []
+    for child_offset, child_type, child_size, _version in _read_immediate_chunks(data, payload_start, payload_end):
+        if child_type != RW_MATERIAL_LIST:
+            continue
+        material_list_start = child_offset + 12
+        material_list_end = material_list_start + child_size
+        for material_offset, material_type, material_size, _material_version in _read_immediate_chunks(
+            data, material_list_start, material_list_end
+        ):
+            if material_type != RW_MATERIAL:
+                continue
+            material_payload_start = material_offset + 12
+            material_payload_end = material_payload_start + material_size
+            names: list[str] = []
+            for _depth, string_offset, string_type, string_size, _string_version in _read_chunks(
+                data, material_payload_start, material_payload_end
+            ):
+                if string_type == RW_STRING:
+                    name = _decode_rw_string(data, string_offset, string_size)
+                    if name:
+                        names.append(name)
+            textures.append(names[0] if names else "")
+    return textures
+
+
 def _extract_geometry(data: bytes, chunk_offset: int, chunk_size: int) -> dict | None:
     struct_offset = chunk_offset + 12
     if struct_offset + 12 > len(data):
@@ -292,16 +348,28 @@ def _extract_geometry(data: bytes, chunk_offset: int, chunk_size: int) -> dict |
     if flags & 0x08:  # prelit colors
         offset += 4 * vertex_count
     uv_sets = num_uv_sets or (2 if flags & 0x80 else (1 if flags & 0x04 else 0))
-    offset += 8 * vertex_count * uv_sets
+    uvs: list[tuple[float, float]] = []
+    for uv_set in range(uv_sets):
+        if offset + 8 * vertex_count > len(payload):
+            break
+        current_uvs = [
+            struct.unpack_from("<ff", payload, offset + index * 8)
+            for index in range(vertex_count)
+        ]
+        if uv_set == 0:
+            uvs = current_uvs
+        offset += 8 * vertex_count
 
     triangles: list[tuple[int, int, int]] = []
+    triangle_materials: list[int] = []
     for index in range(triangle_count):
         tri_offset = offset + index * 8
         if tri_offset + 8 > len(payload):
             break
-        v2, v1, _material, v3 = struct.unpack_from("<HHHH", payload, tri_offset)
+        v2, v1, material, v3 = struct.unpack_from("<HHHH", payload, tri_offset)
         if v1 < vertex_count and v2 < vertex_count and v3 < vertex_count:
             triangles.append((v1, v2, v3))
+            triangle_materials.append(int(material))
     offset += 8 * triangle_count
 
     vertices: list[tuple[float, float, float]] = []
@@ -325,7 +393,10 @@ def _extract_geometry(data: bytes, chunk_offset: int, chunk_size: int) -> dict |
         "vertices": int(vertex_count),
         "morph_targets": int(morph_count),
         "parsed_triangles": triangles,
+        "parsed_triangle_materials": triangle_materials,
         "parsed_vertices": vertices,
+        "parsed_uvs": uvs,
+        "material_textures": _extract_material_textures(data, chunk_offset, chunk_size),
     }
 
 
@@ -346,7 +417,9 @@ def inspect_dff(path: Path) -> dict:
                         bounds.append([round(min(values), 3), round(max(values), 3)])
                     geometry["bounds"] = bounds
                 geometry.pop("parsed_triangles", None)
+                geometry.pop("parsed_triangle_materials", None)
                 geometry.pop("parsed_vertices", None)
+                geometry.pop("parsed_uvs", None)
                 geometries.append(geometry)
     return {
         "bytes": path.stat().st_size,
@@ -429,6 +502,178 @@ def _make_mesh_preview(source: Path, output_dir: Path, thumb_size: int) -> Path 
     return target
 
 
+def _texture_index(game_root: Path) -> dict[str, Path]:
+    cache_key = str(game_root.resolve()).lower()
+    cached = _TEXTURE_INDEX_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    index: dict[str, Path] = {}
+    for package in ("base", "extra1", "extra2"):
+        graphics_root = game_root / package / "shr" / "graphics"
+        if not graphics_root.exists():
+            continue
+        for suffix in ("*.dds", "*.png"):
+            for path in graphics_root.rglob(suffix):
+                path_key = path.name.lower()
+                stem_key = path.stem.lower()
+                index.setdefault(path_key, path)
+                index.setdefault(stem_key, path)
+    _TEXTURE_INDEX_CACHE[cache_key] = index
+    return index
+
+
+def _find_texture_by_name(game_root: Path, texture_name: str) -> Path | None:
+    clean = str(texture_name or "").replace("\\", "/").rsplit("/", 1)[-1].strip()
+    if not clean:
+        return None
+    index = _texture_index(game_root)
+    candidates = [clean.lower(), Path(clean).stem.lower()]
+    for candidate in candidates:
+        path = index.get(candidate)
+        if path is not None and path.exists():
+            return path
+    return None
+
+
+def _load_texture_image(path: Path | None) -> Image.Image | None:
+    if path is None:
+        return None
+    cache_key = str(path.resolve()).lower()
+    if cache_key in _TEXTURE_IMAGE_CACHE:
+        return _TEXTURE_IMAGE_CACHE[cache_key]
+    try:
+        image = Image.open(path).convert("RGBA")
+    except Exception:
+        image = None
+    _TEXTURE_IMAGE_CACHE[cache_key] = image
+    return image
+
+
+def _fallback_material_color(material_index: int) -> tuple[int, int, int, int]:
+    colors = (
+        (156, 126, 82, 235),
+        (104, 137, 92, 235),
+        (133, 137, 146, 235),
+        (118, 89, 64, 235),
+        (92, 108, 124, 235),
+    )
+    return colors[int(material_index) % len(colors)]
+
+
+def _texture_sample(texture: Image.Image | None, uv_values: list[tuple[float, float]], fallback: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
+    if texture is None or not uv_values:
+        return fallback
+    width, height = texture.size
+    if width <= 0 or height <= 0:
+        return fallback
+    centroid = (
+        sum(float(uv[0]) for uv in uv_values) / len(uv_values),
+        sum(float(uv[1]) for uv in uv_values) / len(uv_values),
+    )
+    candidates = [centroid, *uv_values]
+    for flip_v in (True, False):
+        for u, v in candidates:
+            uu = float(u) % 1.0
+            vv = float(v) % 1.0
+            if flip_v:
+                vv = 1.0 - vv
+            x = max(0, min(width - 1, int(round(uu * (width - 1)))))
+            y = max(0, min(height - 1, int(round(vv * (height - 1)))))
+            color = texture.getpixel((x, y))
+            if len(color) == 3:
+                return int(color[0]), int(color[1]), int(color[2]), 235
+            if int(color[3]) > 12:
+                return int(color[0]), int(color[1]), int(color[2]), min(245, max(120, int(color[3])))
+    return fallback
+
+
+def _polygon_area(points: list[tuple[float, float]]) -> float:
+    return abs(
+        points[0][0] * (points[1][1] - points[2][1])
+        + points[1][0] * (points[2][1] - points[0][1])
+        + points[2][0] * (points[0][1] - points[1][1])
+    ) * 0.5
+
+
+def _make_textured_sprite(source: Path, game_root: Path, output_dir: Path, thumb_size: int) -> Path | None:
+    try:
+        meshes = _collect_meshes(source)
+    except Exception:
+        return None
+
+    vertices_2d: list[tuple[float, float]] = []
+    for mesh in meshes:
+        vertices_2d.extend(_project_vertex(v) for v in mesh.get("parsed_vertices", []))
+    if not vertices_2d:
+        return None
+
+    min_x = min(p[0] for p in vertices_2d)
+    max_x = max(p[0] for p in vertices_2d)
+    min_y = min(p[1] for p in vertices_2d)
+    max_y = max(p[1] for p in vertices_2d)
+    span_x = max(1.0, max_x - min_x)
+    span_y = max(1.0, max_y - min_y)
+    margin = thumb_size * 0.07
+    scale = min((thumb_size - margin * 2) / span_x, (thumb_size - margin * 2) / span_y)
+
+    def transform(point: tuple[float, float]) -> tuple[float, float]:
+        px = margin + (point[0] - min_x) * scale
+        py = margin + (point[1] - min_y) * scale
+        return px, py
+
+    canvas = Image.new("RGBA", (thumb_size, thumb_size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(canvas, "RGBA")
+    shadow_w = thumb_size * min(0.82, max(0.26, span_x / max(span_y, 1.0) * 0.36))
+    shadow_h = thumb_size * 0.11
+    shadow_y = thumb_size * 0.82
+    draw.ellipse(
+        (
+            (thumb_size - shadow_w) / 2,
+            shadow_y - shadow_h / 2,
+            (thumb_size + shadow_w) / 2,
+            shadow_y + shadow_h / 2,
+        ),
+        fill=(0, 0, 0, 42),
+    )
+
+    draw_items: list[tuple[float, list[tuple[float, float]], tuple[int, int, int, int]]] = []
+    fallback_texture = _load_texture_image(_find_texture_by_name(game_root, source.stem))
+    for mesh_index, mesh in enumerate(meshes):
+        vertices = mesh.get("parsed_vertices", [])
+        triangles = mesh.get("parsed_triangles", [])
+        triangle_materials = mesh.get("parsed_triangle_materials", [])
+        uvs = mesh.get("parsed_uvs", [])
+        projected = [transform(_project_vertex(v)) for v in vertices]
+        material_textures = mesh.get("material_textures") or []
+        material_images = [_load_texture_image(_find_texture_by_name(game_root, str(name))) for name in material_textures]
+
+        max_triangles = 12000
+        step = max(1, math.ceil(len(triangles) / max_triangles))
+        for original_index in range(0, len(triangles), step):
+            v1, v2, v3 = triangles[original_index]
+            try:
+                points = [projected[v1], projected[v2], projected[v3]]
+            except IndexError:
+                continue
+            if _polygon_area(points) < 0.08:
+                continue
+            material_index = triangle_materials[original_index] if original_index < len(triangle_materials) else 0
+            texture = material_images[material_index] if 0 <= material_index < len(material_images) else fallback_texture
+            uv_values = [uvs[v1], uvs[v2], uvs[v3]] if max(v1, v2, v3) < len(uvs) else []
+            color = _texture_sample(texture, uv_values, _fallback_material_color(material_index + mesh_index))
+            depth = (points[0][1] + points[1][1] + points[2][1]) / 3.0 + mesh_index * 0.001
+            draw_items.append((depth, points, color))
+
+    for _depth, points, color in sorted(draw_items, key=lambda item: item[0]):
+        draw.polygon(points, fill=color)
+
+    target = output_dir / "sprites" / f"{_safe_name(source)}.png"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(target)
+    return target
+
+
 def _file_entries(game_root: Path, paths: list[Path]) -> list[dict]:
     return [{"name": path.name, "path": _rel_to_game(game_root, path), "bytes": path.stat().st_size} for path in paths]
 
@@ -468,6 +713,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
 
         texture_preview = _make_dds_preview(textures[0], output_dir, thumb_size) if textures and textures[0].suffix.lower() == ".dds" else None
         mesh_preview = _make_mesh_preview(models[0], output_dir, thumb_size) if models else None
+        sprite_preview = _make_textured_sprite(models[0], game_root, output_dir, thumb_size) if models else None
         dff_info = inspect_dff(models[0]) if models else None
 
         entities.append(
@@ -482,6 +728,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
                 "gui_files": _file_entries(game_root, gui),
                 "texture_preview": _rel_to_output(output_dir, texture_preview),
                 "mesh_preview": _rel_to_output(output_dir, mesh_preview),
+                "sprite_preview": _rel_to_output(output_dir, sprite_preview),
                 "dff": dff_info,
             }
         )
@@ -493,6 +740,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         "with_animation": sum(1 for entity in entities if entity["animation_files"]),
         "with_gui": sum(1 for entity in entities if entity["gui_files"]),
         "with_mesh_preview": sum(1 for entity in entities if entity["mesh_preview"]),
+        "with_sprite_preview": sum(1 for entity in entities if entity["sprite_preview"]),
         "with_texture_preview": sum(1 for entity in entities if entity["texture_preview"]),
     }
     manifest = {
@@ -503,7 +751,8 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         "entities": entities,
         "notes": [
             "DDS texture atlases are converted to local PNG previews.",
-            "DFF static mesh previews are untextured projections of the original model geometry.",
+            "DFF static sprite previews are projected from original model geometry and sampled from original DDS textures.",
+            "DFF mesh previews are also kept as untextured geometry-debug projections.",
             "ANM files are inventoried; full skeletal/object animation playback still requires a RenderWare animation renderer.",
         ],
     }
@@ -526,8 +775,10 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
     for entity in entities:
         texture_preview = entity.get("texture_preview") or ""
         mesh_preview = entity.get("mesh_preview") or ""
+        sprite_preview = entity.get("sprite_preview") or ""
         texture_img = f'<img src="{html.escape(texture_preview)}" alt="Textur">' if texture_preview else '<div class="empty">keine Textur</div>'
         mesh_img = f'<img src="{html.escape(mesh_preview)}" alt="Mesh">' if mesh_preview else '<div class="empty">kein Mesh</div>'
+        sprite_img = f'<img src="{html.escape(sprite_preview)}" alt="Sprite">' if sprite_preview else '<div class="empty">kein Sprite</div>'
         dff = entity.get("dff") or {}
         geometry_count = dff.get("geometry_count", 0)
         vertices = sum(int(g.get("vertices", 0)) for g in dff.get("geometries", []))
@@ -536,6 +787,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
             f"""
             <article class="card">
               <div class="thumbs">
+                <div>{sprite_img}<span>Sprite</span></div>
                 <div>{mesh_img}<span>Mesh</span></div>
                 <div>{texture_img}<span>Textur</span></div>
               </div>
@@ -565,7 +817,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
     .summary {{ display:flex; gap:14px; flex-wrap:wrap; color:#d6c29a; font-size:13px; }}
     main {{ padding:18px; display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:14px; }}
     .card {{ background:#1c1f1f; border:1px solid #4f4635; border-radius:6px; padding:12px; box-shadow:0 8px 22px rgba(0,0,0,.28); }}
-    .thumbs {{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }}
+    .thumbs {{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:10px; }}
     .thumbs > div {{ min-height:156px; display:flex; align-items:center; justify-content:center; position:relative; background:#0b0d0e; border:1px solid #363d3d; border-radius:4px; overflow:hidden; }}
     .thumbs img {{ max-width:100%; max-height:180px; object-fit:contain; image-rendering:auto; }}
     .thumbs span {{ position:absolute; left:6px; bottom:5px; padding:2px 5px; background:rgba(0,0,0,.62); border-radius:3px; color:#e6d5b2; font-size:11px; }}
@@ -586,6 +838,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
       <span>Modelle: {int(summary.get("with_model", 0))}</span>
       <span>Texturen: {int(summary.get("with_texture", 0))}</span>
       <span>Animationen: {int(summary.get("with_animation", 0))}</span>
+      <span>Sprites: {int(summary.get("with_sprite_preview", 0))}</span>
       <span>Mesh-Previews: {int(summary.get("with_mesh_preview", 0))}</span>
     </div>
   </header>

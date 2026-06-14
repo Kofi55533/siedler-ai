@@ -160,6 +160,20 @@ def _export_game_assets(output_dir: Path, game_root: Path | None, disabled: bool
         "residence": _first_existing(base_gui / "i_res_residences.png"),
         "mine": _first_existing(base_gui / "b_small_generic.png", base_gui / "b_generic_building.png"),
         "minimap_bg": _first_existing(base_gui / "minimapBGlarge.png", base_gui / "bg_windowComplete_mm.png"),
+        "minimap_normal": _first_existing(base_gui / "b_minimap_normal.png"),
+        "minimap_tactics": _first_existing(base_gui / "b_minimap_tactics.png"),
+        "minimap_alchemy": _first_existing(base_gui / "b_minimap_alchemy.png"),
+        "tab_build": _first_existing(base_gui / "Tab_BuildHouse_on.png", base_gui / "Tab_BuildHouse_off.png"),
+        "tab_workers": _first_existing(base_gui / "Tab_Workers_on.png", base_gui / "Tab_Workers_off.png"),
+        "tab_motivation": _first_existing(base_gui / "Tab_BuildMotiv_on.png", base_gui / "Tab_BuildMotiv_off.png"),
+        "select_serf_button": _first_existing(base_gui / "b_select_serf.png", base_gui / "b_units_serf.png"),
+        "select_worker_button": _first_existing(base_gui / "b_units_worker.png", base_gui / "i_workers.png"),
+        "generic_settler": _first_existing(base_gui / "b_generic_settler.png"),
+        "generic_building": _first_existing(base_gui / "b_generic_building.png"),
+        "onscreen_worker": _first_existing(base_gui / "onScreen_Worker.png", base_gui / "onScreen_NoWorker.png"),
+        "onscreen_serf": _first_existing(base_gui / "onScreen_Emotion_serf.png", base_gui / "MO_CU_Serf.png"),
+        "to_building": _first_existing(base_gui / "ToBuilding.png"),
+        "to_worker": _first_existing(base_gui / "ToWorker.png"),
     }
     payday_frames = sorted(base_gui.glob("payday*.png"))
     return {
@@ -980,6 +994,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       filter: drop-shadow(0 4px 4px rgba(0,0,0,.52));
       user-select: none;
       -webkit-user-drag: none;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .entity-sprite.selected {
+      filter:
+        drop-shadow(0 0 5px rgba(255,230,120,.95))
+        drop-shadow(0 5px 5px rgba(0,0,0,.58));
     }
     .entity-sprite.building,
     .entity-sprite.site {
@@ -1014,6 +1035,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       gap: 10px;
       pointer-events: none;
       font-family: system-ui, Segoe UI, sans-serif;
+    }
+    .sidehud.compact {
+      top: 76px;
+      width: min(292px, calc(100vw - 32px));
+      opacity: .94;
     }
     .panel, .minimap {
       pointer-events: auto;
@@ -1173,6 +1199,177 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       border: 1px solid rgba(255,255,255,.13);
       border-radius: 3px;
     }
+    .bottomhud {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 8px;
+      display: grid;
+      grid-template-columns: minmax(230px, 300px) minmax(380px, 1fr) minmax(230px, 320px);
+      gap: 10px;
+      align-items: end;
+      pointer-events: none;
+      font-family: system-ui, Segoe UI, sans-serif;
+    }
+    .selection-panel,
+    .command-panel,
+    .replay-panel {
+      pointer-events: auto;
+      min-height: 112px;
+      border: 1px solid rgba(238, 210, 148, .44);
+      border-radius: 4px;
+      background: linear-gradient(180deg, rgba(49,37,24,.94), rgba(15,13,10,.96));
+      box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 8px 22px rgba(0,0,0,.48);
+      color: #f7e8c6;
+    }
+    body.has-game-assets .selection-panel,
+    body.has-game-assets .command-panel,
+    body.has-game-assets .replay-panel {
+      background-image: linear-gradient(180deg, rgba(24,17,9,.45), rgba(7,6,5,.78)), url("__ASSET_BG_BOTTOM__");
+      background-size: 100% 100%, 100% auto;
+      background-position: center top;
+    }
+    .selection-panel {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 10px;
+      padding: 10px;
+    }
+    .portrait {
+      width: 68px;
+      height: 68px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,226,147,.42);
+      border-radius: 4px;
+      background: rgba(0,0,0,.32);
+      overflow: hidden;
+    }
+    .portrait img {
+      max-width: 66px;
+      max-height: 66px;
+      object-fit: contain;
+      filter: drop-shadow(0 3px 3px rgba(0,0,0,.55));
+    }
+    .selection-title {
+      color: #fff1bd;
+      font: 800 15px/1.18 system-ui, sans-serif;
+      min-height: 18px;
+      overflow-wrap: anywhere;
+    }
+    .selection-meta {
+      color: #d7c49a;
+      font: 700 11px/1.35 system-ui, sans-serif;
+      margin-top: 4px;
+    }
+    .selection-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 9px;
+      flex-wrap: wrap;
+    }
+    .command-panel {
+      padding: 9px 11px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+    .command-tabs {
+      display: grid;
+      grid-auto-flow: row;
+      gap: 6px;
+    }
+    .tab-icon {
+      width: 42px;
+      height: 34px;
+      border: 1px solid rgba(255,226,147,.32);
+      border-radius: 3px;
+      background: rgba(0,0,0,.32);
+      display: grid;
+      place-items: center;
+    }
+    .tab-icon img {
+      max-width: 38px;
+      max-height: 30px;
+      object-fit: contain;
+    }
+    .command-grid {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(34px, 42px));
+      gap: 6px;
+      align-content: start;
+    }
+    .command-slot {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255,226,147,.34);
+      border-radius: 3px;
+      background: linear-gradient(180deg, rgba(93,67,39,.78), rgba(22,17,12,.92));
+      display: grid;
+      place-items: center;
+      color: #ffe2a0;
+      font: 800 11px/1 system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .command-slot img {
+      max-width: 30px;
+      max-height: 30px;
+      object-fit: contain;
+    }
+    .command-slot:disabled {
+      opacity: .38;
+      cursor: default;
+    }
+    .replay-panel {
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .replay-line {
+      color: #ffe8ad;
+      font: 800 13px/1.25 system-ui, sans-serif;
+      overflow-wrap: anywhere;
+    }
+    .replay-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .camera-hint {
+      color: #bfae87;
+      font: 700 10px/1.25 system-ui, sans-serif;
+    }
+    .screen-message {
+      position: absolute;
+      left: 50%;
+      top: 86px;
+      transform: translateX(-50%);
+      min-width: 310px;
+      max-width: min(620px, calc(100vw - 36px));
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 9px;
+      align-items: center;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,229,146,.42);
+      border-radius: 4px;
+      background: linear-gradient(180deg, rgba(43,33,20,.88), rgba(14,12,9,.92));
+      color: #fff1c2;
+      box-shadow: 0 8px 24px rgba(0,0,0,.42);
+      font: 800 13px/1.25 system-ui, sans-serif;
+      pointer-events: none;
+      opacity: .94;
+    }
+    body.has-game-assets .screen-message {
+      background-image: linear-gradient(180deg, rgba(34,25,15,.48), rgba(8,7,5,.78)), url("__ASSET_TOOLTIP__");
+      background-size: 100% 100%, 100% 100%;
+    }
+    .screen-message img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
     .stage.playing .playing-dot {
       background: var(--green);
       animation: pulse 1s infinite;
@@ -1239,7 +1436,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       <img id="map" src="" width="__WIDTH__" height="__HEIGHT__" alt="Replay frame">
       <div id="entityLayer" class="entity-layer"></div>
     </div>
-    <div class="sidehud">
+    <div class="screen-message">
+      <img id="messageIcon" src="__ICON_ONSCREEN_WORKER__" alt="">
+      <div id="messageText">Expert Opening bereit</div>
+    </div>
+    <div class="sidehud compact">
       <div class="panel">
         <div id="headline" class="big"></div>
         <div id="action" class="actionline"></div>
@@ -1275,6 +1476,48 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         </div>
       </div>
     </div>
+    <div class="bottomhud">
+      <div class="selection-panel">
+        <div class="portrait"><img id="selectedPortrait" src="__ICON_SERF__" alt=""></div>
+        <div>
+          <div id="selectedTitle" class="selection-title">Keine Auswahl</div>
+          <div id="selectedMeta" class="selection-meta">Einheit oder Gebaeude anklicken</div>
+          <div id="selectedCoords" class="selection-meta">Kamera: Drag, Rand, WASD, Mausrad</div>
+          <div class="selection-actions">
+            <button class="toolbutton" id="focusSelected">Fokus</button>
+            <button class="toolbutton" id="clearSelected">Abwahl</button>
+          </div>
+        </div>
+      </div>
+      <div class="command-panel">
+        <div class="command-tabs">
+          <div class="tab-icon"><img src="__ICON_TAB_BUILD__" alt=""></div>
+          <div class="tab-icon"><img src="__ICON_TAB_WORKERS__" alt=""></div>
+          <div class="tab-icon"><img src="__ICON_TAB_MOTIVATION__" alt=""></div>
+        </div>
+        <div id="commandGrid" class="command-grid">
+          <button class="command-slot" id="cmdPrev"><img src="__ICON_TO_WORKER__" alt=""><span>&lt;</span></button>
+          <button class="command-slot" id="cmdNext"><img src="__ICON_TO_BUILDING__" alt=""><span>&gt;</span></button>
+          <button class="command-slot" id="cmdHQ"><img src="__ICON_HEADQUARTER__" alt=""><span>HQ</span></button>
+          <button class="command-slot" id="cmdPlay"><span>Play</span></button>
+          <button class="command-slot" id="cmdStepBack"><span>-1</span></button>
+          <button class="command-slot" id="cmdStepForward"><span>+1</span></button>
+          <button class="command-slot" id="cmdZoomIn"><span>+</span></button>
+          <button class="command-slot" id="cmdZoomOut"><span>-</span></button>
+        </div>
+      </div>
+      <div class="replay-panel">
+        <div id="bottomAction" class="replay-line">Aktion 0</div>
+        <input id="bottomSlider" type="range" min="0" max="__MAX_INDEX__" value="0">
+        <div class="replay-buttons">
+          <button class="toolbutton" id="bottomPrev">Zurueck</button>
+          <button class="toolbutton" id="bottomPlay">Play</button>
+          <button class="toolbutton" id="bottomNext">Weiter</button>
+          <button class="toolbutton" id="bottomHQ">HQ</button>
+        </div>
+        <div class="camera-hint">WASD/Rand scrollt, Mausrad zoomt, Klick waehlt Entity.</div>
+      </div>
+    </div>
   </div>
   <script>
     const timeline = __TIMELINE__;
@@ -1301,6 +1544,15 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const action = document.getElementById('action');
     const zoomLevel = document.getElementById('zoomLevel');
     const paydayIcon = document.getElementById('paydayIcon');
+    const bottomSlider = document.getElementById('bottomSlider');
+    const bottomAction = document.getElementById('bottomAction');
+    const bottomPlay = document.getElementById('bottomPlay');
+    const selectedPortrait = document.getElementById('selectedPortrait');
+    const selectedTitle = document.getElementById('selectedTitle');
+    const selectedMeta = document.getElementById('selectedMeta');
+    const selectedCoords = document.getElementById('selectedCoords');
+    const messageIcon = document.getElementById('messageIcon');
+    const messageText = document.getElementById('messageText');
     const resIds = {
       taler: document.getElementById('resTaler'),
       holz: document.getElementById('resHolz'),
@@ -1323,6 +1575,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     let lastX = 0;
     let lastY = 0;
     const entityNodes = new Map();
+    const entityData = new Map();
+    let selectedEntityId = null;
+    let mouseX = 0;
+    let mouseY = 0;
+    let edgePanActive = false;
+    let edgePanFrame = null;
     const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
     const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
     const INITIAL_CAMERA_SCALE = __INITIAL_CAMERA_SCALE__;
@@ -1362,6 +1620,32 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       world.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
       updateMinimap();
     }
+    function panBy(dx, dy) {
+      tx += dx;
+      ty += dy;
+      applyTransform();
+    }
+    function zoomAt(screenX, screenY, factor) {
+      const beforeX = (screenX - tx) / scale;
+      const beforeY = (screenY - ty) / scale;
+      scale = Math.max(0.15, Math.min(12, scale * factor));
+      tx = screenX - beforeX * scale;
+      ty = screenY - beforeY * scale;
+      applyTransform();
+    }
+    function centerOnFramePoint(x, y, targetScale) {
+      if (targetScale) scale = Math.max(0.15, Math.min(12, targetScale));
+      tx = stage.clientWidth / 2 - Number(x || 0) * scale;
+      ty = stage.clientHeight / 2 - Number(y || 0) * scale;
+      applyTransform();
+    }
+    function selectedEntity() {
+      return selectedEntityId ? entityData.get(selectedEntityId) : null;
+    }
+    function setMessage(text, icon) {
+      if (messageText) messageText.textContent = text || '';
+      if (messageIcon && icon) messageIcon.src = icon;
+    }
     function sanitizeClass(value) {
       return String(value || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
     }
@@ -1374,12 +1658,53 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     function entitySpriteSrc(entity) {
       return spriteByKey[entity.sprite_key] || meshByKey[entity.sprite_key] || entityFallbackAsset(entity.kind);
     }
+    function selectionFallbackSrc(entity) {
+      if (!entity) return assetByKey.serf || '';
+      if (entity.kind === 'serf') return spriteByKey[entity.sprite_key] || assetByKey.serf || '';
+      if (entity.kind === 'worker') return spriteByKey[entity.sprite_key] || assetByKey.worker || '';
+      if (entity.kind === 'site') return spriteByKey[entity.sprite_key] || assetByKey.site || '';
+      return spriteByKey[entity.sprite_key] || assetByKey.generic_building || assetByKey.headquarter || '';
+    }
+    function renderSelection() {
+      const entity = selectedEntity();
+      if (!entity) {
+        selectedTitle.textContent = 'Keine Auswahl';
+        selectedMeta.textContent = 'Einheit oder Gebaeude anklicken';
+        selectedCoords.textContent = 'Kamera: Drag, Rand, WASD, Mausrad';
+        selectedPortrait.src = assetByKey.serf || '';
+        return;
+      }
+      selectedTitle.textContent = entity.label || entity.kind || entity.id;
+      selectedMeta.textContent = `${entity.kind || ''} ${entity.state || ''}`.trim();
+      selectedCoords.textContent = `x=${Math.round(Number(entity.x || 0))} y=${Math.round(Number(entity.y || 0))}`;
+      selectedPortrait.src = selectionFallbackSrc(entity);
+      setMessage(entity.label || entity.id, entity.kind === 'serf' ? (assetByKey.onscreen_serf || selectedPortrait.src) : (assetByKey.onscreen_worker || selectedPortrait.src));
+    }
+    function selectEntity(id, focus = false) {
+      selectedEntityId = id && entityData.has(id) ? id : null;
+      for (const [nodeId, node] of entityNodes.entries()) {
+        node.classList.toggle('selected', nodeId === selectedEntityId);
+      }
+      renderSelection();
+      const entity = selectedEntity();
+      if (focus && entity) centerOnFramePoint(entity.x, entity.y, Math.max(scale, 2.4));
+    }
+    function cycleEntity(direction) {
+      const current = timeline[idx] || {};
+      const entities = current.entities || [];
+      if (!entities.length) return;
+      const currentIndex = Math.max(0, entities.findIndex(entity => entity.id === selectedEntityId));
+      const nextIndex = (currentIndex + direction + entities.length) % entities.length;
+      selectEntity(entities[nextIndex].id, true);
+    }
     function updateEntities(f) {
       const keep = new Set();
+      entityData.clear();
       const duration = timer ? Math.max(120, Number(speed.value) * .88) : 120;
       for (const entity of (f.entities || [])) {
         const id = entity.id;
         keep.add(id);
+        entityData.set(id, entity);
         let node = entityNodes.get(id);
         const src = entitySpriteSrc(entity);
         if (!src) continue;
@@ -1390,10 +1715,19 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           node.draggable = false;
           entityLayer.appendChild(node);
           entityNodes.set(id, node);
+          node.addEventListener('click', event => {
+            event.stopPropagation();
+            selectEntity(node.dataset.entityId, false);
+          });
+          node.addEventListener('dblclick', event => {
+            event.stopPropagation();
+            selectEntity(node.dataset.entityId, true);
+          });
         }
         const previousX = Number(node.dataset.x || entity.x);
         const flip = Number(entity.x) < previousX ? -1 : 1;
         node.dataset.x = String(entity.x);
+        node.dataset.entityId = id;
         if (node.getAttribute('src') !== src) node.src = src;
         const kindClass = sanitizeClass(entity.kind);
         const stateClass = sanitizeClass(entity.state);
@@ -1410,12 +1744,17 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         node.style.transitionDuration = `${duration}ms`;
         node.style.setProperty('--anchor-y', String(entity.anchor_y || .78));
         node.style.setProperty('--flip', String(flip));
+        node.classList.toggle('selected', id === selectedEntityId);
       }
       for (const [id, node] of entityNodes.entries()) {
         if (keep.has(id)) continue;
         node.remove();
         entityNodes.delete(id);
       }
+      if (selectedEntityId && !entityData.has(selectedEntityId)) {
+        selectedEntityId = null;
+      }
+      renderSelection();
     }
     function fit() {
       const sx = stage.clientWidth / MAP_WIDTH;
@@ -1475,9 +1814,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       img.src = f.frame;
       mini.src = f.frame;
       slider.value = idx;
+      bottomSlider.value = idx;
       const lastDecision = timeline[timeline.length - 1].decision;
       headline.innerHTML = `<span class="playing-dot"></span>Simzeit ${fmtTime(f.time)}`;
       action.textContent = `Aktion ${f.decision}/${lastDecision}: ${f.action}`;
+      bottomAction.textContent = `t=${fmtTime(f.time)} | ${f.action}`;
       setText('statBuildings', fmt(f.buildings));
       setText('statSites', fmt(f.sites));
       setText('statSerfs', fmt(f.serfs));
@@ -1495,7 +1836,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       clearInterval(timer);
       timer = null;
       playBtn.textContent = 'Play';
+      bottomPlay.textContent = 'Play';
       playBtn.classList.remove('active');
+      bottomPlay.classList.remove('active');
       stage.classList.remove('playing');
     }
     function play() {
@@ -1504,7 +1847,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         return;
       }
       playBtn.textContent = 'Pause';
+      bottomPlay.textContent = 'Pause';
       playBtn.classList.add('active');
+      bottomPlay.classList.add('active');
       stage.classList.add('playing');
       timer = setInterval(() => {
         if (idx >= timeline.length - 1) {
@@ -1517,6 +1862,23 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     document.getElementById('prev').onclick = () => step(-1);
     document.getElementById('next').onclick = () => step(1);
     playBtn.onclick = play;
+    document.getElementById('bottomPrev').onclick = () => step(-1);
+    document.getElementById('bottomNext').onclick = () => step(1);
+    document.getElementById('bottomHQ').onclick = focusInitialCamera;
+    bottomPlay.onclick = play;
+    document.getElementById('cmdPrev').onclick = () => cycleEntity(-1);
+    document.getElementById('cmdNext').onclick = () => cycleEntity(1);
+    document.getElementById('cmdHQ').onclick = focusInitialCamera;
+    document.getElementById('cmdPlay').onclick = play;
+    document.getElementById('cmdStepBack').onclick = () => step(-1);
+    document.getElementById('cmdStepForward').onclick = () => step(1);
+    document.getElementById('cmdZoomIn').onclick = () => zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1.18);
+    document.getElementById('cmdZoomOut').onclick = () => zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1 / 1.18);
+    document.getElementById('focusSelected').onclick = () => {
+      const entity = selectedEntity();
+      if (entity) centerOnFramePoint(entity.x, entity.y, Math.max(scale, 2.4));
+    };
+    document.getElementById('clearSelected').onclick = () => selectEntity(null, false);
     fullscreenBtn.onclick = async () => {
       if (!document.fullscreenElement) {
         await document.documentElement.requestFullscreen();
@@ -1530,19 +1892,14 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       play();
     };
     slider.oninput = e => show(Number(e.target.value));
+    bottomSlider.oninput = e => show(Number(e.target.value));
     document.getElementById('fit').onclick = focusInitialCamera;
     stage.addEventListener('wheel', e => {
       e.preventDefault();
       const rect = stage.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
-      const beforeX = (mx - tx) / scale;
-      const beforeY = (my - ty) / scale;
-      scale *= e.deltaY < 0 ? 1.15 : 1 / 1.15;
-      scale = Math.max(0.15, Math.min(12, scale));
-      tx = mx - beforeX * scale;
-      ty = my - beforeY * scale;
-      applyTransform();
+      zoomAt(mx, my, e.deltaY < 0 ? 1.15 : 1 / 1.15);
     }, { passive: false });
     miniBox.addEventListener('click', e => {
       const rect = miniBox.getBoundingClientRect();
@@ -1554,6 +1911,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     });
     stage.addEventListener('mousedown', e => {
       if (e.target.closest('.sidehud')) return;
+      if (e.target.closest('.bottomhud')) return;
+      if (e.target.closest('.entity-sprite')) return;
       dragging = true;
       stage.classList.add('dragging');
       lastX = e.clientX;
@@ -1571,13 +1930,56 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       lastY = e.clientY;
       applyTransform();
     });
+    stage.addEventListener('mousemove', e => {
+      const rect = stage.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    });
+    stage.addEventListener('mouseenter', () => {
+      edgePanActive = true;
+      if (!edgePanFrame) edgePanLoop();
+    });
+    stage.addEventListener('mouseleave', () => {
+      edgePanActive = false;
+    });
+    stage.addEventListener('click', e => {
+      if (e.target.closest('.sidehud') || e.target.closest('.bottomhud') || e.target.closest('.entity-sprite')) return;
+      selectEntity(null, false);
+    });
+    function edgePanLoop() {
+      edgePanFrame = requestAnimationFrame(edgePanLoop);
+      if (!edgePanActive || dragging) return;
+      const margin = 26;
+      const speedPx = 13;
+      let dx = 0;
+      let dy = 0;
+      if (mouseX < margin) dx += speedPx;
+      if (mouseX > stage.clientWidth - margin) dx -= speedPx;
+      if (mouseY < margin) dy += speedPx;
+      if (mouseY > stage.clientHeight - margin) dy -= speedPx;
+      if (dx || dy) panBy(dx, dy);
+    }
     window.addEventListener('keydown', e => {
       if (e.key === ' ') {
         e.preventDefault();
         play();
       }
-      if (e.key === 'ArrowLeft') step(-1);
-      if (e.key === 'ArrowRight') step(1);
+      const key = e.key.toLowerCase();
+      if (key === 'arrowleft') {
+        e.shiftKey ? step(-1) : panBy(80, 0);
+      }
+      if (key === 'arrowright') {
+        e.shiftKey ? step(1) : panBy(-80, 0);
+      }
+      if (key === 'arrowup') panBy(0, 80);
+      if (key === 'arrowdown') panBy(0, -80);
+      if (key === 'a') panBy(80, 0);
+      if (key === 'd') panBy(-80, 0);
+      if (key === 'w') panBy(0, 80);
+      if (key === 's') panBy(0, -80);
+      if (key === '+') zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1.18);
+      if (key === '-') zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1 / 1.18);
+      if (key === 'escape') selectEntity(null, false);
     });
     window.addEventListener('resize', focusInitialCamera);
     show(0);
@@ -1613,6 +2015,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         "__ICON_WORKER__": assets.get("worker") or blank_asset,
         "__ICON_UNIVERSITY__": assets.get("university") or blank_asset,
         "__ICON_HEADQUARTER__": assets.get("headquarter") or blank_asset,
+        "__ICON_TAB_BUILD__": assets.get("tab_build") or blank_asset,
+        "__ICON_TAB_WORKERS__": assets.get("tab_workers") or blank_asset,
+        "__ICON_TAB_MOTIVATION__": assets.get("tab_motivation") or blank_asset,
+        "__ICON_ONSCREEN_WORKER__": assets.get("onscreen_worker") or assets.get("worker") or blank_asset,
+        "__ICON_TO_BUILDING__": assets.get("to_building") or assets.get("generic_building") or blank_asset,
+        "__ICON_TO_WORKER__": assets.get("to_worker") or assets.get("generic_settler") or blank_asset,
         "__PAYDAY_ICON__": (game_assets.get("payday_frames") or [blank_asset])[0],
         "__GRAPHICS_REPORT_CLASS__": graphics_report_class,
         "__GRAPHICS_REPORT_LINK__": graphics_report_link,

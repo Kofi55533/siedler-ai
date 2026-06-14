@@ -23,7 +23,7 @@ if str(ROOT_DIR) not in sys.path:
 from environment import ActionPhase, SiedlerScharfschuetzenEnv
 from expert_opening import ExpertOpeningController
 from tools.archive.export_original_graphics import export_original_graphics_report
-from tools.archive.render_wintersturm_background import render_background as render_wintersturm_background
+from tools.archive.render_wintersturm_background import EXTRACTED_DIR, render_background as render_wintersturm_background
 from tools.archive import render_replay_mp4 as replay
 
 
@@ -290,6 +290,75 @@ def _make_html_base_image(env, args) -> np.ndarray:
 
     args._base_render_scaled = False
     return replay._make_base_image(env, background_path or None)
+
+
+def _crop_p1_array(array: np.ndarray) -> np.ndarray:
+    height, width = array.shape[:2]
+    return array[: height // 2, width // 2 :]
+
+
+def _make_terrain3d_payload(env, args) -> dict:
+    height_path = EXTRACTED_DIR / "height_map_515.npy"
+    walkable_path = EXTRACTED_DIR / "walkable_map_515.npy"
+    if not height_path.exists():
+        return {"enabled": False, "reason": "height_map_515.npy missing"}
+    try:
+        height = _crop_p1_array(np.load(height_path)).astype(np.float32)
+        walkable = _crop_p1_array(np.load(walkable_path)).astype(np.float32) if walkable_path.exists() else np.ones_like(height)
+    except Exception as exc:
+        return {"enabled": False, "reason": f"terrain load failed: {exc}"}
+
+    grid_h = int(env.map_manager.grid.height)
+    grid_w = int(env.map_manager.grid.width)
+    render_scale = max(1, int(getattr(args, "render_scale", 1) or 1))
+    target_w = grid_w * render_scale
+    target_h = grid_h * render_scale
+
+    # Keep native player-quadrant fidelity but cap at about 260x260 vertices.
+    step_y = max(1, int(np.ceil(height.shape[0] / 258)))
+    step_x = max(1, int(np.ceil(height.shape[1] / 258)))
+    height_s = height[::step_y, ::step_x]
+    walk_s = walkable[::step_y, ::step_x]
+    rows, cols = height_s.shape
+    h_min = float(np.min(height_s))
+    h_max = float(np.max(height_s))
+    h_span = max(1.0, h_max - h_min)
+    vertical_scale = 185.0
+
+    positions: list[float] = []
+    uvs: list[float] = []
+    walk_flags: list[int] = []
+    for row in range(rows):
+        z = -target_h / 2.0 + (row / max(1, rows - 1)) * target_h
+        for col in range(cols):
+            x = -target_w / 2.0 + (col / max(1, cols - 1)) * target_w
+            y = ((float(height_s[row, col]) - h_min) / h_span) * vertical_scale - 18.0
+            positions.extend([round(x, 4), round(y, 4), round(z, 4)])
+            uvs.extend([round(col / max(1, cols - 1), 6), round(row / max(1, rows - 1), 6)])
+            walk_flags.append(1 if float(walk_s[row, col]) >= 0.5 else 0)
+
+    indices: list[int] = []
+    for row in range(rows - 1):
+        for col in range(cols - 1):
+            i0 = row * cols + col
+            i1 = i0 + 1
+            i2 = i0 + cols
+            i3 = i2 + 1
+            indices.extend([i0, i2, i1, i1, i2, i3])
+
+    return {
+        "enabled": True,
+        "rows": int(rows),
+        "cols": int(cols),
+        "source_shape": [int(height.shape[0]), int(height.shape[1])],
+        "height_min": round(h_min, 3),
+        "height_max": round(h_max, 3),
+        "vertical_scale": vertical_scale,
+        "positions": positions,
+        "uvs": uvs,
+        "indices": indices,
+        "walkable": walk_flags,
+    }
 
 
 def _frame_xy(env, args, x: float, y: float) -> tuple[int, int]:
@@ -1559,6 +1628,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const model3dByKey = originalGraphics.model3d_by_key || {};
     const embeddedModel3d = originalGraphics.embedded_model3d || {};
     const assetByKey = gameAssets.assets || {};
+    const terrain3d = gameAssets.terrain3d || { enabled: false };
     const paydayFrames = gameAssets.payday_frames || [];
     const MAP_WIDTH = __WIDTH__;
     const MAP_HEIGHT = __HEIGHT__;
@@ -1758,6 +1828,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         [0, 0, 1, 0, 1, 1, 0, 1],
         [0, 1, 2, 0, 2, 3]
       );
+      const terrainMesh = terrain3d.enabled
+        ? createStaticMesh(terrain3d.positions || [], terrain3d.uvs || [], terrain3d.indices || [])
+        : mapQuad;
+      const terrainRows = Number(terrain3d.rows || 0);
+      const terrainCols = Number(terrain3d.cols || 0);
+      const terrainPositions = terrain3d.positions || [];
 
       function createTexture(url) {
         if (textureCache.has(url)) return textureCache.get(url);
@@ -1924,6 +2000,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           x, y, z, 1,
         ]);
       }
+      function terrainHeightAt(frameX, frameY) {
+        if (!terrain3d.enabled || !terrainRows || !terrainCols || !terrainPositions.length) return 0;
+        const col = Math.max(0, Math.min(terrainCols - 1, Math.round((Number(frameX || 0) / MAP_WIDTH) * (terrainCols - 1))));
+        const row = Math.max(0, Math.min(terrainRows - 1, Math.round((Number(frameY || 0) / MAP_HEIGHT) * (terrainRows - 1))));
+        const index = (row * terrainCols + col) * 3 + 1;
+        return Number(terrainPositions[index] || 0);
+      }
 
       function resize() {
         const width = Math.max(1, stage.clientWidth);
@@ -1981,9 +2064,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         const vp = cameraMatrix();
 
-        bindMesh(mapQuad);
+        bindMesh(terrainMesh);
         const mapTexture = createTexture((frame && frame.frame) || '');
-        drawSubmesh(vp, mapQuad, { indexBuffer: mapQuad.indexBuffer, count: mapQuad.count, texture: mapTexture }, new Float32Array([
+        drawSubmesh(vp, terrainMesh, { indexBuffer: terrainMesh.indexBuffer, indexType: terrainMesh.indexType, count: terrainMesh.count, texture: mapTexture }, new Float32Array([
           1, 0, 0, 0,
           0, 1, 0, 0,
           0, 0, 1, 0,
@@ -2000,8 +2083,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           bindMesh(model);
           const worldX = Number(entity.x || 0) - MAP_WIDTH / 2;
           const worldZ = Number(entity.y || 0) - MAP_HEIGHT / 2;
+          const groundY = terrainHeightAt(entity.x, entity.y);
           const modelScale = Math.max(0.08, (Number(entity.size || 32) * 1.45) / Math.max(1, model.maxSpan));
-          const matrix = m4TranslateScale(worldX, 0, worldZ, modelScale);
+          const matrix = m4TranslateScale(worldX, groundY, worldZ, modelScale);
           for (const submesh of model.submeshes) {
             if (submesh.count > 0) drawSubmesh(vp, model, submesh, matrix);
           }
@@ -2014,6 +2098,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           modelsLoaded: Array.from(modelCache.values()).filter(record => record.loaded).length,
           modelErrors: Array.from(modelCache.values()).filter(record => record.error).length,
           texturesCached: textureCache.size,
+          terrain: terrain3d.enabled ? `${terrainRows}x${terrainCols}` : 'flat',
           canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight],
         };
         canvas.dataset.drawnModels = String(lastStats.drawnModels);
@@ -2022,6 +2107,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.modelsLoaded = String(lastStats.modelsLoaded);
         canvas.dataset.modelErrors = String(lastStats.modelErrors);
         canvas.dataset.texturesCached = String(lastStats.texturesCached);
+        canvas.dataset.terrain = String(lastStats.terrain);
       }
 
       let renderQueued = false;
@@ -2471,6 +2557,7 @@ def main() -> None:
     env.reset(seed=args.seed)
     rng = np.random.default_rng(args.seed)
     base = _make_html_base_image(env, args)
+    game_assets["terrain3d"] = _make_terrain3d_payload(env, args)
     controller = ExpertOpeningController() if args.strategy == "expert_opening" else None
     opening_state = replay.OpeningPolicyState() if args.strategy == "opening_v1" else None
 

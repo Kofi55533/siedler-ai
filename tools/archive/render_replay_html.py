@@ -53,6 +53,7 @@ def _parse_args():
     )
     parser.add_argument("--no-game-assets", action="store_true", help="Keine Original-Spielgrafiken in das Replay kopieren")
     parser.add_argument("--no-game-icon-overlay", action="store_true", help="Keine Original-Entitaets-Overlays in die Kartenframes zeichnen")
+    parser.add_argument("--bake-entity-overlay", action="store_true", help="Entitaeten zusaetzlich direkt in die JPG-Frames brennen")
     parser.add_argument("--no-original-graphics-report", action="store_true", help="Keinen DFF/DDS/ANM-Originalgrafik-Report erzeugen")
     parser.add_argument("--refresh-original-graphics-report", action="store_true", help="Originalgrafik-Report neu erzeugen, auch wenn er schon existiert")
     return parser.parse_args()
@@ -263,7 +264,106 @@ def _make_html_base_image(env, args) -> np.ndarray:
     return replay._make_base_image(env, background_path or None)
 
 
-def _timeline_entry(env, frame_name: str, decision: int, action_label: str) -> dict:
+def _frame_xy(env, args, x: float, y: float) -> tuple[int, int]:
+    grid_h = env.map_manager.grid.height
+    grid_w = env.map_manager.grid.width
+    render_scale = max(1, int(getattr(args, "render_scale", 1) or 1))
+    px, py = replay._world_to_px(env, x, y, grid_w, grid_h)
+    return int(round(px * render_scale)), int(round(py * render_scale))
+
+
+def _entity_snapshot(env, args) -> list[dict]:
+    entities: list[dict] = []
+
+    def add_entity(
+        entity_id: str,
+        kind: str,
+        sprite_key: str,
+        xy,
+        size: int,
+        label: str,
+        state: str = "",
+        anchor_y: float = 0.72,
+    ) -> None:
+        pos = replay._as_xy(xy)
+        if pos is None:
+            return
+        px, py = _frame_xy(env, args, pos[0], pos[1])
+        entities.append(
+            {
+                "id": entity_id,
+                "kind": kind,
+                "sprite_key": sprite_key,
+                "x": px,
+                "y": py,
+                "size": int(size),
+                "label": label,
+                "state": state,
+                "anchor_y": float(anchor_y),
+            }
+        )
+
+    for key, pos in getattr(env, "building_position_map", {}).items():
+        building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
+        add_entity(
+            f"building:{key}",
+            "building",
+            _building_mesh_key(building_name),
+            pos,
+            _building_sprite_size(building_name),
+            building_name,
+            "built",
+            0.62,
+        )
+
+    for index, site in enumerate(getattr(env, "construction_sites", [])):
+        building_name = str(site.get("building", "Baustelle"))
+        site_id = site.get("site_id", index)
+        progress = site.get("progress", 0)
+        add_entity(
+            f"site:{site_id}",
+            "site",
+            _building_mesh_key(building_name),
+            site.get("position"),
+            _building_sprite_size(building_name, construction=True),
+            f"{building_name} Baustelle {int(progress)}",
+            "construction",
+            0.62,
+        )
+
+    for index, worker in enumerate(getattr(env.workforce_manager, "workers", [])):
+        worker_type = str(getattr(worker, "worker_type", "worker") or "worker")
+        state = str(getattr(getattr(worker, "state", None), "value", getattr(worker, "state", "")) or "")
+        add_entity(
+            f"worker:{index}:{worker_type}",
+            "worker",
+            _worker_mesh_key(worker),
+            getattr(worker, "position", None),
+            34,
+            f"{worker_type} {state}",
+            state,
+            0.84,
+        )
+
+    for index, serf in enumerate(getattr(env.production_system, "serfs", [])):
+        serf_id = getattr(serf, "serf_id", None)
+        state = str(getattr(getattr(serf, "state", None), "value", getattr(serf, "state", "")) or "")
+        add_entity(
+            f"serf:{serf_id if serf_id is not None else index}",
+            "serf",
+            _serf_mesh_key(serf),
+            getattr(serf, "position", None),
+            34,
+            f"Serf {serf_id if serf_id is not None else index} {state}",
+            state,
+            0.84,
+        )
+
+    entities.sort(key=lambda item: (int(item["y"]), 0 if item["kind"] in {"building", "site"} else 1, item["id"]))
+    return entities
+
+
+def _timeline_entry(env, frame_name: str, decision: int, action_label: str, args=None) -> dict:
     first_payday = None
     last_payday = None
     next_payday = None
@@ -304,10 +404,11 @@ def _timeline_entry(env, frame_name: str, decision: int, action_label: str) -> d
         "next_payday": next_payday,
         "payday_countdown": payday_countdown,
         "tax_level": int(getattr(env, "current_tax_level", 0)),
+        "entities": _entity_snapshot(env, args) if args is not None else [],
     }
 
 
-_ICON_CACHE: dict[tuple[str, int, int], Image.Image] = {}
+_ICON_CACHE: dict[tuple[str, int, str], Image.Image] = {}
 
 
 def _asset_path_for_render(args, key: str) -> Path | None:
@@ -415,7 +516,14 @@ def _worker_mesh_key(worker) -> str:
 
 def _serf_mesh_key(serf) -> str:
     state = str(getattr(getattr(serf, "state", None), "value", getattr(serf, "state", ""))).lower()
-    resource = str(getattr(serf, "assigned_resource", "") or getattr(serf, "resource", "") or "").lower()
+    target_resource = getattr(serf, "target_resource", "")
+    resource = str(
+        getattr(serf, "assigned_resource", "")
+        or getattr(serf, "resource", "")
+        or getattr(target_resource, "value", target_resource)
+        or getattr(serf, "work_location", "")
+        or ""
+    ).lower()
     if "build" in state:
         return "serf_build"
     if "wood" in resource or "wood" in state or "holz" in resource:
@@ -581,7 +689,8 @@ def _render_frame(env, base, decision: int, total: int, action_label: str, args)
     frame = replay._apply_viewport(frame, args.viewport)
     if not bool(getattr(args, "_base_render_scaled", False)):
         frame = replay._scale_frame(frame, args.render_scale)
-    frame = _overlay_game_icons(env, frame, args)
+    if bool(getattr(args, "bake_entity_overlay", False)):
+        frame = _overlay_game_icons(env, frame, args)
     return frame
 
 
@@ -834,15 +943,67 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     .stage.dragging {
       cursor: grabbing;
     }
+    #world {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: __WIDTH__px;
+      height: __HEIGHT__px;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
     #map {
       position: absolute;
       left: 0;
       top: 0;
-      transform-origin: 0 0;
-      image-rendering: pixelated;
+      width: 100%;
+      height: 100%;
+      image-rendering: auto;
       user-select: none;
       -webkit-user-drag: none;
       filter: saturate(1.05) contrast(1.03);
+    }
+    .entity-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: visible;
+    }
+    .entity-sprite {
+      --anchor-y: .78;
+      --flip: 1;
+      position: absolute;
+      object-fit: contain;
+      image-rendering: auto;
+      transform: translate(-50%, calc(-1 * var(--anchor-y) * 100%)) scaleX(var(--flip));
+      transform-origin: 50% 86%;
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,.52));
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .entity-sprite.building,
+    .entity-sprite.site {
+      filter: drop-shadow(0 6px 6px rgba(0,0,0,.48));
+    }
+    .entity-sprite.site {
+      opacity: .88;
+      mix-blend-mode: normal;
+    }
+    .entity-sprite.walking_to_resource,
+    .entity-sprite.walking_to_build,
+    .entity-sprite.walking_to_work,
+    .entity-sprite.walking_to_supplier,
+    .entity-sprite.walking_from_supplier_to_work,
+    .entity-sprite.walking_to_farm,
+    .entity-sprite.walking_to_residence,
+    .entity-sprite.walking_to_camp {
+      animation: entityWalk .54s steps(2, end) infinite;
+    }
+    .entity-sprite.serf.building,
+    .entity-sprite.extracting,
+    .entity-sprite.working,
+    .entity-sprite.construction {
+      animation: entityWork 1.1s ease-in-out infinite;
     }
     .sidehud {
       position: absolute;
@@ -1020,6 +1181,14 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       0%, 100% { opacity: .65; transform: scale(.92); }
       50% { opacity: 1; transform: scale(1.15); }
     }
+    @keyframes entityWalk {
+      0%, 100% { margin-top: 0; }
+      50% { margin-top: -2px; }
+    }
+    @keyframes entityWork {
+      0%, 100% { filter: drop-shadow(0 4px 4px rgba(0,0,0,.52)) brightness(1); }
+      50% { filter: drop-shadow(0 4px 4px rgba(0,0,0,.52)) brightness(1.08); }
+    }
   </style>
 </head>
 <body class="__GAME_ASSET_CLASS__">
@@ -1066,7 +1235,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     <span class="keycap">Space</span>
   </div>
   <div id="stage" class="stage">
-    <img id="map" src="" width="__WIDTH__" height="__HEIGHT__" alt="Replay frame">
+    <div id="world">
+      <img id="map" src="" width="__WIDTH__" height="__HEIGHT__" alt="Replay frame">
+      <div id="entityLayer" class="entity-layer"></div>
+    </div>
     <div class="sidehud">
       <div class="panel">
         <div id="headline" class="big"></div>
@@ -1107,10 +1279,16 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
   <script>
     const timeline = __TIMELINE__;
     const gameAssets = __GAME_ASSETS__;
+    const originalGraphics = gameAssets.original_graphics || {};
+    const spriteByKey = originalGraphics.sprite_by_key || {};
+    const meshByKey = originalGraphics.mesh_by_key || {};
+    const assetByKey = gameAssets.assets || {};
     const paydayFrames = gameAssets.payday_frames || [];
     const MAP_WIDTH = __WIDTH__;
     const MAP_HEIGHT = __HEIGHT__;
+    const world = document.getElementById('world');
     const img = document.getElementById('map');
+    const entityLayer = document.getElementById('entityLayer');
     const mini = document.getElementById('mini');
     const miniBox = document.getElementById('miniBox');
     const miniView = document.getElementById('miniView');
@@ -1144,6 +1322,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     let dragging = false;
     let lastX = 0;
     let lastY = 0;
+    const entityNodes = new Map();
     const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
     const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
     const INITIAL_CAMERA_SCALE = __INITIAL_CAMERA_SCALE__;
@@ -1180,8 +1359,63 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       miniView.style.height = `${clamp(visibleH * sy, 8, miniBox.clientHeight)}px`;
     }
     function applyTransform() {
-      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      world.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
       updateMinimap();
+    }
+    function sanitizeClass(value) {
+      return String(value || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+    }
+    function entityFallbackAsset(kind) {
+      if (kind === 'serf') return assetByKey.serf || '';
+      if (kind === 'worker') return assetByKey.worker || '';
+      if (kind === 'site') return assetByKey.site || assetByKey.mine || '';
+      return assetByKey.headquarter || assetByKey.site || '';
+    }
+    function entitySpriteSrc(entity) {
+      return spriteByKey[entity.sprite_key] || meshByKey[entity.sprite_key] || entityFallbackAsset(entity.kind);
+    }
+    function updateEntities(f) {
+      const keep = new Set();
+      const duration = timer ? Math.max(120, Number(speed.value) * .88) : 120;
+      for (const entity of (f.entities || [])) {
+        const id = entity.id;
+        keep.add(id);
+        let node = entityNodes.get(id);
+        const src = entitySpriteSrc(entity);
+        if (!src) continue;
+        if (!node) {
+          node = document.createElement('img');
+          node.decoding = 'async';
+          node.loading = 'eager';
+          node.draggable = false;
+          entityLayer.appendChild(node);
+          entityNodes.set(id, node);
+        }
+        const previousX = Number(node.dataset.x || entity.x);
+        const flip = Number(entity.x) < previousX ? -1 : 1;
+        node.dataset.x = String(entity.x);
+        if (node.getAttribute('src') !== src) node.src = src;
+        const kindClass = sanitizeClass(entity.kind);
+        const stateClass = sanitizeClass(entity.state);
+        node.className = `entity-sprite ${kindClass} ${stateClass}`;
+        node.alt = entity.label || entity.kind || '';
+        node.title = entity.label || '';
+        node.style.left = `${Number(entity.x || 0)}px`;
+        node.style.top = `${Number(entity.y || 0)}px`;
+        node.style.width = `${Number(entity.size || 32)}px`;
+        node.style.height = `${Number(entity.size || 32)}px`;
+        node.style.zIndex = String(1000 + Number(entity.y || 0));
+        node.style.transitionProperty = 'left, top';
+        node.style.transitionTimingFunction = 'linear';
+        node.style.transitionDuration = `${duration}ms`;
+        node.style.setProperty('--anchor-y', String(entity.anchor_y || .78));
+        node.style.setProperty('--flip', String(flip));
+      }
+      for (const [id, node] of entityNodes.entries()) {
+        if (keep.has(id)) continue;
+        node.remove();
+        entityNodes.delete(id);
+      }
     }
     function fit() {
       const sx = stage.clientWidth / MAP_WIDTH;
@@ -1250,6 +1484,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       setText('statWorkers', fmt(f.workers));
       updateResources(f);
       updatePayday(f);
+      updateEntities(f);
       updateMinimap();
     }
     function step(delta) {
@@ -1429,7 +1664,7 @@ def main() -> None:
     frame = _render_frame(env, base, 0, args.steps, last_action, args)
     frame_name = "frames/frame_0000.jpg"
     imageio.imwrite(frames_dir / "frame_0000.jpg", frame, quality=max(1, min(100, int(args.jpg_quality))))
-    timeline.append(_timeline_entry(env, frame_name, 0, last_action))
+    timeline.append(_timeline_entry(env, frame_name, 0, last_action, args))
     height, width = frame.shape[:2]
 
     done = False
@@ -1447,7 +1682,7 @@ def main() -> None:
         frame = _render_frame(env, base, decisions, args.steps, last_action, args)
         frame_name = f"frames/frame_{len(timeline):04d}.jpg"
         imageio.imwrite(frames_dir / Path(frame_name).name, frame, quality=max(1, min(100, int(args.jpg_quality))))
-        timeline.append(_timeline_entry(env, frame_name, decisions, last_action))
+        timeline.append(_timeline_entry(env, frame_name, decisions, last_action, args))
 
     (output_dir / "timeline.json").write_text(json.dumps(timeline, indent=2, ensure_ascii=False), encoding="utf-8")
     _write_html(output_dir, timeline, width, height, game_assets=game_assets)

@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 
@@ -596,6 +596,82 @@ def _polygon_area(points: list[tuple[float, float]]) -> float:
     ) * 0.5
 
 
+def _affine_coefficients(
+    dst_points: list[tuple[float, float]],
+    src_points: list[tuple[float, float]],
+) -> tuple[float, float, float, float, float, float] | None:
+    (x0, y0), (x1, y1), (x2, y2) = dst_points
+    (u0, v0), (u1, v1), (u2, v2) = src_points
+    det = x0 * (y1 - y2) + x1 * (y2 - y0) + x2 * (y0 - y1)
+    if abs(det) < 1e-6:
+        return None
+
+    def solve(a0: float, a1: float, a2: float) -> tuple[float, float, float]:
+        a = (a0 * (y1 - y2) + a1 * (y2 - y0) + a2 * (y0 - y1)) / det
+        b = (a0 * (x2 - x1) + a1 * (x0 - x2) + a2 * (x1 - x0)) / det
+        c = (
+            a0 * (x1 * y2 - x2 * y1)
+            + a1 * (x2 * y0 - x0 * y2)
+            + a2 * (x0 * y1 - x1 * y0)
+        ) / det
+        return a, b, c
+
+    a, b, c = solve(u0, u1, u2)
+    d, e, f = solve(v0, v1, v2)
+    return a, b, c, d, e, f
+
+
+def _uv_to_texture_points(texture: Image.Image, uv_values: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    width, height = texture.size
+    points: list[tuple[float, float]] = []
+    for u, v in uv_values:
+        uu = float(u) % 1.0
+        vv = 1.0 - (float(v) % 1.0)
+        points.append((uu * max(1, width - 1), vv * max(1, height - 1)))
+    return points
+
+
+def _draw_textured_triangle(
+    canvas: Image.Image,
+    texture: Image.Image,
+    points: list[tuple[float, float]],
+    uv_values: list[tuple[float, float]],
+) -> bool:
+    if len(points) != 3 or len(uv_values) != 3 or texture.width <= 0 or texture.height <= 0:
+        return False
+    min_x = max(0, int(math.floor(min(point[0] for point in points))))
+    max_x = min(canvas.width, int(math.ceil(max(point[0] for point in points))) + 1)
+    min_y = max(0, int(math.floor(min(point[1] for point in points))))
+    max_y = min(canvas.height, int(math.ceil(max(point[1] for point in points))) + 1)
+    if max_x <= min_x or max_y <= min_y:
+        return False
+
+    local_points = [(point[0] - min_x, point[1] - min_y) for point in points]
+    tex_points = _uv_to_texture_points(texture, uv_values)
+    coeffs = _affine_coefficients(local_points, tex_points)
+    if coeffs is None:
+        return False
+
+    width = max_x - min_x
+    height = max_y - min_y
+    try:
+        patch = texture.transform(
+            (width, height),
+            Image.Transform.AFFINE,
+            coeffs,
+            resample=Image.Resampling.BILINEAR,
+        ).convert("RGBA")
+    except Exception:
+        return False
+
+    mask = Image.new("L", (width, height), 0)
+    ImageDraw.Draw(mask).polygon(local_points, fill=255)
+    alpha = ImageChops.multiply(patch.getchannel("A"), mask)
+    patch.putalpha(alpha)
+    canvas.alpha_composite(patch, (min_x, min_y))
+    return True
+
+
 def _make_textured_sprite(source: Path, game_root: Path, output_dir: Path, thumb_size: int) -> Path | None:
     try:
         meshes = _collect_meshes(source)
@@ -637,7 +713,15 @@ def _make_textured_sprite(source: Path, game_root: Path, output_dir: Path, thumb
         fill=(0, 0, 0, 42),
     )
 
-    draw_items: list[tuple[float, list[tuple[float, float]], tuple[int, int, int, int]]] = []
+    draw_items: list[
+        tuple[
+            float,
+            list[tuple[float, float]],
+            Image.Image | None,
+            list[tuple[float, float]],
+            tuple[int, int, int, int],
+        ]
+    ] = []
     fallback_texture = _load_texture_image(_find_texture_by_name(game_root, source.stem))
     for mesh_index, mesh in enumerate(meshes):
         vertices = mesh.get("parsed_vertices", [])
@@ -663,10 +747,11 @@ def _make_textured_sprite(source: Path, game_root: Path, output_dir: Path, thumb
             uv_values = [uvs[v1], uvs[v2], uvs[v3]] if max(v1, v2, v3) < len(uvs) else []
             color = _texture_sample(texture, uv_values, _fallback_material_color(material_index + mesh_index))
             depth = (points[0][1] + points[1][1] + points[2][1]) / 3.0 + mesh_index * 0.001
-            draw_items.append((depth, points, color))
+            draw_items.append((depth, points, texture, uv_values, color))
 
-    for _depth, points, color in sorted(draw_items, key=lambda item: item[0]):
-        draw.polygon(points, fill=color)
+    for _depth, points, texture, uv_values, color in sorted(draw_items, key=lambda item: item[0]):
+        if texture is None or not uv_values or not _draw_textured_triangle(canvas, texture, points, uv_values):
+            draw.polygon(points, fill=color)
 
     target = output_dir / "sprites" / f"{_safe_name(source)}.png"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -751,7 +836,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         "entities": entities,
         "notes": [
             "DDS texture atlases are converted to local PNG previews.",
-            "DFF static sprite previews are projected from original model geometry and sampled from original DDS textures.",
+            "DFF static sprite previews are projected from original model geometry and affine-mapped from original DDS textures.",
             "DFF mesh previews are also kept as untextured geometry-debug projections.",
             "ANM files are inventoried; full skeletal/object animation playback still requires a RenderWare animation renderer.",
         ],

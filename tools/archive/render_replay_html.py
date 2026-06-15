@@ -1834,6 +1834,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           animation: canvas && canvas.dataset.animation,
           animationKeys: canvas && canvas.dataset.animationKeys,
           orientedEntities: canvas && canvas.dataset.orientedEntities,
+          selectedEntity: canvas && canvas.dataset.selectedEntity,
           cameraYawDeg: canvas && canvas.dataset.cameraYawDeg,
           cameraPitchDeg: canvas && canvas.dataset.cameraPitchDeg,
         };
@@ -2006,9 +2007,24 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const terrainMesh = terrain3d.enabled
         ? createStaticMesh(terrain3d.positions || [], terrain3d.normals || [], terrain3d.uvs || [], terrain3d.indices || [])
         : mapQuad;
+      const selectionMesh = createStaticMesh(
+        [
+          -1, 0, -1,
+           1, 0, -1,
+           1, 0,  1,
+          -1, 0,  1,
+        ],
+        [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+        [0, 0, 1, 0, 1, 1, 0, 1],
+        [0, 1, 2, 0, 2, 3]
+      );
       const terrainRows = Number(terrain3d.rows || 0);
       const terrainCols = Number(terrain3d.cols || 0);
       const terrainPositions = terrain3d.positions || [];
+      const selectionTexture = createTexture(
+        'data:image/svg+xml;utf8,' +
+        encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><ellipse cx="64" cy="64" rx="54" ry="34" fill="none" stroke="#f6d66f" stroke-width="10" opacity=".96"/><ellipse cx="64" cy="64" rx="44" ry="25" fill="none" stroke="#3a2108" stroke-width="4" opacity=".85"/></svg>')
+      );
 
       function createTexture(url) {
         if (textureCache.has(url)) return textureCache.get(url);
@@ -2233,6 +2249,56 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const index = (row * terrainCols + col) * 3 + 1;
         return Number(terrainPositions[index] || 0);
       }
+      function projectWorldToCanvas(vp, x, y, z) {
+        const clipX = vp[0] * x + vp[4] * y + vp[8] * z + vp[12];
+        const clipY = vp[1] * x + vp[5] * y + vp[9] * z + vp[13];
+        const clipZ = vp[2] * x + vp[6] * y + vp[10] * z + vp[14];
+        const clipW = vp[3] * x + vp[7] * y + vp[11] * z + vp[15];
+        if (!Number.isFinite(clipW) || Math.abs(clipW) < 1e-6) return null;
+        const ndcX = clipX / clipW;
+        const ndcY = clipY / clipW;
+        const ndcZ = clipZ / clipW;
+        if (ndcX < -1.15 || ndcX > 1.15 || ndcY < -1.15 || ndcY > 1.15 || ndcZ < -1.25 || ndcZ > 1.25) {
+          return null;
+        }
+        return {
+          x: ((ndcX + 1) * 0.5) * canvas.clientWidth,
+          y: ((1 - ndcY) * 0.5) * canvas.clientHeight,
+          z: ndcZ,
+        };
+      }
+      function entityScreenPoint(entity, vp) {
+        const worldX = Number(entity.x || 0) - MAP_WIDTH / 2;
+        const worldZ = Number(entity.y || 0) - MAP_HEIGHT / 2;
+        const groundY = terrainHeightAt(entity.x, entity.y);
+        const lift = Math.max(8, Number(entity.size || 32) * 0.28);
+        return projectWorldToCanvas(vp, worldX, groundY + lift, worldZ);
+      }
+      function pickEntity(screenX, screenY, frame) {
+        resize();
+        const vp = cameraMatrix();
+        const entities = ((frame && frame.entities) || []).slice().sort((a, b) => Number(b.y || 0) - Number(a.y || 0));
+        let best = null;
+        let bestScore = Infinity;
+        for (const entity of entities) {
+          const modelUrl = model3dByKey[entity.sprite_key];
+          if (!modelUrl) continue;
+          const point = entityScreenPoint(entity, vp);
+          if (!point) continue;
+          const radius = Math.max(18, Math.min(58, Number(entity.size || 32) * 0.62));
+          const dx = point.x - screenX;
+          const dy = point.y - screenY;
+          const distance = Math.hypot(dx, dy);
+          if (distance > radius) continue;
+          const score = distance + Math.max(0, point.z + 1) * 3;
+          if (score < bestScore) {
+            bestScore = score;
+            best = entity;
+          }
+        }
+        canvas.dataset.lastPick = best ? best.id : "";
+        return best;
+      }
 
       function resize() {
         const width = Math.max(1, stage.clientWidth);
@@ -2318,10 +2384,26 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           const record = ensureModel(modelUrl);
           if (!record || !record.loaded || !record.model) continue;
           const model = record.model;
-          bindMesh(model);
           const worldX = Number(entity.x || 0) - MAP_WIDTH / 2;
           const worldZ = Number(entity.y || 0) - MAP_HEIGHT / 2;
           const groundY = terrainHeightAt(entity.x, entity.y);
+          if (entity.id === selectedEntityId) {
+            bindMesh(selectionMesh);
+            const ringScale = Math.max(22, Number(entity.size || 32) * 0.68);
+            const ringMatrix = m4Transform(worldX, groundY + 2.2, worldZ, ringScale, Number(entity.angle || 0), 1);
+            drawSubmesh(
+              vp,
+              selectionMesh,
+              {
+                indexBuffer: selectionMesh.indexBuffer,
+                indexType: selectionMesh.indexType,
+                count: selectionMesh.count,
+                texture: selectionTexture,
+              },
+              ringMatrix
+            );
+          }
+          bindMesh(model);
           const modelScale = Math.max(0.08, (Number(entity.size || 32) * 1.45) / Math.max(1, model.maxSpan));
           const motion = entityMotion(entity, frame && frame.time);
           const matrix = m4Transform(worldX, groundY + motion.y, worldZ, modelScale, motion.yaw, motion.scaleY);
@@ -2340,6 +2422,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           terrain: terrain3d.enabled ? `${terrainRows}x${terrainCols}` : 'flat',
           animation: Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion',
           orientedEntities: entities.filter(entity => entity.orientation_deg !== undefined).length,
+          selectedEntity: selectedEntityId || "",
           cameraYawDeg: Math.round((cameraYaw * 180 / Math.PI) * 10) / 10,
           cameraPitchDeg: Math.round((cameraPitch * 180 / Math.PI) * 10) / 10,
           canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight],
@@ -2355,6 +2438,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.animation = String(lastStats.animation);
         canvas.dataset.animationKeys = String(Object.keys(animationByKey).length);
         canvas.dataset.orientedEntities = String(lastStats.orientedEntities);
+        canvas.dataset.selectedEntity = String(lastStats.selectedEntity);
         canvas.dataset.cameraYawDeg = String(lastStats.cameraYawDeg);
         canvas.dataset.cameraPitchDeg = String(lastStats.cameraPitchDeg);
       }
@@ -2369,7 +2453,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         });
       }
 
-      return { render, requestRender, stats: () => lastStats };
+      return { render, requestRender, pickEntity, stats: () => lastStats };
     }
     function selectionFallbackSrc(entity) {
       if (!entity) return assetByKey.serf || '';
@@ -2401,6 +2485,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       renderSelection();
       const entity = selectedEntity();
       if (focus && entity) centerOnFramePoint(entity.x, entity.y, Math.max(scale, 2.4));
+      if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
     }
     function cycleEntity(direction) {
       const current = timeline[idx] || {};
@@ -2699,6 +2784,14 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     });
     stage.addEventListener('click', e => {
       if (e.target.closest('.sidehud') || e.target.closest('.bottomhud') || e.target.closest('.entity-sprite')) return;
+      if (mode3d && renderer3d) {
+        const rect = stage.getBoundingClientRect();
+        const picked = renderer3d.pickEntity(e.clientX - rect.left, e.clientY - rect.top, timeline[idx]);
+        if (picked) {
+          selectEntity(picked.id, false);
+          return;
+        }
+      }
       selectEntity(null, false);
     });
     stage.addEventListener('contextmenu', e => {

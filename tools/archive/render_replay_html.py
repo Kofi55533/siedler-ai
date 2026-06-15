@@ -457,6 +457,18 @@ def _entity_snapshot(env, args) -> list[dict]:
             return "work"
         return "idle"
 
+    def orientation_deg_from_position(xy) -> float | None:
+        if not isinstance(xy, dict):
+            return None
+        for key in ("orientation", "Orientation", "rotation", "Rotation", "r", "R"):
+            if key not in xy:
+                continue
+            try:
+                return float(xy.get(key))
+            except (TypeError, ValueError):
+                return None
+        return None
+
     def add_entity(
         entity_id: str,
         kind: str,
@@ -467,6 +479,7 @@ def _entity_snapshot(env, args) -> list[dict]:
         state: str = "",
         anchor_y: float = 0.72,
         target_xy=None,
+        orientation_deg: float | None = None,
     ) -> None:
         pos = replay._as_xy(xy)
         if pos is None:
@@ -485,6 +498,9 @@ def _entity_snapshot(env, args) -> list[dict]:
             "anim_role": animation_role(kind, state, sprite_key),
             "anim_seed": sum((idx + 1) * ord(char) for idx, char in enumerate(entity_id)) % 1000,
         }
+        if orientation_deg is not None:
+            record["orientation_deg"] = round(float(orientation_deg), 4)
+            record["angle"] = round(math.radians(float(orientation_deg)), 5)
         target_frame = frame_xy_from_position(target_xy)
         if target_frame is not None:
             tx, ty = target_frame
@@ -507,21 +523,24 @@ def _entity_snapshot(env, args) -> list[dict]:
             building_name,
             "built",
             0.62,
+            orientation_deg=orientation_deg_from_position(pos),
         )
 
     for index, site in enumerate(getattr(env, "construction_sites", [])):
         building_name = str(site.get("building", "Baustelle"))
         site_id = site.get("site_id", index)
         progress = site.get("progress", 0)
+        site_position = site.get("position")
         add_entity(
             f"site:{site_id}",
             "site",
             _building_mesh_key(building_name),
-            site.get("position"),
+            site_position,
             _building_sprite_size(building_name, construction=True),
             f"{building_name} Baustelle {int(progress)}",
             "construction",
             0.62,
+            orientation_deg=orientation_deg_from_position(site_position),
         )
 
     for index, worker in enumerate(getattr(env.workforce_manager, "workers", [])):
@@ -1809,6 +1828,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           lighting: canvas && canvas.dataset.lighting,
           animation: canvas && canvas.dataset.animation,
           animationKeys: canvas && canvas.dataset.animationKeys,
+          orientedEntities: canvas && canvas.dataset.orientedEntities,
         };
       },
     };
@@ -2294,6 +2314,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           texturesCached: textureCache.size,
           terrain: terrain3d.enabled ? `${terrainRows}x${terrainCols}` : 'flat',
           animation: Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion',
+          orientedEntities: entities.filter(entity => entity.orientation_deg !== undefined).length,
           canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight],
         };
         canvas.dataset.drawnModels = String(lastStats.drawnModels);
@@ -2306,6 +2327,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.lighting = "directional_normals";
         canvas.dataset.animation = String(lastStats.animation);
         canvas.dataset.animationKeys = String(Object.keys(animationByKey).length);
+        canvas.dataset.orientedEntities = String(lastStats.orientedEntities);
       }
 
       let renderQueued = false;

@@ -1157,6 +1157,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     .stage.dragging {
       cursor: grabbing;
     }
+    .stage.mode3d.hovering-entity {
+      cursor: pointer;
+    }
     #world {
       position: absolute;
       left: 0;
@@ -1800,6 +1803,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const entityNodes = new Map();
     const entityData = new Map();
     let selectedEntityId = null;
+    let hoveredEntityId = null;
     let mouseX = 0;
     let mouseY = 0;
     let edgePanActive = false;
@@ -1835,6 +1839,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           animationKeys: canvas && canvas.dataset.animationKeys,
           orientedEntities: canvas && canvas.dataset.orientedEntities,
           selectedEntity: canvas && canvas.dataset.selectedEntity,
+          hoveredEntity: canvas && canvas.dataset.hoveredEntity,
           cameraYawDeg: canvas && canvas.dataset.cameraYawDeg,
           cameraPitchDeg: canvas && canvas.dataset.cameraPitchDeg,
         };
@@ -1910,6 +1915,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }
     function selectedEntity() {
       return selectedEntityId ? entityData.get(selectedEntityId) : null;
+    }
+    function setHoveredEntity(id) {
+      const nextId = id && entityData.has(id) ? id : null;
+      if (hoveredEntityId === nextId) return;
+      hoveredEntityId = nextId;
+      stage.classList.toggle('hovering-entity', Boolean(hoveredEntityId));
+      if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
     }
     function setMessage(text, icon) {
       if (messageText) messageText.textContent = text || '';
@@ -2024,6 +2036,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const selectionTexture = createTexture(
         'data:image/svg+xml;utf8,' +
         encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><ellipse cx="64" cy="64" rx="54" ry="34" fill="none" stroke="#f6d66f" stroke-width="10" opacity=".96"/><ellipse cx="64" cy="64" rx="44" ry="25" fill="none" stroke="#3a2108" stroke-width="4" opacity=".85"/></svg>')
+      );
+      const hoverTexture = createTexture(
+        'data:image/svg+xml;utf8,' +
+        encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><ellipse cx="64" cy="64" rx="50" ry="31" fill="none" stroke="#d9f0ff" stroke-width="7" opacity=".78"/><ellipse cx="64" cy="64" rx="40" ry="23" fill="none" stroke="#132536" stroke-width="3" opacity=".72"/></svg>')
       );
 
       function createTexture(url) {
@@ -2387,9 +2403,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           const worldX = Number(entity.x || 0) - MAP_WIDTH / 2;
           const worldZ = Number(entity.y || 0) - MAP_HEIGHT / 2;
           const groundY = terrainHeightAt(entity.x, entity.y);
-          if (entity.id === selectedEntityId) {
+          const isSelected3d = entity.id === selectedEntityId;
+          const isHovered3d = entity.id === hoveredEntityId && !isSelected3d;
+          if (isSelected3d || isHovered3d) {
             bindMesh(selectionMesh);
-            const ringScale = Math.max(22, Number(entity.size || 32) * 0.68);
+            const ringScale = Math.max(22, Number(entity.size || 32) * (isSelected3d ? 0.68 : 0.58));
             const ringMatrix = m4Transform(worldX, groundY + 2.2, worldZ, ringScale, Number(entity.angle || 0), 1);
             drawSubmesh(
               vp,
@@ -2398,7 +2416,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
                 indexBuffer: selectionMesh.indexBuffer,
                 indexType: selectionMesh.indexType,
                 count: selectionMesh.count,
-                texture: selectionTexture,
+                texture: isSelected3d ? selectionTexture : hoverTexture,
               },
               ringMatrix
             );
@@ -2423,6 +2441,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           animation: Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion',
           orientedEntities: entities.filter(entity => entity.orientation_deg !== undefined).length,
           selectedEntity: selectedEntityId || "",
+          hoveredEntity: hoveredEntityId || "",
           cameraYawDeg: Math.round((cameraYaw * 180 / Math.PI) * 10) / 10,
           cameraPitchDeg: Math.round((cameraPitch * 180 / Math.PI) * 10) / 10,
           canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight],
@@ -2439,6 +2458,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.animationKeys = String(Object.keys(animationByKey).length);
         canvas.dataset.orientedEntities = String(lastStats.orientedEntities);
         canvas.dataset.selectedEntity = String(lastStats.selectedEntity);
+        canvas.dataset.hoveredEntity = String(lastStats.hoveredEntity);
         canvas.dataset.cameraYawDeg = String(lastStats.cameraYawDeg);
         canvas.dataset.cameraPitchDeg = String(lastStats.cameraPitchDeg);
       }
@@ -2551,6 +2571,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       }
       if (selectedEntityId && !entityData.has(selectedEntityId)) {
         selectedEntityId = null;
+      }
+      if (hoveredEntityId && !entityData.has(hoveredEntityId)) {
+        setHoveredEntity(null);
       }
       renderSelection();
     }
@@ -2708,6 +2731,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         renderer3d.render(timeline[idx]);
         setMessage('3D-Ansicht aktiv', assetByKey.onscreen_worker || assetByKey.worker || '');
       } else {
+        setHoveredEntity(null);
         setMessage('2D-Ansicht aktiv', assetByKey.onscreen_worker || assetByKey.worker || '');
       }
     };
@@ -2759,11 +2783,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     window.addEventListener('mousemove', e => {
       if (!dragging && !rotatingCamera) return;
       if (rotatingCamera) {
+        setHoveredEntity(null);
         rotateCamera((e.clientX - lastX) * 0.006, -(e.clientY - lastY) * 0.004);
         lastX = e.clientX;
         lastY = e.clientY;
         return;
       }
+      setHoveredEntity(null);
       tx += e.clientX - lastX;
       ty += e.clientY - lastY;
       lastX = e.clientX;
@@ -2774,6 +2800,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const rect = stage.getBoundingClientRect();
       mouseX = e.clientX - rect.left;
       mouseY = e.clientY - rect.top;
+      if (mode3d && renderer3d && !dragging && !rotatingCamera) {
+        const hovered = renderer3d.pickEntity(mouseX, mouseY, timeline[idx]);
+        setHoveredEntity(hovered ? hovered.id : null);
+      }
     });
     stage.addEventListener('mouseenter', () => {
       edgePanActive = true;
@@ -2781,6 +2811,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     });
     stage.addEventListener('mouseleave', () => {
       edgePanActive = false;
+      setHoveredEntity(null);
     });
     stage.addEventListener('click', e => {
       if (e.target.closest('.sidehud') || e.target.closest('.bottomhud') || e.target.closest('.entity-sprite')) return;
@@ -2788,11 +2819,23 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const rect = stage.getBoundingClientRect();
         const picked = renderer3d.pickEntity(e.clientX - rect.left, e.clientY - rect.top, timeline[idx]);
         if (picked) {
+          setHoveredEntity(picked.id);
           selectEntity(picked.id, false);
           return;
         }
       }
+      setHoveredEntity(null);
       selectEntity(null, false);
+    });
+    stage.addEventListener('dblclick', e => {
+      if (e.target.closest('.sidehud') || e.target.closest('.bottomhud') || e.target.closest('.entity-sprite')) return;
+      if (!mode3d || !renderer3d) return;
+      const rect = stage.getBoundingClientRect();
+      const picked = renderer3d.pickEntity(e.clientX - rect.left, e.clientY - rect.top, timeline[idx]);
+      if (!picked) return;
+      e.preventDefault();
+      setHoveredEntity(picked.id);
+      selectEntity(picked.id, true);
     });
     stage.addEventListener('contextmenu', e => {
       if (mode3d) e.preventDefault();

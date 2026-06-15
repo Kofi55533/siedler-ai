@@ -1806,6 +1806,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     let edgePanFrame = null;
     let mode3d = false;
     let renderer3d = null;
+    let rotatingCamera = false;
+    const CAMERA_DEFAULT_YAW = -0.553;
+    const CAMERA_DEFAULT_PITCH = 0.733;
+    let cameraYaw = CAMERA_DEFAULT_YAW;
+    let cameraPitch = CAMERA_DEFAULT_PITCH;
     const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
     const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
     const INITIAL_CAMERA_SCALE = __INITIAL_CAMERA_SCALE__;
@@ -1829,6 +1834,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           animation: canvas && canvas.dataset.animation,
           animationKeys: canvas && canvas.dataset.animationKeys,
           orientedEntities: canvas && canvas.dataset.orientedEntities,
+          cameraYawDeg: canvas && canvas.dataset.cameraYawDeg,
+          cameraPitchDeg: canvas && canvas.dataset.cameraPitchDeg,
         };
       },
     };
@@ -1867,6 +1874,18 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     function applyTransform() {
       world.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
       updateMinimap();
+      if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
+    }
+    function clampCameraPitch(value) {
+      return clamp(value, 0.38, 1.18);
+    }
+    function resetCameraAngles() {
+      cameraYaw = CAMERA_DEFAULT_YAW;
+      cameraPitch = CAMERA_DEFAULT_PITCH;
+    }
+    function rotateCamera(deltaYaw, deltaPitch = 0) {
+      cameraYaw += deltaYaw;
+      cameraPitch = clampCameraPitch(cameraPitch + deltaPitch);
       if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
     }
     function panBy(dx, dy) {
@@ -2235,7 +2254,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const centerZ = (stage.clientHeight / 2 - ty) / scale - MAP_HEIGHT / 2;
         const viewW = stage.clientWidth / Math.max(0.1, scale);
         const viewH = stage.clientHeight / Math.max(0.1, scale);
-        const eye = [centerX - viewH * 0.42, Math.max(420, viewH * 0.72), centerZ + viewH * 0.68];
+        const distance = Math.max(620, viewH * 1.08);
+        const horizontalDistance = distance * Math.cos(cameraPitch);
+        const eye = [
+          centerX + Math.sin(cameraYaw) * horizontalDistance,
+          distance * Math.sin(cameraPitch),
+          centerZ + Math.cos(cameraYaw) * horizontalDistance,
+        ];
         const target = [centerX, 0, centerZ];
         const view = m4LookAt(eye, target, [0, 1, 0]);
         const proj = m4Ortho(-viewW / 2, viewW / 2, -viewH / 2, viewH / 2, 1, 6000);
@@ -2315,6 +2340,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           terrain: terrain3d.enabled ? `${terrainRows}x${terrainCols}` : 'flat',
           animation: Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion',
           orientedEntities: entities.filter(entity => entity.orientation_deg !== undefined).length,
+          cameraYawDeg: Math.round((cameraYaw * 180 / Math.PI) * 10) / 10,
+          cameraPitchDeg: Math.round((cameraPitch * 180 / Math.PI) * 10) / 10,
           canvas: [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight],
         };
         canvas.dataset.drawnModels = String(lastStats.drawnModels);
@@ -2328,6 +2355,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.animation = String(lastStats.animation);
         canvas.dataset.animationKeys = String(Object.keys(animationByKey).length);
         canvas.dataset.orientedEntities = String(lastStats.orientedEntities);
+        canvas.dataset.cameraYawDeg = String(lastStats.cameraYawDeg);
+        canvas.dataset.cameraPitchDeg = String(lastStats.cameraPitchDeg);
       }
 
       let renderQueued = false;
@@ -2449,6 +2478,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       applyTransform();
     }
     function focusInitialCamera() {
+      resetCameraAngles();
       const fullFit = Math.min(stage.clientWidth / MAP_WIDTH, stage.clientHeight / MAP_HEIGHT);
       scale = Math.max(fullFit * 1.05, INITIAL_CAMERA_SCALE);
       tx = stage.clientWidth / 2 - INITIAL_CAMERA_X * scale;
@@ -2623,6 +2653,14 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (e.target.closest('.sidehud')) return;
       if (e.target.closest('.bottomhud')) return;
       if (e.target.closest('.entity-sprite')) return;
+      if (mode3d && (e.button === 1 || e.button === 2 || e.altKey)) {
+        e.preventDefault();
+        rotatingCamera = true;
+        stage.classList.add('dragging');
+        lastX = e.clientX;
+        lastY = e.clientY;
+        return;
+      }
       dragging = true;
       stage.classList.add('dragging');
       lastX = e.clientX;
@@ -2630,10 +2668,17 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     });
     window.addEventListener('mouseup', () => {
       dragging = false;
+      rotatingCamera = false;
       stage.classList.remove('dragging');
     });
     window.addEventListener('mousemove', e => {
-      if (!dragging) return;
+      if (!dragging && !rotatingCamera) return;
+      if (rotatingCamera) {
+        rotateCamera((e.clientX - lastX) * 0.006, -(e.clientY - lastY) * 0.004);
+        lastX = e.clientX;
+        lastY = e.clientY;
+        return;
+      }
       tx += e.clientX - lastX;
       ty += e.clientY - lastY;
       lastX = e.clientX;
@@ -2656,9 +2701,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (e.target.closest('.sidehud') || e.target.closest('.bottomhud') || e.target.closest('.entity-sprite')) return;
       selectEntity(null, false);
     });
+    stage.addEventListener('contextmenu', e => {
+      if (mode3d) e.preventDefault();
+    });
     function edgePanLoop() {
       edgePanFrame = requestAnimationFrame(edgePanLoop);
-      if (!edgePanActive || dragging) return;
+      if (!edgePanActive || dragging || rotatingCamera) return;
       const margin = 26;
       const speedPx = 13;
       let dx = 0;
@@ -2689,6 +2737,22 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (key === 's') panBy(0, -80);
       if (key === '+') zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1.18);
       if (key === '-') zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1 / 1.18);
+      if (mode3d && key === 'q') {
+        e.preventDefault();
+        rotateCamera(-Math.PI / 18, 0);
+      }
+      if (mode3d && key === 'e') {
+        e.preventDefault();
+        rotateCamera(Math.PI / 18, 0);
+      }
+      if (mode3d && e.key === 'PageUp') {
+        e.preventDefault();
+        rotateCamera(0, 0.08);
+      }
+      if (mode3d && e.key === 'PageDown') {
+        e.preventDefault();
+        rotateCamera(0, -0.08);
+      }
       if (key === 'escape') selectEntity(null, false);
     });
     window.addEventListener('resize', () => {
@@ -2705,6 +2769,15 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if ((requestedMode === '3d' || params.get('3d') === '1') && !mode3d) {
         mode3dBtn.onclick();
       }
+      const requestedYaw = params.has('yaw') ? Number(params.get('yaw')) : NaN;
+      if (Number.isFinite(requestedYaw)) {
+        cameraYaw = requestedYaw * Math.PI / 180;
+      }
+      const requestedPitch = params.has('pitch') ? Number(params.get('pitch')) : NaN;
+      if (Number.isFinite(requestedPitch)) {
+        cameraPitch = clampCameraPitch(requestedPitch * Math.PI / 180);
+      }
+      if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
     }
     show(0);
     focusInitialCamera();

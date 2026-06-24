@@ -345,11 +345,15 @@ def _make_terrain3d_payload(env, args) -> dict:
     target_w = grid_w * render_scale
     target_h = grid_h * render_scale
 
-    # Keep native player-quadrant fidelity but cap at about 260x260 vertices.
-    step_y = max(1, int(np.ceil(height.shape[0] / 258)))
-    step_x = max(1, int(np.ceil(height.shape[1] / 258)))
-    height_s = height[::step_y, ::step_x]
-    walk_s = walkable[::step_y, ::step_x]
+    # WebGL 1 only guarantees 16-bit element indices. Keep this below 65,536
+    # vertices even when OES_element_index_uint is unavailable, otherwise
+    # terrain indices wrap and create visibly torn/black terrain patches.
+    max_rows = min(int(height.shape[0]), 255)
+    max_cols = min(int(height.shape[1]), 255)
+    row_indices = np.linspace(0, height.shape[0] - 1, max_rows).round().astype(np.int32)
+    col_indices = np.linspace(0, height.shape[1] - 1, max_cols).round().astype(np.int32)
+    height_s = height[np.ix_(row_indices, col_indices)]
+    walk_s = walkable[np.ix_(row_indices, col_indices)]
     rows, cols = height_s.shape
     h_min = float(np.min(height_s))
     h_max = float(np.max(height_s))
@@ -396,6 +400,7 @@ def _make_terrain3d_payload(env, args) -> dict:
         "enabled": True,
         "rows": int(rows),
         "cols": int(cols),
+        "vertex_count": int(rows * cols),
         "source_shape": [int(height.shape[0]), int(height.shape[1])],
         "height_min": round(h_min, 3),
         "height_max": round(h_max, 3),
@@ -1160,6 +1165,61 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     .stage.mode3d.hovering-entity {
       cursor: pointer;
     }
+    .stage.selecting {
+      cursor: crosshair;
+    }
+    .selection-rect {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      border: 1px solid rgba(255, 231, 150, .95);
+      background: rgba(255, 210, 90, .12);
+      box-shadow: inset 0 0 0 1px rgba(28, 22, 8, .72), 0 0 9px rgba(255, 224, 128, .38);
+      z-index: 8;
+    }
+    .stage.selecting .selection-rect {
+      display: block;
+    }
+    .path-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 2;
+    }
+    .path-overlay .movement-trail {
+      fill: none;
+      stroke: rgba(255, 232, 132, 1);
+      stroke-width: 3.1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.78));
+    }
+    .path-overlay .movement-trail.worker {
+      stroke: rgba(132, 221, 255, 1);
+    }
+    .path-overlay .movement-trail-shadow {
+      fill: none;
+      stroke: rgba(10, 22, 30, .93);
+      stroke-width: 6.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.86));
+    }
+    .path-overlay .movement-target-line {
+      fill: none;
+      stroke: rgba(255, 246, 195, .72);
+      stroke-width: 1.6;
+      stroke-dasharray: 5 4;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.74));
+    }
+    .path-overlay .movement-target {
+      fill: rgba(255, 231, 134, .94);
+      stroke: rgba(48, 36, 13, .98);
+      stroke-width: 1.4;
+    }
     #world {
       position: absolute;
       left: 0;
@@ -1168,6 +1228,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       height: __HEIGHT__px;
       transform-origin: 0 0;
       will-change: transform;
+      z-index: 0;
     }
     #map {
       position: absolute;
@@ -1187,6 +1248,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       height: 100%;
       display: none;
       background: #080b0c;
+      z-index: 0;
     }
     .stage.mode3d #world {
       display: none;
@@ -1199,6 +1261,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       inset: 0;
       pointer-events: none;
       overflow: visible;
+      z-index: 1;
     }
     .entity-sprite {
       --anchor-y: .78;
@@ -1655,6 +1718,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       <div id="entityLayer" class="entity-layer"></div>
     </div>
     <canvas id="webglScene"></canvas>
+    <svg id="pathOverlay" class="path-overlay" aria-hidden="true"></svg>
+    <div id="selectionRect" class="selection-rect"></div>
     <div class="screen-message">
       <img id="messageIcon" src="__ICON_ONSCREEN_WORKER__" alt="">
       <div id="messageText">Expert Opening bereit</div>
@@ -1750,6 +1815,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const animationByKey = originalGraphics.animation_by_key || {};
     const assetByKey = gameAssets.assets || {};
     const terrain3d = gameAssets.terrain3d || { enabled: false };
+    const terrainTexture = gameAssets.terrain_texture || '';
     const paydayFrames = gameAssets.payday_frames || [];
     const MAP_WIDTH = __WIDTH__;
     const MAP_HEIGHT = __HEIGHT__;
@@ -1757,6 +1823,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const img = document.getElementById('map');
     const webglScene = document.getElementById('webglScene');
     const entityLayer = document.getElementById('entityLayer');
+    const pathOverlay = document.getElementById('pathOverlay');
+    const selectionRect = document.getElementById('selectionRect');
     const mini = document.getElementById('mini');
     const miniBox = document.getElementById('miniBox');
     const miniView = document.getElementById('miniView');
@@ -1802,12 +1870,18 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     let lastY = 0;
     const entityNodes = new Map();
     const entityData = new Map();
+    let selectedEntityIds = new Set();
     let selectedEntityId = null;
     let hoveredEntityId = null;
     let mouseX = 0;
     let mouseY = 0;
     let edgePanActive = false;
     let edgePanFrame = null;
+    let selectingBox = false;
+    let selectionMoved = false;
+    let selectionStartX = 0;
+    let selectionStartY = 0;
+    let suppressNextClick = false;
     let mode3d = false;
     let renderer3d = null;
     let rotatingCamera = false;
@@ -1839,6 +1913,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           animationKeys: canvas && canvas.dataset.animationKeys,
           orientedEntities: canvas && canvas.dataset.orientedEntities,
           selectedEntity: canvas && canvas.dataset.selectedEntity,
+          selectedEntities: canvas && canvas.dataset.selectedEntities,
+          selectionCount: canvas && canvas.dataset.selectionCount,
           hoveredEntity: canvas && canvas.dataset.hoveredEntity,
           cameraYawDeg: canvas && canvas.dataset.cameraYawDeg,
           cameraPitchDeg: canvas && canvas.dataset.cameraPitchDeg,
@@ -1881,6 +1957,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       world.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
       updateMinimap();
       if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
+      renderMovementTrails();
     }
     function clampCameraPitch(value) {
       return clamp(value, 0.38, 1.18);
@@ -1916,6 +1993,74 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     function selectedEntity() {
       return selectedEntityId ? entityData.get(selectedEntityId) : null;
     }
+    function selectedEntities() {
+      return Array.from(selectedEntityIds)
+        .map(id => entityData.get(id))
+        .filter(Boolean);
+    }
+    function normalizeSelection(ids) {
+      const clean = [];
+      const seen = new Set();
+      for (const id of ids || []) {
+        if (!id || seen.has(id) || !entityData.has(id)) continue;
+        seen.add(id);
+        clean.push(id);
+      }
+      return clean;
+    }
+    function selectedKindSummary(entities) {
+      const counts = new Map();
+      for (const entity of entities) {
+        const key = entity.kind || 'entity';
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+      return Array.from(counts.entries())
+        .map(([kind, count]) => `${kind}: ${count}`)
+        .join(', ');
+    }
+    function selectionBounds(entities) {
+      if (!entities.length) return null;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const entity of entities) {
+        const size = Math.max(16, Number(entity.size || 32));
+        const x = Number(entity.x || 0);
+        const y = Number(entity.y || 0);
+        minX = Math.min(minX, x - size * .5);
+        minY = Math.min(minY, y - size * .5);
+        maxX = Math.max(maxX, x + size * .5);
+        maxY = Math.max(maxY, y + size * .5);
+      }
+      return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+    }
+    function focusSelection() {
+      const entities = selectedEntities();
+      if (!entities.length) return;
+      if (entities.length === 1) {
+        centerOnFramePoint(entities[0].x, entities[0].y, Math.max(scale, 2.4));
+        return;
+      }
+      const bounds = selectionBounds(entities);
+      if (!bounds) return;
+      const pad = 260;
+      const targetScale = Math.min(
+        4.2,
+        Math.max(0.2, stage.clientWidth / Math.max(1, bounds.width + pad)),
+        Math.max(0.2, stage.clientHeight / Math.max(1, bounds.height + pad))
+      );
+      centerOnFramePoint((bounds.minX + bounds.maxX) / 2, (bounds.minY + bounds.maxY) / 2, Math.max(targetScale, 0.6));
+    }
+    function applySelection(ids, primaryId = null, focus = false) {
+      const clean = normalizeSelection(ids);
+      selectedEntityIds = new Set(clean);
+      selectedEntityId = primaryId && selectedEntityIds.has(primaryId) ? primaryId : (clean[0] || null);
+      for (const [nodeId, node] of entityNodes.entries()) {
+        node.classList.toggle('selected', selectedEntityIds.has(nodeId));
+      }
+      renderSelection();
+      if (focus) focusSelection();
+      if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
+      renderMovementTrails();
+    }
     function setHoveredEntity(id) {
       const nextId = id && entityData.has(id) ? id : null;
       if (hoveredEntityId === nextId) return;
@@ -1938,6 +2083,83 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }
     function entitySpriteSrc(entity) {
       return spriteByKey[entity.sprite_key] || meshByKey[entity.sprite_key] || entityFallbackAsset(entity.kind);
+    }
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const TRAIL_HISTORY_FRAMES = 36;
+    const TRAIL_ENTITY_LIMIT = 8;
+    function createOverlayNode(name, attributes) {
+      const node = document.createElementNS(SVG_NS, name);
+      for (const [key, value] of Object.entries(attributes || {})) {
+        node.setAttribute(key, String(value));
+      }
+      return node;
+    }
+    function projectOverlayPoint(entity) {
+      if (!entity) return null;
+      if (mode3d && renderer3d && renderer3d.projectEntity) {
+        return renderer3d.projectEntity(entity);
+      }
+      return {
+        x: Number(entity.x || 0) * scale + tx,
+        y: Number(entity.y || 0) * scale + ty,
+      };
+    }
+    function movementHistory(entityId) {
+      const start = Math.max(0, idx - TRAIL_HISTORY_FRAMES);
+      const history = [];
+      for (let frameIndex = start; frameIndex <= idx; frameIndex += 1) {
+        const entry = ((timeline[frameIndex] || {}).entities || []).find(entity => entity.id === entityId);
+        if (entry) history.push(entry);
+      }
+      return history;
+    }
+    function appendMovementTarget(entity, point) {
+      if (entity.target_x === undefined || entity.target_y === undefined || !point) return;
+      const target = projectOverlayPoint({ ...entity, x: entity.target_x, y: entity.target_y });
+      if (!target || Math.hypot(target.x - point.x, target.y - point.y) < 8) return;
+      pathOverlay.appendChild(createOverlayNode('path', {
+        class: 'movement-target-line',
+        d: `M ${point.x.toFixed(1)} ${point.y.toFixed(1)} L ${target.x.toFixed(1)} ${target.y.toFixed(1)}`,
+      }));
+      pathOverlay.appendChild(createOverlayNode('circle', {
+        class: 'movement-target',
+        cx: target.x.toFixed(1),
+        cy: target.y.toFixed(1),
+        r: 4.2,
+      }));
+    }
+    function renderMovementTrails() {
+      if (!pathOverlay) return;
+      const overlayWidth = Math.max(1, stage.clientWidth);
+      const overlayHeight = Math.max(1, stage.clientHeight);
+      pathOverlay.setAttribute('viewBox', `0 0 ${overlayWidth} ${overlayHeight}`);
+      pathOverlay.replaceChildren();
+      const movingEntities = selectedEntities()
+        .filter(entity => entity.kind === 'serf' || entity.kind === 'worker')
+        .slice(0, TRAIL_ENTITY_LIMIT);
+      for (const entity of movingEntities) {
+        const points = [];
+        for (const historicEntity of movementHistory(entity.id)) {
+          const point = projectOverlayPoint(historicEntity);
+          const lastPoint = points[points.length - 1];
+          if (!point || (lastPoint && Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) < .7)) continue;
+          points.push(point);
+        }
+        if (points.length > 1) {
+          const d = points
+            .map((point, pointIndex) => `${pointIndex ? 'L' : 'M'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+            .join(' ');
+          pathOverlay.appendChild(createOverlayNode('path', {
+            class: 'movement-trail-shadow',
+            d,
+          }));
+          pathOverlay.appendChild(createOverlayNode('path', {
+            class: `movement-trail ${sanitizeClass(entity.kind)}`,
+            d,
+          }));
+        }
+        appendMovementTarget(entity, points[points.length - 1] || projectOverlayPoint(entity));
+      }
     }
     function createReplay3DRenderer(canvas) {
       const gl = canvas.getContext('webgl', { alpha: false, antialias: true });
@@ -2290,6 +2512,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const lift = Math.max(8, Number(entity.size || 32) * 0.28);
         return projectWorldToCanvas(vp, worldX, groundY + lift, worldZ);
       }
+      function projectEntity(entity) {
+        resize();
+        return entityScreenPoint(entity, cameraMatrix());
+      }
       function pickEntity(screenX, screenY, frame) {
         resize();
         const vp = cameraMatrix();
@@ -2314,6 +2540,27 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         }
         canvas.dataset.lastPick = best ? best.id : "";
         return best;
+      }
+      function pickEntitiesInRect(left, top, right, bottom, frame) {
+        resize();
+        const vp = cameraMatrix();
+        const minX = Math.min(left, right);
+        const maxX = Math.max(left, right);
+        const minY = Math.min(top, bottom);
+        const maxY = Math.max(top, bottom);
+        const ids = [];
+        const entities = ((frame && frame.entities) || []).slice().sort((a, b) => Number(a.y || 0) - Number(b.y || 0));
+        for (const entity of entities) {
+          const modelUrl = model3dByKey[entity.sprite_key];
+          if (!modelUrl) continue;
+          const point = entityScreenPoint(entity, vp);
+          if (!point) continue;
+          if (point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY) {
+            ids.push(entity.id);
+          }
+        }
+        canvas.dataset.lastBoxPickCount = String(ids.length);
+        return ids;
       }
 
       function resize() {
@@ -2385,7 +2632,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const vp = cameraMatrix();
 
         bindMesh(terrainMesh);
-        const mapTexture = createTexture((frame && frame.frame) || '');
+        const mapTexture = createTexture(terrainTexture || ((frame && frame.frame) || ''));
         drawSubmesh(vp, terrainMesh, { indexBuffer: terrainMesh.indexBuffer, indexType: terrainMesh.indexType, count: terrainMesh.count, texture: mapTexture }, new Float32Array([
           1, 0, 0, 0,
           0, 1, 0, 0,
@@ -2403,7 +2650,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           const worldX = Number(entity.x || 0) - MAP_WIDTH / 2;
           const worldZ = Number(entity.y || 0) - MAP_HEIGHT / 2;
           const groundY = terrainHeightAt(entity.x, entity.y);
-          const isSelected3d = entity.id === selectedEntityId;
+          const isSelected3d = selectedEntityIds.has(entity.id);
           const isHovered3d = entity.id === hoveredEntityId && !isSelected3d;
           if (isSelected3d || isHovered3d) {
             bindMesh(selectionMesh);
@@ -2441,6 +2688,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           animation: Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion',
           orientedEntities: entities.filter(entity => entity.orientation_deg !== undefined).length,
           selectedEntity: selectedEntityId || "",
+          selectedEntities: Array.from(selectedEntityIds).join(","),
+          selectionCount: selectedEntityIds.size,
           hoveredEntity: hoveredEntityId || "",
           cameraYawDeg: Math.round((cameraYaw * 180 / Math.PI) * 10) / 10,
           cameraPitchDeg: Math.round((cameraPitch * 180 / Math.PI) * 10) / 10,
@@ -2458,6 +2707,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.animationKeys = String(Object.keys(animationByKey).length);
         canvas.dataset.orientedEntities = String(lastStats.orientedEntities);
         canvas.dataset.selectedEntity = String(lastStats.selectedEntity);
+        canvas.dataset.selectedEntities = String(lastStats.selectedEntities);
+        canvas.dataset.selectionCount = String(lastStats.selectionCount);
         canvas.dataset.hoveredEntity = String(lastStats.hoveredEntity);
         canvas.dataset.cameraYawDeg = String(lastStats.cameraYawDeg);
         canvas.dataset.cameraPitchDeg = String(lastStats.cameraPitchDeg);
@@ -2473,7 +2724,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         });
       }
 
-      return { render, requestRender, pickEntity, stats: () => lastStats };
+      return { render, requestRender, pickEntity, pickEntitiesInRect, projectEntity, stats: () => lastStats };
     }
     function selectionFallbackSrc(entity) {
       if (!entity) return assetByKey.serf || '';
@@ -2484,11 +2735,23 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }
     function renderSelection() {
       const entity = selectedEntity();
-      if (!entity) {
+      const entities = selectedEntities();
+      if (!entities.length) {
         selectedTitle.textContent = 'Keine Auswahl';
         selectedMeta.textContent = 'Einheit oder Gebaeude anklicken';
         selectedCoords.textContent = 'Kamera: Drag, Rand, WASD, Mausrad';
         selectedPortrait.src = assetByKey.serf || '';
+        return;
+      }
+      if (entities.length > 1) {
+        const bounds = selectionBounds(entities);
+        selectedTitle.textContent = `${entities.length} Entitaeten ausgewaehlt`;
+        selectedMeta.textContent = selectedKindSummary(entities);
+        selectedCoords.textContent = bounds
+          ? `Bereich x=${Math.round(bounds.minX)}-${Math.round(bounds.maxX)} y=${Math.round(bounds.minY)}-${Math.round(bounds.maxY)}`
+          : 'Mehrfachauswahl';
+        selectedPortrait.src = entity ? selectionFallbackSrc(entity) : (assetByKey.serf || '');
+        setMessage(`${entities.length} Entitaeten ausgewaehlt`, assetByKey.onscreen_worker || selectedPortrait.src);
         return;
       }
       selectedTitle.textContent = entity.label || entity.kind || entity.id;
@@ -2497,15 +2760,24 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       selectedPortrait.src = selectionFallbackSrc(entity);
       setMessage(entity.label || entity.id, entity.kind === 'serf' ? (assetByKey.onscreen_serf || selectedPortrait.src) : (assetByKey.onscreen_worker || selectedPortrait.src));
     }
-    function selectEntity(id, focus = false) {
-      selectedEntityId = id && entityData.has(id) ? id : null;
-      for (const [nodeId, node] of entityNodes.entries()) {
-        node.classList.toggle('selected', nodeId === selectedEntityId);
+    function selectEntity(id, focus = false, additive = false) {
+      if (!id || !entityData.has(id)) {
+        if (!additive) applySelection([], null, false);
+        return;
       }
-      renderSelection();
-      const entity = selectedEntity();
-      if (focus && entity) centerOnFramePoint(entity.x, entity.y, Math.max(scale, 2.4));
-      if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
+      if (!additive) {
+        applySelection([id], id, focus);
+        return;
+      }
+      const ids = normalizeSelection(Array.from(selectedEntityIds));
+      const index = ids.indexOf(id);
+      if (index >= 0) {
+        ids.splice(index, 1);
+        applySelection(ids, selectedEntityId === id ? null : selectedEntityId, focus);
+      } else {
+        ids.push(id);
+        applySelection(ids, id, focus);
+      }
     }
     function cycleEntity(direction) {
       const current = timeline[idx] || {};
@@ -2535,11 +2807,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           entityNodes.set(id, node);
           node.addEventListener('click', event => {
             event.stopPropagation();
-            selectEntity(node.dataset.entityId, false);
+            selectEntity(node.dataset.entityId, false, event.shiftKey || event.ctrlKey || event.metaKey);
           });
           node.addEventListener('dblclick', event => {
             event.stopPropagation();
-            selectEntity(node.dataset.entityId, true);
+            selectEntity(node.dataset.entityId, true, event.shiftKey || event.ctrlKey || event.metaKey);
           });
         }
         const previousX = Number(node.dataset.x || entity.x);
@@ -2562,7 +2834,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         node.style.transitionDuration = `${duration}ms`;
         node.style.setProperty('--anchor-y', String(entity.anchor_y || .78));
         node.style.setProperty('--flip', String(flip));
-        node.classList.toggle('selected', id === selectedEntityId);
+        node.classList.toggle('selected', selectedEntityIds.has(id));
       }
       for (const [id, node] of entityNodes.entries()) {
         if (keep.has(id)) continue;
@@ -2571,6 +2843,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       }
       if (selectedEntityId && !entityData.has(selectedEntityId)) {
         selectedEntityId = null;
+      }
+      const aliveSelectedIds = normalizeSelection(Array.from(selectedEntityIds));
+      selectedEntityIds = new Set(aliveSelectedIds);
+      if (!selectedEntityId || !selectedEntityIds.has(selectedEntityId)) {
+        selectedEntityId = aliveSelectedIds[0] || null;
       }
       if (hoveredEntityId && !entityData.has(hoveredEntityId)) {
         setHoveredEntity(null);
@@ -2650,6 +2927,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       updateEntities(f);
       updateMinimap();
       if (mode3d && renderer3d) renderer3d.render(f);
+      renderMovementTrails();
     }
     function step(delta) {
       show(idx + delta);
@@ -2682,6 +2960,52 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         step(1);
       }, Number(speed.value));
     }
+    function showSelectionRect(left, top, right, bottom) {
+      const x = Math.min(left, right);
+      const y = Math.min(top, bottom);
+      const width = Math.abs(right - left);
+      const height = Math.abs(bottom - top);
+      selectionRect.style.left = `${x}px`;
+      selectionRect.style.top = `${y}px`;
+      selectionRect.style.width = `${width}px`;
+      selectionRect.style.height = `${height}px`;
+    }
+    function hideSelectionRect() {
+      stage.classList.remove('selecting');
+      selectionRect.style.width = '0px';
+      selectionRect.style.height = '0px';
+    }
+    function pick2dEntitiesInRect(left, top, right, bottom) {
+      const minX = Math.min(left, right);
+      const maxX = Math.max(left, right);
+      const minY = Math.min(top, bottom);
+      const maxY = Math.max(top, bottom);
+      const ids = [];
+      for (const entity of ((timeline[idx] || {}).entities || [])) {
+        if (!entitySpriteSrc(entity)) continue;
+        const screenX = Number(entity.x || 0) * scale + tx;
+        const screenY = Number(entity.y || 0) * scale + ty;
+        const radius = Math.max(10, Number(entity.size || 32) * scale * .36);
+        if (screenX + radius < minX || screenX - radius > maxX) continue;
+        if (screenY + radius < minY || screenY - radius > maxY) continue;
+        ids.push(entity.id);
+      }
+      return ids;
+    }
+    function pickEntitiesInSelectionRect(left, top, right, bottom) {
+      if (mode3d && renderer3d && renderer3d.pickEntitiesInRect) {
+        return renderer3d.pickEntitiesInRect(left, top, right, bottom, timeline[idx]);
+      }
+      return pick2dEntitiesInRect(left, top, right, bottom);
+    }
+    function applyBoxSelection(left, top, right, bottom, additive) {
+      const ids = pickEntitiesInSelectionRect(left, top, right, bottom);
+      const nextIds = additive ? normalizeSelection([...selectedEntityIds, ...ids]) : ids;
+      applySelection(nextIds, ids[0] || (additive ? selectedEntityId : null), false);
+      if (ids.length) {
+        setMessage(`${ids.length} Entitaeten markiert`, assetByKey.onscreen_worker || assetByKey.worker || '');
+      }
+    }
     document.getElementById('prev').onclick = () => step(-1);
     document.getElementById('next').onclick = () => step(1);
     playBtn.onclick = play;
@@ -2697,10 +3021,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     document.getElementById('cmdStepForward').onclick = () => step(1);
     document.getElementById('cmdZoomIn').onclick = () => zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1.18);
     document.getElementById('cmdZoomOut').onclick = () => zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1 / 1.18);
-    document.getElementById('focusSelected').onclick = () => {
-      const entity = selectedEntity();
-      if (entity) centerOnFramePoint(entity.x, entity.y, Math.max(scale, 2.4));
-    };
+    document.getElementById('focusSelected').onclick = focusSelection;
     document.getElementById('clearSelected').onclick = () => selectEntity(null, false);
     fullscreenBtn.onclick = async () => {
       if (!document.fullscreenElement) {
@@ -2734,6 +3055,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         setHoveredEntity(null);
         setMessage('2D-Ansicht aktiv', assetByKey.onscreen_worker || assetByKey.worker || '');
       }
+      renderMovementTrails();
     };
     speed.onchange = () => {
       if (!timer) return;
@@ -2770,17 +3092,51 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         lastY = e.clientY;
         return;
       }
+      if (e.button === 0 && !e.altKey) {
+        e.preventDefault();
+        const rect = stage.getBoundingClientRect();
+        selectingBox = true;
+        selectionMoved = false;
+        selectionStartX = e.clientX - rect.left;
+        selectionStartY = e.clientY - rect.top;
+        showSelectionRect(selectionStartX, selectionStartY, selectionStartX, selectionStartY);
+        stage.classList.add('selecting');
+        return;
+      }
+      e.preventDefault();
       dragging = true;
       stage.classList.add('dragging');
       lastX = e.clientX;
       lastY = e.clientY;
     });
-    window.addEventListener('mouseup', () => {
+    window.addEventListener('mouseup', e => {
+      if (selectingBox) {
+        const rect = stage.getBoundingClientRect();
+        const endX = clamp(e.clientX - rect.left, 0, stage.clientWidth);
+        const endY = clamp(e.clientY - rect.top, 0, stage.clientHeight);
+        selectingBox = false;
+        hideSelectionRect();
+        if (selectionMoved) {
+          suppressNextClick = true;
+          applyBoxSelection(selectionStartX, selectionStartY, endX, endY, e.shiftKey || e.ctrlKey || e.metaKey);
+        }
+        return;
+      }
       dragging = false;
       rotatingCamera = false;
       stage.classList.remove('dragging');
     });
     window.addEventListener('mousemove', e => {
+      if (selectingBox) {
+        const rect = stage.getBoundingClientRect();
+        const endX = clamp(e.clientX - rect.left, 0, stage.clientWidth);
+        const endY = clamp(e.clientY - rect.top, 0, stage.clientHeight);
+        if (Math.hypot(endX - selectionStartX, endY - selectionStartY) > 5) {
+          selectionMoved = true;
+        }
+        showSelectionRect(selectionStartX, selectionStartY, endX, endY);
+        return;
+      }
       if (!dragging && !rotatingCamera) return;
       if (rotatingCamera) {
         setHoveredEntity(null);
@@ -2800,7 +3156,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const rect = stage.getBoundingClientRect();
       mouseX = e.clientX - rect.left;
       mouseY = e.clientY - rect.top;
-      if (mode3d && renderer3d && !dragging && !rotatingCamera) {
+      if (mode3d && renderer3d && !dragging && !rotatingCamera && !selectingBox) {
         const hovered = renderer3d.pickEntity(mouseX, mouseY, timeline[idx]);
         setHoveredEntity(hovered ? hovered.id : null);
       }
@@ -2814,18 +3170,22 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       setHoveredEntity(null);
     });
     stage.addEventListener('click', e => {
+      if (suppressNextClick) {
+        suppressNextClick = false;
+        return;
+      }
       if (e.target.closest('.sidehud') || e.target.closest('.bottomhud') || e.target.closest('.entity-sprite')) return;
       if (mode3d && renderer3d) {
         const rect = stage.getBoundingClientRect();
         const picked = renderer3d.pickEntity(e.clientX - rect.left, e.clientY - rect.top, timeline[idx]);
         if (picked) {
           setHoveredEntity(picked.id);
-          selectEntity(picked.id, false);
+          selectEntity(picked.id, false, e.shiftKey || e.ctrlKey || e.metaKey);
           return;
         }
       }
       setHoveredEntity(null);
-      selectEntity(null, false);
+      selectEntity(null, false, e.shiftKey || e.ctrlKey || e.metaKey);
     });
     stage.addEventListener('dblclick', e => {
       if (e.target.closest('.sidehud') || e.target.closest('.bottomhud') || e.target.closest('.entity-sprite')) return;
@@ -2835,14 +3195,14 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (!picked) return;
       e.preventDefault();
       setHoveredEntity(picked.id);
-      selectEntity(picked.id, true);
+      selectEntity(picked.id, true, e.shiftKey || e.ctrlKey || e.metaKey);
     });
     stage.addEventListener('contextmenu', e => {
-      if (mode3d) e.preventDefault();
+      e.preventDefault();
     });
     function edgePanLoop() {
       edgePanFrame = requestAnimationFrame(edgePanLoop);
-      if (!edgePanActive || dragging || rotatingCamera) return;
+      if (!edgePanActive || dragging || rotatingCamera || selectingBox) return;
       const margin = 26;
       const speedPx = 13;
       let dx = 0;
@@ -2913,11 +3273,23 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (Number.isFinite(requestedPitch)) {
         cameraPitch = clampCameraPitch(requestedPitch * Math.PI / 180);
       }
+      const requestedSelection = String(params.get('select') || '')
+        .split(',')
+        .map(value => value.trim())
+        .filter(Boolean);
+      if (requestedSelection.length) {
+        applySelection(requestedSelection, requestedSelection[0], params.get('focus') === '1');
+      }
       if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
+      renderMovementTrails();
     }
     show(0);
     focusInitialCamera();
     applyStartupParams();
+    requestAnimationFrame(() => {
+      if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
+      renderMovementTrails();
+    });
   </script>
 </body>
 </html>
@@ -2998,6 +3370,13 @@ def main() -> None:
     env.reset(seed=args.seed)
     rng = np.random.default_rng(args.seed)
     base = _make_html_base_image(env, args)
+    terrain_texture_name = "terrain_base.jpg"
+    imageio.imwrite(
+        output_dir / terrain_texture_name,
+        base,
+        quality=max(1, min(100, int(args.jpg_quality))),
+    )
+    game_assets["terrain_texture"] = terrain_texture_name
     game_assets["terrain3d"] = _make_terrain3d_payload(env, args)
     controller = ExpertOpeningController() if args.strategy == "expert_opening" else None
     opening_state = replay.OpeningPolicyState() if args.strategy == "opening_v1" else None

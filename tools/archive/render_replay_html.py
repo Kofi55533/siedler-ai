@@ -199,13 +199,18 @@ def _compact_animation_manifest(entries: list[dict]) -> dict:
             "keyframes": int(anm.get("keyframes") or 0),
             "keyframe_bytes": int(anm.get("keyframe_bytes") or 0),
             "parsed": bool(anm.get("parsed")),
+            "track_data": str(entry.get("track_data") or ""),
+            "track_node_count": int(((anm.get("track_topology") or {}).get("node_count") or 0)),
         }
         files.append(record)
         if not record["parsed"]:
             continue
         existing = by_role.get(role)
         if existing is None or (
-            role in {"walk", "run", "work"}
+            bool(record["track_data"]) and not bool(existing.get("track_data"))
+        ) or (
+            bool(record["track_data"]) == bool(existing.get("track_data"))
+            and role in {"idle", "walk", "run", "work"}
             and record["duration"] > 0
             and record["keyframes"] >= int(existing.get("keyframes", 0))
         ):
@@ -243,7 +248,12 @@ def _export_original_graphics(
     animation_by_key: dict[str, dict] = {}
     for entity in manifest.get("entities", []):
         key = str(entity.get("key", ""))
-        animation_by_key[key] = _compact_animation_manifest(entity.get("animation_files") or [])
+        compact_animation = _compact_animation_manifest(entity.get("animation_files") or [])
+        for record in compact_animation.get("files") or []:
+            track_data = str(record.get("track_data") or "")
+            if track_data:
+                record["track_data"] = _rel_asset(output_dir, report_dir / track_data)
+        animation_by_key[key] = compact_animation
         model_3d = str(entity.get("model_3d", "") or "")
         model_3d_path = report_dir / model_3d if model_3d else None
         rel_model_3d = _rel_asset(output_dir, model_3d_path)
@@ -1911,6 +1921,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           lighting: canvas && canvas.dataset.lighting,
           animation: canvas && canvas.dataset.animation,
           animationKeys: canvas && canvas.dataset.animationKeys,
+          originalAnimationDrawn: canvas && canvas.dataset.originalAnimationDrawn,
+          originalAnimationPending: canvas && canvas.dataset.originalAnimationPending,
+          originalAnimationMaxDisplacement: canvas && canvas.dataset.originalAnimationMaxDisplacement,
+          originalAnimationAssets: canvas && canvas.dataset.originalAnimationAssets,
+          originalAnimationErrors: canvas && canvas.dataset.originalAnimationErrors,
           orientedEntities: canvas && canvas.dataset.orientedEntities,
           selectedEntity: canvas && canvas.dataset.selectedEntity,
           selectedEntities: canvas && canvas.dataset.selectedEntities,
@@ -2226,6 +2241,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
 
       const modelCache = new Map();
       const textureCache = new Map();
+      const animationCache = new Map();
       let lastStats = { drawnModels: 0, totalEntities: 0, modelsCached: 0, texturesCached: 0, canvas: [0, 0] };
       const mapQuad = createStaticMesh(
         [
@@ -2331,15 +2347,23 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
 
       async function loadModel(modelUrl) {
         const data = embeddedModel3d[modelUrl] || await loadJson(modelUrl);
+        const basePositions = new Float32Array(data.positions || []);
+        const baseNormals = data.normals && data.normals.length === data.positions.length
+          ? new Float32Array(data.normals)
+          : new Float32Array(Array.from({ length: (data.positions || []).length / 3 }, () => [0, 1, 0]).flat());
+        const skinning = data.skinning && (data.skinning.geometry_skins || []).length ? data.skinning : null;
+        const sourcePositions = data.source_positions && data.source_positions.length === data.positions.length
+          ? new Float32Array(data.source_positions)
+          : null;
+        const sourceNormals = data.source_normals && data.source_normals.length === data.positions.length
+          ? new Float32Array(data.source_normals)
+          : null;
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.positions || []), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, basePositions, skinning ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
         const normalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-        const modelNormals = data.normals && data.normals.length === data.positions.length
-          ? data.normals
-          : Array.from({ length: (data.positions || []).length / 3 }, () => [0, 1, 0]).flat();
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelNormals), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, baseNormals, skinning ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
         const uvBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.uvs || []), gl.STATIC_DRAW);
@@ -2366,8 +2390,33 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           normalBuffer,
           uvBuffer,
           submeshes,
+          basePositions,
+          baseNormals,
+          sourcePositions,
+          sourceNormals,
+          skinning,
+          sourceBounds: data.bounds || {},
           maxSpan: Number((data.bounds || {}).max_span || 100),
         };
+      }
+
+      function ensureAnimation(animationUrl) {
+        if (!animationUrl) return null;
+        if (!animationCache.has(animationUrl)) {
+          const record = { loaded: false, data: null };
+          animationCache.set(animationUrl, record);
+          loadJson(animationUrl)
+            .then(data => {
+              record.loaded = true;
+              record.data = data;
+              if (mode3d) render(timeline[idx]);
+            })
+            .catch(error => {
+              record.error = String(error && error.message || error || 'animation load failed');
+              console.warn('ANM track load failed', animationUrl, record.error);
+            });
+        }
+        return animationCache.get(animationUrl);
       }
 
       function ensureModel(modelUrl) {
@@ -2390,6 +2439,193 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
             });
         }
         return modelCache.get(modelUrl);
+      }
+
+      function m4Identity() {
+        return new Float32Array([
+          1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, 1, 0,
+          0, 0, 0, 1,
+        ]);
+      }
+      function m4FromQuatTranslation(qx, qy, qz, qw, tx, ty, tz) {
+        const xx = qx * qx, yy = qy * qy, zz = qz * qz;
+        const xy = qx * qy, xz = qx * qz, yz = qy * qz;
+        const wx = qw * qx, wy = qw * qy, wz = qw * qz;
+        return new Float32Array([
+          1 - 2 * (yy + zz), 2 * (xy + wz), 2 * (xz - wy), 0,
+          2 * (xy - wz), 1 - 2 * (xx + zz), 2 * (yz + wx), 0,
+          2 * (xz + wy), 2 * (yz - wx), 1 - 2 * (xx + yy), 0,
+          tx, ty, tz, 1,
+        ]);
+      }
+      function m4TransformPoint(matrix, x, y, z) {
+        return [
+          matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12],
+          matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13],
+          matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14],
+        ];
+      }
+      function m4TransformDirection(matrix, x, y, z) {
+        return [
+          matrix[0] * x + matrix[4] * y + matrix[8] * z,
+          matrix[1] * x + matrix[5] * y + matrix[9] * z,
+          matrix[2] * x + matrix[6] * y + matrix[10] * z,
+        ];
+      }
+      function quaternionSlerp(a, b, amount) {
+        let bx = b[0], by = b[1], bz = b[2], bw = b[3];
+        let cosine = a[0] * bx + a[1] * by + a[2] * bz + a[3] * bw;
+        if (cosine < 0) {
+          cosine = -cosine;
+          bx = -bx; by = -by; bz = -bz; bw = -bw;
+        }
+        let left;
+        let right;
+        if (cosine > 0.9995) {
+          left = 1 - amount;
+          right = amount;
+        } else {
+          const angle = Math.acos(Math.max(-1, Math.min(1, cosine)));
+          const sine = Math.sin(angle) || 1;
+          left = Math.sin((1 - amount) * angle) / sine;
+          right = Math.sin(amount * angle) / sine;
+        }
+        const x = a[0] * left + bx * right;
+        const y = a[1] * left + by * right;
+        const z = a[2] * left + bz * right;
+        const w = a[3] * left + bw * right;
+        const length = Math.hypot(x, y, z, w) || 1;
+        return [x / length, y / length, z / length, w / length];
+      }
+      function bindMatrixForBone(bone) {
+        const bind = (bone && bone.bind_local) || {};
+        const right = bind.right || [1, 0, 0];
+        const up = bind.up || [0, 1, 0];
+        const at = bind.at || [0, 0, 1];
+        const position = bind.position || [0, 0, 0];
+        return new Float32Array([
+          right[0], right[1], right[2], 0,
+          up[0], up[1], up[2], 0,
+          at[0], at[1], at[2], 0,
+          position[0], position[1], position[2], 1,
+        ]);
+      }
+      function sampleAnimationTrack(track, duration, time) {
+        if (!track || !track.length) return null;
+        if (track.length === 1) return track[0];
+        const clipDuration = Math.max(0.001, Number(duration || track[track.length - 1][0] || 1));
+        const localTime = ((Number(time || 0) % clipDuration) + clipDuration) % clipDuration;
+        let rightIndex = track.findIndex(frame => Number(frame[0]) >= localTime);
+        if (rightIndex < 0) rightIndex = 0;
+        const right = track[rightIndex];
+        const left = rightIndex > 0 ? track[rightIndex - 1] : track[track.length - 1];
+        const leftTime = rightIndex > 0 ? Number(left[0]) : Number(left[0]) - clipDuration;
+        const rightTime = rightIndex > 0 ? Number(right[0]) : Number(right[0]) + clipDuration;
+        const sampleTime = rightIndex > 0 ? localTime : localTime + clipDuration;
+        const amount = Math.max(0, Math.min(1, (sampleTime - leftTime) / Math.max(1e-6, rightTime - leftTime)));
+        const q = quaternionSlerp([left[1], left[2], left[3], left[4]], [right[1], right[2], right[3], right[4]], amount);
+        return m4FromQuatTranslation(
+          q[0], q[1], q[2], q[3],
+          Number(left[5]) + (Number(right[5]) - Number(left[5])) * amount,
+          Number(left[6]) + (Number(right[6]) - Number(left[6])) * amount,
+          Number(left[7]) + (Number(right[7]) - Number(left[7])) * amount,
+        );
+      }
+      function applyOriginalSkinning(model, clip, animationTime) {
+        const skinning = model && model.skinning;
+        const bones = skinning && skinning.bones;
+        const geometrySkins = skinning && skinning.geometry_skins;
+        const tracks = clip && clip.tracks;
+        if (!model || !model.sourcePositions || !model.sourceNormals || !bones || !geometrySkins || !tracks) return false;
+        if (Number(clip.node_count || 0) !== bones.length || tracks.length !== bones.length) return false;
+        const localMatrices = new Array(bones.length);
+        const worldMatrices = new Array(bones.length);
+        for (let boneIndex = 0; boneIndex < bones.length; boneIndex += 1) {
+          const bone = bones[boneIndex];
+          localMatrices[boneIndex] = sampleAnimationTrack(tracks[boneIndex], clip.duration, animationTime) || bindMatrixForBone(bone);
+          const parentIndex = Number(bone.parent_index);
+          worldMatrices[boneIndex] = parentIndex >= 0 && worldMatrices[parentIndex]
+            ? m4Multiply(worldMatrices[parentIndex], localMatrices[boneIndex])
+            : localMatrices[boneIndex];
+        }
+
+        const skinnedPositions = new Float32Array(model.basePositions);
+        const skinnedNormals = new Float32Array(model.baseNormals);
+        const bounds = model.sourceBounds || {};
+        const min = bounds.min || [0, 0, 0];
+        const max = bounds.max || [0, 0, 0];
+        const centerX = (Number(min[0]) + Number(max[0])) * .5;
+        const centerY = (Number(min[1]) + Number(max[1])) * .5;
+        const minZ = Number(min[2]);
+        let vertexOffset = 0;
+        let maxDisplacement = 0;
+        for (const geometrySkin of geometrySkins) {
+          const palettes = (geometrySkin.inverse_bind_matrices || []).map((inverseBind, boneIndex) => {
+            const world = worldMatrices[boneIndex] || m4Identity();
+            return m4Multiply(world, new Float32Array(inverseBind));
+          });
+          const vertexCount = Number(geometrySkin.vertex_count || 0);
+          for (let vertexIndex = 0; vertexIndex < vertexCount; vertexIndex += 1) {
+            const sourceIndex = (vertexOffset + vertexIndex) * 3;
+            const sourcePosition = [
+              model.sourcePositions[sourceIndex],
+              model.sourcePositions[sourceIndex + 1],
+              model.sourcePositions[sourceIndex + 2],
+            ];
+            const sourceNormal = [
+              model.sourceNormals[sourceIndex],
+              model.sourceNormals[sourceIndex + 1],
+              model.sourceNormals[sourceIndex + 2],
+            ];
+            const indices = (geometrySkin.bone_indices || [])[vertexIndex] || [];
+            const weights = (geometrySkin.weights || [])[vertexIndex] || [];
+            let px = 0, py = 0, pz = 0;
+            let nx = 0, ny = 0, nz = 0;
+            let totalWeight = 0;
+            for (let influence = 0; influence < 4; influence += 1) {
+              const weight = Number(weights[influence] || 0);
+              const palette = palettes[Number(indices[influence])];
+              if (weight <= 0 || !palette) continue;
+              const point = m4TransformPoint(palette, sourcePosition[0], sourcePosition[1], sourcePosition[2]);
+              const normal = m4TransformDirection(palette, sourceNormal[0], sourceNormal[1], sourceNormal[2]);
+              px += point[0] * weight; py += point[1] * weight; pz += point[2] * weight;
+              nx += normal[0] * weight; ny += normal[1] * weight; nz += normal[2] * weight;
+              totalWeight += weight;
+            }
+            if (totalWeight <= 1e-6) continue;
+            const normal = normalize([nx, ny, nz]);
+            skinnedPositions[sourceIndex] = px - centerX;
+            skinnedPositions[sourceIndex + 1] = pz - minZ;
+            skinnedPositions[sourceIndex + 2] = -(py - centerY);
+            skinnedNormals[sourceIndex] = normal[0];
+            skinnedNormals[sourceIndex + 1] = normal[2];
+            skinnedNormals[sourceIndex + 2] = -normal[1];
+            maxDisplacement = Math.max(
+              maxDisplacement,
+              Math.hypot(
+                skinnedPositions[sourceIndex] - model.basePositions[sourceIndex],
+                skinnedPositions[sourceIndex + 1] - model.basePositions[sourceIndex + 1],
+                skinnedPositions[sourceIndex + 2] - model.basePositions[sourceIndex + 2],
+              )
+            );
+          }
+          vertexOffset += vertexCount;
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, model.positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, skinnedPositions, gl.DYNAMIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, model.normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, skinnedNormals, gl.DYNAMIC_DRAW);
+        model.lastSkinMaxDisplacement = maxDisplacement;
+        return true;
+      }
+      function restoreModelBindPose(model) {
+        if (!model || !model.skinning || !model.basePositions || !model.baseNormals) return;
+        gl.bindBuffer(gl.ARRAY_BUFFER, model.positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, model.basePositions, gl.DYNAMIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, model.normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, model.baseNormals, gl.DYNAMIC_DRAW);
       }
 
       function m4Multiply(a, b) {
@@ -2457,7 +2693,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         if (role === 'work') return 1.2;
         return 2.4;
       }
-      function entityMotion(entity, frameTime) {
+      function entityMotion(entity, frameTime, usingOriginalAnimation = false) {
         const role = String(entity.anim_role || '').toLowerCase();
         const state = String(entity.state || '').toLowerCase();
         const info = animationInfoFor(entity);
@@ -2467,6 +2703,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         let yaw = Number(entity.angle || 0);
         let y = 0;
         let scaleY = 1;
+        if (usingOriginalAnimation) {
+          return { yaw, y, scaleY, duration, source: info ? info.name : '' };
+        }
         if (role === 'walk' || role === 'run' || state.includes('walking')) {
           const stride = role === 'run' ? 2.5 : 2.0;
           y = Math.abs(Math.sin(phase * stride)) * (role === 'run' ? 5.0 : 3.4);
@@ -2642,6 +2881,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
 
         const entities = ((frame && frame.entities) || []).slice().sort((a, b) => Number(a.y || 0) - Number(b.y || 0));
         let drawnModels = 0;
+        let originalAnimationDrawn = 0;
+        let originalAnimationPending = 0;
+        let originalAnimationMaxDisplacement = 0;
         for (const entity of entities) {
           const modelUrl = model3dByKey[entity.sprite_key];
           const record = ensureModel(modelUrl);
@@ -2668,9 +2910,31 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
               ringMatrix
             );
           }
+          const animationInfo = animationInfoFor(entity);
+          const canAnimateEntity = entity.kind === 'serf' || entity.kind === 'worker';
+          const animationRecord = canAnimateEntity && animationInfo && animationInfo.track_data
+            ? ensureAnimation(animationInfo.track_data)
+            : null;
+          let usingOriginalAnimation = false;
+          if (animationRecord && animationRecord.loaded && animationRecord.data) {
+            const duration = Math.max(0.001, Number(animationRecord.data.duration || animationInfo.duration || 1));
+            const seedOffset = (Number(entity.anim_seed || 0) / 1000) * duration;
+            usingOriginalAnimation = applyOriginalSkinning(
+              model,
+              animationRecord.data,
+              Number((frame && frame.time) || 0) + seedOffset,
+            );
+          } else if (model.skinning) {
+            restoreModelBindPose(model);
+            if (animationRecord && !animationRecord.error) originalAnimationPending += 1;
+          }
+          if (usingOriginalAnimation) {
+            originalAnimationDrawn += 1;
+            originalAnimationMaxDisplacement = Math.max(originalAnimationMaxDisplacement, Number(model.lastSkinMaxDisplacement || 0));
+          }
           bindMesh(model);
           const modelScale = Math.max(0.08, (Number(entity.size || 32) * 1.45) / Math.max(1, model.maxSpan));
-          const motion = entityMotion(entity, frame && frame.time);
+          const motion = entityMotion(entity, frame && frame.time, usingOriginalAnimation);
           const matrix = m4Transform(worldX, groundY + motion.y, worldZ, modelScale, motion.yaw, motion.scaleY);
           for (const submesh of model.submeshes) {
             if (submesh.count > 0) drawSubmesh(vp, model, submesh, matrix);
@@ -2685,7 +2949,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           modelErrors: Array.from(modelCache.values()).filter(record => record.error).length,
           texturesCached: textureCache.size,
           terrain: terrain3d.enabled ? `${terrainRows}x${terrainCols}` : 'flat',
-          animation: Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion',
+          animation: originalAnimationDrawn ? 'original_hanim_cpu_skinning' : (Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion'),
+          originalAnimationDrawn,
+          originalAnimationPending,
+          originalAnimationMaxDisplacement: Math.round(originalAnimationMaxDisplacement * 1000) / 1000,
+          originalAnimationAssets: Array.from(animationCache.values()).filter(record => record.loaded).length,
+          originalAnimationErrors: Array.from(animationCache.values()).filter(record => record.error).length,
           orientedEntities: entities.filter(entity => entity.orientation_deg !== undefined).length,
           selectedEntity: selectedEntityId || "",
           selectedEntities: Array.from(selectedEntityIds).join(","),
@@ -2705,6 +2974,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.lighting = "directional_normals";
         canvas.dataset.animation = String(lastStats.animation);
         canvas.dataset.animationKeys = String(Object.keys(animationByKey).length);
+        canvas.dataset.originalAnimationDrawn = String(lastStats.originalAnimationDrawn);
+        canvas.dataset.originalAnimationPending = String(lastStats.originalAnimationPending);
+        canvas.dataset.originalAnimationMaxDisplacement = String(lastStats.originalAnimationMaxDisplacement);
+        canvas.dataset.originalAnimationAssets = String(lastStats.originalAnimationAssets);
+        canvas.dataset.originalAnimationErrors = String(lastStats.originalAnimationErrors);
         canvas.dataset.orientedEntities = String(lastStats.orientedEntities);
         canvas.dataset.selectedEntity = String(lastStats.selectedEntity);
         canvas.dataset.selectedEntities = String(lastStats.selectedEntities);

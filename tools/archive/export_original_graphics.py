@@ -479,6 +479,163 @@ def _extract_skin_plugins(data: bytes, chunks: list[tuple[int, int, int, int, in
     return skins
 
 
+def _extract_frame_list(data: bytes, chunks: list[tuple[int, int, int, int, int]]) -> list[dict]:
+    """Read the RenderWare frame list as local bind transforms."""
+    frame_chunk = next((chunk for chunk in chunks if chunk[2] == RW_FRAME_LIST), None)
+    if frame_chunk is None:
+        return []
+    payload_start = frame_chunk[1] + 12
+    payload_end = payload_start + frame_chunk[3]
+    struct_chunk = next(
+        (
+            chunk
+            for chunk in _read_immediate_chunks(data, payload_start, payload_end)
+            if chunk[1] == RW_STRUCT
+        ),
+        None,
+    )
+    if struct_chunk is None:
+        return []
+    struct_offset, _chunk_type, struct_size, _version = struct_chunk
+    struct_start = struct_offset + 12
+    if struct_size < 4 or struct_start + struct_size > len(data):
+        return []
+    frame_count = int(struct.unpack_from("<I", data, struct_start)[0])
+    if frame_count <= 0 or 4 + frame_count * 56 > struct_size:
+        return []
+    frames: list[dict] = []
+    for frame_index in range(frame_count):
+        offset = struct_start + 4 + frame_index * 56
+        matrix = struct.unpack_from("<12f", data, offset)
+        parent, flags = struct.unpack_from("<ii", data, offset + 48)
+        frames.append(
+            {
+                "index": int(frame_index),
+                "right": [_round_float(value) for value in matrix[0:3]],
+                "up": [_round_float(value) for value in matrix[3:6]],
+                "at": [_round_float(value) for value in matrix[6:9]],
+                "position": [_round_float(value) for value in matrix[9:12]],
+                "parent": int(parent),
+                "flags": int(flags),
+            }
+        )
+    return frames
+
+
+def _extract_frame_hanim_ids(data: bytes, chunks: list[tuple[int, int, int, int, int]]) -> list[int]:
+    """Return HAnim IDs in frame-list order (root frame itself has no entry)."""
+    ids: list[int] = []
+    for _depth, offset, chunk_type, size, _version in chunks:
+        if chunk_type != RW_HANIM_PLUGIN or size < 12 or offset + 24 > len(data):
+            continue
+        _version_value, hierarchy_id, _flags = struct.unpack_from("<III", data, offset + 12)
+        ids.append(int(hierarchy_id))
+    return ids
+
+
+def _extract_skinning_payload(
+    data: bytes,
+    chunks: list[tuple[int, int, int, int, int]],
+    vertex_counts: list[int],
+) -> list[dict]:
+    """Read vertex bone indices, weights, and 4x4 inverse-bind matrices."""
+    skin_chunks = [chunk for chunk in chunks if chunk[2] == RW_SKIN_PLUGIN]
+    payloads: list[dict] = []
+    for geometry_index, chunk in enumerate(skin_chunks):
+        if geometry_index >= len(vertex_counts):
+            break
+        vertex_count = int(vertex_counts[geometry_index])
+        payload_start = chunk[1] + 12
+        payload_end = payload_start + chunk[3]
+        if vertex_count <= 0 or chunk[3] < 4 or payload_end > len(data):
+            continue
+        raw = data[payload_start:payload_end]
+        bone_count, used_bone_count, max_weights, platform = struct.unpack_from("<BBBB", raw, 0)
+        indices_start = 4 + int(used_bone_count)
+        weights_start = indices_start + vertex_count * 4
+        matrices_start = weights_start + vertex_count * 16
+        matrices_end = matrices_start + int(bone_count) * 64
+        if matrices_end > len(raw):
+            continue
+        bone_indices = [
+            [int(value) for value in raw[indices_start + vertex_index * 4 : indices_start + vertex_index * 4 + 4]]
+            for vertex_index in range(vertex_count)
+        ]
+        weights = [
+            [_round_float(value) for value in struct.unpack_from("<4f", raw, weights_start + vertex_index * 16)]
+            for vertex_index in range(vertex_count)
+        ]
+        inverse_bind_matrices = [
+            [_round_float(value) for value in struct.unpack_from("<16f", raw, matrices_start + bone_index * 64)]
+            for bone_index in range(int(bone_count))
+        ]
+        payloads.append(
+            {
+                "geometry_index": int(geometry_index),
+                "vertex_count": vertex_count,
+                "bone_count": int(bone_count),
+                "used_bones": [int(value) for value in raw[4 : 4 + int(used_bone_count)]],
+                "max_vertex_weights": int(max_weights),
+                "platform": int(platform),
+                "bone_indices": bone_indices,
+                "weights": weights,
+                "inverse_bind_matrices": inverse_bind_matrices,
+                "trailing_bytes": int(len(raw) - matrices_end),
+            }
+        )
+    return payloads
+
+
+def _extract_model_skinning(source: Path, vertex_counts: list[int]) -> dict:
+    """Join DFF frame/HAnim/skin data into a renderer-ready source payload."""
+    data = source.read_bytes()
+    chunks = _read_chunks(data, 0, len(data))
+    hierarchies = _extract_hanim_hierarchies(data, chunks)
+    frames = _extract_frame_list(data, chunks)
+    skins = _extract_skinning_payload(data, chunks, vertex_counts)
+    if not hierarchies or not frames or not skins:
+        return {}
+
+    hierarchy = hierarchies[0]
+    nodes = hierarchy.get("nodes") or []
+    node_by_id = {int(node["id"]): node for node in nodes}
+    frame_hanim_ids = _extract_frame_hanim_ids(data, chunks)
+    frame_to_bone: dict[int, int] = {}
+    for frame_index, hierarchy_id in enumerate(frame_hanim_ids, start=1):
+        node = node_by_id.get(int(hierarchy_id))
+        if node is not None:
+            frame_to_bone[frame_index] = int(node["index"])
+
+    bones: list[dict] = []
+    for node in sorted(nodes, key=lambda item: int(item["index"])):
+        bone_index = int(node["index"])
+        frame_index = next((index for index, mapped_bone in frame_to_bone.items() if mapped_bone == bone_index), -1)
+        frame = frames[frame_index] if 0 <= frame_index < len(frames) else None
+        parent_frame = int(frame["parent"]) if frame else -1
+        bones.append(
+            {
+                "index": bone_index,
+                "id": int(node["id"]),
+                "flags": int(node["flags"]),
+                "frame_index": int(frame_index),
+                "parent_index": int(frame_to_bone.get(parent_frame, -1)),
+                "bind_local": {
+                    "right": (frame or {}).get("right", [1.0, 0.0, 0.0]),
+                    "up": (frame or {}).get("up", [0.0, 1.0, 0.0]),
+                    "at": (frame or {}).get("at", [0.0, 0.0, 1.0]),
+                    "position": (frame or {}).get("position", [0.0, 0.0, 0.0]),
+                },
+            }
+        )
+    return {
+        "coordinate_system": "renderware_dff_source",
+        "node_count": int(hierarchy["node_count"]),
+        "keyframe_size": int(hierarchy["keyframe_size"]),
+        "bones": bones,
+        "geometry_skins": skins,
+    }
+
+
 def inspect_dff(path: Path) -> dict:
     data = path.read_bytes()
     chunks = _read_chunks(data, 0, len(data))
@@ -534,7 +691,93 @@ def _animation_role(path: Path) -> str:
     return "other"
 
 
-def inspect_anm(path: Path) -> dict:
+def _decode_anm_tracks(data: bytes, keyframes: int, keyframe_bytes: int, node_count: int) -> dict:
+    """Reconstruct RenderWare keyframe ownership from its prev-frame offsets.
+
+    Settlers 5 ANMs start with one keyframe per HAnim node. Every later
+    keyframe stores the byte offset of its predecessor, so following that
+    offset assigns it to the same bone track even when different bones use
+    different sampling times.
+    """
+    if node_count <= 0 or keyframe_bytes < 36 or keyframes < node_count:
+        return {"parsed": False, "reason": "missing compatible HAnim node count", "tracks": []}
+
+    owners: list[int | None] = []
+    track_counts = [0] * node_count
+    tracks: list[list[list[float]]] = [[] for _ in range(node_count)]
+    linked = 0
+    unresolved = 0
+    last_times = [-float("inf")] * node_count
+    monotonic_violations = 0
+    max_time = 0.0
+    for keyframe_index in range(keyframes):
+        offset = 32 + keyframe_index * keyframe_bytes
+        if offset + 36 > len(data):
+            unresolved += 1
+            owners.append(None)
+            continue
+        time = float(struct.unpack_from("<f", data, offset)[0])
+        previous_offset = int(struct.unpack_from("<I", data, offset + 32)[0])
+        owner: int | None
+        if keyframe_index < node_count:
+            owner = keyframe_index
+        elif previous_offset % keyframe_bytes == 0 and 0 <= previous_offset // keyframe_bytes < keyframe_index:
+            owner = owners[previous_offset // keyframe_bytes]
+            linked += 1
+        else:
+            owner = None
+            unresolved += 1
+        owners.append(owner)
+        if owner is None or owner < 0 or owner >= node_count:
+            continue
+        if time + 1e-6 < last_times[owner]:
+            monotonic_violations += 1
+        last_times[owner] = max(last_times[owner], time)
+        max_time = max(max_time, time)
+        track_counts[owner] += 1
+        quaternion = struct.unpack_from("<4f", data, offset + 4)
+        translation = struct.unpack_from("<3f", data, offset + 20)
+        tracks[owner].append(
+            [
+                _round_float(time),
+                *[_round_float(value) for value in quaternion],
+                *[_round_float(value) for value in translation],
+            ]
+        )
+
+    return {
+        "parsed": True,
+        "node_count": int(node_count),
+        "track_count": int(sum(1 for count in track_counts if count > 0)),
+        "track_keyframes_min": int(min(track_counts) if track_counts else 0),
+        "track_keyframes_max": int(max(track_counts) if track_counts else 0),
+        "linked_keyframes": int(linked),
+        "unresolved_keyframes": int(unresolved),
+        "monotonic_time_violations": int(monotonic_violations),
+        "max_keyframe_time": round(float(max_time), 6),
+        "tracks": tracks,
+    }
+
+
+def _analyze_anm_tracks(data: bytes, keyframes: int, keyframe_bytes: int, node_count: int, duration: float) -> dict:
+    decoded = _decode_anm_tracks(data, keyframes, keyframe_bytes, node_count)
+    if not decoded.get("parsed"):
+        return {"parsed": False, "reason": decoded.get("reason", "track decode failed")}
+    return {
+        "parsed": True,
+        "node_count": int(decoded["node_count"]),
+        "track_count": int(decoded["track_count"]),
+        "track_keyframes_min": int(decoded["track_keyframes_min"]),
+        "track_keyframes_max": int(decoded["track_keyframes_max"]),
+        "linked_keyframes": int(decoded["linked_keyframes"]),
+        "unresolved_keyframes": int(decoded["unresolved_keyframes"]),
+        "monotonic_time_violations": int(decoded["monotonic_time_violations"]),
+        "max_keyframe_time": float(decoded["max_keyframe_time"]),
+        "duration_delta": round(abs(float(duration) - float(decoded["max_keyframe_time"])), 6),
+    }
+
+
+def inspect_anm(path: Path, expected_node_count: int = 0) -> dict:
     """Parse the RenderWare ANM chunk header.
 
     Settlers 5 animation files are RenderWare chunk type 0x1b. The first
@@ -574,7 +817,51 @@ def inspect_anm(path: Path) -> dict:
             "keyframe_bytes": keyframe_bytes,
         }
     )
+    if expected_node_count > 0:
+        info["track_topology"] = _analyze_anm_tracks(
+            data,
+            int(keyframes),
+            int(keyframe_bytes),
+            int(expected_node_count),
+            float(duration),
+        )
     return info
+
+
+def _make_anm_track_json(source: Path, output_dir: Path, node_count: int) -> Path | None:
+    """Export decoded original HAnim tracks in a compact, browser-loadable JSON file."""
+    info = inspect_anm(source, node_count)
+    topology = info.get("track_topology") or {}
+    if not info.get("parsed") or not topology.get("parsed"):
+        return None
+    data = source.read_bytes()
+    decoded = _decode_anm_tracks(
+        data,
+        int(info["keyframes"]),
+        int(info["keyframe_bytes"]),
+        int(node_count),
+    )
+    if not decoded.get("parsed"):
+        return None
+    target = output_dir / "animations" / f"{_safe_name(source)}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "source": source.name,
+        "format": "s5_rwanim_hanim_tracks_v1",
+        "role": _animation_role(source),
+        "duration": float(info["duration"]),
+        "node_count": int(node_count),
+        "keyframe_bytes": int(info["keyframe_bytes"]),
+        "keyframe_layout": ["time", "qx", "qy", "qz", "qw", "tx", "ty", "tz"],
+        "track_topology": {
+            key: value
+            for key, value in decoded.items()
+            if key != "tracks"
+        },
+        "tracks": decoded["tracks"],
+    }
+    target.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    return target
 
 
 def _collect_meshes(path: Path) -> list[dict]:
@@ -946,6 +1233,7 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
         "hanim_hierarchies": dff_info.get("hanim_hierarchies") or [],
         "skin_plugins": dff_info.get("skin_plugins") or [],
     }
+    skinning = _extract_model_skinning(source, [len(mesh.get("parsed_vertices", [])) for mesh in meshes])
 
     all_vertices = [vertex for mesh in meshes for vertex in mesh.get("parsed_vertices", [])]
     if not all_vertices:
@@ -966,6 +1254,8 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
     positions: list[float] = []
     normals: list[float] = []
     uvs: list[float] = []
+    source_positions: list[float] = []
+    source_normals: list[float] = []
     submesh_map: dict[tuple[int, int, str], dict] = {}
     vertex_offset = 0
     for mesh_index, mesh in enumerate(meshes):
@@ -978,6 +1268,7 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
 
         for vertex_index, vertex in enumerate(vertices):
             # WebGL scene is Y-up. The original DFF local X/Y plane becomes X/Z, original Z becomes height.
+            source_positions.extend([_round_float(float(vertex[0])), _round_float(float(vertex[1])), _round_float(float(vertex[2]))])
             positions.extend(
                 [
                     _round_float(float(vertex[0]) - center_x),
@@ -987,9 +1278,11 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
             )
             if vertex_index < len(mesh_normals):
                 normal = mesh_normals[vertex_index]
+                source_normals.extend([_round_float(float(normal[0])), _round_float(float(normal[1])), _round_float(float(normal[2]))])
                 nx, ny, nz = _normalize_vector(float(normal[0]), float(normal[2]), -float(normal[1]))
                 normals.extend([_round_float(nx), _round_float(ny), _round_float(nz)])
             else:
+                source_normals.extend([0.0, 0.0, 1.0])
                 normals.extend([0.0, 1.0, 0.0])
             if vertex_index < len(mesh_uvs):
                 u, v = mesh_uvs[vertex_index]
@@ -1023,6 +1316,8 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
         "positions": positions,
         "normals": normals,
         "uvs": uvs,
+        "source_positions": source_positions,
+        "source_normals": source_normals,
         "submeshes": list(submesh_map.values()),
         "bounds": {
             "min": [_round_float(min_x), _round_float(min_y), _round_float(min_z)],
@@ -1031,6 +1326,7 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
             "max_span": _round_float(max(span_x, span_y, span_z)),
         },
         "skeleton": skeleton,
+        "skinning": skinning,
         "notes": "Static DFF geometry plus original HAnim/Skin metadata converted for the local WebGL replay renderer; ANM animation tracks are not applied here.",
     }
     target.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -1041,18 +1337,45 @@ def _file_entries(game_root: Path, paths: list[Path]) -> list[dict]:
     return [{"name": path.name, "path": _rel_to_game(game_root, path), "bytes": path.stat().st_size} for path in paths]
 
 
-def _animation_file_entries(game_root: Path, paths: list[Path]) -> list[dict]:
-    entries: list[dict] = []
+def _animation_file_entries(
+    game_root: Path,
+    paths: list[Path],
+    expected_node_count: int = 0,
+    output_dir: Path | None = None,
+) -> list[dict]:
+    records: list[tuple[Path, dict]] = []
     for path in paths:
         entry = {"name": path.name, "path": _rel_to_game(game_root, path), "bytes": path.stat().st_size}
         try:
             entry["role"] = _animation_role(path)
-            entry["anm"] = inspect_anm(path)
+            entry["anm"] = inspect_anm(path, expected_node_count)
         except Exception as exc:
             entry["role"] = _animation_role(path)
             entry["anm"] = {"parsed": False, "error": str(exc)}
-        entries.append(entry)
-    return entries
+        records.append((path, entry))
+
+    if output_dir is not None and expected_node_count > 0:
+        for role in ("idle", "walk", "run", "work"):
+            candidates = [
+                record
+                for record in records
+                if record[1].get("role") == role
+                and (record[1].get("anm") or {}).get("parsed")
+                and ((record[1].get("anm") or {}).get("track_topology") or {}).get("parsed")
+            ]
+            if not candidates:
+                continue
+            source, entry = max(
+                candidates,
+                key=lambda record: (
+                    int((record[1].get("anm") or {}).get("keyframes", 0)),
+                    str(record[0].name).lower(),
+                ),
+            )
+            track_data = _make_anm_track_json(source, output_dir, expected_node_count)
+            if track_data is not None:
+                entry["track_data"] = _rel_to_output(output_dir, track_data)
+    return [entry for _path, entry in records]
 
 
 def _animation_summary(entries: list[dict]) -> dict:
@@ -1119,9 +1442,11 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         texture_preview = _make_dds_preview(textures[0], output_dir, thumb_size) if textures and textures[0].suffix.lower() == ".dds" else None
         mesh_preview = _make_mesh_preview(models[0], output_dir, thumb_size) if models else None
         sprite_preview = _make_textured_sprite(models[0], game_root, output_dir, thumb_size) if models else None
-        model_3d = _make_model3d_json(models[0], game_root, output_dir) if models else None
         dff_info = inspect_dff(models[0]) if models else None
-        animation_files = _animation_file_entries(game_root, animations)
+        model_3d = _make_model3d_json(models[0], game_root, output_dir) if models else None
+        hierarchies = (dff_info or {}).get("hanim_hierarchies") or []
+        expected_node_count = int(hierarchies[0].get("node_count", 0)) if hierarchies else 0
+        animation_files = _animation_file_entries(game_root, animations, expected_node_count, output_dir)
 
         entities.append(
             {

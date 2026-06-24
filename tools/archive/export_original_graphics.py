@@ -37,6 +37,8 @@ RW_CLUMP = 0x0010
 RW_ATOMIC = 0x0014
 RW_GEOMETRY_LIST = 0x001A
 RW_ANIMATION = 0x001B
+RW_SKIN_PLUGIN = 0x0116
+RW_HANIM_PLUGIN = 0x011E
 
 RW_CONTAINER_TYPES = {
     RW_EXTENSION,
@@ -408,6 +410,75 @@ def _extract_geometry(data: bytes, chunk_offset: int, chunk_size: int) -> dict |
     }
 
 
+def _extract_hanim_hierarchies(data: bytes, chunks: list[tuple[int, int, int, int, int]]) -> list[dict]:
+    """Read RenderWare HAnim hierarchy headers and node records from DFF extensions."""
+    hierarchies: list[dict] = []
+    for _depth, offset, chunk_type, size, _version in chunks:
+        if chunk_type != RW_HANIM_PLUGIN or size < 20 or offset + 12 + size > len(data):
+            continue
+        version, hierarchy_id, node_count, flags, keyframe_size = struct.unpack_from("<IIIII", data, offset + 12)
+        node_bytes = int(node_count) * 12
+        if node_count <= 0 or 20 + node_bytes > size:
+            continue
+        nodes = [
+            {
+                "id": int(node_id),
+                "index": int(node_index),
+                "flags": int(node_flags),
+            }
+            for node_id, node_index, node_flags in (
+                struct.unpack_from("<III", data, offset + 32 + node_index * 12)
+                for node_index in range(int(node_count))
+            )
+        ]
+        hierarchies.append(
+            {
+                "offset": int(offset),
+                "bytes": int(size),
+                "version": int(version),
+                "hierarchy_id": int(hierarchy_id),
+                "node_count": int(node_count),
+                "flags": int(flags),
+                "keyframe_size": int(keyframe_size),
+                "nodes": nodes,
+            }
+        )
+    return hierarchies
+
+
+def _extract_skin_plugins(data: bytes, chunks: list[tuple[int, int, int, int, int]]) -> list[dict]:
+    """Read the unambiguous Skin-plugin header and used-bone table.
+
+    The subsequent inverse-bind matrices and per-vertex weight sections are
+    layout-dependent. Keeping their byte offsets explicit makes later skinning
+    work auditable without guessing at matrix alignment.
+    """
+    skins: list[dict] = []
+    for _depth, offset, chunk_type, size, _version in chunks:
+        if chunk_type != RW_SKIN_PLUGIN or size < 4 or offset + 12 + size > len(data):
+            continue
+        payload_start = offset + 12
+        bone_count, used_bone_count, max_weights, platform = struct.unpack_from("<BBBB", data, payload_start)
+        used_start = payload_start + 4
+        used_end = min(payload_start + size, used_start + int(used_bone_count))
+        used_bones = [int(value) for value in data[used_start:used_end]]
+        matrix_offset = (4 + int(used_bone_count) + 3) & ~3
+        skins.append(
+            {
+                "offset": int(offset),
+                "bytes": int(size),
+                "bone_count": int(bone_count),
+                "used_bone_count": int(used_bone_count),
+                "max_vertex_weights": int(max_weights),
+                "platform": int(platform),
+                "used_bones": used_bones,
+                "inverse_bind_matrix_offset": int(matrix_offset),
+                "inverse_bind_matrix_bytes": int(size - matrix_offset) if matrix_offset <= size else 0,
+            }
+        )
+    return skins
+
+
 def inspect_dff(path: Path) -> dict:
     data = path.read_bytes()
     chunks = _read_chunks(data, 0, len(data))
@@ -437,6 +508,8 @@ def inspect_dff(path: Path) -> dict:
         "chunk_count": len(chunks),
         "geometry_count": len(geometries),
         "geometries": geometries,
+        "hanim_hierarchies": _extract_hanim_hierarchies(data, chunks),
+        "skin_plugins": _extract_skin_plugins(data, chunks),
     }
 
 
@@ -868,6 +941,12 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
     if not meshes:
         return None
 
+    dff_info = inspect_dff(source)
+    skeleton = {
+        "hanim_hierarchies": dff_info.get("hanim_hierarchies") or [],
+        "skin_plugins": dff_info.get("skin_plugins") or [],
+    }
+
     all_vertices = [vertex for mesh in meshes for vertex in mesh.get("parsed_vertices", [])]
     if not all_vertices:
         return None
@@ -940,7 +1019,7 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
     target.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "source": source.name,
-        "format": "s5_dff_static_v1",
+        "format": "s5_dff_static_with_skeleton_metadata_v1",
         "positions": positions,
         "normals": normals,
         "uvs": uvs,
@@ -951,7 +1030,8 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
             "span": [_round_float(span_x), _round_float(span_y), _round_float(span_z)],
             "max_span": _round_float(max(span_x, span_y, span_z)),
         },
-        "notes": "Static DFF geometry converted for the local WebGL replay renderer; ANM animation tracks are not applied here.",
+        "skeleton": skeleton,
+        "notes": "Static DFF geometry plus original HAnim/Skin metadata converted for the local WebGL replay renderer; ANM animation tracks are not applied here.",
     }
     target.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return target
@@ -1085,6 +1165,7 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
             "DFF static sprite previews are projected from original model geometry and affine-mapped from original DDS textures.",
             "DFF static geometry is exported as WebGL-ready JSON plus local PNG textures for the replay 3D mode.",
             "DFF mesh previews are also kept as untextured geometry-debug projections.",
+            "DFF HAnim hierarchies and Skin-plugin headers are extracted with node IDs, used bones, and weight limits.",
             "ANM RenderWare headers are parsed for role, duration and keyframe counts; full skeletal/object skinning still requires a HAnim renderer.",
         ],
     }
@@ -1132,6 +1213,17 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
         geometry_count = dff.get("geometry_count", 0)
         vertices = sum(int(g.get("vertices", 0)) for g in dff.get("geometries", []))
         triangles = sum(int(g.get("triangles", 0)) for g in dff.get("geometries", []))
+        hierarchies = dff.get("hanim_hierarchies") or []
+        skins = dff.get("skin_plugins") or []
+        skeleton_text = "kein HAnim"
+        if hierarchies:
+            node_count = int(hierarchies[0].get("node_count", 0))
+            keyframe_size = int(hierarchies[0].get("keyframe_size", 0))
+            skin_text = "ohne Skin"
+            if skins:
+                skin = skins[0]
+                skin_text = f"Skin {int(skin.get('bone_count', 0))} Knochen, max. {int(skin.get('max_vertex_weights', 0))} Gewichte"
+            skeleton_text = f"HAnim {node_count} Knoten, Keyframe {keyframe_size} Byte; {skin_text}"
         animation_summary = entity.get("animation_summary") or {}
         rows.append(
             f"""
@@ -1150,6 +1242,7 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
                 <dt>ANM-Timing</dt><dd>{_short_animation_summary(animation_summary)}</dd>
                 <dt>GUI</dt><dd>{_short_file_list(entity.get("gui_files") or [])}</dd>
                 <dt>Geometrie</dt><dd>{geometry_count} Chunks, {vertices} Vertices, {triangles} Dreiecke</dd>
+                <dt>Skelett</dt><dd>{html.escape(skeleton_text)}</dd>
                 <dt>WebGL</dt><dd>{html.escape(model_3d) if model_3d else "fehlt"}</dd>
               </dl>
             </article>

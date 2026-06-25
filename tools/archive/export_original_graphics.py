@@ -636,6 +636,153 @@ def _extract_model_skinning(source: Path, vertex_counts: list[int]) -> dict:
     }
 
 
+def _extract_atomics(data: bytes, chunks: list[tuple[int, int, int, int, int]]) -> list[dict]:
+    """Map DFF geometry indices to their owning frame indices."""
+    atomics: list[dict] = []
+    for _depth, offset, chunk_type, size, _version in chunks:
+        if chunk_type != RW_ATOMIC:
+            continue
+        payload_start = offset + 12
+        payload_end = payload_start + size
+        struct_chunk = next(
+            (
+                child
+                for child in _read_immediate_chunks(data, payload_start, payload_end)
+                if child[1] == RW_STRUCT and child[2] >= 16
+            ),
+            None,
+        )
+        if struct_chunk is None:
+            continue
+        struct_offset = struct_chunk[0] + 12
+        frame_index, geometry_index, flags, unused = struct.unpack_from("<iiii", data, struct_offset)
+        atomics.append(
+            {
+                "frame_index": int(frame_index),
+                "geometry_index": int(geometry_index),
+                "flags": int(flags),
+                "unused": int(unused),
+            }
+        )
+    return atomics
+
+
+def _m4_identity() -> list[float]:
+    return [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+
+def _m4_multiply(a: list[float], b: list[float]) -> list[float]:
+    out = [0.0] * 16
+    for col in range(4):
+        for row in range(4):
+            out[col * 4 + row] = sum(a[k * 4 + row] * b[col * 4 + k] for k in range(4))
+    return out
+
+
+def _m4_transform_point(matrix: list[float], vertex: tuple[float, float, float]) -> tuple[float, float, float]:
+    x, y, z = vertex
+    return (
+        matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12],
+        matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13],
+        matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14],
+    )
+
+
+def _m4_transform_direction(matrix: list[float], normal: tuple[float, float, float]) -> tuple[float, float, float]:
+    x, y, z = normal
+    return _normalize_vector(
+        matrix[0] * x + matrix[4] * y + matrix[8] * z,
+        matrix[1] * x + matrix[5] * y + matrix[9] * z,
+        matrix[2] * x + matrix[6] * y + matrix[10] * z,
+    )
+
+
+def _frame_matrix(frame: dict) -> list[float]:
+    right = frame.get("right") or [1.0, 0.0, 0.0]
+    up = frame.get("up") or [0.0, 1.0, 0.0]
+    at = frame.get("at") or [0.0, 0.0, 1.0]
+    position = frame.get("position") or [0.0, 0.0, 0.0]
+    return [
+        float(right[0]), float(right[1]), float(right[2]), 0.0,
+        float(up[0]), float(up[1]), float(up[2]), 0.0,
+        float(at[0]), float(at[1]), float(at[2]), 0.0,
+        float(position[0]), float(position[1]), float(position[2]), 1.0,
+    ]
+
+
+def _extract_object_frame_payload(source: Path) -> dict:
+    """Build bind and HAnim metadata for rigid DFF atomic meshes."""
+    data = source.read_bytes()
+    chunks = _read_chunks(data, 0, len(data))
+    frames = _extract_frame_list(data, chunks)
+    atomics = _extract_atomics(data, chunks)
+    if not frames or not atomics:
+        return {}
+    hierarchies = _extract_hanim_hierarchies(data, chunks)
+    hierarchy = hierarchies[0] if hierarchies else {}
+    nodes = hierarchy.get("nodes") or []
+    node_by_id = {int(node["id"]): node for node in nodes}
+    frame_to_bone: dict[int, int] = {}
+    for frame_index, hierarchy_id in enumerate(_extract_frame_hanim_ids(data, chunks), start=1):
+        node = node_by_id.get(int(hierarchy_id))
+        if node is not None:
+            frame_to_bone[frame_index] = int(node["index"])
+    world_matrices: list[list[float] | None] = [None] * len(frames)
+
+    def resolve(frame_index: int) -> list[float]:
+        if not 0 <= frame_index < len(frames):
+            return _m4_identity()
+        cached = world_matrices[frame_index]
+        if cached is not None:
+            return cached
+        frame = frames[frame_index]
+        local = _frame_matrix(frame)
+        parent = int(frame.get("parent", -1))
+        world = _m4_multiply(resolve(parent), local) if parent >= 0 else local
+        world_matrices[frame_index] = world
+        return world
+
+    bindings = []
+    for atomic in atomics:
+        frame_index = int(atomic["frame_index"])
+        bindings.append(
+            {
+                **atomic,
+                "bone_index": int(frame_to_bone.get(frame_index, -1)),
+                "bind_world": [_round_float(value) for value in resolve(frame_index)],
+            }
+        )
+    bones: list[dict] = []
+    for node in sorted(nodes, key=lambda item: int(item["index"])):
+        bone_index = int(node["index"])
+        frame_index = next((index for index, mapped_bone in frame_to_bone.items() if mapped_bone == bone_index), -1)
+        frame = frames[frame_index] if 0 <= frame_index < len(frames) else None
+        parent_frame = int(frame["parent"]) if frame else -1
+        bones.append(
+            {
+                "index": bone_index,
+                "id": int(node["id"]),
+                "frame_index": int(frame_index),
+                "parent_index": int(frame_to_bone.get(parent_frame, -1)),
+                "bind_local": {
+                    "right": (frame or {}).get("right", [1.0, 0.0, 0.0]),
+                    "up": (frame or {}).get("up", [0.0, 1.0, 0.0]),
+                    "at": (frame or {}).get("at", [0.0, 0.0, 1.0]),
+                    "position": (frame or {}).get("position", [0.0, 0.0, 0.0]),
+                },
+            }
+        )
+    return {
+        "coordinate_system": "renderware_dff_source",
+        "frame_count": len(frames),
+        "atomic_bindings": bindings,
+        "animation_skeleton": {
+            "node_count": int(hierarchy.get("node_count") or 0),
+            "bones": bones,
+        },
+    }
+
+
 def inspect_dff(path: Path) -> dict:
     data = path.read_bytes()
     chunks = _read_chunks(data, 0, len(data))
@@ -1234,8 +1381,28 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
         "skin_plugins": dff_info.get("skin_plugins") or [],
     }
     skinning = _extract_model_skinning(source, [len(mesh.get("parsed_vertices", [])) for mesh in meshes])
+    object_frames = _extract_object_frame_payload(source)
+    atomic_bindings = {
+        int(binding["geometry_index"]): binding
+        for binding in (object_frames.get("atomic_bindings") or [])
+    }
+    export_meshes: list[dict] = []
+    for mesh_index, mesh in enumerate(meshes):
+        transformed = dict(mesh)
+        binding = atomic_bindings.get(mesh_index)
+        bind_world = binding.get("bind_world") if binding and not skinning else None
+        if bind_world:
+            transformed["parsed_vertices"] = [
+                _m4_transform_point(bind_world, vertex)
+                for vertex in (mesh.get("parsed_vertices") or [])
+            ]
+            transformed["parsed_normals"] = [
+                _m4_transform_direction(bind_world, normal)
+                for normal in (mesh.get("parsed_normals") or [])
+            ]
+        export_meshes.append(transformed)
 
-    all_vertices = [vertex for mesh in meshes for vertex in mesh.get("parsed_vertices", [])]
+    all_vertices = [vertex for mesh in export_meshes for vertex in mesh.get("parsed_vertices", [])]
     if not all_vertices:
         return None
 
@@ -1256,11 +1423,15 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
     uvs: list[float] = []
     source_positions: list[float] = []
     source_normals: list[float] = []
+    geometry_ranges: list[dict] = []
     submesh_map: dict[tuple[int, int, str], dict] = {}
     vertex_offset = 0
-    for mesh_index, mesh in enumerate(meshes):
+    for mesh_index, mesh in enumerate(export_meshes):
         vertices = mesh.get("parsed_vertices", [])
         mesh_normals = mesh.get("parsed_normals", [])
+        raw_mesh = meshes[mesh_index] if mesh_index < len(meshes) else mesh
+        raw_vertices = raw_mesh.get("parsed_vertices", [])
+        raw_normals = raw_mesh.get("parsed_normals", [])
         mesh_uvs = mesh.get("parsed_uvs", [])
         triangles = mesh.get("parsed_triangles", [])
         triangle_materials = mesh.get("parsed_triangle_materials", [])
@@ -1268,7 +1439,14 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
 
         for vertex_index, vertex in enumerate(vertices):
             # WebGL scene is Y-up. The original DFF local X/Y plane becomes X/Z, original Z becomes height.
-            source_positions.extend([_round_float(float(vertex[0])), _round_float(float(vertex[1])), _round_float(float(vertex[2]))])
+            raw_vertex = raw_vertices[vertex_index] if vertex_index < len(raw_vertices) else vertex
+            source_positions.extend(
+                [
+                    _round_float(float(raw_vertex[0])),
+                    _round_float(float(raw_vertex[1])),
+                    _round_float(float(raw_vertex[2])),
+                ]
+            )
             positions.extend(
                 [
                     _round_float(float(vertex[0]) - center_x),
@@ -1278,7 +1456,14 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
             )
             if vertex_index < len(mesh_normals):
                 normal = mesh_normals[vertex_index]
-                source_normals.extend([_round_float(float(normal[0])), _round_float(float(normal[1])), _round_float(float(normal[2]))])
+                raw_normal = raw_normals[vertex_index] if vertex_index < len(raw_normals) else normal
+                source_normals.extend(
+                    [
+                        _round_float(float(raw_normal[0])),
+                        _round_float(float(raw_normal[1])),
+                        _round_float(float(raw_normal[2])),
+                    ]
+                )
                 nx, ny, nz = _normalize_vector(float(normal[0]), float(normal[2]), -float(normal[1]))
                 normals.extend([_round_float(nx), _round_float(ny), _round_float(nz)])
             else:
@@ -1306,13 +1491,25 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
                 }
             submesh_map[key]["indices"].extend([vertex_offset + int(v1), vertex_offset + int(v2), vertex_offset + int(v3)])
 
+        binding = atomic_bindings.get(mesh_index)
+        geometry_ranges.append(
+            {
+                "geometry_index": int(mesh_index),
+                "vertex_offset": int(vertex_offset),
+                "vertex_count": int(len(vertices)),
+                "bone_index": int((binding or {}).get("bone_index", -1)),
+            }
+        )
         vertex_offset += len(vertices)
+
+    if object_frames:
+        object_frames["geometry_ranges"] = geometry_ranges
 
     target = output_dir / "models3d" / f"{_safe_name(source)}.json"
     target.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "source": source.name,
-        "format": "s5_dff_static_with_skeleton_metadata_v1",
+        "format": "s5_dff_atomic_bind_and_rigid_animation_metadata_v1",
         "positions": positions,
         "normals": normals,
         "uvs": uvs,
@@ -1327,7 +1524,8 @@ def _make_model3d_json(source: Path, game_root: Path, output_dir: Path) -> Path 
         },
         "skeleton": skeleton,
         "skinning": skinning,
-        "notes": "Static DFF geometry plus original HAnim/Skin metadata converted for the local WebGL replay renderer; ANM animation tracks are not applied here.",
+        "object_frames": object_frames,
+        "notes": "DFF geometry is converted with Atomic bind transforms, HAnim metadata, Skin data, and rigid-atomic frame mappings for the local WebGL replay renderer.",
     }
     target.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return target
@@ -1342,6 +1540,7 @@ def _animation_file_entries(
     paths: list[Path],
     expected_node_count: int = 0,
     output_dir: Path | None = None,
+    model_stem: str = "",
 ) -> list[dict]:
     records: list[tuple[Path, dict]] = []
     for path in paths:
@@ -1365,6 +1564,13 @@ def _animation_file_entries(
             ]
             if not candidates:
                 continue
+            exact_model_candidates = [
+                record
+                for record in candidates
+                if model_stem and record[0].stem.lower().startswith(f"{model_stem.lower()}_")
+            ]
+            if exact_model_candidates:
+                candidates = exact_model_candidates
             source, entry = max(
                 candidates,
                 key=lambda record: (
@@ -1446,7 +1652,13 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         model_3d = _make_model3d_json(models[0], game_root, output_dir) if models else None
         hierarchies = (dff_info or {}).get("hanim_hierarchies") or []
         expected_node_count = int(hierarchies[0].get("node_count", 0)) if hierarchies else 0
-        animation_files = _animation_file_entries(game_root, animations, expected_node_count, output_dir)
+        animation_files = _animation_file_entries(
+            game_root,
+            animations,
+            expected_node_count,
+            output_dir,
+            models[0].stem if models else "",
+        )
 
         entities.append(
             {

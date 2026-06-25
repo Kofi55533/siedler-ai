@@ -1935,6 +1935,44 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           cameraPitchDeg: canvas && canvas.dataset.cameraPitchDeg,
         };
       },
+      setFrame(frameIndex) {
+        show(Number(frameIndex || 0));
+        return this.stats();
+      },
+      setMode3d(enabled = true) {
+        if (Boolean(enabled) !== mode3d) mode3dBtn.click();
+        return this.stats();
+      },
+      select(entityId, additive = false) {
+        selectEntity(String(entityId || ''), false, Boolean(additive));
+        return this.stats();
+      },
+      focus(entityId) {
+        const entity = ((timeline[idx] || {}).entities || []).find(item => item.id === entityId);
+        if (entity) {
+          selectEntity(entity.id, false, false);
+          centerOnFramePoint(entity.x, entity.y, Math.max(scale, 2.4));
+        }
+        return this.stats();
+      },
+      setCamera(options = {}) {
+        if (Number.isFinite(Number(options.scale))) scale = clamp(Number(options.scale), 0.15, 12);
+        if (Number.isFinite(Number(options.tx))) tx = Number(options.tx);
+        if (Number.isFinite(Number(options.ty))) ty = Number(options.ty);
+        if (Number.isFinite(Number(options.x)) && Number.isFinite(Number(options.y))) {
+          tx = stage.clientWidth / 2 - Number(options.x) * scale;
+          ty = stage.clientHeight / 2 - Number(options.y) * scale;
+        }
+        if (Number.isFinite(Number(options.yaw))) cameraYaw = Number(options.yaw);
+        if (Number.isFinite(Number(options.pitch))) cameraPitch = clampCameraPitch(Number(options.pitch));
+        applyTransform();
+        return this.stats();
+      },
+      setModelCulling(enabled = true) {
+        if (renderer3d && renderer3d.setModelCulling) renderer3d.setModelCulling(Boolean(enabled));
+        if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
+        return this.stats();
+      },
     };
 
     function clamp(value, min, max) {
@@ -2271,14 +2309,34 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const terrainRows = Number(terrain3d.rows || 0);
       const terrainCols = Number(terrain3d.cols || 0);
       const terrainPositions = terrain3d.positions || [];
-      const selectionTexture = createTexture(
-        'data:image/svg+xml;utf8,' +
-        encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><ellipse cx="64" cy="64" rx="54" ry="34" fill="none" stroke="#f6d66f" stroke-width="10" opacity=".96"/><ellipse cx="64" cy="64" rx="44" ry="25" fill="none" stroke="#3a2108" stroke-width="4" opacity=".85"/></svg>')
-      );
-      const hoverTexture = createTexture(
-        'data:image/svg+xml;utf8,' +
-        encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><ellipse cx="64" cy="64" rx="50" ry="31" fill="none" stroke="#d9f0ff" stroke-width="7" opacity=".78"/><ellipse cx="64" cy="64" rx="40" ry="23" fill="none" stroke="#132536" stroke-width="3" opacity=".72"/></svg>')
-      );
+      let cullEntityModels = false;
+      const allowRigidAtomicAnimation = false;
+      const selectionTexture = createTexture(ringTextureDataUrl('#f6d66f', '#3a2108', 10, 4, 0.96, 0.85));
+      const hoverTexture = createTexture(ringTextureDataUrl('#d9f0ff', '#132536', 7, 3, 0.78, 0.72));
+
+      function ringTextureDataUrl(primary, secondary, primaryWidth, secondaryWidth, primaryAlpha, secondaryAlpha) {
+        const ringCanvas = document.createElement('canvas');
+        ringCanvas.width = 128;
+        ringCanvas.height = 128;
+        const ctx = ringCanvas.getContext('2d');
+        ctx.clearRect(0, 0, ringCanvas.width, ringCanvas.height);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.globalAlpha = primaryAlpha;
+        ctx.strokeStyle = primary;
+        ctx.lineWidth = primaryWidth;
+        ctx.beginPath();
+        ctx.ellipse(64, 64, 54, 34, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = secondaryAlpha;
+        ctx.strokeStyle = secondary;
+        ctx.lineWidth = secondaryWidth;
+        ctx.beginPath();
+        ctx.ellipse(64, 64, 44, 25, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        return ringCanvas.toDataURL('image/png');
+      }
 
       function createTexture(url) {
         if (textureCache.has(url)) return textureCache.get(url);
@@ -2358,12 +2416,16 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const sourceNormals = data.source_normals && data.source_normals.length === data.positions.length
           ? new Float32Array(data.source_normals)
           : null;
+        const objectFrames = data.object_frames && (data.object_frames.atomic_bindings || []).length
+          ? data.object_frames
+          : null;
+        const dynamicGeometry = Boolean(skinning);
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, basePositions, skinning ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, basePositions, dynamicGeometry ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
         const normalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, baseNormals, skinning ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, baseNormals, dynamicGeometry ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
         const uvBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.uvs || []), gl.STATIC_DRAW);
@@ -2395,6 +2457,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           sourcePositions,
           sourceNormals,
           skinning,
+          objectFrames,
           sourceBounds: data.bounds || {},
           maxSpan: Number((data.bounds || {}).max_span || 100),
         };
@@ -2473,6 +2536,18 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           matrix[1] * x + matrix[5] * y + matrix[9] * z,
           matrix[2] * x + matrix[6] * y + matrix[10] * z,
         ];
+      }
+      function m4AffineInverse(matrix) {
+        const inverse = new Float32Array([
+          matrix[0], matrix[4], matrix[8], 0,
+          matrix[1], matrix[5], matrix[9], 0,
+          matrix[2], matrix[6], matrix[10], 0,
+          0, 0, 0, 1,
+        ]);
+        inverse[12] = -(inverse[0] * matrix[12] + inverse[4] * matrix[13] + inverse[8] * matrix[14]);
+        inverse[13] = -(inverse[1] * matrix[12] + inverse[5] * matrix[13] + inverse[9] * matrix[14]);
+        inverse[14] = -(inverse[2] * matrix[12] + inverse[6] * matrix[13] + inverse[10] * matrix[14]);
+        return inverse;
       }
       function quaternionSlerp(a, b, amount) {
         let bx = b[0], by = b[1], bz = b[2], bw = b[3];
@@ -2620,8 +2695,83 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         model.lastSkinMaxDisplacement = maxDisplacement;
         return true;
       }
+      function applyOriginalRigidAnimation(model, clip, animationTime) {
+        const objectFrames = model && model.objectFrames;
+        const skeleton = objectFrames && objectFrames.animation_skeleton;
+        const bones = skeleton && skeleton.bones;
+        const geometryRanges = objectFrames && objectFrames.geometry_ranges;
+        const tracks = clip && clip.tracks;
+        if (!model || !model.sourcePositions || !model.sourceNormals || !bones || !geometryRanges || !tracks) return false;
+        if (Number(clip.node_count || 0) !== bones.length || tracks.length !== bones.length) return false;
+        const worldMatrices = new Array(bones.length);
+        for (let boneIndex = 0; boneIndex < bones.length; boneIndex += 1) {
+          const bone = bones[boneIndex];
+          const bindLocal = bindMatrixForBone(bone);
+          const initial = sampleAnimationTrack(tracks[boneIndex], clip.duration, 0) || bindLocal;
+          const sampled = sampleAnimationTrack(tracks[boneIndex], clip.duration, animationTime) || initial;
+          // Rigid building ANMs encode motion relative to their first pose. Anchor
+          // that delta to the DFF bind frame, otherwise the whole model is moved.
+          const local = m4Multiply(bindLocal, m4Multiply(sampled, m4AffineInverse(initial)));
+          const parentIndex = Number(bone.parent_index);
+          worldMatrices[boneIndex] = parentIndex >= 0 && worldMatrices[parentIndex]
+            ? m4Multiply(worldMatrices[parentIndex], local)
+            : local;
+        }
+        const rigidPositions = new Float32Array(model.basePositions);
+        const rigidNormals = new Float32Array(model.baseNormals);
+        const bounds = model.sourceBounds || {};
+        const min = bounds.min || [0, 0, 0];
+        const max = bounds.max || [0, 0, 0];
+        const centerX = (Number(min[0]) + Number(max[0])) * .5;
+        const centerY = (Number(min[1]) + Number(max[1])) * .5;
+        const minZ = Number(min[2]);
+        let maxDisplacement = 0;
+        for (const geometryRange of geometryRanges) {
+          const boneIndex = Number(geometryRange.bone_index);
+          const matrix = worldMatrices[boneIndex];
+          if (!matrix) continue;
+          const vertexOffset = Number(geometryRange.vertex_offset || 0);
+          const vertexCount = Number(geometryRange.vertex_count || 0);
+          for (let vertexIndex = 0; vertexIndex < vertexCount; vertexIndex += 1) {
+            const sourceIndex = (vertexOffset + vertexIndex) * 3;
+            const point = m4TransformPoint(
+              matrix,
+              model.sourcePositions[sourceIndex],
+              model.sourcePositions[sourceIndex + 1],
+              model.sourcePositions[sourceIndex + 2],
+            );
+            const rawNormal = m4TransformDirection(
+              matrix,
+              model.sourceNormals[sourceIndex],
+              model.sourceNormals[sourceIndex + 1],
+              model.sourceNormals[sourceIndex + 2],
+            );
+            const normal = normalize(rawNormal);
+            rigidPositions[sourceIndex] = point[0] - centerX;
+            rigidPositions[sourceIndex + 1] = point[2] - minZ;
+            rigidPositions[sourceIndex + 2] = -(point[1] - centerY);
+            rigidNormals[sourceIndex] = normal[0];
+            rigidNormals[sourceIndex + 1] = normal[2];
+            rigidNormals[sourceIndex + 2] = -normal[1];
+            maxDisplacement = Math.max(
+              maxDisplacement,
+              Math.hypot(
+                rigidPositions[sourceIndex] - model.basePositions[sourceIndex],
+                rigidPositions[sourceIndex + 1] - model.basePositions[sourceIndex + 1],
+                rigidPositions[sourceIndex + 2] - model.basePositions[sourceIndex + 2],
+              )
+            );
+          }
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, model.positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, rigidPositions, gl.DYNAMIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, model.normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, rigidNormals, gl.DYNAMIC_DRAW);
+        model.lastRigidMaxDisplacement = maxDisplacement;
+        return true;
+      }
       function restoreModelBindPose(model) {
-        if (!model || !model.skinning || !model.basePositions || !model.baseNormals) return;
+        if (!model || !model.basePositions || !model.baseNormals) return;
         gl.bindBuffer(gl.ARRAY_BUFFER, model.positionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, model.basePositions, gl.DYNAMIC_DRAW);
         gl.bindBuffer(gl.ARRAY_BUFFER, model.normalBuffer);
@@ -2882,6 +3032,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const entities = ((frame && frame.entities) || []).slice().sort((a, b) => Number(a.y || 0) - Number(b.y || 0));
         let drawnModels = 0;
         let originalAnimationDrawn = 0;
+        let originalRigidAnimationDrawn = 0;
         let originalAnimationPending = 0;
         let originalAnimationMaxDisplacement = 0;
         for (const entity of entities) {
@@ -2911,7 +3062,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
             );
           }
           const animationInfo = animationInfoFor(entity);
-          const canAnimateEntity = entity.kind === 'serf' || entity.kind === 'worker';
+          const canAnimateEntity = Boolean(model.skinning) || Boolean(
+            allowRigidAtomicAnimation
+            && model.objectFrames
+            && model.objectFrames.animation_skeleton
+            && (model.objectFrames.animation_skeleton.bones || []).length
+          );
           const animationRecord = canAnimateEntity && animationInfo && animationInfo.track_data
             ? ensureAnimation(animationInfo.track_data)
             : null;
@@ -2919,26 +3075,37 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           if (animationRecord && animationRecord.loaded && animationRecord.data) {
             const duration = Math.max(0.001, Number(animationRecord.data.duration || animationInfo.duration || 1));
             const seedOffset = (Number(entity.anim_seed || 0) / 1000) * duration;
-            usingOriginalAnimation = applyOriginalSkinning(
-              model,
-              animationRecord.data,
-              Number((frame && frame.time) || 0) + seedOffset,
-            );
-          } else if (model.skinning) {
+            // Units may start the same walk cycle at different phases. Building
+            // atomics instead share the simulation clock, as in the original.
+            const animationTime = Number((frame && frame.time) || 0) + (model.skinning ? seedOffset : 0);
+            usingOriginalAnimation = model.skinning
+              ? applyOriginalSkinning(model, animationRecord.data, animationTime)
+              : applyOriginalRigidAnimation(model, animationRecord.data, animationTime);
+          } else if (model.skinning || (allowRigidAtomicAnimation && model.objectFrames)) {
             restoreModelBindPose(model);
             if (animationRecord && !animationRecord.error) originalAnimationPending += 1;
           }
           if (usingOriginalAnimation) {
             originalAnimationDrawn += 1;
             originalAnimationMaxDisplacement = Math.max(originalAnimationMaxDisplacement, Number(model.lastSkinMaxDisplacement || 0));
+            originalAnimationMaxDisplacement = Math.max(originalAnimationMaxDisplacement, Number(model.lastRigidMaxDisplacement || 0));
+            if (model.objectFrames && !model.skinning) originalRigidAnimationDrawn += 1;
           }
           bindMesh(model);
+          if (cullEntityModels) {
+            gl.enable(gl.CULL_FACE);
+            gl.cullFace(gl.BACK);
+            gl.frontFace(gl.CCW);
+          } else {
+            gl.disable(gl.CULL_FACE);
+          }
           const modelScale = Math.max(0.08, (Number(entity.size || 32) * 1.45) / Math.max(1, model.maxSpan));
           const motion = entityMotion(entity, frame && frame.time, usingOriginalAnimation);
           const matrix = m4Transform(worldX, groundY + motion.y, worldZ, modelScale, motion.yaw, motion.scaleY);
           for (const submesh of model.submeshes) {
             if (submesh.count > 0) drawSubmesh(vp, model, submesh, matrix);
           }
+          gl.disable(gl.CULL_FACE);
           drawnModels += 1;
         }
         lastStats = {
@@ -2949,8 +3116,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           modelErrors: Array.from(modelCache.values()).filter(record => record.error).length,
           texturesCached: textureCache.size,
           terrain: terrain3d.enabled ? `${terrainRows}x${terrainCols}` : 'flat',
-          animation: originalAnimationDrawn ? 'original_hanim_cpu_skinning' : (Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion'),
+          animation: originalAnimationDrawn
+            ? (originalRigidAnimationDrawn ? 'original_hanim_cpu_skinning_and_rigid_atomics' : 'original_hanim_cpu_skinning')
+            : (Object.keys(animationByKey).length ? 'anm_timing_state_motion' : 'state_motion'),
           originalAnimationDrawn,
+          originalRigidAnimationDrawn,
           originalAnimationPending,
           originalAnimationMaxDisplacement: Math.round(originalAnimationMaxDisplacement * 1000) / 1000,
           originalAnimationAssets: Array.from(animationCache.values()).filter(record => record.loaded).length,
@@ -2975,6 +3145,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         canvas.dataset.animation = String(lastStats.animation);
         canvas.dataset.animationKeys = String(Object.keys(animationByKey).length);
         canvas.dataset.originalAnimationDrawn = String(lastStats.originalAnimationDrawn);
+        canvas.dataset.originalRigidAnimationDrawn = String(lastStats.originalRigidAnimationDrawn);
         canvas.dataset.originalAnimationPending = String(lastStats.originalAnimationPending);
         canvas.dataset.originalAnimationMaxDisplacement = String(lastStats.originalAnimationMaxDisplacement);
         canvas.dataset.originalAnimationAssets = String(lastStats.originalAnimationAssets);
@@ -2998,7 +3169,15 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         });
       }
 
-      return { render, requestRender, pickEntity, pickEntitiesInRect, projectEntity, stats: () => lastStats };
+      return {
+        render,
+        requestRender,
+        pickEntity,
+        pickEntitiesInRect,
+        projectEntity,
+        stats: () => lastStats,
+        setModelCulling(value) { cullEntityModels = Boolean(value); },
+      };
     }
     function selectionFallbackSrc(entity) {
       if (!entity) return assetByKey.serf || '';

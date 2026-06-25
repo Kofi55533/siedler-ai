@@ -972,11 +972,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }
     body {
       display: grid;
-      grid-template-rows: auto auto 1fr;
+      grid-template-rows: auto auto minmax(0, 1fr);
       min-width: 0;
       overflow: hidden;
     }
     .resourcebar {
+      grid-row: 1;
       display: grid;
       grid-template-columns: minmax(190px, 250px) 1fr minmax(230px, 310px);
       gap: 10px;
@@ -1119,6 +1120,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       font: 800 18px/1 system-ui, sans-serif;
     }
     .controlbar {
+      grid-row: 2;
       display: grid;
       grid-template-columns: auto auto auto minmax(260px, 1fr) auto auto auto auto;
       gap: 8px;
@@ -1161,7 +1163,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       accent-color: var(--gold);
     }
     .stage {
+      grid-row: 3;
       position: relative;
+      min-height: 0;
       overflow: hidden;
       cursor: grab;
       background:
@@ -1639,6 +1643,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     body.debug-mode .asset-strip.debug-only {
       display: grid !important;
     }
+    body.debug-mode .controlbar.debug-only {
+      display: grid !important;
+    }
     .screen-message {
       position: absolute;
       left: 50%;
@@ -1716,7 +1723,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       </div>
     </div>
   </div>
-  <div class="controlbar">
+  <div class="controlbar debug-only">
     <button class="toolbutton" id="prev">Zurueck</button>
     <button class="toolbutton" id="play">Play</button>
     <button class="toolbutton" id="next">Weiter</button>

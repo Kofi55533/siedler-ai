@@ -1833,8 +1833,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         <div class="portrait"><img id="selectedPortrait" src="__ICON_SERF__" alt=""></div>
         <div>
           <div id="selectedTitle" class="selection-title">Keine Auswahl</div>
-          <div id="selectedMeta" class="selection-meta">Einheit oder Gebaeude anklicken</div>
-          <div id="selectedCoords" class="selection-meta">Kamera: Drag, Rand, WASD, Mausrad</div>
+          <div id="selectedMeta" class="selection-meta"></div>
+          <div id="selectedCoords" class="selection-meta"></div>
           <div class="selection-actions">
             <button class="toolbutton" id="focusSelected">Fokus</button>
             <button class="toolbutton" id="clearSelected">Abwahl</button>
@@ -3330,8 +3330,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const entities = selectedEntities();
       if (!entities.length) {
         selectedTitle.textContent = 'Keine Auswahl';
-        selectedMeta.textContent = 'Einheit oder Gebaeude anklicken';
-        selectedCoords.textContent = 'Kamera: Drag, Rand, WASD, Mausrad';
+        selectedMeta.textContent = '';
+        selectedCoords.textContent = '';
         selectedPortrait.src = assetByKey.serf || '';
         return;
       }

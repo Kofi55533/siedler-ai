@@ -1692,7 +1692,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       transform: translateX(-50%);
       min-width: 310px;
       max-width: min(620px, calc(100vw - 36px));
-      display: grid;
+      display: none;
       grid-template-columns: 42px 1fr;
       gap: 9px;
       align-items: center;
@@ -1705,6 +1705,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       font: 800 13px/1.25 system-ui, sans-serif;
       pointer-events: none;
       opacity: .94;
+    }
+    .screen-message.visible {
+      display: grid;
     }
     body.has-game-assets .screen-message {
       background-image: linear-gradient(180deg, rgba(34,25,15,.48), rgba(8,7,5,.78)), url("__ASSET_TOOLTIP__");
@@ -1785,7 +1788,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     <canvas id="webglScene"></canvas>
     <svg id="pathOverlay" class="path-overlay" aria-hidden="true"></svg>
     <div id="selectionRect" class="selection-rect"></div>
-    <div class="screen-message">
+    <div id="screenMessage" class="screen-message">
       <img id="messageIcon" src="__ICON_ONSCREEN_WORKER__" alt="">
       <div id="messageText">Expert Opening bereit</div>
     </div>
@@ -1910,6 +1913,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const selectedTitle = document.getElementById('selectedTitle');
     const selectedMeta = document.getElementById('selectedMeta');
     const selectedCoords = document.getElementById('selectedCoords');
+    const screenMessage = document.getElementById('screenMessage');
     const messageIcon = document.getElementById('messageIcon');
     const messageText = document.getElementById('messageText');
     const resIds = {
@@ -1938,6 +1942,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     let selectedEntityIds = new Set();
     let selectedEntityId = null;
     let hoveredEntityId = null;
+    let messageTimer = null;
+    let suppressModeMessage = false;
     let mouseX = 0;
     let mouseY = 0;
     let edgePanActive = false;
@@ -2176,9 +2182,24 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       stage.classList.toggle('hovering-entity', Boolean(hoveredEntityId));
       if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
     }
-    function setMessage(text, icon) {
+    function setMessage(text, icon, options = {}) {
+      if (!screenMessage || options.silent || !text) {
+        if (screenMessage) screenMessage.classList.remove('visible');
+        if (messageTimer) clearTimeout(messageTimer);
+        messageTimer = null;
+        return;
+      }
       if (messageText) messageText.textContent = text || '';
       if (messageIcon && icon) messageIcon.src = icon;
+      screenMessage.classList.add('visible');
+      if (messageTimer) clearTimeout(messageTimer);
+      const timeout = Number.isFinite(Number(options.timeout)) ? Number(options.timeout) : 2600;
+      if (timeout > 0) {
+        messageTimer = setTimeout(() => {
+          screenMessage.classList.remove('visible');
+          messageTimer = null;
+        }, timeout);
+      }
     }
     function sanitizeClass(value) {
       return String(value || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
@@ -3621,10 +3642,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       }
       if (mode3d && renderer3d) {
         renderer3d.render(timeline[idx]);
-        setMessage('3D-Ansicht aktiv', assetByKey.onscreen_worker || assetByKey.worker || '');
+        if (!suppressModeMessage) setMessage('3D-Ansicht aktiv', assetByKey.onscreen_worker || assetByKey.worker || '');
       } else {
         setHoveredEntity(null);
-        setMessage('2D-Ansicht aktiv', assetByKey.onscreen_worker || assetByKey.worker || '');
+        if (!suppressModeMessage) setMessage('2D-Ansicht aktiv', assetByKey.onscreen_worker || assetByKey.worker || '');
       }
       renderMovementTrails();
     };
@@ -3838,7 +3859,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const force2d = requestedMode === '2d' || requestedMode === 'flat' || params.get('3d') === '0';
       const force3d = requestedMode === '3d' || params.get('3d') === '1';
       if ((force3d || !force2d) && !mode3d) {
-        mode3dBtn.onclick();
+        suppressModeMessage = true;
+        try {
+          mode3dBtn.onclick();
+        } finally {
+          suppressModeMessage = false;
+        }
       }
       const requestedYaw = params.has('yaw') ? Number(params.get('yaw')) : NaN;
       if (Number.isFinite(requestedYaw)) {

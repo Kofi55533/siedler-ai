@@ -1629,7 +1629,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }
     .command-grid {
       display: grid;
-      grid-template-columns: repeat(8, minmax(34px, 42px));
+      grid-template-columns: repeat(9, minmax(34px, 42px));
       gap: 6px;
       align-content: start;
     }
@@ -1653,6 +1653,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     .command-slot:disabled {
       opacity: .38;
       cursor: default;
+    }
+    .command-slot.active {
+      border-color: rgba(255,232,132,.82);
+      background: linear-gradient(180deg, rgba(128,92,47,.95), rgba(54,35,17,.98));
+      box-shadow: inset 0 0 0 1px rgba(255,232,132,.24), 0 0 12px rgba(255,216,105,.22);
     }
     .replay-panel {
       padding: 10px;
@@ -1851,6 +1856,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           <button class="command-slot" id="cmdPrev"><img src="__ICON_TO_WORKER__" alt=""><span>&lt;</span></button>
           <button class="command-slot" id="cmdNext"><img src="__ICON_TO_BUILDING__" alt=""><span>&gt;</span></button>
           <button class="command-slot" id="cmdHQ"><img src="__ICON_HEADQUARTER__" alt=""><span>HQ</span></button>
+          <button class="command-slot" id="cmdTrails"><span>Weg</span></button>
           <button class="command-slot" id="cmdPlay"><span>Play</span></button>
           <button class="command-slot" id="cmdStepBack"><span>-1</span></button>
           <button class="command-slot" id="cmdStepForward"><span>+1</span></button>
@@ -1960,6 +1966,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const CAMERA_DEFAULT_PITCH = 0.733;
     let cameraYaw = CAMERA_DEFAULT_YAW;
     let cameraPitch = CAMERA_DEFAULT_PITCH;
+    let showAllTrails = false;
     const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
     const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
     const INITIAL_CAMERA_SCALE = __INITIAL_CAMERA_SCALE__;
@@ -1978,6 +1985,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           totalEntities: canvas && canvas.dataset.totalEntities,
           modelsLoaded: canvas && canvas.dataset.modelsLoaded,
           modelErrors: canvas && canvas.dataset.modelErrors,
+          showAllTrails,
           terrain: canvas && canvas.dataset.terrain,
           lighting: canvas && canvas.dataset.lighting,
           animation: canvas && canvas.dataset.animation,
@@ -2216,6 +2224,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const SVG_NS = 'http://www.w3.org/2000/svg';
     const TRAIL_HISTORY_FRAMES = 36;
     const TRAIL_ENTITY_LIMIT = 8;
+    const TRAIL_ALL_ENTITY_LIMIT = 48;
     function createOverlayNode(name, attributes) {
       const node = document.createElementNS(SVG_NS, name);
       for (const [key, value] of Object.entries(attributes || {})) {
@@ -2263,9 +2272,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const overlayHeight = Math.max(1, stage.clientHeight);
       pathOverlay.setAttribute('viewBox', `0 0 ${overlayWidth} ${overlayHeight}`);
       pathOverlay.replaceChildren();
-      const movingEntities = selectedEntities()
+      const sourceEntities = showAllTrails ? (((timeline[idx] || {}).entities) || []) : selectedEntities();
+      const movingEntities = sourceEntities
         .filter(entity => entity.kind === 'serf' || entity.kind === 'worker')
-        .slice(0, TRAIL_ENTITY_LIMIT);
+        .slice(0, showAllTrails ? TRAIL_ALL_ENTITY_LIMIT : TRAIL_ENTITY_LIMIT);
       for (const entity of movingEntities) {
         const points = [];
         for (const historicEntity of movementHistory(entity.id)) {
@@ -3608,6 +3618,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     document.getElementById('cmdPrev').onclick = () => cycleEntity(-1);
     document.getElementById('cmdNext').onclick = () => cycleEntity(1);
     document.getElementById('cmdHQ').onclick = focusInitialCamera;
+    document.getElementById('cmdTrails').onclick = () => {
+      showAllTrails = !showAllTrails;
+      document.getElementById('cmdTrails').classList.toggle('active', showAllTrails);
+      renderMovementTrails();
+      setMessage(showAllTrails ? 'Laufwege sichtbar' : 'Laufwege ausgeblendet', assetByKey.onscreen_worker || assetByKey.worker || '');
+    };
     document.getElementById('cmdPlay').onclick = play;
     document.getElementById('cmdStepBack').onclick = () => step(-1);
     document.getElementById('cmdStepForward').onclick = () => step(1);
@@ -3865,6 +3881,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         } finally {
           suppressModeMessage = false;
         }
+      }
+      if (params.get('trails') === '1' || params.get('paths') === '1') {
+        showAllTrails = true;
+        document.getElementById('cmdTrails').classList.add('active');
+        renderMovementTrails();
       }
       const requestedYaw = params.has('yaw') ? Number(params.get('yaw')) : NaN;
       if (Number.isFinite(requestedYaw)) {

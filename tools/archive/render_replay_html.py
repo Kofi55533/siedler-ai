@@ -3763,7 +3763,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         show(clamp(Math.round(requestedFrame), 0, Math.max(0, timeline.length - 1)));
       }
       const requestedMode = String(params.get('mode') || params.get('view') || '').toLowerCase();
-      if ((requestedMode === '3d' || params.get('3d') === '1') && !mode3d) {
+      const force2d = requestedMode === '2d' || requestedMode === 'flat' || params.get('3d') === '0';
+      const force3d = requestedMode === '3d' || params.get('3d') === '1';
+      if ((force3d || !force2d) && !mode3d) {
         mode3dBtn.onclick();
       }
       const requestedYaw = params.has('yaw') ? Number(params.get('yaw')) : NaN;

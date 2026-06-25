@@ -24,7 +24,12 @@ if str(ROOT_DIR) not in sys.path:
 from environment import ActionPhase, SiedlerScharfschuetzenEnv
 from expert_opening import ExpertOpeningController
 from tools.archive.export_original_graphics import export_original_graphics_report
-from tools.archive.render_wintersturm_background import EXTRACTED_DIR, render_background as render_wintersturm_background
+from tools.archive.render_wintersturm_background import (
+    EXTRACTED_DIR,
+    _render_texture_field,
+    _texture_set,
+    render_background as render_wintersturm_background,
+)
 from tools.archive import render_replay_mp4 as replay
 
 
@@ -344,8 +349,8 @@ def _make_terrain3d_payload(env, args) -> dict:
     if not height_path.exists():
         return {"enabled": False, "reason": "height_map_515.npy missing"}
     try:
-        height = _crop_p1_array(np.load(height_path)).astype(np.float32)
-        walkable = _crop_p1_array(np.load(walkable_path)).astype(np.float32) if walkable_path.exists() else np.ones_like(height)
+        height = np.load(height_path).astype(np.float32)
+        walkable = np.load(walkable_path).astype(np.float32) if walkable_path.exists() else np.ones_like(height)
     except Exception as exc:
         return {"enabled": False, "reason": f"terrain load failed: {exc}"}
 
@@ -354,6 +359,16 @@ def _make_terrain3d_payload(env, args) -> dict:
     render_scale = max(1, int(getattr(args, "render_scale", 1) or 1))
     target_w = grid_w * render_scale
     target_h = grid_h * render_scale
+    full_rows = int(height.shape[0])
+    full_cols = int(height.shape[1])
+    p1_row_start = 0
+    p1_col_start = full_cols // 2
+    p1_rows = max(1, full_rows // 2)
+    p1_cols = max(1, full_cols - p1_col_start)
+    x_min = -target_w / 2.0 - target_w * (p1_col_start / p1_cols)
+    x_max = target_w / 2.0
+    z_min = -target_h / 2.0
+    z_max = target_h / 2.0 + target_h * ((full_rows - (p1_row_start + p1_rows)) / p1_rows)
 
     # WebGL 1 only guarantees 16-bit element indices. Keep this below 65,536
     # vertices even when OES_element_index_uint is unavailable, otherwise
@@ -375,12 +390,12 @@ def _make_terrain3d_payload(env, args) -> dict:
     uvs: list[float] = []
     walk_flags: list[int] = []
     height_y = ((height_s - h_min) / h_span) * vertical_scale - 18.0
-    step_world_x = target_w / max(1, cols - 1)
-    step_world_z = target_h / max(1, rows - 1)
+    step_world_x = (x_max - x_min) / max(1, cols - 1)
+    step_world_z = (z_max - z_min) / max(1, rows - 1)
     for row in range(rows):
-        z = -target_h / 2.0 + (row / max(1, rows - 1)) * target_h
+        z = z_min + (row / max(1, rows - 1)) * (z_max - z_min)
         for col in range(cols):
-            x = -target_w / 2.0 + (col / max(1, cols - 1)) * target_w
+            x = x_min + (col / max(1, cols - 1)) * (x_max - x_min)
             y = float(height_y[row, col])
             positions.extend([round(x, 4), round(y, 4), round(z, 4)])
             left = float(height_y[row, max(0, col - 1)])
@@ -415,12 +430,36 @@ def _make_terrain3d_payload(env, args) -> dict:
         "height_min": round(h_min, 3),
         "height_max": round(h_max, 3),
         "vertical_scale": vertical_scale,
+        "x_min": round(x_min, 4),
+        "x_max": round(x_max, 4),
+        "z_min": round(z_min, 4),
+        "z_max": round(z_max, 4),
+        "p1_col_start": int(p1_col_start),
+        "p1_row_start": int(p1_row_start),
+        "p1_cols": int(p1_cols),
+        "p1_rows": int(p1_rows),
         "positions": positions,
         "normals": normals,
         "uvs": uvs,
         "indices": indices,
         "walkable": walk_flags,
     }
+
+
+def _make_full_terrain_texture(args, output_dir: Path, game_root: Path | None) -> str:
+    target = output_dir / "terrain_full.jpg"
+    size = max(1024, int(getattr(args, "wintersturm_background_size", 1536) or 1536) * 2)
+    try:
+        height = np.load(EXTRACTED_DIR / "height_map_515.npy")
+        walkable = np.load(EXTRACTED_DIR / "walkable_map_515.npy")
+        lowres = np.load(EXTRACTED_DIR / "terrain_lowres_131.npy")
+        image = _render_texture_field(lowres, height, walkable, _texture_set(game_root), size)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        image.save(target, quality=92)
+        return target.name
+    except Exception:
+        fallback = output_dir / "terrain_base.jpg"
+        return fallback.name if fallback.exists() else ""
 
 
 def _frame_xy(env, args, x: float, y: float) -> tuple[int, int]:
@@ -2297,6 +2336,25 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const textureCache = new Map();
       const animationCache = new Map();
       let lastStats = { drawnModels: 0, totalEntities: 0, modelsCached: 0, texturesCached: 0, canvas: [0, 0] };
+      const terrainRows = Number(terrain3d.rows || 0);
+      const terrainCols = Number(terrain3d.cols || 0);
+      const terrainPositions = terrain3d.positions || [];
+      const terrainXMin = Number.isFinite(Number(terrain3d.x_min)) ? Number(terrain3d.x_min) : -MAP_WIDTH / 2;
+      const terrainXMax = Number.isFinite(Number(terrain3d.x_max)) ? Number(terrain3d.x_max) : MAP_WIDTH / 2;
+      const terrainZMin = Number.isFinite(Number(terrain3d.z_min)) ? Number(terrain3d.z_min) : -MAP_HEIGHT / 2;
+      const terrainZMax = Number.isFinite(Number(terrain3d.z_max)) ? Number(terrain3d.z_max) : MAP_HEIGHT / 2;
+      const terrainPad = Math.max(terrainXMax - terrainXMin, terrainZMax - terrainZMin, MAP_WIDTH, MAP_HEIGHT) * 0.10;
+      const terrainBackplate = createStaticMesh(
+        [
+          terrainXMin - terrainPad, -26, terrainZMin - terrainPad,
+          terrainXMax + terrainPad, -26, terrainZMin - terrainPad,
+          terrainXMax + terrainPad, -26, terrainZMax + terrainPad,
+          terrainXMin - terrainPad, -26, terrainZMax + terrainPad,
+        ],
+        [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+        [0, 0, 1, 0, 1, 1, 0, 1],
+        [0, 1, 2, 0, 2, 3]
+      );
       const mapQuad = createStaticMesh(
         [
           -MAP_WIDTH / 2, -1, -MAP_HEIGHT / 2,
@@ -2322,9 +2380,6 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         [0, 0, 1, 0, 1, 1, 0, 1],
         [0, 1, 2, 0, 2, 3]
       );
-      const terrainRows = Number(terrain3d.rows || 0);
-      const terrainCols = Number(terrain3d.cols || 0);
-      const terrainPositions = terrain3d.positions || [];
       let cullEntityModels = false;
       const allowRigidAtomicAnimation = false;
       const shadowTexture = createTexture(shadowTextureDataUrl());
@@ -2910,8 +2965,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       }
       function terrainHeightAt(frameX, frameY) {
         if (!terrain3d.enabled || !terrainRows || !terrainCols || !terrainPositions.length) return 0;
-        const col = Math.max(0, Math.min(terrainCols - 1, Math.round((Number(frameX || 0) / MAP_WIDTH) * (terrainCols - 1))));
-        const row = Math.max(0, Math.min(terrainRows - 1, Math.round((Number(frameY || 0) / MAP_HEIGHT) * (terrainRows - 1))));
+        const worldX = Number(frameX || 0) - MAP_WIDTH / 2;
+        const worldZ = Number(frameY || 0) - MAP_HEIGHT / 2;
+        const col = Math.max(0, Math.min(terrainCols - 1, Math.round(((worldX - terrainXMin) / Math.max(1, terrainXMax - terrainXMin)) * (terrainCols - 1))));
+        const row = Math.max(0, Math.min(terrainRows - 1, Math.round(((worldZ - terrainZMin) / Math.max(1, terrainZMax - terrainZMin)) * (terrainRows - 1))));
         const index = (row * terrainCols + col) * 3 + 1;
         return Number(terrainPositions[index] || 0);
       }
@@ -3055,12 +3112,20 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.disable(gl.CULL_FACE);
-        gl.clearColor(0.03, 0.04, 0.04, 1);
+        gl.clearColor(0.10, 0.12, 0.12, 1);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         const vp = cameraMatrix();
 
-        bindMesh(terrainMesh);
         const mapTexture = createTexture(terrainTexture || ((frame && frame.frame) || ''));
+        bindMesh(terrainBackplate);
+        drawSubmesh(vp, terrainBackplate, { indexBuffer: terrainBackplate.indexBuffer, indexType: terrainBackplate.indexType, count: terrainBackplate.count, texture: mapTexture }, new Float32Array([
+          1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, 1, 0,
+          0, 0, 0, 1,
+        ]));
+
+        bindMesh(terrainMesh);
         drawSubmesh(vp, terrainMesh, { indexBuffer: terrainMesh.indexBuffer, indexType: terrainMesh.indexType, count: terrainMesh.count, texture: mapTexture }, new Float32Array([
           1, 0, 0, 0,
           0, 1, 0, 0,
@@ -3886,7 +3951,7 @@ def main() -> None:
         base,
         quality=max(1, min(100, int(args.jpg_quality))),
     )
-    game_assets["terrain_texture"] = terrain_texture_name
+    game_assets["terrain_texture"] = _make_full_terrain_texture(args, output_dir, game_root) or terrain_texture_name
     game_assets["terrain3d"] = _make_terrain3d_payload(env, args)
     controller = ExpertOpeningController() if args.strategy == "expert_opening" else None
     opening_state = replay.OpeningPolicyState() if args.strategy == "opening_v1" else None

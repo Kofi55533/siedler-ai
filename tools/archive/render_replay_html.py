@@ -178,6 +178,7 @@ def _export_game_assets(output_dir: Path, game_root: Path | None, disabled: bool
         "generic_building": _first_existing(base_gui / "b_generic_building.png"),
         "onscreen_worker": _first_existing(base_gui / "onScreen_Worker.png", base_gui / "onScreen_NoWorker.png"),
         "onscreen_serf": _first_existing(base_gui / "onScreen_Emotion_serf.png", base_gui / "MO_CU_Serf.png"),
+        "trail_toggle": _first_existing(base_gui / "onScreen_NPCmarker.png", base_gui / "miniMap_Signal_0.png", base_gui / "MoveCamera.png"),
         "to_building": _first_existing(base_gui / "ToBuilding.png"),
         "to_worker": _first_existing(base_gui / "ToWorker.png"),
     }
@@ -1856,7 +1857,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           <button class="command-slot" id="cmdPrev"><img src="__ICON_TO_WORKER__" alt=""><span>&lt;</span></button>
           <button class="command-slot" id="cmdNext"><img src="__ICON_TO_BUILDING__" alt=""><span>&gt;</span></button>
           <button class="command-slot" id="cmdHQ"><img src="__ICON_HEADQUARTER__" alt=""><span>HQ</span></button>
-          <button class="command-slot" id="cmdTrails"><span>Weg</span></button>
+          <button class="command-slot" id="cmdTrails"><img src="__ICON_TRAILS__" alt=""><span class="debug-only">Weg</span></button>
           <button class="command-slot" id="cmdPlay"><span>Play</span></button>
           <button class="command-slot" id="cmdStepBack"><span>-1</span></button>
           <button class="command-slot" id="cmdStepForward"><span>+1</span></button>
@@ -3949,6 +3950,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         "__ICON_ONSCREEN_WORKER__": assets.get("onscreen_worker") or assets.get("worker") or blank_asset,
         "__ICON_TO_BUILDING__": assets.get("to_building") or assets.get("generic_building") or blank_asset,
         "__ICON_TO_WORKER__": assets.get("to_worker") or assets.get("generic_settler") or blank_asset,
+        "__ICON_TRAILS__": assets.get("trail_toggle") or assets.get("to_worker") or blank_asset,
         "__PAYDAY_ICON__": (game_assets.get("payday_frames") or [blank_asset])[0],
         "__GRAPHICS_REPORT_CLASS__": graphics_report_class,
         "__GRAPHICS_REPORT_LINK__": graphics_report_link,

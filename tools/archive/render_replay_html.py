@@ -1462,7 +1462,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       border: 1px solid rgba(238, 210, 148, .24);
     }
     .graphics-report.hidden {
-      display: none;
+      display: none !important;
     }
     .graphics-report a {
       color: #ffe39d;
@@ -1630,6 +1630,15 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       color: #bfae87;
       font: 700 10px/1.25 system-ui, sans-serif;
     }
+    .debug-only {
+      display: none !important;
+    }
+    body.debug-mode .debug-only {
+      display: block !important;
+    }
+    body.debug-mode .asset-strip.debug-only {
+      display: grid !important;
+    }
     .screen-message {
       position: absolute;
       left: 50%;
@@ -1744,13 +1753,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           <div class="stat"><b id="statSerfs">0</b><span>Serfs</span></div>
           <div class="stat"><b id="statWorkers">0</b><span>Worker</span></div>
         </div>
-        <div class="asset-strip">
+        <div class="asset-strip debug-only">
           <div class="asset-badge"><img src="__ICON_SERF__" alt="Serf"></div>
           <div class="asset-badge"><img src="__ICON_WORKER__" alt="Worker"></div>
           <div class="asset-badge"><img src="__ICON_UNIVERSITY__" alt="Hochschule"></div>
           <div class="asset-badge"><img src="__ICON_HEADQUARTER__" alt="Hauptquartier"></div>
         </div>
-        <div class="graphics-report __GRAPHICS_REPORT_CLASS__">
+        <div class="graphics-report __GRAPHICS_REPORT_CLASS__ debug-only">
           <a href="__GRAPHICS_REPORT_LINK__" target="_blank" rel="noreferrer">Originalgrafik-Report</a>
           <p>__GRAPHICS_REPORT_SUMMARY__</p>
           <div class="mesh-strip">
@@ -1809,7 +1818,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           <button class="toolbutton" id="bottomNext">Weiter</button>
           <button class="toolbutton" id="bottomHQ">HQ</button>
         </div>
-        <div class="camera-hint">WASD/Rand scrollt, Mausrad zoomt, Klick waehlt Entity.</div>
+        <div class="camera-hint debug-only">WASD/Rand scrollt, Mausrad zoomt, Klick waehlt Entity.</div>
       </div>
     </div>
   </div>
@@ -2311,8 +2320,31 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       const terrainPositions = terrain3d.positions || [];
       let cullEntityModels = false;
       const allowRigidAtomicAnimation = false;
+      const shadowTexture = createTexture(shadowTextureDataUrl());
       const selectionTexture = createTexture(ringTextureDataUrl('#f6d66f', '#3a2108', 10, 4, 0.96, 0.85));
       const hoverTexture = createTexture(ringTextureDataUrl('#d9f0ff', '#132536', 7, 3, 0.78, 0.72));
+
+      function shadowTextureDataUrl() {
+        const shadowCanvas = document.createElement('canvas');
+        shadowCanvas.width = 128;
+        shadowCanvas.height = 128;
+        const ctx = shadowCanvas.getContext('2d');
+        ctx.clearRect(0, 0, shadowCanvas.width, shadowCanvas.height);
+        const gradient = ctx.createRadialGradient(64, 64, 4, 64, 64, 58);
+        gradient.addColorStop(0, 'rgba(0,0,0,.34)');
+        gradient.addColorStop(0.58, 'rgba(0,0,0,.20)');
+        gradient.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.save();
+        ctx.translate(64, 64);
+        ctx.scale(1, 0.48);
+        ctx.translate(-64, -64);
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(64, 64, 58, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return shadowCanvas.toDataURL('image/png');
+      }
 
       function ringTextureDataUrl(primary, secondary, primaryWidth, secondaryWidth, primaryAlpha, secondaryAlpha) {
         const ringCanvas = document.createElement('canvas');
@@ -3045,6 +3077,20 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           const groundY = terrainHeightAt(entity.x, entity.y);
           const isSelected3d = selectedEntityIds.has(entity.id);
           const isHovered3d = entity.id === hoveredEntityId && !isSelected3d;
+          bindMesh(selectionMesh);
+          const shadowScale = Math.max(16, Number(entity.size || 32) * (entity.kind === 'building' || entity.kind === 'site' ? 0.68 : 0.46));
+          const shadowMatrix = m4Transform(worldX, groundY + 0.85, worldZ, shadowScale, Number(entity.angle || 0), 1);
+          drawSubmesh(
+            vp,
+            selectionMesh,
+            {
+              indexBuffer: selectionMesh.indexBuffer,
+              indexType: selectionMesh.indexType,
+              count: selectionMesh.count,
+              texture: shadowTexture,
+            },
+            shadowMatrix
+          );
           if (isSelected3d || isHovered3d) {
             bindMesh(selectionMesh);
             const ringScale = Math.max(22, Number(entity.size || 32) * (isSelected3d ? 0.68 : 0.58));
@@ -3710,6 +3756,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     });
     function applyStartupParams() {
       const params = new URLSearchParams(window.location.search || '');
+      const debugMode = params.get('debug') === '1' || params.get('debug') === 'true';
+      document.body.classList.toggle('debug-mode', debugMode);
       const requestedFrame = Number(params.get('frame') || params.get('idx') || 0);
       if (Number.isFinite(requestedFrame) && requestedFrame > 0) {
         show(clamp(Math.round(requestedFrame), 0, Math.max(0, timeline.length - 1)));

@@ -567,6 +567,31 @@ def _entity_snapshot(env, args) -> list[dict]:
                 record["angle"] = round(math.atan2(dx, dy), 5)
         entities.append(record)
 
+    render_scale = max(1, int(getattr(args, "render_scale", 1) or 1))
+    for tree_id, grid_pos in sorted(getattr(env.map_manager.grid, "tree_positions", {}).items()):
+        gx = getattr(grid_pos, "x", None)
+        gy = getattr(grid_pos, "y", None)
+        if gx is None or gy is None:
+            continue
+        px = int(round((float(gx) + 0.5) * render_scale))
+        py = int(round((float(gy) + 0.5) * render_scale))
+        tree_entity_id = f"tree:{tree_id}"
+        entities.append(
+            {
+                "id": tree_entity_id,
+                "kind": "tree",
+                "sprite_key": "tree_fir",
+                "x": px,
+                "y": py,
+                "size": 46,
+                "label": f"Baum {tree_id}",
+                "state": "standing",
+                "anchor_y": 0.90,
+                "anim_role": "idle",
+                "anim_seed": sum((idx + 1) * ord(char) for idx, char in enumerate(tree_entity_id)) % 1000,
+            }
+        )
+
     for key, pos in getattr(env, "building_position_map", {}).items():
         building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
         add_entity(
@@ -2216,6 +2241,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     function entityFallbackAsset(kind) {
       if (kind === 'serf') return assetByKey.serf || '';
       if (kind === 'worker') return assetByKey.worker || '';
+      if (kind === 'tree') return assetByKey.wood || '';
       if (kind === 'site') return assetByKey.site || assetByKey.mine || '';
       return assetByKey.headquarter || assetByKey.site || '';
     }
@@ -3333,6 +3359,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (!entity) return assetByKey.serf || '';
       if (entity.kind === 'serf') return spriteByKey[entity.sprite_key] || assetByKey.serf || '';
       if (entity.kind === 'worker') return spriteByKey[entity.sprite_key] || assetByKey.worker || '';
+      if (entity.kind === 'tree') return spriteByKey[entity.sprite_key] || assetByKey.wood || '';
       if (entity.kind === 'site') return spriteByKey[entity.sprite_key] || assetByKey.site || '';
       return spriteByKey[entity.sprite_key] || assetByKey.generic_building || assetByKey.headquarter || '';
     }

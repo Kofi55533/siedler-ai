@@ -181,6 +181,10 @@ def _export_game_assets(output_dir: Path, game_root: Path | None, disabled: bool
         "trail_toggle": _first_existing(base_gui / "onScreen_NPCmarker.png", base_gui / "miniMap_Signal_0.png", base_gui / "MoveCamera.png"),
         "to_building": _first_existing(base_gui / "ToBuilding.png"),
         "to_worker": _first_existing(base_gui / "ToWorker.png"),
+        "ok": _first_existing(base_gui / "ok.png", base_gui / "trade_ok.png"),
+        "arrow": _first_existing(base_gui / "dbg_arrow.png", base_gui / "GCWindow" / "MoveCamera.png"),
+        "plus": _first_existing(base_gui / "trade_plus.png"),
+        "minus": _first_existing(base_gui / "trade_minus.png"),
     }
     payday_frames = sorted(base_gui.glob("payday*.png"))
     return {
@@ -1755,6 +1759,20 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       max-width: 30px;
       max-height: 30px;
       object-fit: contain;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.55));
+    }
+    .command-slot img.flip-x {
+      transform: scaleX(-1);
+    }
+    .command-slot img.rotate-left {
+      transform: rotate(90deg);
+    }
+    .command-slot img.rotate-right {
+      transform: rotate(-90deg);
+    }
+    .command-slot img.small-icon {
+      max-width: 22px;
+      max-height: 22px;
     }
     .command-slot:disabled {
       opacity: .38;
@@ -1959,15 +1977,15 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           <div class="tab-icon"><img src="__ICON_TAB_MOTIVATION__" alt=""></div>
         </div>
         <div id="commandGrid" class="command-grid">
-          <button class="command-slot" id="cmdPrev"><img src="__ICON_TO_WORKER__" alt=""><span>&lt;</span></button>
-          <button class="command-slot" id="cmdNext"><img src="__ICON_TO_BUILDING__" alt=""><span>&gt;</span></button>
-          <button class="command-slot" id="cmdHQ"><img src="__ICON_HEADQUARTER__" alt=""><span>HQ</span></button>
-          <button class="command-slot" id="cmdTrails"><img src="__ICON_TRAILS__" alt=""><span class="debug-only">Weg</span></button>
-          <button class="command-slot" id="cmdPlay"><span>Play</span></button>
-          <button class="command-slot" id="cmdStepBack"><span>-1</span></button>
-          <button class="command-slot" id="cmdStepForward"><span>+1</span></button>
-          <button class="command-slot" id="cmdZoomIn"><span>+</span></button>
-          <button class="command-slot" id="cmdZoomOut"><span>-</span></button>
+          <button class="command-slot" id="cmdPrev" title="Vorige Auswahl"><img src="__ICON_TO_WORKER__" alt=""><span class="debug-only">&lt;</span></button>
+          <button class="command-slot" id="cmdNext" title="Naechste Auswahl"><img src="__ICON_TO_BUILDING__" alt=""><span class="debug-only">&gt;</span></button>
+          <button class="command-slot" id="cmdHQ" title="Hauptquartier"><img src="__ICON_HEADQUARTER__" alt=""><span class="debug-only">HQ</span></button>
+          <button class="command-slot" id="cmdTrails" title="Laufwege"><img src="__ICON_TRAILS__" alt=""><span class="debug-only">Weg</span></button>
+          <button class="command-slot" id="cmdPlay" title="Play/Pause"><img src="__ICON_OK__" alt=""><span class="debug-only">Play</span></button>
+          <button class="command-slot" id="cmdStepBack" title="Ein Schritt zurueck"><img class="small-icon rotate-left" src="__ICON_ARROW__" alt=""><span class="debug-only">-1</span></button>
+          <button class="command-slot" id="cmdStepForward" title="Ein Schritt vor"><img class="small-icon rotate-right" src="__ICON_ARROW__" alt=""><span class="debug-only">+1</span></button>
+          <button class="command-slot" id="cmdZoomIn" title="Zoom rein"><img class="small-icon" src="__ICON_PLUS__" alt=""><span class="debug-only">+</span></button>
+          <button class="command-slot" id="cmdZoomOut" title="Zoom raus"><img class="small-icon" src="__ICON_MINUS__" alt=""><span class="debug-only">-</span></button>
         </div>
       </div>
       <div class="replay-panel">
@@ -4078,6 +4096,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         "__ICON_TO_BUILDING__": assets.get("to_building") or assets.get("generic_building") or blank_asset,
         "__ICON_TO_WORKER__": assets.get("to_worker") or assets.get("generic_settler") or blank_asset,
         "__ICON_TRAILS__": assets.get("trail_toggle") or assets.get("to_worker") or blank_asset,
+        "__ICON_OK__": assets.get("ok") or blank_asset,
+        "__ICON_ARROW__": assets.get("arrow") or assets.get("trail_toggle") or blank_asset,
+        "__ICON_PLUS__": assets.get("plus") or assets.get("ok") or blank_asset,
+        "__ICON_MINUS__": assets.get("minus") or assets.get("ok") or blank_asset,
         "__PAYDAY_ICON__": (game_assets.get("payday_frames") or [blank_asset])[0],
         "__GRAPHICS_REPORT_CLASS__": graphics_report_class,
         "__GRAPHICS_REPORT_LINK__": graphics_report_link,

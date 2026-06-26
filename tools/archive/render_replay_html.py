@@ -1996,6 +1996,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const assetByKey = gameAssets.assets || {};
     const terrain3d = gameAssets.terrain3d || { enabled: false };
     const terrainTexture = gameAssets.terrain_texture || '';
+    const minimapTexture = gameAssets.minimap_texture || terrainTexture || '';
     const paydayFrames = gameAssets.payday_frames || [];
     const MAP_WIDTH = __WIDTH__;
     const MAP_HEIGHT = __HEIGHT__;
@@ -2167,19 +2168,32 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     function setText(id, value) {
       document.getElementById(id).textContent = value;
     }
+    function minimapContentArea() {
+      const boxRect = miniBox.getBoundingClientRect();
+      const imageRect = mini.getBoundingClientRect();
+      const width = imageRect.width || miniBox.clientWidth;
+      const height = imageRect.height || miniBox.clientHeight;
+      return {
+        left: Math.max(0, imageRect.left - boxRect.left),
+        top: Math.max(0, imageRect.top - boxRect.top),
+        width,
+        height,
+      };
+    }
     function updateMinimap() {
       if (!miniBox.clientWidth || !miniBox.clientHeight) return;
       zoomLevel.textContent = `${Math.round(scale * 100)}%`;
-      const sx = miniBox.clientWidth / MAP_WIDTH;
-      const sy = miniBox.clientHeight / MAP_HEIGHT;
+      const area = minimapContentArea();
+      const sx = area.width / MAP_WIDTH;
+      const sy = area.height / MAP_HEIGHT;
       const visibleX = clamp(-tx / scale, 0, MAP_WIDTH);
       const visibleY = clamp(-ty / scale, 0, MAP_HEIGHT);
       const visibleW = clamp(stage.clientWidth / scale, 0, MAP_WIDTH);
       const visibleH = clamp(stage.clientHeight / scale, 0, MAP_HEIGHT);
-      miniView.style.left = `${clamp(visibleX * sx, 0, miniBox.clientWidth)}px`;
-      miniView.style.top = `${clamp(visibleY * sy, 0, miniBox.clientHeight)}px`;
-      miniView.style.width = `${clamp(visibleW * sx, 8, miniBox.clientWidth)}px`;
-      miniView.style.height = `${clamp(visibleH * sy, 8, miniBox.clientHeight)}px`;
+      miniView.style.left = `${area.left + clamp(visibleX * sx, 0, area.width)}px`;
+      miniView.style.top = `${area.top + clamp(visibleY * sy, 0, area.height)}px`;
+      miniView.style.width = `${clamp(visibleW * sx, 8, area.width)}px`;
+      miniView.style.height = `${clamp(visibleH * sy, 8, area.height)}px`;
     }
     function applyTransform() {
       world.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
@@ -3624,7 +3638,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       idx = Math.max(0, Math.min(timeline.length - 1, i));
       const f = timeline[idx];
       img.src = f.frame;
-      mini.src = f.frame;
+      if (!mini.getAttribute('src')) mini.src = minimapTexture || f.frame;
       slider.value = idx;
       bottomSlider.value = idx;
       const lastDecision = timeline[timeline.length - 1].decision;
@@ -3793,8 +3807,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }, { passive: false });
     miniBox.addEventListener('click', e => {
       const rect = miniBox.getBoundingClientRect();
-      const worldX = ((e.clientX - rect.left) / rect.width) * MAP_WIDTH;
-      const worldY = ((e.clientY - rect.top) / rect.height) * MAP_HEIGHT;
+      const area = minimapContentArea();
+      const localX = clamp(e.clientX - rect.left - area.left, 0, area.width);
+      const localY = clamp(e.clientY - rect.top - area.top, 0, area.height);
+      const worldX = (localX / Math.max(1, area.width)) * MAP_WIDTH;
+      const worldY = (localY / Math.max(1, area.height)) * MAP_HEIGHT;
       tx = stage.clientWidth / 2 - worldX * scale;
       ty = stage.clientHeight / 2 - worldY * scale;
       applyTransform();
@@ -4110,6 +4127,7 @@ def main() -> None:
         base,
         quality=max(1, min(100, int(args.jpg_quality))),
     )
+    game_assets["minimap_texture"] = terrain_texture_name
     game_assets["terrain_texture"] = _make_full_terrain_texture(args, output_dir, game_root) or terrain_texture_name
     game_assets["terrain3d"] = _make_terrain3d_payload(env, args)
     controller = ExpertOpeningController() if args.strategy == "expert_opening" else None

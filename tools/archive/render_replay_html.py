@@ -1078,6 +1078,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     game_assets_json = json.dumps(game_assets, ensure_ascii=False).replace("</", "<\\/")
     assets = game_assets.get("assets") or {}
     original_graphics = game_assets.get("original_graphics") or {}
+    debug_map_link = os.path.relpath(ROOT_DIR / "analysis" / "wintersturm_debug_map.png", output_dir).replace(os.sep, "/")
+    debug_map_json_link = os.path.relpath(ROOT_DIR / "analysis" / "wintersturm_debug_map.json", output_dir).replace(os.sep, "/")
     graphics_summary_data = original_graphics.get("summary") or {}
     sample_sprites = original_graphics.get("sample_sprites") or {}
     sample_meshes = original_graphics.get("sample_meshes") or {}
@@ -1652,6 +1654,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       color: #d8c59c;
       font: 12px/1.35 system-ui, sans-serif;
     }
+    .debug-link-list {
+      display: grid;
+      gap: 5px;
+      margin-top: 8px;
+    }
     .mesh-strip {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -1968,6 +1975,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
             <img src="__MESH_HEADQUARTER__" alt="HQ Mesh">
             <img src="__MESH_UNIVERSITY__" alt="Hochschule Mesh">
             <img src="__MESH_TREE__" alt="Baum Mesh">
+          </div>
+        </div>
+        <div class="graphics-report debug-only">
+          <a href="__DEBUG_MAP_LINK__" target="_blank" rel="noreferrer">Raster-/Walkability-Karte</a>
+          <div class="debug-link-list">
+            <a href="__DEBUG_MAP_JSON_LINK__" target="_blank" rel="noreferrer">Raster-JSON</a>
           </div>
         </div>
         <button class="toolbutton" id="fit" style="margin-top:10px;">HQ Kamera</button>
@@ -4147,6 +4160,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         "__INITIAL_CAMERA_X__": str(int(round(width * ((41100.0 - 25240.0) / 25240.0)))),
         "__INITIAL_CAMERA_Y__": str(int(round(height * (23100.0 / 25248.0)))),
         "__INITIAL_CAMERA_SCALE__": "2.15",
+        "__DEBUG_MAP_LINK__": html.escape(debug_map_link, quote=True),
+        "__DEBUG_MAP_JSON_LINK__": html.escape(debug_map_json_link, quote=True),
     }
     blank_asset = "data:image/gif;base64,R0lGODlhAQABAAAAACw="
     asset_replacements = {

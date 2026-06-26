@@ -1,0 +1,91 @@
+{
+  "grid_shape": [
+    257,
+    258
+  ],
+  "scale_px_per_cell": 8,
+  "walkable_cells_static": 34602,
+  "blocked_cells_static": 31704,
+  "tree_cells": 198,
+  "tree_count": 202,
+  "deposit_count": 6,
+  "shaft_count": 12,
+  "build_layers": {
+    "Wohnhaus_1": {
+      "universe_candidates": 27135,
+      "currently_valid": 24439,
+      "color_rgb": [
+        67,
+        142,
+        255
+      ]
+    },
+    "Bauernhof_1": {
+      "universe_candidates": 22579,
+      "currently_valid": 17987,
+      "color_rgb": [
+        91,
+        214,
+        124
+      ]
+    },
+    "Hochschule_1": {
+      "universe_candidates": 15867,
+      "currently_valid": 8789,
+      "color_rgb": [
+        151,
+        107,
+        255
+      ]
+    },
+    "Kloster_1": {
+      "universe_candidates": 15867,
+      "currently_valid": 8789,
+      "color_rgb": [
+        227,
+        93,
+        194
+      ]
+    },
+    "Eisenmine_1": {
+      "universe_candidates": 2,
+      "currently_valid": 2,
+      "color_rgb": [
+        168,
+        176,
+        190
+      ]
+    },
+    "Schwefelmine_1": {
+      "universe_candidates": 2,
+      "currently_valid": 2,
+      "color_rgb": [
+        235,
+        210,
+        66
+      ]
+    },
+    "Lehmmine_1": {
+      "universe_candidates": 1,
+      "currently_valid": 1,
+      "color_rgb": [
+        203,
+        126,
+        66
+      ]
+    },
+    "Steinmine_1": {
+      "universe_candidates": 1,
+      "currently_valid": 1,
+      "color_rgb": [
+        196,
+        196,
+        186
+      ]
+    }
+  },
+  "outputs": {
+    "png": "analysis/wintersturm_debug_map.png",
+    "json": "analysis/wintersturm_debug_map.json"
+  }
+}

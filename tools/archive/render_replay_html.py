@@ -567,6 +567,25 @@ def _entity_snapshot(env, args) -> list[dict]:
                 record["angle"] = round(math.atan2(dx, dy), 5)
         entities.append(record)
 
+    occupied_mine_points: list[tuple[int, int]] = []
+    for key, pos in getattr(env, "building_position_map", {}).items():
+        building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
+        if "mine" not in _building_mesh_key(building_name):
+            continue
+        point = frame_xy_from_position(pos)
+        if point is not None:
+            occupied_mine_points.append(point)
+    for site in getattr(env, "construction_sites", []):
+        building_name = str(site.get("building", ""))
+        if "mine" not in _building_mesh_key(building_name):
+            continue
+        point = frame_xy_from_position(site.get("position"))
+        if point is not None:
+            occupied_mine_points.append(point)
+
+    def covered_by_mine(px: int, py: int, radius: float = 58.0) -> bool:
+        return any(math.hypot(px - ox, py - oy) <= radius for ox, oy in occupied_mine_points)
+
     render_scale = max(1, int(getattr(args, "render_scale", 1) or 1))
     for tree_id, grid_pos in sorted(getattr(env.map_manager.grid, "tree_positions", {}).items()):
         gx = getattr(grid_pos, "x", None)
@@ -591,6 +610,54 @@ def _entity_snapshot(env, args) -> list[dict]:
                 "anim_seed": sum((idx + 1) * ord(char) for idx, char in enumerate(tree_entity_id)) % 1000,
             }
         )
+
+    for category, cat_data in sorted(getattr(env, "deposit_categories", {}).items()):
+        for deposit_index, deposit in enumerate(cat_data.get("deposits", [])):
+            if float(deposit.get("remaining", 0) or 0) <= 0:
+                continue
+            px, py = _frame_xy(env, args, float(deposit.get("x", 0)), float(deposit.get("y", 0)))
+            if covered_by_mine(px, py):
+                continue
+            resource_entity_id = f"resource:{category}:{deposit_index}"
+            entities.append(
+                {
+                    "id": resource_entity_id,
+                    "kind": "resource",
+                    "sprite_key": _resource_mesh_key(category),
+                    "x": px,
+                    "y": py,
+                    "size": 48,
+                    "label": f"{category} Vorkommen",
+                    "state": f"remaining {int(float(deposit.get('remaining', 0) or 0))}",
+                    "anchor_y": 0.78,
+                    "anim_role": "idle",
+                    "anim_seed": sum((idx + 1) * ord(char) for idx, char in enumerate(resource_entity_id)) % 1000,
+                }
+            )
+
+    for category, cat_data in sorted(getattr(env, "shaft_categories", {}).items()):
+        for shaft_index, shaft in enumerate(cat_data.get("shafts", [])):
+            if float(shaft.get("remaining", 0) or 0) <= 0:
+                continue
+            px, py = _frame_xy(env, args, float(shaft.get("x", 0)), float(shaft.get("y", 0)))
+            if covered_by_mine(px, py, radius=38.0):
+                continue
+            shaft_entity_id = f"shaft:{category}:{shaft_index}"
+            entities.append(
+                {
+                    "id": shaft_entity_id,
+                    "kind": "shaft",
+                    "sprite_key": "generic_mine_site",
+                    "x": px,
+                    "y": py,
+                    "size": 42,
+                    "label": f"{category} Stollen",
+                    "state": f"remaining {int(float(shaft.get('remaining', 0) or 0))}",
+                    "anchor_y": 0.76,
+                    "anim_role": "idle",
+                    "anim_seed": sum((idx + 1) * ord(char) for idx, char in enumerate(shaft_entity_id)) % 1000,
+                }
+            )
 
     for key, pos in getattr(env, "building_position_map", {}).items():
         building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
@@ -825,6 +892,19 @@ def _serf_mesh_key(serf) -> str:
     if any(token in resource for token in ("stone", "clay", "iron", "sulfur", "stein", "lehm", "eisen", "schwefel")):
         return "serf_mine"
     return "serf_idle"
+
+
+def _resource_mesh_key(category: str) -> str:
+    normalized = str(category or "").lower()
+    if "eisen" in normalized or "iron" in normalized:
+        return "iron_resource"
+    if "stein" in normalized or "stone" in normalized:
+        return "stone_resource"
+    if "lehm" in normalized or "clay" in normalized:
+        return "clay_resource"
+    if "schwefel" in normalized or "sulfur" in normalized:
+        return "sulfur_resource"
+    return "stone_resource"
 
 
 def _building_icon_key(building_name: str) -> str:
@@ -2242,6 +2322,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (kind === 'serf') return assetByKey.serf || '';
       if (kind === 'worker') return assetByKey.worker || '';
       if (kind === 'tree') return assetByKey.wood || '';
+      if (kind === 'resource') return assetByKey.stone || assetByKey.mine || '';
+      if (kind === 'shaft') return assetByKey.mine || assetByKey.stone || '';
       if (kind === 'site') return assetByKey.site || assetByKey.mine || '';
       return assetByKey.headquarter || assetByKey.site || '';
     }
@@ -3360,6 +3442,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (entity.kind === 'serf') return spriteByKey[entity.sprite_key] || assetByKey.serf || '';
       if (entity.kind === 'worker') return spriteByKey[entity.sprite_key] || assetByKey.worker || '';
       if (entity.kind === 'tree') return spriteByKey[entity.sprite_key] || assetByKey.wood || '';
+      if (entity.kind === 'resource' || entity.kind === 'shaft') return spriteByKey[entity.sprite_key] || assetByKey.mine || assetByKey.stone || '';
       if (entity.kind === 'site') return spriteByKey[entity.sprite_key] || assetByKey.site || '';
       return spriteByKey[entity.sprite_key] || assetByKey.generic_building || assetByKey.headquarter || '';
     }

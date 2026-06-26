@@ -2267,7 +2267,22 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         miniMarkers.appendChild(marker);
       }
     }
+    function constrainTransform() {
+      const mapW = MAP_WIDTH * scale;
+      const mapH = MAP_HEIGHT * scale;
+      if (mapW <= stage.clientWidth) {
+        tx = (stage.clientWidth - mapW) / 2;
+      } else {
+        tx = clamp(tx, stage.clientWidth - mapW, 0);
+      }
+      if (mapH <= stage.clientHeight) {
+        ty = (stage.clientHeight - mapH) / 2;
+      } else {
+        ty = clamp(ty, stage.clientHeight - mapH, 0);
+      }
+    }
     function applyTransform() {
+      constrainTransform();
       world.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
       updateMinimap();
       if (mode3d && renderer3d) renderer3d.render(timeline[idx]);

@@ -1571,11 +1571,34 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       object-fit: contain;
       image-rendering: pixelated;
     }
+    #miniMarkers {
+      position: absolute;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 2;
+    }
+    #miniMarkers circle {
+      stroke: rgba(13, 12, 10, .95);
+      stroke-width: 1.1;
+      paint-order: stroke;
+    }
+    #miniMarkers .mini-building { fill: #f7d77d; }
+    #miniMarkers .mini-site { fill: #ff9d42; }
+    #miniMarkers .mini-serf { fill: #7ccfff; }
+    #miniMarkers .mini-worker { fill: #f0f4ff; }
+    #miniMarkers .mini-resource,
+    #miniMarkers .mini-shaft { fill: #79d85d; }
+    #miniMarkers .mini-selected {
+      fill: #fff3a2;
+      stroke: #2b2109;
+      stroke-width: 1.8;
+    }
     #miniView {
       position: absolute;
       border: 2px solid #ffe47c;
       box-shadow: 0 0 0 1px #111, 0 0 9px rgba(255,224,110,.75);
       pointer-events: none;
+      z-index: 3;
     }
     .playing-dot {
       display: inline-block;
@@ -1953,6 +1976,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         <div class="minimap-title"><span>Karte</span><span id="zoomLevel">100%</span></div>
         <div id="miniBox" class="minimap-inner">
           <img id="mini" src="" alt="">
+          <svg id="miniMarkers" aria-hidden="true"></svg>
           <div id="miniView"></div>
         </div>
       </div>
@@ -2026,6 +2050,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const selectionRect = document.getElementById('selectionRect');
     const mini = document.getElementById('mini');
     const miniBox = document.getElementById('miniBox');
+    const miniMarkers = document.getElementById('miniMarkers');
     const miniView = document.getElementById('miniView');
     const stage = document.getElementById('stage');
     const slider = document.getElementById('slider');
@@ -2198,10 +2223,21 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         height,
       };
     }
+    function placeMinimapOverlay() {
+      const area = minimapContentArea();
+      miniMarkers.style.left = `${area.left}px`;
+      miniMarkers.style.top = `${area.top}px`;
+      miniMarkers.style.width = `${area.width}px`;
+      miniMarkers.style.height = `${area.height}px`;
+      miniMarkers.setAttribute('viewBox', `0 0 ${area.width} ${area.height}`);
+      miniMarkers.setAttribute('width', String(area.width));
+      miniMarkers.setAttribute('height', String(area.height));
+      return area;
+    }
     function updateMinimap() {
       if (!miniBox.clientWidth || !miniBox.clientHeight) return;
       zoomLevel.textContent = `${Math.round(scale * 100)}%`;
-      const area = minimapContentArea();
+      const area = placeMinimapOverlay();
       const sx = area.width / MAP_WIDTH;
       const sy = area.height / MAP_HEIGHT;
       const visibleX = clamp(-tx / scale, 0, MAP_WIDTH);
@@ -2212,6 +2248,24 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       miniView.style.top = `${area.top + clamp(visibleY * sy, 0, area.height)}px`;
       miniView.style.width = `${clamp(visibleW * sx, 8, area.width)}px`;
       miniView.style.height = `${clamp(visibleH * sy, 8, area.height)}px`;
+    }
+    function updateMiniMarkers(f) {
+      const area = placeMinimapOverlay();
+      miniMarkers.replaceChildren();
+      const kinds = new Set(['building', 'site', 'serf', 'worker', 'resource', 'shaft']);
+      const svgNs = 'http://www.w3.org/2000/svg';
+      for (const entity of (f.entities || [])) {
+        if (!kinds.has(entity.kind)) continue;
+        const cx = clamp((Number(entity.x || 0) / MAP_WIDTH) * area.width, 0, area.width);
+        const cy = clamp((Number(entity.y || 0) / MAP_HEIGHT) * area.height, 0, area.height);
+        const marker = document.createElementNS(svgNs, 'circle');
+        const selected = selectedEntityIds.has(entity.id);
+        marker.setAttribute('cx', String(Math.round(cx * 10) / 10));
+        marker.setAttribute('cy', String(Math.round(cy * 10) / 10));
+        marker.setAttribute('r', selected ? '4.1' : (entity.kind === 'building' || entity.kind === 'site' ? '3.2' : '2.4'));
+        marker.setAttribute('class', `mini-${sanitizeClass(entity.kind)}${selected ? ' mini-selected' : ''}`);
+        miniMarkers.appendChild(marker);
+      }
     }
     function applyTransform() {
       world.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
@@ -2317,6 +2371,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         node.classList.toggle('selected', selectedEntityIds.has(nodeId));
       }
       renderSelection();
+      updateMiniMarkers(timeline[idx] || {});
       if (focus) focusSelection();
       if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
       renderMovementTrails();
@@ -3671,6 +3726,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       updatePayday(f);
       updateEntities(f);
       updateMinimap();
+      updateMiniMarkers(f);
       if (mode3d && renderer3d) renderer3d.render(f);
       renderMovementTrails();
     }
@@ -4007,7 +4063,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     });
     window.addEventListener('resize', () => {
       focusInitialCamera();
+      updateMiniMarkers(timeline[idx] || {});
       if (renderer3d) renderer3d.requestRender();
+    });
+    mini.addEventListener('load', () => {
+      updateMinimap();
+      updateMiniMarkers(timeline[idx] || {});
     });
     function applyStartupParams() {
       const params = new URLSearchParams(window.location.search || '');

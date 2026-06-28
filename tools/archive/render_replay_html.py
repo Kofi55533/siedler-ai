@@ -773,6 +773,116 @@ def _timeline_entry(env, frame_name: str, decision: int, action_label: str, args
     }
 
 
+def _entity_target_key(entity: dict) -> tuple[int | None, int | None]:
+    if entity.get("target_x") is None or entity.get("target_y") is None:
+        return (None, None)
+    return (int(round(float(entity.get("target_x", 0)))), int(round(float(entity.get("target_y", 0)))))
+
+
+def _entity_path_sample(frame: dict, entity: dict) -> dict:
+    sample = {
+        "time": int(frame.get("time", 0)),
+        "decision": int(frame.get("decision", 0)),
+        "x": int(round(float(entity.get("x", 0)))),
+        "y": int(round(float(entity.get("y", 0)))),
+        "state": str(entity.get("state", "")),
+        "action": str(frame.get("action", "")),
+    }
+    target_x, target_y = _entity_target_key(entity)
+    if target_x is not None and target_y is not None:
+        sample["target_x"] = target_x
+        sample["target_y"] = target_y
+    return sample
+
+
+def _write_entity_paths(output_dir: Path, timeline: list[dict]) -> str:
+    """Writes compact per-entity movement/state traces derived from the HTML timeline."""
+    moving_kinds = {"serf", "worker"}
+    entities: dict[str, dict] = {}
+    by_kind: dict[str, int] = {}
+
+    for frame in timeline:
+        for entity in frame.get("entities", []):
+            entity_id = str(entity.get("id", ""))
+            if not entity_id:
+                continue
+            kind = str(entity.get("kind", "entity"))
+            record = entities.get(entity_id)
+            if record is None:
+                record = {
+                    "id": entity_id,
+                    "kind": kind,
+                    "label": str(entity.get("label", entity_id)),
+                    "sprite_key": str(entity.get("sprite_key", "")),
+                    "first_time": int(frame.get("time", 0)),
+                    "last_time": int(frame.get("time", 0)),
+                    "sample_count": 0,
+                    "total_distance_px": 0.0,
+                    "samples": [],
+                    "state_changes": [],
+                    "target_changes": [],
+                }
+                entities[entity_id] = record
+                by_kind[kind] = by_kind.get(kind, 0) + 1
+
+            sample = _entity_path_sample(frame, entity)
+            samples = record["samples"]
+            previous = samples[-1] if samples else None
+            if previous is not None:
+                dx = float(sample["x"]) - float(previous["x"])
+                dy = float(sample["y"]) - float(previous["y"])
+                if dx or dy:
+                    record["total_distance_px"] = round(float(record["total_distance_px"]) + math.hypot(dx, dy), 3)
+
+            record["last_time"] = int(frame.get("time", 0))
+            record["sample_count"] = int(record["sample_count"]) + 1
+
+            previous_state = previous.get("state") if previous else None
+            if previous_state != sample.get("state"):
+                record["state_changes"].append(
+                    {
+                        "time": sample["time"],
+                        "decision": sample["decision"],
+                        "state": sample.get("state", ""),
+                        "action": sample.get("action", ""),
+                    }
+                )
+
+            target_key = (sample.get("target_x"), sample.get("target_y"))
+            previous_target = (previous.get("target_x"), previous.get("target_y")) if previous else (None, None)
+            if target_key != previous_target:
+                record["target_changes"].append(
+                    {
+                        "time": sample["time"],
+                        "decision": sample["decision"],
+                        "target_x": target_key[0],
+                        "target_y": target_key[1],
+                        "action": sample.get("action", ""),
+                    }
+                )
+
+            if kind in moving_kinds:
+                samples.append(sample)
+            elif not samples:
+                samples.append(sample)
+            else:
+                samples[-1]["last_seen_time"] = sample["time"]
+
+    entity_list = sorted(entities.values(), key=lambda item: (item["kind"], item["id"]))
+    report = {
+        "source": "analysis/replays/expert_opening_interactive/timeline.json",
+        "frames": len(timeline),
+        "time_start": int(timeline[0]["time"]) if timeline else None,
+        "time_end": int(timeline[-1]["time"]) if timeline else None,
+        "entity_count": len(entity_list),
+        "by_kind": dict(sorted(by_kind.items())),
+        "entities": entity_list,
+    }
+    target = output_dir / "entity_paths.json"
+    target.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    return target.name
+
+
 _ICON_CACHE: dict[tuple[str, int, str], Image.Image] = {}
 
 
@@ -1981,6 +2091,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           <a href="__DEBUG_MAP_LINK__" target="_blank" rel="noreferrer">Raster-/Walkability-Karte</a>
           <div class="debug-link-list">
             <a href="__DEBUG_MAP_JSON_LINK__" target="_blank" rel="noreferrer">Raster-JSON</a>
+            <a href="__ENTITY_PATHS_LINK__" target="_blank" rel="noreferrer">Entity-Laufwege-JSON</a>
           </div>
         </div>
         <button class="toolbutton" id="fit" style="margin-top:10px;">HQ Kamera</button>
@@ -4162,6 +4273,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         "__INITIAL_CAMERA_SCALE__": "2.15",
         "__DEBUG_MAP_LINK__": html.escape(debug_map_link, quote=True),
         "__DEBUG_MAP_JSON_LINK__": html.escape(debug_map_json_link, quote=True),
+        "__ENTITY_PATHS_LINK__": "entity_paths.json",
     }
     blank_asset = "data:image/gif;base64,R0lGODlhAQABAAAAACw="
     asset_replacements = {
@@ -4272,6 +4384,7 @@ def main() -> None:
         timeline.append(_timeline_entry(env, frame_name, decisions, last_action, args))
 
     (output_dir / "timeline.json").write_text(json.dumps(timeline, indent=2, ensure_ascii=False), encoding="utf-8")
+    _write_entity_paths(output_dir, timeline)
     _write_html(output_dir, timeline, width, height, game_assets=game_assets)
 
     print(f"Interactive replay: {output_dir / 'index.html'}")

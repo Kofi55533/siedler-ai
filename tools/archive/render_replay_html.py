@@ -942,6 +942,33 @@ def _write_entity_paths(output_dir: Path, timeline: list[dict]) -> str:
     return target.name
 
 
+def _trim_embedded_model_payload(game_assets: dict, timeline: list[dict]) -> None:
+    original_graphics = game_assets.get("original_graphics") or {}
+    embedded = original_graphics.get("embedded_model3d") or {}
+    model3d_by_key = original_graphics.get("model3d_by_key") or {}
+    if not embedded or not model3d_by_key:
+        return
+
+    used_sprite_keys = {
+        str(entity.get("sprite_key") or "")
+        for frame in timeline
+        for entity in frame.get("entities", [])
+        if entity.get("sprite_key")
+    }
+    required_urls = {
+        str(model3d_by_key.get(sprite_key) or "")
+        for sprite_key in used_sprite_keys
+        if model3d_by_key.get(sprite_key)
+    }
+    filtered = {url: data for url, data in embedded.items() if url in required_urls}
+    original_graphics["embedded_model3d"] = filtered
+    original_graphics["embedded_model3d_summary"] = {
+        "available": len(embedded),
+        "embedded": len(filtered),
+        "used_sprite_keys": len(used_sprite_keys),
+    }
+
+
 _ICON_CACHE: dict[tuple[str, int, str], Image.Image] = {}
 
 
@@ -4806,6 +4833,7 @@ def main() -> None:
 
     (output_dir / "timeline.json").write_text(json.dumps(timeline, indent=2, ensure_ascii=False), encoding="utf-8")
     _write_entity_paths(output_dir, timeline)
+    _trim_embedded_model_payload(game_assets, timeline)
     _write_html(output_dir, timeline, width, height, game_assets=game_assets)
 
     print(f"Interactive replay: {output_dir / 'index.html'}")

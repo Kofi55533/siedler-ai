@@ -15,7 +15,7 @@ from pathlib import Path
 
 import imageio.v2 as imageio
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
@@ -473,6 +473,63 @@ def _frame_xy(env, args, x: float, y: float) -> tuple[int, int]:
     render_scale = max(1, int(getattr(args, "render_scale", 1) or 1))
     px, py = replay._world_to_px(env, x, y, grid_w, grid_h)
     return int(round(px * render_scale)), int(round(py * render_scale))
+
+
+def _write_walkability_overlay(env, args, output_dir: Path, width: int, height: int) -> str:
+    if getattr(args, "viewport", "full") != "full":
+        return ""
+
+    grid = env.map_manager.grid
+    terrain = np.asarray(grid.terrain_base, dtype=np.uint8)
+    trees = np.asarray(grid.trees, dtype=np.uint8)
+    buildings = np.asarray(grid.buildings, dtype=np.uint8)
+
+    rgba = np.zeros((grid.height, grid.width, 4), dtype=np.uint8)
+    rgba[terrain == 1] = (58, 190, 92, 42)
+    rgba[terrain == 0] = (222, 54, 54, 82)
+    rgba[(terrain == 1) & (trees == 1)] = (20, 126, 56, 172)
+    rgba[(terrain == 1) & (buildings == 1)] = (255, 220, 92, 132)
+
+    image = Image.fromarray(rgba, mode="RGBA").resize((int(width), int(height)), Image.Resampling.NEAREST)
+    draw = ImageDraw.Draw(image, "RGBA")
+    cell_w = max(1.0, int(width) / max(1, grid.width))
+    cell_h = max(1.0, int(height) / max(1, grid.height))
+    if min(cell_w, cell_h) >= 4.0:
+        line_color = (238, 244, 218, 34)
+        for x in range(0, int(width), max(1, int(round(cell_w)))):
+            draw.line((x, 0, x, int(height)), fill=line_color)
+        for y in range(0, int(height), max(1, int(round(cell_h)))):
+            draw.line((0, y, int(width), y), fill=line_color)
+
+    def draw_point(xy: tuple[int, int], color: tuple[int, int, int, int], radius: int = 6) -> None:
+        x, y = xy
+        draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=color, outline=(18, 18, 16, 210), width=1)
+
+    def draw_cross(xy: tuple[int, int], color: tuple[int, int, int, int], radius: int = 8) -> None:
+        x, y = xy
+        draw.line((x - radius, y, x + radius, y), fill=color, width=3)
+        draw.line((x, y - radius, x, y + radius), fill=color, width=3)
+        draw.ellipse((x - 3, y - 3, x + 3, y + 3), fill=color)
+
+    resource_colors = {
+        "Eisen": (138, 158, 178, 220),
+        "Stein": (214, 214, 194, 220),
+        "Lehm": (214, 132, 72, 220),
+        "Schwefel": (238, 218, 68, 230),
+    }
+    for category, cat_data in getattr(env, "deposit_categories", {}).items():
+        color = resource_colors.get(str(category), (238, 218, 68, 220))
+        for deposit in cat_data.get("deposits", []):
+            draw_point(_frame_xy(env, args, deposit.get("x", 0), deposit.get("y", 0)), color, radius=7)
+
+    for category, cat_data in getattr(env, "shaft_categories", {}).items():
+        color = resource_colors.get(str(category), (238, 218, 68, 220))
+        for shaft in cat_data.get("shafts", []):
+            draw_cross(_frame_xy(env, args, shaft.get("x", 0), shaft.get("y", 0)), color, radius=9)
+
+    target = output_dir / "walkability_overlay.png"
+    image.save(target)
+    return target.name
 
 
 def _entity_snapshot(env, args) -> list[dict]:
@@ -1515,6 +1572,22 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       user-select: none;
       -webkit-user-drag: none;
       filter: saturate(1.05) contrast(1.03);
+      z-index: 0;
+    }
+    .debug-map-overlay {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      image-rendering: pixelated;
+      pointer-events: none;
+      opacity: .78;
+      z-index: 1;
+    }
+    .debug-map-overlay.active {
+      display: block;
     }
     #webglScene {
       position: absolute;
@@ -1536,7 +1609,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       inset: 0;
       pointer-events: none;
       overflow: visible;
-      z-index: 1;
+      z-index: 2;
     }
     .entity-sprite {
       --anchor-y: .78;
@@ -2058,6 +2131,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
   <div id="stage" class="stage">
     <div id="world">
       <img id="map" src="" width="__WIDTH__" height="__HEIGHT__" alt="Replay frame">
+      <img id="debugMapOverlay" class="debug-map-overlay" src="" width="__WIDTH__" height="__HEIGHT__" alt="">
       <div id="entityLayer" class="entity-layer"></div>
     </div>
     <canvas id="webglScene"></canvas>
@@ -2099,6 +2173,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
             <a href="__DEBUG_MAP_JSON_LINK__" target="_blank" rel="noreferrer">Raster-JSON</a>
             <a href="__ENTITY_PATHS_LINK__" target="_blank" rel="noreferrer">Entity-Laufwege-JSON</a>
           </div>
+          <button class="toolbutton" id="toggleGridOverlay" style="margin-top:8px;">Raster Overlay</button>
         </div>
         <button class="toolbutton" id="fit" style="margin-top:10px;">HQ Kamera</button>
       </div>
@@ -2170,11 +2245,13 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const terrain3d = gameAssets.terrain3d || { enabled: false };
     const terrainTexture = gameAssets.terrain_texture || '';
     const minimapTexture = gameAssets.minimap_texture || terrainTexture || '';
+    const walkabilityOverlay = gameAssets.walkability_overlay || '';
     const paydayFrames = gameAssets.payday_frames || [];
     const MAP_WIDTH = __WIDTH__;
     const MAP_HEIGHT = __HEIGHT__;
     const world = document.getElementById('world');
     const img = document.getElementById('map');
+    const debugMapOverlay = document.getElementById('debugMapOverlay');
     const webglScene = document.getElementById('webglScene');
     const entityLayer = document.getElementById('entityLayer');
     const pathOverlay = document.getElementById('pathOverlay');
@@ -2249,6 +2326,8 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     let cameraYaw = CAMERA_DEFAULT_YAW;
     let cameraPitch = CAMERA_DEFAULT_PITCH;
     let showAllTrails = false;
+    let showGridOverlay = false;
+    if (debugMapOverlay && walkabilityOverlay) debugMapOverlay.src = walkabilityOverlay;
     const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
     const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
     const INITIAL_CAMERA_SCALE = __INITIAL_CAMERA_SCALE__;
@@ -2282,6 +2361,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           selectedEntities: canvas && canvas.dataset.selectedEntities,
           selectionCount: canvas && canvas.dataset.selectionCount,
           hoveredEntity: canvas && canvas.dataset.hoveredEntity,
+          gridOverlay: showGridOverlay,
           cameraYawDeg: canvas && canvas.dataset.cameraYawDeg,
           cameraPitchDeg: canvas && canvas.dataset.cameraPitchDeg,
         };
@@ -2324,6 +2404,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
         return this.stats();
       },
+      setGridOverlay(enabled = true) {
+        setGridOverlay(Boolean(enabled), false);
+        return this.stats();
+      },
     };
 
     function clamp(value, min, max) {
@@ -2342,6 +2426,19 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     }
     function setText(id, value) {
       document.getElementById(id).textContent = value;
+    }
+    function setGridOverlay(enabled, announce = true) {
+      showGridOverlay = Boolean(enabled) && Boolean(walkabilityOverlay);
+      if (debugMapOverlay) debugMapOverlay.classList.toggle('active', showGridOverlay);
+      const button = document.getElementById('toggleGridOverlay');
+      if (button) button.classList.toggle('active', showGridOverlay);
+      if (announce) {
+        const message = walkabilityOverlay
+          ? (showGridOverlay ? 'Raster Overlay sichtbar' : 'Raster Overlay ausgeblendet')
+          : 'Raster Overlay fehlt';
+        setMessage(message, assetByKey.onscreen_worker || assetByKey.worker || '');
+      }
+      renderMovementTrails();
     }
     function minimapContentArea() {
       const boxRect = miniBox.getBoundingClientRect();
@@ -4008,6 +4105,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       renderMovementTrails();
       setMessage(showAllTrails ? 'Laufwege sichtbar' : 'Laufwege ausgeblendet', assetByKey.onscreen_worker || assetByKey.worker || '');
     };
+    document.getElementById('toggleGridOverlay').onclick = () => {
+      setGridOverlay(!showGridOverlay);
+    };
     document.getElementById('cmdPlay').onclick = play;
     document.getElementById('cmdStepBack').onclick = () => step(-1);
     document.getElementById('cmdStepForward').onclick = () => step(1);
@@ -4228,6 +4328,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       if (key === 's') panBy(0, -80);
       if (key === '+') zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1.18);
       if (key === '-') zoomAt(stage.clientWidth / 2, stage.clientHeight / 2, 1 / 1.18);
+      if (key === 'g') {
+        e.preventDefault();
+        setGridOverlay(!showGridOverlay);
+      }
       if (mode3d && key === 'q') {
         e.preventDefault();
         rotateCamera(-Math.PI / 18, 0);
@@ -4278,6 +4382,9 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         showAllTrails = true;
         document.getElementById('cmdTrails').classList.add('active');
         renderMovementTrails();
+      }
+      if (params.get('grid') === '1' || params.get('walkability') === '1' || params.get('overlay') === '1') {
+        setGridOverlay(true, false);
       }
       const requestedYaw = params.has('yaw') ? Number(params.get('yaw')) : NaN;
       if (Number.isFinite(requestedYaw)) {
@@ -4411,6 +4518,7 @@ def main() -> None:
     imageio.imwrite(frames_dir / "frame_0000.jpg", frame, quality=max(1, min(100, int(args.jpg_quality))))
     timeline.append(_timeline_entry(env, frame_name, 0, last_action, args))
     height, width = frame.shape[:2]
+    game_assets["walkability_overlay"] = _write_walkability_overlay(env, args, output_dir, width, height)
 
     done = False
     trunc = False

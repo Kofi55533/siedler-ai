@@ -1900,6 +1900,51 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .event-log {
+      margin-top: 9px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 226, 147, .20);
+    }
+    .event-log-title {
+      color: #fff1bd;
+      font: 800 12px/1.2 system-ui, sans-serif;
+      margin-bottom: 6px;
+    }
+    .event-log-list {
+      max-height: 170px;
+      overflow: auto;
+      display: grid;
+      gap: 4px;
+      padding-right: 2px;
+    }
+    .event-log-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) 42px;
+      gap: 6px;
+      align-items: center;
+      border: 1px solid rgba(255, 226, 147, .18);
+      border-radius: 3px;
+      background: rgba(0,0,0,.22);
+      color: #ead9ae;
+      font: 700 10px/1.25 system-ui, sans-serif;
+      padding: 5px 6px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .event-log-row:hover {
+      background: rgba(76, 58, 32, .58);
+    }
+    .event-log-row.active {
+      border-color: rgba(255, 232, 132, .76);
+      background: rgba(116, 80, 34, .66);
+      color: #fff0bc;
+    }
+    .event-log-row span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .bottomhud {
       position: absolute;
       left: 10px;
@@ -2224,6 +2269,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           <div class="entity-roster-title">Einheiten</div>
           <div id="entityRoster" class="entity-roster-list"></div>
         </div>
+        <div class="event-log debug-only">
+          <div class="event-log-title">Aktionen</div>
+          <div id="eventLog" class="event-log-list"></div>
+        </div>
         <button class="toolbutton" id="fit" style="margin-top:10px;">HQ Kamera</button>
       </div>
       <div class="minimap">
@@ -2328,6 +2377,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const selectedCoords = document.getElementById('selectedCoords');
     const selectedDetails = document.getElementById('selectedDetails');
     const entityRoster = document.getElementById('entityRoster');
+    const eventLog = document.getElementById('eventLog');
     const screenMessage = document.getElementById('screenMessage');
     const messageIcon = document.getElementById('messageIcon');
     const messageText = document.getElementById('messageText');
@@ -2381,6 +2431,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
     const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
     const INITIAL_CAMERA_SCALE = __INITIAL_CAMERA_SCALE__;
+    const actionEvents = buildActionEvents();
     window.replayDebug = {
       timeline,
       gameAssets,
@@ -2664,6 +2715,62 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         fragment.appendChild(button);
       }
       entityRoster.replaceChildren(fragment);
+    }
+    function buildActionEvents() {
+      const events = [];
+      let previousAction = null;
+      for (let frameIndex = 0; frameIndex < timeline.length; frameIndex += 1) {
+        const frame = timeline[frameIndex] || {};
+        const actionName = String(frame.action || '');
+        if (actionName === previousAction) continue;
+        const previousEvent = events[events.length - 1];
+        if (previousEvent) {
+          previousEvent.endIndex = Math.max(previousEvent.index, frameIndex - 1);
+          previousEvent.endTime = Number(frame.time ?? previousEvent.time);
+          previousEvent.duration = Math.max(0, previousEvent.endTime - previousEvent.time);
+        }
+        events.push({
+          index: frameIndex,
+          endIndex: frameIndex,
+          decision: Number(frame.decision || 0),
+          time: Number(frame.time || 0),
+          endTime: Number(frame.time || 0),
+          duration: 0,
+          action: actionName,
+        });
+        previousAction = actionName;
+      }
+      const lastFrame = timeline[timeline.length - 1] || {};
+      const lastEvent = events[events.length - 1];
+      if (lastEvent) {
+        lastEvent.endIndex = Math.max(lastEvent.index, timeline.length - 1);
+        lastEvent.endTime = Number(lastFrame.time ?? lastEvent.time);
+        lastEvent.duration = Math.max(0, lastEvent.endTime - lastEvent.time);
+      }
+      return events;
+    }
+    function renderActionEventLog() {
+      if (!eventLog) return;
+      const fragment = document.createDocumentFragment();
+      for (const event of actionEvents) {
+        const active = idx >= event.index && idx <= event.endIndex;
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = `event-log-row${active ? ' active' : ''}`;
+        row.dataset.index = String(event.index);
+
+        const time = document.createElement('span');
+        time.textContent = `t=${fmtTime(event.time)}`;
+        const label = document.createElement('span');
+        label.textContent = event.action || '';
+        const duration = document.createElement('span');
+        duration.textContent = `${Math.round(event.duration)}s`;
+
+        row.append(time, label, duration);
+        row.addEventListener('click', () => show(event.index));
+        fragment.appendChild(row);
+      }
+      eventLog.replaceChildren(fragment);
     }
     function selectionBounds(entities) {
       if (!entities.length) return null;
@@ -4098,6 +4205,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       updatePayday(f);
       updateEntities(f);
       renderEntityRoster(f);
+      renderActionEventLog();
       updateMinimap();
       updateMiniMarkers(f);
       if (mode3d && renderer3d) renderer3d.render(f);

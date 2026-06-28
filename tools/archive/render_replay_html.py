@@ -754,7 +754,7 @@ def _entity_snapshot(env, args) -> list[dict]:
                 {
                     "id": shaft_entity_id,
                     "kind": "shaft",
-                    "sprite_key": "generic_mine_site",
+                    "sprite_key": _shaft_mesh_key(category),
                     "x": px,
                     "y": py,
                     "size": 42,
@@ -1199,6 +1199,19 @@ def _resource_mesh_key(category: str) -> str:
     if "schwefel" in normalized or "sulfur" in normalized:
         return "sulfur_resource"
     return "stone_resource"
+
+
+def _shaft_mesh_key(category: str) -> str:
+    normalized = str(category or "").lower()
+    if "eisen" in normalized or "iron" in normalized:
+        return "iron_shaft"
+    if "stein" in normalized or "stone" in normalized:
+        return "stone_shaft"
+    if "lehm" in normalized or "clay" in normalized:
+        return "clay_shaft"
+    if "schwefel" in normalized or "sulfur" in normalized:
+        return "sulfur_shaft"
+    return "generic_mine_site"
 
 
 def _building_icon_key(building_name: str) -> str:

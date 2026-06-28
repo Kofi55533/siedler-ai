@@ -217,10 +217,14 @@ ENTITY_SPECS: tuple[EntitySpec, ...] = (
     EntitySpec("tree_fir", "Tanne/Fichte", "resources", ("XD_Fir1.dff", "XD_Fir2.dff"), ("XD_Fir1.dds", "XD_Fir1Snow.dds"), (), ("i_res_wood.png",)),
     EntitySpec("tree_pine", "Kiefer", "resources", ("XD_Pine*.dff",), ("XD_Pine*.dds",), (), ("i_res_wood.png",)),
     EntitySpec("tree_leaf", "Laubbaum", "resources", ("XD_Tree*.dff",), ("XD_Tree*.dds",), (), ("i_res_wood.png",)),
-    EntitySpec("stone_resource", "Steinressource", "resources", ("XD_Stone*.dff",), ("XD_Stone*.dds", "XD_RessourceStone1.dds"), (), ("i_res_stone.png",)),
-    EntitySpec("clay_resource", "Lehmressource", "resources", ("XD_Clay*.dff",), ("XD_Clay*.dds", "XD_RessourceClay1.dds"), (), ("i_res_mud.png",)),
-    EntitySpec("iron_resource", "Eisenressource", "resources", ("XD_Iron*.dff",), ("XD_Iron*.dds", "XD_RessourceIron1.dds"), (), ("i_res_iron.png",)),
-    EntitySpec("sulfur_resource", "Schwefelressource", "resources", ("XD_Sulfur*.dff",), ("XD_Sulfur*.dds", "XD_RessourceSulfur1.dds"), (), ("i_res_sulfur.png",)),
+    EntitySpec("stone_resource", "Steinvorkommen", "resources", ("XD_StonePit*.dff",), ("XD_StonePit*.dds", "XD_RessourceStone*.dds"), (), ("i_res_stone.png",)),
+    EntitySpec("clay_resource", "Lehmgrube/Vorkommen", "resources", ("XD_ClayPit*.dff",), ("XD_ClayPit*.dds", "XD_RessourceClay*.dds"), (), ("i_res_mud.png",)),
+    EntitySpec("iron_resource", "Eisenvorkommen", "resources", ("XD_IronPit*.dff",), ("XD_IronPit*.dds", "XD_RessourceIron*.dds"), (), ("i_res_iron.png",)),
+    EntitySpec("sulfur_resource", "Schwefelvorkommen", "resources", ("XD_SulfurPit*.dff",), ("XD_SulfurPit*.dds", "XD_RessourceSulfur*.dds"), (), ("i_res_sulfur.png",)),
+    EntitySpec("stone_shaft", "Steinstollen/Minen-Slot", "resources", ("XD_Stone1.dff", "XD_Stone2.dff", "XD_Stone3.dff"), ("XD_Stone1.dds", "XD_Stone1medium.dds", "XD_RessourceStone*.dds"), (), ("b_small_generic.png",)),
+    EntitySpec("clay_shaft", "Lehmstollen/Minen-Slot", "resources", ("XD_Clay1.dff", "XD_Clay2.dff", "XD_Clay3.dff"), ("XD_RessourceClay*.dds",), (), ("b_small_generic.png",)),
+    EntitySpec("iron_shaft", "Eisenstollen/Minen-Slot", "resources", ("XD_Iron1.dff", "XD_Iron2.dff", "XD_Iron3.dff"), ("XD_RessourceIron*.dds",), (), ("b_small_generic.png",)),
+    EntitySpec("sulfur_shaft", "Schwefelstollen/Minen-Slot", "resources", ("XD_Sulfur1.dff", "XD_Sulfur2.dff", "XD_Sulfur3.dff"), ("XD_RessourceSulfur*.dds",), (), ("b_small_generic.png",)),
 )
 
 

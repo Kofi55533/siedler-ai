@@ -222,7 +222,7 @@ def _compact_animation_manifest(entries: list[dict]) -> dict:
             bool(record["track_data"]) and not bool(existing.get("track_data"))
         ) or (
             bool(record["track_data"]) == bool(existing.get("track_data"))
-            and role in {"idle", "walk", "run", "work"}
+            and (role in {"idle", "walk", "run", "work"} or role.startswith("work_"))
             and record["duration"] > 0
             and record["keyframes"] >= int(existing.get("keyframes", 0))
         ):
@@ -567,13 +567,56 @@ def _entity_snapshot(env, args) -> list[dict]:
         state_l = state.lower()
         if "walking" in state_l:
             return "walk"
-        if any(token in state_l for token in ("building", "construction", "extracting", "working", "eating", "resting", "camping")):
+        if any(token in state_l for token in ("building", "construction", "extracting", "working")):
             return "work"
+        if any(token in state_l for token in ("eating", "resting", "camping")):
+            return "idle"
         if kind in {"building", "site"}:
             return "built"
         if sprite_key in {"serf_wood", "serf_build", "serf_mine"} and state_l:
             return "work"
         return "idle"
+
+    def mine_work_role_for_position(xy) -> str | None:
+        pos = replay._as_xy(xy)
+        if pos is None:
+            return None
+        best_role = None
+        best_dist = float("inf")
+        for key, building_pos in getattr(env, "building_position_map", {}).items():
+            building_xy = replay._as_xy(building_pos)
+            if building_xy is None:
+                continue
+            building_name = key.rsplit("_", 1)[0] if key.rsplit("_", 1)[-1].isdigit() else key
+            mesh_key = _building_mesh_key(building_name)
+            role = None
+            if mesh_key.startswith("clay_mine_"):
+                role = "work_clay"
+            elif mesh_key.startswith("iron_mine_"):
+                role = "work_iron"
+            elif mesh_key.startswith("stone_mine_"):
+                role = "work_stone"
+            elif mesh_key.startswith("sulfur_mine_"):
+                role = "work_sulfur"
+            if role is None:
+                continue
+            dist = math.hypot(float(pos[0]) - float(building_xy[0]), float(pos[1]) - float(building_xy[1]))
+            if dist < best_dist:
+                best_dist = dist
+                best_role = role
+        return best_role if best_dist <= 1300.0 else None
+
+    def worker_animation_role(worker, worker_type: str, state: str) -> str:
+        state_l = state.lower()
+        if "walking" in state_l:
+            return "walk"
+        if "working" in state_l:
+            if worker_type == "miner":
+                return mine_work_role_for_position(getattr(worker, "workplace_position", None)) or "work"
+            return "work"
+        if any(token in state_l for token in ("eating", "resting", "camping", "idle")):
+            return "idle"
+        return animation_role("worker", state, _worker_mesh_key(worker))
 
     def orientation_deg_from_position(xy) -> float | None:
         if not isinstance(xy, dict):
@@ -598,6 +641,7 @@ def _entity_snapshot(env, args) -> list[dict]:
         anchor_y: float = 0.72,
         target_xy=None,
         orientation_deg: float | None = None,
+        anim_role: str | None = None,
     ) -> None:
         pos = replay._as_xy(xy)
         if pos is None:
@@ -613,7 +657,7 @@ def _entity_snapshot(env, args) -> list[dict]:
             "label": label,
             "state": state,
             "anchor_y": float(anchor_y),
-            "anim_role": animation_role(kind, state, sprite_key),
+            "anim_role": anim_role or animation_role(kind, state, sprite_key),
             "anim_seed": sum((idx + 1) * ord(char) for idx, char in enumerate(entity_id)) % 1000,
         }
         if orientation_deg is not None:
@@ -766,6 +810,7 @@ def _entity_snapshot(env, args) -> list[dict]:
             state,
             0.84,
             target_for_object(worker, state),
+            anim_role=worker_animation_role(worker, worker_type, state),
         )
 
     for index, serf in enumerate(getattr(env.production_system, "serfs", [])):
@@ -3726,12 +3771,18 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         const role = String(entity.anim_role || '').toLowerCase();
         const entry = animationByKey[entity.sprite_key] || {};
         const byRole = entry.by_role || {};
-        return byRole[role] || byRole.walk || byRole.work || byRole.idle || null;
+        if (byRole[role]) return byRole[role];
+        if (role.startsWith('work_')) return byRole.work || null;
+        if (role === 'work') return byRole.work || null;
+        if (role === 'walk') return byRole.walk || byRole.run || null;
+        if (role === 'run') return byRole.run || byRole.walk || null;
+        if (role === 'idle') return byRole.idle || null;
+        return null;
       }
       function defaultAnimationDuration(role) {
         if (role === 'walk') return 1.0;
         if (role === 'run') return 0.7;
-        if (role === 'work') return 1.2;
+        if (role === 'work' || role.startsWith('work_')) return 1.2;
         return 2.4;
       }
       function entityMotion(entity, frameTime, usingOriginalAnimation = false) {
@@ -3751,7 +3802,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           const stride = role === 'run' ? 2.5 : 2.0;
           y = Math.abs(Math.sin(phase * stride)) * (role === 'run' ? 5.0 : 3.4);
           scaleY = 1.0 + Math.sin(phase * stride + 1.1) * 0.025;
-        } else if (role === 'work' || state.includes('working') || state.includes('building') || state.includes('extracting')) {
+        } else if (role === 'work' || role.startsWith('work_') || state.includes('working') || state.includes('building') || state.includes('extracting')) {
           yaw += Math.sin(phase) * 0.11;
           y = Math.max(0, Math.sin(phase * 2.0)) * 1.8;
           scaleY = 1.0 + Math.sin(phase * 2.0 + 0.6) * 0.018;

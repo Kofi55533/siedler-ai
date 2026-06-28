@@ -892,6 +892,14 @@ def _animation_role(path: Path) -> str:
     if "run" in name:
         return "run"
     if "work" in name or "conveyor" in name or "pit_" in name or "door" in name:
+        if "claymine" in name:
+            return "work_clay"
+        if "ironmine" in name:
+            return "work_iron"
+        if "stonemine" in name:
+            return "work_stone"
+        if "sulfurmine" in name:
+            return "work_sulfur"
         return "work"
     if "idle" in name:
         return "idle"

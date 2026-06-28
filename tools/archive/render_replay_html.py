@@ -9,8 +9,10 @@ import html
 import json
 import math
 import os
+import re
 import shutil
 import sys
+import unicodedata
 from pathlib import Path
 
 import imageio.v2 as imageio
@@ -21,7 +23,7 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from environment import ActionPhase, SiedlerScharfschuetzenEnv
+from environment import ActionPhase, SiedlerScharfschuetzenEnv, get_building_level
 from expert_opening import ExpertOpeningController
 from tools.archive.export_original_graphics import export_original_graphics_report
 from tools.archive.render_wintersturm_background import (
@@ -1001,27 +1003,76 @@ def _load_render_icon(args, key: str, size: int, *, mesh: bool = False, sprite: 
 
 
 def _building_mesh_key(building_name: str) -> str:
-    normalized = replay.get_base_building_name(building_name).lower()
-    if "hauptquartier" in normalized or "headquarter" in normalized:
-        return "headquarters_1"
-    if "hochschule" in normalized or "university" in normalized:
-        return "university_1"
-    if "kloster" in normalized or "monastery" in normalized:
-        return "monastery_1"
-    if "dorfzentrum" in normalized or "village" in normalized:
-        return "village_center_1"
-    if "wohnhaus" in normalized or "residence" in normalized:
-        return "residence_1"
-    if "bauernhof" in normalized or "farm" in normalized:
-        return "farm_1"
-    if "lehm" in normalized:
-        return "clay_mine_1"
-    if "eisen" in normalized:
-        return "iron_mine_1"
-    if "stein" in normalized:
-        return "stone_mine_1"
-    if "schwefel" in normalized or "sulfur" in normalized:
-        return "sulfur_mine_1"
+    base = replay.get_base_building_name(building_name)
+    normalized = base.lower()
+    folded = unicodedata.normalize("NFKD", normalized).encode("ascii", "ignore").decode("ascii")
+    level = max(1, min(3, int(get_building_level(building_name) or 1)))
+    level_2 = max(1, min(2, level))
+
+    def has(*tokens: str) -> bool:
+        return any(token in normalized or token in folded for token in tokens)
+
+    if has("hauptquartier", "headquarter"):
+        return f"headquarters_{level}"
+    if has("hochschule", "university"):
+        return f"university_{level_2}"
+    if has("kloster", "monastery"):
+        return f"monastery_{level}"
+    if has("dorfzentrum", "village"):
+        return f"village_center_{level}"
+    if has("wohnhaus", "residence"):
+        return f"residence_{level}"
+    if has("bauernhof", "farm"):
+        return f"farm_{level}"
+    if has("sagemuhle", "saegemuhle", "sagem", "saaag", "saw"):
+        return f"sawmill_{level_2}"
+    if has("steinmetz", "stonemason"):
+        return f"stonemason_{level_2}"
+    if has("lehmhutte", "lehmhuette", "lehmha", "brickworks"):
+        return f"brickworks_{level_2}"
+    if has("alchimist", "alchemist"):
+        return f"alchemist_{level_2}"
+    if has("schmiede", "blacksmith"):
+        return f"blacksmith_{level}"
+    if has("bank"):
+        return f"bank_{level_2}"
+    if has("markt", "market"):
+        return f"market_{level_2}"
+    if has("kaserne", "barracks"):
+        return f"barracks_{level_2}"
+    if has("schiessplatz", "schieplatz", "schie", "archery"):
+        return f"archery_{level_2}"
+    if has("stall", "stable"):
+        return f"stable_{level_2}"
+    if has("kanongiesserei", "kanongieerei", "kanongie", "foundry"):
+        return f"foundry_{level_2}"
+    if has("buchsenmacherei", "buechsenmacherei", "baaa14chsen", "gunsmith"):
+        return f"gunsmith_{level_2}"
+    if has("taverne", "tavern"):
+        return f"tavern_{level_2}"
+    if has("wetterturm", "weather tower", "weathertower"):
+        return "weather_tower_1"
+    if has("wetterkraftwerk", "powerplant", "power plant"):
+        return "power_plant_1"
+    if has("architektenstube", "masterbuilder", "master builder"):
+        return "master_builder_workshop"
+    if has("brucke", "braaa14cke", "bridge"):
+        return "bridge_1"
+    if "pb_beautification" in folded or "pb_beautification" in normalized:
+        match = re.search(r"beautification(\d+)", folded)
+        if match:
+            return f"beautification_{int(match.group(1)):02d}"
+        return "beautification_01"
+    if has("turm", "tower"):
+        return f"tower_{level}"
+    if has("lehm"):
+        return f"clay_mine_{level}"
+    if has("eisen"):
+        return f"iron_mine_{level}"
+    if has("stein"):
+        return f"stone_mine_{level}"
+    if has("schwefel", "sulfur"):
+        return f"sulfur_mine_{level}"
     if "mine" in normalized or "grube" in normalized:
         return "generic_mine_site"
     return "headquarters_1"
@@ -1099,12 +1150,14 @@ def _building_icon_key(building_name: str) -> str:
 
 def _building_sprite_size(building_name: str, *, construction: bool = False) -> int:
     key = _building_mesh_key(building_name)
-    if key == "headquarters_1":
+    if key.startswith("headquarters_"):
         size = 112
-    elif key in {"university_1", "monastery_1", "village_center_1"}:
+    elif key.startswith(("university_", "monastery_", "village_center_")):
         size = 92
-    elif key in {"residence_1", "farm_1"}:
+    elif key.startswith(("residence_", "farm_")):
         size = 72
+    elif key.startswith("tower_"):
+        size = 86
     elif "mine" in key:
         size = 68
     else:

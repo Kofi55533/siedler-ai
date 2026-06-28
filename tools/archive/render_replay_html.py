@@ -2427,6 +2427,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     let cameraPitch = CAMERA_DEFAULT_PITCH;
     let showAllTrails = false;
     let showGridOverlay = false;
+    let renderedEventLogIndex = -1;
     if (debugMapOverlay && walkabilityOverlay) debugMapOverlay.src = walkabilityOverlay;
     const INITIAL_CAMERA_X = __INITIAL_CAMERA_X__;
     const INITIAL_CAMERA_Y = __INITIAL_CAMERA_Y__;
@@ -2749,11 +2750,23 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       }
       return events;
     }
-    function renderActionEventLog() {
+    function activeActionEventIndex() {
+      for (let eventIndex = 0; eventIndex < actionEvents.length; eventIndex += 1) {
+        const event = actionEvents[eventIndex];
+        if (idx >= event.index && idx <= event.endIndex) return eventIndex;
+      }
+      return -1;
+    }
+    function renderActionEventLog(force = false) {
       if (!eventLog) return;
+      const activeIndex = activeActionEventIndex();
+      if (!force && activeIndex === renderedEventLogIndex && eventLog.childElementCount === actionEvents.length) return;
+      renderedEventLogIndex = activeIndex;
       const fragment = document.createDocumentFragment();
-      for (const event of actionEvents) {
-        const active = idx >= event.index && idx <= event.endIndex;
+      let activeRow = null;
+      for (let eventIndex = 0; eventIndex < actionEvents.length; eventIndex += 1) {
+        const event = actionEvents[eventIndex];
+        const active = eventIndex === activeIndex;
         const row = document.createElement('button');
         row.type = 'button';
         row.className = `event-log-row${active ? ' active' : ''}`;
@@ -2768,9 +2781,11 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
 
         row.append(time, label, duration);
         row.addEventListener('click', () => show(event.index));
+        if (active) activeRow = row;
         fragment.appendChild(row);
       }
       eventLog.replaceChildren(fragment);
+      if (activeRow && !timer) activeRow.scrollIntoView({ block: 'nearest' });
     }
     function selectionBounds(entities) {
       if (!entities.length) return null;

@@ -1612,6 +1612,70 @@ def _animation_summary(entries: list[dict]) -> dict:
     return {"files": len(entries), "parsed": parsed, "by_role": by_role}
 
 
+def _mapped_asset_paths(entities: list[dict]) -> set[str]:
+    mapped: set[str] = set()
+    for entity in entities:
+        for key in ("model_files", "texture_files", "animation_files", "gui_files"):
+            for item in entity.get(key) or []:
+                path = str(item.get("path") or "").replace("\\", "/").lower()
+                if path:
+                    mapped.add(path)
+    return mapped
+
+
+def _write_asset_inventory(game_root: Path, output_dir: Path, entities: list[dict]) -> dict:
+    mapped_paths = _mapped_asset_paths(entities)
+    suffixes = (".dff", ".anm", ".dds", ".png")
+    files: list[dict] = []
+    by_extension: dict[str, dict] = {}
+    unmapped_samples: dict[str, list[dict]] = {}
+
+    for path in sorted(_iter_graphics_files(game_root, suffixes), key=lambda item: _rel_to_game(game_root, item).lower()):
+        rel = _rel_to_game(game_root, path)
+        rel_key = rel.lower()
+        ext = path.suffix.lower().lstrip(".")
+        mapped = rel_key in mapped_paths
+        size = int(path.stat().st_size)
+        entry = {
+            "name": path.name,
+            "path": rel,
+            "extension": ext,
+            "stem": path.stem,
+            "bytes": size,
+            "mapped_to_replay": mapped,
+        }
+        files.append(entry)
+
+        ext_summary = by_extension.setdefault(ext, {"files": 0, "mapped": 0, "unmapped": 0, "bytes": 0})
+        ext_summary["files"] = int(ext_summary["files"]) + 1
+        ext_summary["bytes"] = int(ext_summary["bytes"]) + size
+        if mapped:
+            ext_summary["mapped"] = int(ext_summary["mapped"]) + 1
+        else:
+            ext_summary["unmapped"] = int(ext_summary["unmapped"]) + 1
+            samples = unmapped_samples.setdefault(ext, [])
+            if len(samples) < 60:
+                samples.append({"name": path.name, "path": rel, "bytes": size})
+
+    mapped_count = sum(1 for item in files if item["mapped_to_replay"])
+    summary = {
+        "total_files": len(files),
+        "mapped_files": mapped_count,
+        "unmapped_files": len(files) - mapped_count,
+        "bytes": sum(int(item["bytes"]) for item in files),
+        "by_extension": dict(sorted(by_extension.items())),
+        "unmapped_samples": dict(sorted(unmapped_samples.items())),
+    }
+    payload = {
+        "game_root": str(game_root),
+        "summary": summary,
+        "files": files,
+    }
+    target = output_dir / "asset_inventory.json"
+    target.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return {"path": _rel_to_output(output_dir, target), "summary": summary}
+
+
 def _status_for(models: list[Path], textures: list[Path], animations: list[Path], gui: list[Path]) -> str:
     if models and textures and animations:
         return "model_texture_animation"
@@ -1691,11 +1755,17 @@ def export_original_graphics_report(game_root: Path | None, output_dir: Path, th
         "with_texture_preview": sum(1 for entity in entities if entity["texture_preview"]),
         "with_animation_metadata": sum(1 for entity in entities if (entity.get("animation_summary") or {}).get("parsed", 0) > 0),
     }
+    asset_inventory = _write_asset_inventory(game_root, output_dir, entities)
+    inventory_summary = asset_inventory.get("summary") or {}
+    summary["raw_asset_files"] = int(inventory_summary.get("total_files", 0))
+    summary["raw_asset_mapped_files"] = int(inventory_summary.get("mapped_files", 0))
+    summary["raw_asset_unmapped_files"] = int(inventory_summary.get("unmapped_files", 0))
     manifest = {
         "enabled": True,
         "game_root": str(game_root),
         "thumb_size": int(thumb_size),
         "summary": summary,
+        "asset_inventory": asset_inventory,
         "entities": entities,
         "notes": [
             "DDS texture atlases are converted to local PNG previews.",
@@ -1737,6 +1807,9 @@ def _short_animation_summary(summary: dict) -> str:
 def _write_html(output_dir: Path, manifest: dict) -> None:
     entities = manifest.get("entities") or []
     summary = manifest.get("summary") or {}
+    inventory = manifest.get("asset_inventory") or {}
+    inventory_path = str(inventory.get("path") or "")
+    inventory_link = f'<a href="{html.escape(inventory_path)}">Asset-Inventar JSON</a>' if inventory_path else ""
     rows = []
     for entity in entities:
         texture_preview = entity.get("texture_preview") or ""
@@ -1797,6 +1870,8 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
     header {{ position:sticky; top:0; z-index:1; padding:16px 20px; background:#24180f; border-bottom:1px solid #7b5c36; }}
     h1 {{ margin:0 0 6px; font-size:22px; }}
     .summary {{ display:flex; gap:14px; flex-wrap:wrap; color:#d6c29a; font-size:13px; }}
+    .summary a {{ color:#ffe09a; text-decoration:none; }}
+    .summary a:hover {{ text-decoration:underline; }}
     main {{ padding:18px; display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:14px; }}
     .card {{ background:#1c1f1f; border:1px solid #4f4635; border-radius:6px; padding:12px; box-shadow:0 8px 22px rgba(0,0,0,.28); }}
     .thumbs {{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:10px; }}
@@ -1824,6 +1899,9 @@ def _write_html(output_dir: Path, manifest: dict) -> None:
       <span>WebGL-Modelle: {int(summary.get("with_model_3d", 0))}</span>
       <span>Sprites: {int(summary.get("with_sprite_preview", 0))}</span>
       <span>Mesh-Previews: {int(summary.get("with_mesh_preview", 0))}</span>
+      <span>Rohdateien: {int(summary.get("raw_asset_files", 0))}</span>
+      <span>Ungemappt: {int(summary.get("raw_asset_unmapped_files", 0))}</span>
+      <span>{inventory_link}</span>
     </div>
   </header>
   <main>

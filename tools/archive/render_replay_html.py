@@ -1845,6 +1845,12 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       font: 700 11px/1.35 system-ui, sans-serif;
       margin-top: 4px;
     }
+    .selection-detail {
+      color: #bcae88;
+      font: 700 10px/1.35 system-ui, sans-serif;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+    }
     .selection-actions {
       display: flex;
       gap: 6px;
@@ -2112,6 +2118,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           <div id="selectedTitle" class="selection-title">Keine Auswahl</div>
           <div id="selectedMeta" class="selection-meta"></div>
           <div id="selectedCoords" class="selection-meta"></div>
+          <div id="selectedDetails" class="selection-detail"></div>
           <div class="selection-actions">
             <button class="toolbutton" id="focusSelected">Fokus</button>
             <button class="toolbutton" id="clearSelected">Abwahl</button>
@@ -2193,6 +2200,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const selectedTitle = document.getElementById('selectedTitle');
     const selectedMeta = document.getElementById('selectedMeta');
     const selectedCoords = document.getElementById('selectedCoords');
+    const selectedDetails = document.getElementById('selectedDetails');
     const screenMessage = document.getElementById('screenMessage');
     const messageIcon = document.getElementById('messageIcon');
     const messageText = document.getElementById('messageText');
@@ -2484,6 +2492,40 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         maxY = Math.max(maxY, y + size * .5);
       }
       return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+    }
+    function entityTrackStats(entityId) {
+      let previous = null;
+      let distance = 0;
+      let samples = 0;
+      let stateChanges = 0;
+      let targetChanges = 0;
+      for (let frameIndex = 0; frameIndex <= idx; frameIndex += 1) {
+        const entry = ((timeline[frameIndex] || {}).entities || []).find(item => item.id === entityId);
+        if (!entry) continue;
+        samples += 1;
+        if (previous) {
+          const dx = Number(entry.x || 0) - Number(previous.x || 0);
+          const dy = Number(entry.y || 0) - Number(previous.y || 0);
+          if (dx || dy) distance += Math.hypot(dx, dy);
+          if (String(entry.state || '') !== String(previous.state || '')) stateChanges += 1;
+          const target = `${entry.target_x ?? ''},${entry.target_y ?? ''}`;
+          const previousTarget = `${previous.target_x ?? ''},${previous.target_y ?? ''}`;
+          if (target !== previousTarget) targetChanges += 1;
+        }
+        previous = entry;
+      }
+      return {
+        samples,
+        distance,
+        stateChanges,
+        targetChanges,
+      };
+    }
+    function selectedTargetLine(entity) {
+      if (!entity || entity.target_x === undefined || entity.target_y === undefined) return 'Ziel: keines';
+      const dx = Number(entity.target_x || 0) - Number(entity.x || 0);
+      const dy = Number(entity.target_y || 0) - Number(entity.y || 0);
+      return `Ziel x=${Math.round(Number(entity.target_x || 0))} y=${Math.round(Number(entity.target_y || 0))} dist=${Math.round(Math.hypot(dx, dy))}px`;
     }
     function focusSelection() {
       const entities = selectedEntities();
@@ -3679,6 +3721,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         selectedTitle.textContent = 'Keine Auswahl';
         selectedMeta.textContent = '';
         selectedCoords.textContent = '';
+        selectedDetails.textContent = '';
         selectedPortrait.src = assetByKey.serf || '';
         return;
       }
@@ -3689,13 +3732,16 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         selectedCoords.textContent = bounds
           ? `Bereich x=${Math.round(bounds.minX)}-${Math.round(bounds.maxX)} y=${Math.round(bounds.minY)}-${Math.round(bounds.maxY)}`
           : 'Mehrfachauswahl';
+        selectedDetails.textContent = 'Mehrfachauswahl: einzelne Entity waehlen fuer Ziel und Laufwegdaten.';
         selectedPortrait.src = entity ? selectionFallbackSrc(entity) : (assetByKey.serf || '');
         setMessage(`${entities.length} Entitaeten ausgewaehlt`, assetByKey.onscreen_worker || selectedPortrait.src);
         return;
       }
       selectedTitle.textContent = entity.label || entity.kind || entity.id;
       selectedMeta.textContent = `${entity.kind || ''} ${entity.state || ''}`.trim();
-      selectedCoords.textContent = `x=${Math.round(Number(entity.x || 0))} y=${Math.round(Number(entity.y || 0))}`;
+      selectedCoords.textContent = `x=${Math.round(Number(entity.x || 0))} y=${Math.round(Number(entity.y || 0))} | ${selectedTargetLine(entity)}`;
+      const stats = entityTrackStats(entity.id);
+      selectedDetails.textContent = `Track ${stats.samples} Frames, Weg ${Math.round(stats.distance)}px, Statuswechsel ${stats.stateChanges}, Zielwechsel ${stats.targetChanges}`;
       selectedPortrait.src = selectionFallbackSrc(entity);
       setMessage(entity.label || entity.id, entity.kind === 'serf' ? (assetByKey.onscreen_serf || selectedPortrait.src) : (assetByKey.onscreen_worker || selectedPortrait.src));
     }

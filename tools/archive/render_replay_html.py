@@ -1855,6 +1855,51 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       border: 1px solid rgba(255,255,255,.13);
       border-radius: 3px;
     }
+    .entity-roster {
+      margin-top: 9px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 226, 147, .20);
+    }
+    .entity-roster-title {
+      color: #fff1bd;
+      font: 800 12px/1.2 system-ui, sans-serif;
+      margin-bottom: 6px;
+    }
+    .entity-roster-list {
+      max-height: 176px;
+      overflow: auto;
+      display: grid;
+      gap: 4px;
+      padding-right: 2px;
+    }
+    .entity-roster-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(68px, .75fr) minmax(0, 1.25fr) auto;
+      gap: 6px;
+      align-items: center;
+      border: 1px solid rgba(255, 226, 147, .18);
+      border-radius: 3px;
+      background: rgba(0,0,0,.24);
+      color: #ead9ae;
+      font: 700 10px/1.25 system-ui, sans-serif;
+      padding: 5px 6px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .entity-roster-row:hover {
+      background: rgba(76, 58, 32, .58);
+    }
+    .entity-roster-row.selected {
+      border-color: rgba(255, 232, 132, .76);
+      background: rgba(116, 80, 34, .66);
+      color: #fff0bc;
+    }
+    .entity-roster-row span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .bottomhud {
       position: absolute;
       left: 10px;
@@ -2175,6 +2220,10 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
           </div>
           <button class="toolbutton" id="toggleGridOverlay" style="margin-top:8px;">Raster Overlay</button>
         </div>
+        <div class="entity-roster debug-only">
+          <div class="entity-roster-title">Einheiten</div>
+          <div id="entityRoster" class="entity-roster-list"></div>
+        </div>
         <button class="toolbutton" id="fit" style="margin-top:10px;">HQ Kamera</button>
       </div>
       <div class="minimap">
@@ -2278,6 +2327,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
     const selectedMeta = document.getElementById('selectedMeta');
     const selectedCoords = document.getElementById('selectedCoords');
     const selectedDetails = document.getElementById('selectedDetails');
+    const entityRoster = document.getElementById('entityRoster');
     const screenMessage = document.getElementById('screenMessage');
     const messageIcon = document.getElementById('messageIcon');
     const messageText = document.getElementById('messageText');
@@ -2576,6 +2626,45 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         .map(([kind, count]) => `${kind}: ${count}`)
         .join(', ');
     }
+    function entityRosterSortKey(entity) {
+      const kindRank = entity.kind === 'serf' ? 0 : entity.kind === 'worker' ? 1 : 2;
+      const idNumber = Number(String(entity.id || '').replace(/[^0-9]+/g, ''));
+      return [kindRank, Number.isFinite(idNumber) ? idNumber : 99999, String(entity.id || '')];
+    }
+    function renderEntityRoster(f) {
+      if (!entityRoster) return;
+      const rows = ((f && f.entities) || [])
+        .filter(entity => entity.kind === 'serf' || entity.kind === 'worker')
+        .sort((a, b) => {
+          const ak = entityRosterSortKey(a);
+          const bk = entityRosterSortKey(b);
+          return ak[0] - bk[0] || ak[1] - bk[1] || String(ak[2]).localeCompare(String(bk[2]));
+        });
+      const fragment = document.createDocumentFragment();
+      for (const entity of rows) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `entity-roster-row${selectedEntityIds.has(entity.id) ? ' selected' : ''}`;
+        button.dataset.entityId = entity.id;
+
+        const label = document.createElement('span');
+        label.textContent = entity.label || entity.id || entity.kind || '';
+        const state = document.createElement('span');
+        state.textContent = entity.state || '';
+        const coords = document.createElement('span');
+        coords.textContent = `${Math.round(Number(entity.x || 0))},${Math.round(Number(entity.y || 0))}`;
+
+        button.append(label, state, coords);
+        button.addEventListener('click', event => {
+          selectEntity(entity.id, false, event.shiftKey || event.ctrlKey || event.metaKey);
+        });
+        button.addEventListener('dblclick', event => {
+          selectEntity(entity.id, true, event.shiftKey || event.ctrlKey || event.metaKey);
+        });
+        fragment.appendChild(button);
+      }
+      entityRoster.replaceChildren(fragment);
+    }
     function selectionBounds(entities) {
       if (!entities.length) return null;
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -2649,6 +2738,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         node.classList.toggle('selected', selectedEntityIds.has(nodeId));
       }
       renderSelection();
+      renderEntityRoster(timeline[idx] || {});
       updateMiniMarkers(timeline[idx] || {});
       if (focus) focusSelection();
       if (mode3d && renderer3d) renderer3d.render(timeline[idx]);
@@ -4007,6 +4097,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       updateResources(f);
       updatePayday(f);
       updateEntities(f);
+      renderEntityRoster(f);
       updateMinimap();
       updateMiniMarkers(f);
       if (mode3d && renderer3d) renderer3d.render(f);

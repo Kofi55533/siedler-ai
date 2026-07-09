@@ -78,6 +78,17 @@ def _pb_spec(
     return EntitySpec(key, label, group, (f"{stem}.dff",), (f"{stem}*.dds",), animation_globs, gui_globs)
 
 
+def _zb_spec(key: str, label: str, stem: str) -> EntitySpec:
+    """Construction-site model with the shared original construction textures."""
+    return EntitySpec(
+        key,
+        label,
+        "construction_sites",
+        (f"{stem}.dff",),
+        (f"{stem}*.dds", "ZB_ConstructionSite1.dds", "ZB_ConstructionSite2.dds"),
+    )
+
+
 ENTITY_SPECS: tuple[EntitySpec, ...] = (
     EntitySpec(
         "serf_idle",
@@ -214,17 +225,34 @@ ENTITY_SPECS: tuple[EntitySpec, ...] = (
     _pb_spec("sulfur_mine_2", "Schwefelmine 2", "mines", "PB_SulfurMine2", animation_globs=("PB_SulfurMine*.anm",), gui_globs=("b_small_generic.png",)),
     _pb_spec("sulfur_mine_3", "Schwefelmine 3", "mines", "PB_SulfurMine3", animation_globs=("PB_SulfurMine*.anm",), gui_globs=("b_small_generic.png",)),
     EntitySpec("generic_mine_site", "Minen-Baustelle/Slot", "mines", ("PB_GenericMine.dff",), ("PB_GenericMine.dds",), (), ("b_small_generic.png",)),
+    _zb_spec("site_generic_1", "Allgemeine Baustelle", "ZB_ConstructionSite1"),
+    _zb_spec("site_university_1", "Hochschul-Baustelle", "ZB_ConstructionSiteUniversity1"),
+    _zb_spec("site_monastery_1", "Kloster-Baustelle", "ZB_ConstructionSiteMonastery1"),
+    _zb_spec("site_village_center_1", "Dorfzentrum-Baustelle", "ZB_ConstructionSiteVillageCenter1"),
+    _zb_spec("site_residence_1", "Wohnhaus-Baustelle", "ZB_ConstructionSiteResidence1"),
+    _zb_spec("site_farm_1", "Bauernhof-Baustelle", "ZB_ConstructionSiteFarm1"),
+    _zb_spec("site_mine_iron_1", "Eisen-/Lehmmine-Baustelle", "ZB_ConstructionSiteIronMine1"),
+    _zb_spec("site_mine_stone_1", "Steinmine-Baustelle", "ZB_ConstructionSiteStoneMine1"),
+    _zb_spec("site_mine_sulfur_1", "Schwefelmine-Baustelle", "ZB_ConstructionSiteSulfurMine1"),
+    _zb_spec("site_mint_1", "Ziegel-/Alchemie-Baustelle", "ZB_ConstructionSiteMint1"),
+    _zb_spec("site_stonemason_1", "Steinmetz-/Saege-Baustelle", "ZB_ConstructionSiteStonemason1"),
+    _zb_spec("site_blacksmith_1", "Schmiede-Baustelle", "ZB_ConstructionSiteBlacksmith1"),
+    _zb_spec("site_market_1", "Markt-/Giesserei-Baustelle", "ZB_ConstructionSiteMarket1"),
+    _zb_spec("site_barracks_1", "Kasernen-Baustelle", "ZB_ConstructionSiteBarracks1"),
+    _zb_spec("site_archery_1", "Schiessplatz-Baustelle", "ZB_ConstructionSiteArchery1"),
+    _zb_spec("site_stables_1", "Stall-Baustelle", "ZB_ConstructionSiteStables1"),
+    _zb_spec("site_tower_1", "Turm-Baustelle", "ZB_ConstructionSiteTower1"),
     EntitySpec("tree_fir", "Tanne/Fichte", "resources", ("XD_Fir1.dff", "XD_Fir2.dff"), ("XD_Fir1.dds", "XD_Fir1Snow.dds"), (), ("i_res_wood.png",)),
     EntitySpec("tree_pine", "Kiefer", "resources", ("XD_Pine*.dff",), ("XD_Pine*.dds",), (), ("i_res_wood.png",)),
     EntitySpec("tree_leaf", "Laubbaum", "resources", ("XD_Tree*.dff",), ("XD_Tree*.dds",), (), ("i_res_wood.png",)),
-    EntitySpec("stone_resource", "Steinvorkommen", "resources", ("XD_StonePit*.dff",), ("XD_StonePit*.dds", "XD_RessourceStone*.dds"), (), ("i_res_stone.png",)),
-    EntitySpec("clay_resource", "Lehmgrube/Vorkommen", "resources", ("XD_ClayPit*.dff",), ("XD_ClayPit*.dds", "XD_RessourceClay*.dds"), (), ("i_res_mud.png",)),
-    EntitySpec("iron_resource", "Eisenvorkommen", "resources", ("XD_IronPit*.dff",), ("XD_IronPit*.dds", "XD_RessourceIron*.dds"), (), ("i_res_iron.png",)),
-    EntitySpec("sulfur_resource", "Schwefelvorkommen", "resources", ("XD_SulfurPit*.dff",), ("XD_SulfurPit*.dds", "XD_RessourceSulfur*.dds"), (), ("i_res_sulfur.png",)),
-    EntitySpec("stone_shaft", "Steinstollen/Minen-Slot", "resources", ("XD_Stone1.dff", "XD_Stone2.dff", "XD_Stone3.dff"), ("XD_Stone1.dds", "XD_Stone1medium.dds", "XD_RessourceStone*.dds"), (), ("b_small_generic.png",)),
-    EntitySpec("clay_shaft", "Lehmstollen/Minen-Slot", "resources", ("XD_Clay1.dff", "XD_Clay2.dff", "XD_Clay3.dff"), ("XD_RessourceClay*.dds",), (), ("b_small_generic.png",)),
-    EntitySpec("iron_shaft", "Eisenstollen/Minen-Slot", "resources", ("XD_Iron1.dff", "XD_Iron2.dff", "XD_Iron3.dff"), ("XD_RessourceIron*.dds",), (), ("b_small_generic.png",)),
-    EntitySpec("sulfur_shaft", "Schwefelstollen/Minen-Slot", "resources", ("XD_Sulfur1.dff", "XD_Sulfur2.dff", "XD_Sulfur3.dff"), ("XD_RessourceSulfur*.dds",), (), ("b_small_generic.png",)),
+    EntitySpec("stone_mine_pit", "Steingrube/Minenplatz", "resources", ("XD_StonePit*.dff",), ("XD_StonePit*.dds", "XD_RessourceStone*.dds"), (), ("i_res_stone.png",)),
+    EntitySpec("clay_mine_pit", "Lehmgrube/Minenplatz", "resources", ("XD_ClayPit*.dff",), ("XD_ClayPit*.dds", "XD_RessourceClay*.dds"), (), ("i_res_mud.png",)),
+    EntitySpec("iron_mine_pit", "Eisengrube/Minenplatz", "resources", ("XD_IronPit*.dff",), ("XD_IronPit*.dds", "XD_RessourceIron*.dds"), (), ("i_res_iron.png",)),
+    EntitySpec("sulfur_mine_pit", "Schwefelgrube/Minenplatz", "resources", ("XD_SulfurPit*.dff",), ("XD_SulfurPit*.dds", "XD_RessourceSulfur*.dds"), (), ("i_res_sulfur.png",)),
+    EntitySpec("stone_small_deposit", "Steinklumpen", "resources", ("XD_Stone1.dff", "XD_Stone2.dff", "XD_Stone3.dff"), ("XD_Stone1.dds", "XD_Stone1medium.dds", "XD_RessourceStone*.dds"), (), ("i_res_stone.png",)),
+    EntitySpec("clay_small_deposit", "Lehmklumpen", "resources", ("XD_Clay1.dff", "XD_Clay2.dff", "XD_Clay3.dff"), ("XD_RessourceClay*.dds",), (), ("i_res_mud.png",)),
+    EntitySpec("iron_small_deposit", "Eisenklumpen", "resources", ("XD_Iron1.dff", "XD_Iron2.dff", "XD_Iron3.dff"), ("XD_RessourceIron*.dds",), (), ("i_res_iron.png",)),
+    EntitySpec("sulfur_small_deposit", "Schwefelklumpen", "resources", ("XD_Sulfur1.dff", "XD_Sulfur2.dff", "XD_Sulfur3.dff"), ("XD_RessourceSulfur*.dds",), (), ("i_res_sulfur.png",)),
 )
 
 

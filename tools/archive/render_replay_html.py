@@ -565,14 +565,14 @@ def _entity_snapshot(env, args) -> list[dict]:
 
     def animation_role(kind: str, state: str, sprite_key: str) -> str:
         state_l = state.lower()
+        if kind in {"building", "site"}:
+            return "idle"
         if "walking" in state_l:
             return "walk"
         if any(token in state_l for token in ("building", "construction", "extracting", "working")):
             return "work"
         if any(token in state_l for token in ("eating", "resting", "camping")):
             return "idle"
-        if kind in {"building", "site"}:
-            return "built"
         if sprite_key in {"serf_wood", "serf_build", "serf_mine"} and state_l:
             return "work"
         return "idle"
@@ -730,11 +730,11 @@ def _entity_snapshot(env, args) -> list[dict]:
                 {
                     "id": resource_entity_id,
                     "kind": "resource",
-                    "sprite_key": _resource_mesh_key(category),
+                    "sprite_key": _mine_pit_mesh_key(category),
                     "x": px,
                     "y": py,
                     "size": 48,
-                    "label": f"{category} Vorkommen",
+                    "label": f"{category} Grube (Minenplatz)",
                     "state": f"remaining {int(float(deposit.get('remaining', 0) or 0))}",
                     "anchor_y": 0.78,
                     "anim_role": "idle",
@@ -749,16 +749,16 @@ def _entity_snapshot(env, args) -> list[dict]:
             px, py = _frame_xy(env, args, float(shaft.get("x", 0)), float(shaft.get("y", 0)))
             if covered_by_mine(px, py, radius=38.0):
                 continue
-            shaft_entity_id = f"shaft:{category}:{shaft_index}"
+            shaft_entity_id = f"small_deposit:{category}:{shaft_index}"
             entities.append(
                 {
                     "id": shaft_entity_id,
                     "kind": "shaft",
-                    "sprite_key": _shaft_mesh_key(category),
+                    "sprite_key": _small_deposit_mesh_key(category),
                     "x": px,
                     "y": py,
                     "size": 42,
-                    "label": f"{category} Stollen",
+                    "label": f"{category} Klumpen",
                     "state": f"remaining {int(float(shaft.get('remaining', 0) or 0))}",
                     "anchor_y": 0.76,
                     "anim_role": "idle",
@@ -788,7 +788,7 @@ def _entity_snapshot(env, args) -> list[dict]:
         add_entity(
             f"site:{site_id}",
             "site",
-            _building_mesh_key(building_name),
+            _construction_mesh_key(building_name),
             site_position,
             _building_sprite_size(building_name, construction=True),
             f"{building_name} Baustelle {int(progress)}",
@@ -1150,6 +1150,37 @@ def _building_mesh_key(building_name: str) -> str:
     return "headquarters_1"
 
 
+def _construction_mesh_key(building_name: str) -> str:
+    """Map a construction site to the model declared by the original entity XML."""
+    building_key = _building_mesh_key(building_name)
+    for prefix, site_key in (
+        ("headquarters_", "site_generic_1"),
+        ("university_", "site_university_1"),
+        ("monastery_", "site_monastery_1"),
+        ("village_center_", "site_village_center_1"),
+        ("residence_", "site_residence_1"),
+        ("farm_", "site_farm_1"),
+        ("sawmill_", "site_stonemason_1"),
+        ("stonemason_", "site_stonemason_1"),
+        ("brickworks_", "site_mint_1"),
+        ("alchemist_", "site_mint_1"),
+        ("blacksmith_", "site_blacksmith_1"),
+        ("market_", "site_market_1"),
+        ("foundry_", "site_market_1"),
+        ("barracks_", "site_barracks_1"),
+        ("archery_", "site_archery_1"),
+        ("stable_", "site_stables_1"),
+        ("tower_", "site_tower_1"),
+        ("clay_mine_", "site_mine_iron_1"),
+        ("iron_mine_", "site_mine_iron_1"),
+        ("stone_mine_", "site_mine_stone_1"),
+        ("sulfur_mine_", "site_mine_sulfur_1"),
+    ):
+        if building_key.startswith(prefix):
+            return site_key
+    return "site_generic_1"
+
+
 def _worker_mesh_key(worker) -> str:
     worker_type = str(getattr(worker, "worker_type", "") or "").lower()
     if "miner" in worker_type:
@@ -1188,29 +1219,29 @@ def _serf_mesh_key(serf) -> str:
     return "serf_idle"
 
 
-def _resource_mesh_key(category: str) -> str:
+def _mine_pit_mesh_key(category: str) -> str:
     normalized = str(category or "").lower()
     if "eisen" in normalized or "iron" in normalized:
-        return "iron_resource"
+        return "iron_mine_pit"
     if "stein" in normalized or "stone" in normalized:
-        return "stone_resource"
+        return "stone_mine_pit"
     if "lehm" in normalized or "clay" in normalized:
-        return "clay_resource"
+        return "clay_mine_pit"
     if "schwefel" in normalized or "sulfur" in normalized:
-        return "sulfur_resource"
-    return "stone_resource"
+        return "sulfur_mine_pit"
+    return "stone_mine_pit"
 
 
-def _shaft_mesh_key(category: str) -> str:
+def _small_deposit_mesh_key(category: str) -> str:
     normalized = str(category or "").lower()
     if "eisen" in normalized or "iron" in normalized:
-        return "iron_shaft"
+        return "iron_small_deposit"
     if "stein" in normalized or "stone" in normalized:
-        return "stone_shaft"
+        return "stone_small_deposit"
     if "lehm" in normalized or "clay" in normalized:
-        return "clay_shaft"
+        return "clay_small_deposit"
     if "schwefel" in normalized or "sulfur" in normalized:
-        return "sulfur_shaft"
+        return "sulfur_small_deposit"
     return "generic_mine_site"
 
 
@@ -1301,7 +1332,7 @@ def _overlay_game_icons(env, frame: np.ndarray, args) -> np.ndarray:
             continue
         x, y = world_to_frame(xy[0], xy[1])
         building_name = str(site.get("building", ""))
-        graphics_key = _building_mesh_key(building_name)
+        graphics_key = _construction_mesh_key(building_name)
         if use_sprite:
             icon = (
                 _load_render_icon(args, graphics_key, _building_sprite_size(building_name, construction=True), sprite=True)
@@ -3801,6 +3832,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
       function entityMotion(entity, frameTime, usingOriginalAnimation = false) {
         const role = String(entity.anim_role || '').toLowerCase();
         const state = String(entity.state || '').toLowerCase();
+        const kind = String(entity.kind || '').toLowerCase();
         const info = animationInfoFor(entity);
         const duration = Math.max(0.18, Number((info && info.duration) || defaultAnimationDuration(role)));
         const seed = Number(entity.anim_seed || 0) / 1000;
@@ -3808,7 +3840,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         let yaw = Number(entity.angle || 0);
         let y = 0;
         let scaleY = 1;
-        if (usingOriginalAnimation) {
+        if (usingOriginalAnimation || ['building', 'site', 'resource', 'shaft', 'tree'].includes(kind)) {
           return { yaw, y, scaleY, duration, source: info ? info.name : '' };
         }
         if (role === 'walk' || role === 'run' || state.includes('walking')) {

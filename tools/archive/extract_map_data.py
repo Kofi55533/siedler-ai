@@ -5,12 +5,35 @@ Extrahiert Kartendaten aus der mapdata.xml von EMS Wintersturm
 
 import re
 import json
+import sys
 from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from map_extract_config import EXTRACTED_DIR
 
 MAP_DATA_PATH = EXTRACTED_DIR / "mapdata.xml"
-OUTPUT_PATH = Path(r"c:\Users\marku\OneDrive\Desktop\siedler_ai\config\wintersturm_map_data.json")
+OUTPUT_PATH = ROOT_DIR / "config" / "wintersturm_map_data.json"
+
+RESOURCE_KEYS = ("iron", "stone", "clay", "sulfur")
+PIT_DEFAULT_AMOUNTS = {
+    "iron": 12000,
+    "stone": 14000,
+    "clay": 12000,
+    "sulfur": 8000,
+}
+SMALL_NODE_DEFAULT_AMOUNT = 400
+
+
+def _resource_buckets():
+    return {resource: [] for resource in RESOURCE_KEYS}
+
+
+def _resource_amount(script: str, default: int) -> int:
+    match = re.search(r"SetResourceDoodadGoodAmount\\([^,]+,(\\d+)\\)", script or "")
+    return int(match.group(1)) if match else int(default)
 
 def parse_entities():
     """Parst alle Entities aus der mapdata.xml"""
@@ -37,18 +60,8 @@ def parse_entities():
             3: {"buildings": [], "units": []},
             4: {"buildings": [], "units": []},
         },
-        "deposits": {
-            "iron": [],
-            "stone": [],
-            "clay": [],
-            "sulfur": [],
-        },
-        "mine_slots": {
-            "iron": [],
-            "stone": [],
-            "clay": [],
-            "sulfur": [],
-        },
+        "mine_pits": _resource_buckets(),
+        "small_resource_nodes": _resource_buckets(),
         "trees": [],
         "summary": {}
     }
@@ -72,16 +85,17 @@ def parse_entities():
         "PB_University2": "Hochschule_2",
     }
 
-    # Deposit-Typen (kleine sammelbare Vorkommen)
-    deposit_types = {
+    # XD_*Pit1 are the large mine pits. Original PB_*Mine entities use them
+    # via <BuildOn>, while serfs may gather there before a mine exists.
+    mine_pit_types = {
         "XD_IronPit1": "iron",
         "XD_StonePit1": "stone",
         "XD_ClayPit1": "clay",
         "XD_SulfurPit1": "sulfur",
     }
 
-    # Minen-Slots (wo man Minen bauen kann) - XD_Iron1, XD_Stone1, etc.
-    mine_slot_types = {
+    # XD_*1/2/3 are small 400-unit resource nodes, not mine build slots.
+    small_resource_node_types = {
         "XD_Iron1": "iron",
         "XD_Stone1": "stone",
         "XD_Clay1": "clay",
@@ -120,26 +134,25 @@ def parse_entities():
                     "position": position
                 })
 
-        # Deposits (sammelbare Ressourcen)
-        elif entity_type in deposit_types:
-            resource = deposit_types[entity_type]
-            # Extrahiere Menge aus Script
-            amount = 4000  # Default
-            amount_match = re.search(r'SetResourceDoodadGoodAmount\([^,]+,(\d+)\)', script)
-            if amount_match:
-                amount = int(amount_match.group(1))
-
-            data["deposits"][resource].append({
+        # Large mine pit: the original PB_*Mine entity is built on it.
+        elif entity_type in mine_pit_types:
+            resource = mine_pit_types[entity_type]
+            data["mine_pits"][resource].append({
                 "position": position,
-                "amount": amount
+                "amount": _resource_amount(script, PIT_DEFAULT_AMOUNTS[resource]),
+                "original_type": entity_type,
+                "entity_kind": "mine_pit",
+                "buildable_mine": resource,
             })
 
-        # Minen-Slots (exakter Match, nicht startswith - da XD_Iron1 != XD_IronPit1)
-        elif entity_type in mine_slot_types:
-            resource = mine_slot_types[entity_type]
-            data["mine_slots"][resource].append({
+        # Small resource node: directly collectable but not a mine build slot.
+        elif entity_type in small_resource_node_types:
+            resource = small_resource_node_types[entity_type]
+            data["small_resource_nodes"][resource].append({
                 "position": position,
-                "type": entity_type
+                "amount": _resource_amount(script, SMALL_NODE_DEFAULT_AMOUNT),
+                "original_type": entity_type,
+                "entity_kind": "small_resource_node",
             })
 
         # Bäume
@@ -165,20 +178,23 @@ def parse_entities():
                     "position": position
                 })
 
-    # Zusammenfassung
+    # Keep the historical keys as aliases so older map consumers continue to
+    # read the same coordinate sets, while canonical keys describe the engine
+    # entities correctly.
+    data["deposits"] = data["mine_pits"]
+    data["mine_slots"] = data["small_resource_nodes"]
+
+    mine_pit_summary = {resource: len(data["mine_pits"][resource]) for resource in RESOURCE_KEYS}
+    small_node_summary = {resource: len(data["small_resource_nodes"][resource]) for resource in RESOURCE_KEYS}
     data["summary"] = {
         "total_trees": len(data["trees"]),
-        "deposits": {
-            "iron": len(data["deposits"]["iron"]),
-            "stone": len(data["deposits"]["stone"]),
-            "clay": len(data["deposits"]["clay"]),
-            "sulfur": len(data["deposits"]["sulfur"]),
-        },
-        "mine_slots": {
-            "iron": len(data["mine_slots"]["iron"]),
-            "stone": len(data["mine_slots"]["stone"]),
-            "clay": len(data["mine_slots"]["clay"]),
-            "sulfur": len(data["mine_slots"]["sulfur"]),
+        "mine_pits": mine_pit_summary,
+        "small_resource_nodes": small_node_summary,
+        "deposits": mine_pit_summary,
+        "mine_slots": small_node_summary,
+        "legacy_aliases": {
+            "deposits": "mine_pits",
+            "mine_slots": "small_resource_nodes",
         },
     }
 
@@ -202,12 +218,12 @@ def main():
     print(f"\nDaten gespeichert in: {OUTPUT_PATH}")
     print("\n=== ZUSAMMENFASSUNG ===")
     print(f"Bäume: {data['summary']['total_trees']}")
-    print(f"\nDeposits (sammelbar ohne Mine):")
-    for res, count in data['summary']['deposits'].items():
+    print(f"\nMinenplaetze/Gruben (baubar, vor Mine sammelbar):")
+    for res, count in data['summary']['mine_pits'].items():
         if count > 0:
             print(f"  {res}: {count}")
-    print(f"\nMinen-Slots (baubar):")
-    for res, count in data['summary']['mine_slots'].items():
+    print(f"\nKleine Ressourcenklumpen (nicht baubar):")
+    for res, count in data['summary']['small_resource_nodes'].items():
         if count > 0:
             print(f"  {res}: {count}")
 
@@ -241,20 +257,20 @@ def main():
         # Spieler 1 hat y < 25248, Spieler 2 hat y > 25248
         return pos['x'] > MAP_WIDTH / 2 and pos['y'] < MAP_HEIGHT / 2
 
-    print("\n=== MINEN-SLOTS (Spieler 1 Bereich) ===")
+    print("\n=== KLEINE RESSOURCENKLUMPEN (Spieler 1 Bereich) ===")
     for resource in ["iron", "stone", "clay", "sulfur"]:
-        slots = [s for s in data["mine_slots"][resource] if in_player1_quadrant(s['position'])]
+        slots = [s for s in data["small_resource_nodes"][resource] if in_player1_quadrant(s['position'])]
         if slots:
-            print(f"\n{resource.upper()} Minen-Slots ({len(slots)} Stück):")
+            print(f"\n{resource.upper()} Klumpen ({len(slots)} Stück):")
             for s in sorted(slots, key=lambda x: ((x['position']['x']-hq_x)**2 + (x['position']['y']-hq_y)**2)**0.5):
                 dist = ((s['position']['x']-hq_x)**2 + (s['position']['y']-hq_y)**2)**0.5
                 print(f"  ({s['position']['x']:.0f}, {s['position']['y']:.0f}) - Distanz: {dist:.0f}")
 
-    print("\n=== DEPOSIT-DETAILS (Spieler 1 Bereich) ===")
+    print("\n=== MINENGRUBEN-DETAILS (Spieler 1 Bereich) ===")
     for resource in ["iron", "stone", "clay", "sulfur"]:
-        deposits = [d for d in data["deposits"][resource] if in_player1_quadrant(d['position'])]
+        deposits = [d for d in data["mine_pits"][resource] if in_player1_quadrant(d['position'])]
         if deposits:
-            print(f"\n{resource.upper()} Deposits ({len(deposits)} Stück):")
+            print(f"\n{resource.upper()} Gruben ({len(deposits)} Stück):")
             for d in sorted(deposits, key=lambda x: ((x['position']['x']-hq_x)**2 + (x['position']['y']-hq_y)**2)**0.5):
                 dist = ((d['position']['x']-hq_x)**2 + (d['position']['y']-hq_y)**2)**0.5
                 print(f"  ({d['position']['x']:.0f}, {d['position']['y']:.0f}) - {d['amount']} Einheiten - Distanz: {dist:.0f}")

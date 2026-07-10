@@ -105,17 +105,17 @@ def load_env_runtime() -> Dict[str, Any]:
     env_refiner_ops = dict(DEFAULT_REFINER_RESOURCE_OPS_PER_CYCLE)
     env_refiner_ops.update(REFINER_RESOURCE_OPS_PER_CYCLE)
 
-    def _pit_amount(category: str, fallback: int = 4000) -> int:
+    def _pit_amount(category: str, fallback: int) -> int:
         deps = PLAYER_1_SMALL_DEPOSITS.get(category, [])
         if not deps:
             return fallback
         return _safe_int(deps[0].get("amount"), fallback)
 
     env_deposit_amounts = {
-        "xd_ironpit1": _pit_amount("Eisen", 4000),
-        "xd_stonepit1": _pit_amount("Stein", 4000),
-        "xd_claypit1": _pit_amount("Lehm", 4000),
-        "xd_sulfurpit1": _pit_amount("Schwefel", 4000),
+        "xd_ironpit1": _pit_amount("Eisen", 12000),
+        "xd_stonepit1": _pit_amount("Stein", 14000),
+        "xd_claypit1": _pit_amount("Lehm", 12000),
+        "xd_sulfurpit1": _pit_amount("Schwefel", 8000),
         "xd_iron1": 400,
         "xd_stone1": 400,
         "xd_clay1": 400,
@@ -128,7 +128,11 @@ def load_env_runtime() -> Dict[str, Any]:
         try:
             with open(resources_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            runtime_deps = data.get("deposits", {}) if isinstance(data, dict) else {}
+            runtime_deps = (
+                data.get("mine_pits", data.get("deposits", {}))
+                if isinstance(data, dict)
+                else {}
+            )
             runtime_map_deposit_amounts = {
                 "xd_ironpit1": _safe_int((runtime_deps.get("Eisen") or [{}])[0].get("amount"), 0),
                 "xd_stonepit1": _safe_int((runtime_deps.get("Stein") or [{}])[0].get("amount"), 0),

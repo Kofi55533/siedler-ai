@@ -85,63 +85,87 @@
       "units": []
     }
   },
-  "deposits": {
+  "mine_pits": {
     "iron": [
       {
         "position": {
           "x": 34325.0,
           "y": 7950.0
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
       },
       {
         "position": {
           "x": 36325.0,
           "y": 6750.0
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
       },
       {
         "position": {
           "x": 34325.0,
           "y": 43350.0
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
       },
       {
         "position": {
           "x": 36325.0,
           "y": 44550.0
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
       },
       {
         "position": {
           "x": 16867.75,
           "y": 7933.826
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
       },
       {
         "position": {
           "x": 14865.83,
           "y": 6729.034
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
       },
       {
         "position": {
           "x": 16872.35,
           "y": 43335.42
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
       },
       {
         "position": {
           "x": 14868.5,
           "y": 44548.66
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
       }
     ],
     "stone": [
@@ -150,28 +174,40 @@
           "x": 42400.0,
           "y": 36300.0
         },
-        "amount": 4000
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "stone"
       },
       {
         "position": {
           "x": 42800.0,
           "y": 15100.0
         },
-        "amount": 4000
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "stone"
       },
       {
         "position": {
           "x": 8400.0,
           "y": 36300.0
         },
-        "amount": 4000
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "stone"
       },
       {
         "position": {
           "x": 8400.0,
           "y": 14700.0
         },
-        "amount": 4000
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "stone"
       }
     ],
     "clay": [
@@ -180,28 +216,40 @@
           "x": 19985.86,
           "y": 18793.32
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "clay"
       },
       {
         "position": {
           "x": 20010.53,
           "y": 32573.66
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "clay"
       },
       {
         "position": {
           "x": 31125.0,
           "y": 32550.0
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "clay"
       },
       {
         "position": {
           "x": 31125.0,
           "y": 18750.0
         },
-        "amount": 4000
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "clay"
       }
     ],
     "sulfur": [
@@ -210,144 +258,192 @@
           "x": 47725.0,
           "y": 32750.0
         },
-        "amount": 4000
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
       },
       {
         "position": {
           "x": 47725.0,
           "y": 18550.0
         },
-        "amount": 4000
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
       },
       {
         "position": {
           "x": 48125.0,
           "y": 20950.0
         },
-        "amount": 4000
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
       },
       {
         "position": {
           "x": 3455.522,
           "y": 32734.37
         },
-        "amount": 4000
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
       },
       {
         "position": {
           "x": 2925.0,
           "y": 30150.0
         },
-        "amount": 4000
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
       },
       {
         "position": {
           "x": 48125.0,
           "y": 30150.0
         },
-        "amount": 4000
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
       },
       {
         "position": {
           "x": 2925.0,
           "y": 20950.0
         },
-        "amount": 4000
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
       },
       {
         "position": {
           "x": 3470.616,
           "y": 18575.27
         },
-        "amount": 4000
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
       }
     ]
   },
-  "mine_slots": {
+  "small_resource_nodes": {
     "iron": [
       {
         "position": {
           "x": 37784.37,
           "y": 7265.83
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 37495.02,
           "y": 7801.381
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 36275.84,
           "y": 8927.041
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 13515.63,
           "y": 7265.83
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 13804.98,
           "y": 7801.381
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 15024.16,
           "y": 8927.041
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 37784.37,
           "y": 44034.17
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 37495.02,
           "y": 43498.62
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 36275.84,
           "y": 42372.96
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 13515.63,
           "y": 44034.17
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 13804.98,
           "y": 43498.62
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 15024.16,
           "y": 42372.96
         },
-        "type": "XD_Iron1"
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
       }
     ],
     "stone": [
@@ -356,84 +452,108 @@
           "x": 38633.13,
           "y": 14720.38
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 39320.85,
           "y": 14715.73
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 40056.03,
           "y": 14890.56
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 38633.13,
           "y": 36579.62
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 39320.85,
           "y": 36584.27
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 40056.03,
           "y": 36409.44
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 12666.87,
           "y": 14720.38
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 11979.15,
           "y": 14715.73
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 11243.97,
           "y": 14890.56
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 12666.87,
           "y": 36579.62
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 11979.15,
           "y": 36584.27
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 11243.97,
           "y": 36409.44
         },
-        "type": "XD_Stone1"
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
       }
     ],
     "clay": [
@@ -442,84 +562,108 @@
           "x": 35180.72,
           "y": 19552.98
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 35106.41,
           "y": 18871.68
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 34991.41,
           "y": 17996.99
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 35180.72,
           "y": 31747.02
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 35106.41,
           "y": 32428.32
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 34991.41,
           "y": 33303.01
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 16119.28,
           "y": 19552.98
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 16193.59,
           "y": 18871.68
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 16308.59,
           "y": 17996.99
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 16119.28,
           "y": 31747.02
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 16193.59,
           "y": 32428.32
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 16308.59,
           "y": 33303.01
         },
-        "type": "XD_Clay1"
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
       }
     ],
     "sulfur": [
@@ -528,84 +672,108 @@
           "x": 44576.42,
           "y": 22119.58
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 44304.14,
           "y": 21484.33
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 44005.73,
           "y": 20978.49
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 6723.578,
           "y": 22119.58
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 6995.859,
           "y": 21484.33
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 7294.27,
           "y": 20978.49
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 44576.42,
           "y": 29180.42
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 44304.14,
           "y": 29815.67
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 44005.73,
           "y": 30321.51
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 6723.578,
           "y": 29180.42
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 6995.859,
           "y": 29815.67
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       },
       {
         "position": {
           "x": 7294.27,
           "y": 30321.51
         },
-        "type": "XD_Sulfur1"
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
       }
     ]
   },
@@ -25001,6 +25169,18 @@
   ],
   "summary": {
     "total_trees": 3484,
+    "mine_pits": {
+      "iron": 8,
+      "stone": 4,
+      "clay": 4,
+      "sulfur": 8
+    },
+    "small_resource_nodes": {
+      "iron": 12,
+      "stone": 12,
+      "clay": 12,
+      "sulfur": 12
+    },
     "deposits": {
       "iron": 8,
       "stone": 4,
@@ -25012,6 +25192,10 @@
       "stone": 12,
       "clay": 12,
       "sulfur": 12
+    },
+    "legacy_aliases": {
+      "deposits": "mine_pits",
+      "mine_slots": "small_resource_nodes"
     },
     "player_1_buildings": 2,
     "player_1_units": 0,
@@ -25108,41 +25292,696 @@
       "type": "XD_VillageCenter"
     }
   ],
-  "walkable_export": {
-    "source_log": "SettlersHoK_2026-02-04_04-21-22.log",
-    "export": {
-      "x_min": 25500,
-      "x_max": 28200,
-      "y_min": 4500,
-      "y_max": 11800,
-      "step": 100,
-      "rows": 74,
-      "cols": 28,
-      "walkable_count": 704,
-      "blocked_count": 1368
-    },
-    "patch": {
-      "patch_file": "config/wintersturm_map_data_from_log.json/walkable_patch_515_255_45.npy",
-      "applied_to": "map_extract/wintersturm_extracted/walkable_map_515.npy"
-    }
+  "deposits": {
+    "iron": [
+      {
+        "position": {
+          "x": 34325.0,
+          "y": 7950.0
+        },
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
+      },
+      {
+        "position": {
+          "x": 36325.0,
+          "y": 6750.0
+        },
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
+      },
+      {
+        "position": {
+          "x": 34325.0,
+          "y": 43350.0
+        },
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
+      },
+      {
+        "position": {
+          "x": 36325.0,
+          "y": 44550.0
+        },
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
+      },
+      {
+        "position": {
+          "x": 16867.75,
+          "y": 7933.826
+        },
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
+      },
+      {
+        "position": {
+          "x": 14865.83,
+          "y": 6729.034
+        },
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
+      },
+      {
+        "position": {
+          "x": 16872.35,
+          "y": 43335.42
+        },
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
+      },
+      {
+        "position": {
+          "x": 14868.5,
+          "y": 44548.66
+        },
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "iron"
+      }
+    ],
+    "stone": [
+      {
+        "position": {
+          "x": 42400.0,
+          "y": 36300.0
+        },
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "stone"
+      },
+      {
+        "position": {
+          "x": 42800.0,
+          "y": 15100.0
+        },
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "stone"
+      },
+      {
+        "position": {
+          "x": 8400.0,
+          "y": 36300.0
+        },
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "stone"
+      },
+      {
+        "position": {
+          "x": 8400.0,
+          "y": 14700.0
+        },
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "stone"
+      }
+    ],
+    "clay": [
+      {
+        "position": {
+          "x": 19985.86,
+          "y": 18793.32
+        },
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "clay"
+      },
+      {
+        "position": {
+          "x": 20010.53,
+          "y": 32573.66
+        },
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "clay"
+      },
+      {
+        "position": {
+          "x": 31125.0,
+          "y": 32550.0
+        },
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "clay"
+      },
+      {
+        "position": {
+          "x": 31125.0,
+          "y": 18750.0
+        },
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "clay"
+      }
+    ],
+    "sulfur": [
+      {
+        "position": {
+          "x": 47725.0,
+          "y": 32750.0
+        },
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
+      },
+      {
+        "position": {
+          "x": 47725.0,
+          "y": 18550.0
+        },
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
+      },
+      {
+        "position": {
+          "x": 48125.0,
+          "y": 20950.0
+        },
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
+      },
+      {
+        "position": {
+          "x": 3455.522,
+          "y": 32734.37
+        },
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
+      },
+      {
+        "position": {
+          "x": 2925.0,
+          "y": 30150.0
+        },
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
+      },
+      {
+        "position": {
+          "x": 48125.0,
+          "y": 30150.0
+        },
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
+      },
+      {
+        "position": {
+          "x": 2925.0,
+          "y": 20950.0
+        },
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
+      },
+      {
+        "position": {
+          "x": 3470.616,
+          "y": 18575.27
+        },
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "buildable_mine": "sulfur"
+      }
+    ]
   },
-  "walkable_export_full_p1": {
-    "source_log": "SettlersHoK_2026-02-04_15-21-42.log",
-    "export": {
-      "x_min": 25000,
-      "x_max": 51000,
-      "y_min": 0,
-      "y_max": 25500,
-      "step": 100,
-      "rows": 256,
-      "cols": 261,
-      "tree_count": 791,
-      "shaft_count": 48,
-      "deposit_count": 24
-    },
-    "patch": {
-      "patch_file": "map_extract/game_export_2026-02-04_15-21-42/walkable_patch_515_250_0.npy",
-      "applied_to": "map_extract/wintersturm_extracted/walkable_map_515.npy"
-    }
+  "mine_slots": {
+    "iron": [
+      {
+        "position": {
+          "x": 37784.37,
+          "y": 7265.83
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 37495.02,
+          "y": 7801.381
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 36275.84,
+          "y": 8927.041
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 13515.63,
+          "y": 7265.83
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 13804.98,
+          "y": 7801.381
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 15024.16,
+          "y": 8927.041
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 37784.37,
+          "y": 44034.17
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 37495.02,
+          "y": 43498.62
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 36275.84,
+          "y": 42372.96
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 13515.63,
+          "y": 44034.17
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 13804.98,
+          "y": 43498.62
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 15024.16,
+          "y": 42372.96
+        },
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node"
+      }
+    ],
+    "stone": [
+      {
+        "position": {
+          "x": 38633.13,
+          "y": 14720.38
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 39320.85,
+          "y": 14715.73
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 40056.03,
+          "y": 14890.56
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 38633.13,
+          "y": 36579.62
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 39320.85,
+          "y": 36584.27
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 40056.03,
+          "y": 36409.44
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 12666.87,
+          "y": 14720.38
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 11979.15,
+          "y": 14715.73
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 11243.97,
+          "y": 14890.56
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 12666.87,
+          "y": 36579.62
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 11979.15,
+          "y": 36584.27
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 11243.97,
+          "y": 36409.44
+        },
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node"
+      }
+    ],
+    "clay": [
+      {
+        "position": {
+          "x": 35180.72,
+          "y": 19552.98
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 35106.41,
+          "y": 18871.68
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 34991.41,
+          "y": 17996.99
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 35180.72,
+          "y": 31747.02
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 35106.41,
+          "y": 32428.32
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 34991.41,
+          "y": 33303.01
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 16119.28,
+          "y": 19552.98
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 16193.59,
+          "y": 18871.68
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 16308.59,
+          "y": 17996.99
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 16119.28,
+          "y": 31747.02
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 16193.59,
+          "y": 32428.32
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 16308.59,
+          "y": 33303.01
+        },
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node"
+      }
+    ],
+    "sulfur": [
+      {
+        "position": {
+          "x": 44576.42,
+          "y": 22119.58
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 44304.14,
+          "y": 21484.33
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 44005.73,
+          "y": 20978.49
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 6723.578,
+          "y": 22119.58
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 6995.859,
+          "y": 21484.33
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 7294.27,
+          "y": 20978.49
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 44576.42,
+          "y": 29180.42
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 44304.14,
+          "y": 29815.67
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 44005.73,
+          "y": 30321.51
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 6723.578,
+          "y": 29180.42
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 6995.859,
+          "y": 29815.67
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      },
+      {
+        "position": {
+          "x": 7294.27,
+          "y": 30321.51
+        },
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node"
+      }
+    ]
   }
 }

@@ -83,53 +83,61 @@ PLAYER_1_VILLAGE_CENTER_SLOTS = [
 # WICHTIG: Das sind Serf-Sammelpunkte (nicht Mine-Bauplätze).
 # =============================================================================
 
-# Stollen sind feste Positionen auf der Karte, an denen Serfs Rohstoffe sammeln.
-PLAYER_1_MINE_SHAFTS = {
+# Canonical engine semantics: XD_*1/2/3 are 400-unit resource nodes.
+# They are collectable by serfs and are never mine construction sites.
+PLAYER_1_SMALL_RESOURCE_NODES = {
     "Eisenmine": [
-        {"x": 36275.84, "y": 8927.04, "distance_to_hq": 14971},
-        {"x": 37495.02, "y": 7801.38, "distance_to_hq": 15717},
-        {"x": 37784.37, "y": 7265.83, "distance_to_hq": 16177},
+        {"x": 36275.84, "y": 8927.04, "amount": 400, "distance_to_hq": 14971},
+        {"x": 37495.02, "y": 7801.38, "amount": 400, "distance_to_hq": 15717},
+        {"x": 37784.37, "y": 7265.83, "amount": 400, "distance_to_hq": 16177},
     ],
     "Steinmine": [
-        {"x": 40056.03, "y": 14890.56, "distance_to_hq": 8275},
-        {"x": 39320.85, "y": 14715.73, "distance_to_hq": 8570},
-        {"x": 38633.13, "y": 14720.38, "distance_to_hq": 8735},
+        {"x": 40056.03, "y": 14890.56, "amount": 400, "distance_to_hq": 8275},
+        {"x": 39320.85, "y": 14715.73, "amount": 400, "distance_to_hq": 8570},
+        {"x": 38633.13, "y": 14720.38, "amount": 400, "distance_to_hq": 8735},
     ],
     "Lehmmine": [
-        {"x": 35180.72, "y": 19552.98, "distance_to_hq": 6900},
-        {"x": 35106.41, "y": 18871.68, "distance_to_hq": 7334},
-        {"x": 34991.41, "y": 17996.99, "distance_to_hq": 7959},
+        {"x": 35180.72, "y": 19552.98, "amount": 400, "distance_to_hq": 6900},
+        {"x": 35106.41, "y": 18871.68, "amount": 400, "distance_to_hq": 7334},
+        {"x": 34991.41, "y": 17996.99, "amount": 400, "distance_to_hq": 7959},
     ],
     "Schwefelmine": [
-        {"x": 44304.14, "y": 21484.33, "distance_to_hq": 3588},
-        {"x": 44005.73, "y": 20978.49, "distance_to_hq": 3597},
-        {"x": 44576.42, "y": 22119.58, "distance_to_hq": 3612},
+        {"x": 44304.14, "y": 21484.33, "amount": 400, "distance_to_hq": 3588},
+        {"x": 44005.73, "y": 20978.49, "amount": 400, "distance_to_hq": 3597},
+        {"x": 44576.42, "y": 22119.58, "amount": 400, "distance_to_hq": 3612},
     ],
 }
+
+# Legacy-Name: XD_*1/2/3 are collectable small resource nodes, not mine sites.
+PLAYER_1_MINE_SHAFTS = PLAYER_1_SMALL_RESOURCE_NODES
 
 # =============================================================================
 # VORKOMMEN PRO SPIELER (XD_*Pit1)
 # Diese Positionen sind die Mine-Bauplätze im Originalspiel.
 # Leibeigene können dort sammeln, solange keine Mine gebaut wurde.
-# Kapazität = 4000 Einheiten pro Vorkommen.
+# Original defaults: Eisen/Lehm 12000, Stein 14000, Schwefel 8000.
 # =============================================================================
 
-PLAYER_1_SMALL_DEPOSITS = {
+PLAYER_1_MINE_PITS = {
     "Eisen": [
-        {"x": 34325.0, "y": 7950.0, "amount": 4000, "distance_to_hq": 16595},
-        {"x": 36325.0, "y": 6750.0, "amount": 4000, "distance_to_hq": 17033},
+        {"x": 34325.0, "y": 7950.0, "amount": 12000, "distance_to_hq": 16595},
+        {"x": 36325.0, "y": 6750.0, "amount": 12000, "distance_to_hq": 17033},
     ],
     "Stein": [
-        {"x": 42800.0, "y": 15100.0, "amount": 4000, "distance_to_hq": 8178},
+        {"x": 42800.0, "y": 15100.0, "amount": 14000, "distance_to_hq": 8178},
     ],
     "Lehm": [
-        {"x": 31125.0, "y": 18750.0, "amount": 4000, "distance_to_hq": 10882},
+        {"x": 31125.0, "y": 18750.0, "amount": 12000, "distance_to_hq": 10882},
     ],
     "Schwefel": [
-        {"x": 48125.0, "y": 20950.0, "amount": 4000, "distance_to_hq": 7346},
-        {"x": 47725.0, "y": 18550.0, "amount": 4000, "distance_to_hq": 8036},
+        {"x": 48125.0, "y": 20950.0, "amount": 8000, "distance_to_hq": 7346},
+        {"x": 47725.0, "y": 18550.0, "amount": 8000, "distance_to_hq": 8036},
     ],
 }
+
+# Legacy-Name retained for existing environment consumers. XD_*Pit1 are the
+# actual mine build sites and pre-mine resource sources.
+PLAYER_1_SMALL_DEPOSITS = PLAYER_1_MINE_PITS
 
 # Zusammenfassung der Ressourcen pro Spieler
 RESOURCES_PER_PLAYER = {
@@ -139,34 +147,46 @@ RESOURCES_PER_PLAYER = {
         "Lehmmine": 3,
         "Schwefelmine": 3,
     },
+    "small_resource_nodes": {
+        "Eisen": {"count": 3, "total_amount": 1200},
+        "Stein": {"count": 3, "total_amount": 1200},
+        "Lehm": {"count": 3, "total_amount": 1200},
+        "Schwefel": {"count": 3, "total_amount": 1200},
+    },
+    "mine_pits": {
+        "Eisen": {"count": 2, "total_amount": 24000},
+        "Stein": {"count": 1, "total_amount": 14000},
+        "Lehm": {"count": 1, "total_amount": 12000},
+        "Schwefel": {"count": 2, "total_amount": 16000},
+    },
     "mine_build_slots": {
-        "Eisen": {"count": 2, "total_amount": 8000},
-        "Stein": {"count": 1, "total_amount": 4000},
-        "Lehm": {"count": 1, "total_amount": 4000},
-        "Schwefel": {"count": 2, "total_amount": 8000},
+        "Eisen": {"count": 2, "total_amount": 24000},
+        "Stein": {"count": 1, "total_amount": 14000},
+        "Lehm": {"count": 1, "total_amount": 12000},
+        "Schwefel": {"count": 2, "total_amount": 16000},
     },
     "trees": {"count": 202, "wood_per_tree": 75, "total_wood": 15150},
 }
 
 # Legacy-Kompatibilität (wird noch von environment.py verwendet)
 PLAYER_1_MINE_BUILD_SLOTS = {
-    "Eisenmine": PLAYER_1_SMALL_DEPOSITS["Eisen"],
-    "Steinmine": PLAYER_1_SMALL_DEPOSITS["Stein"],
-    "Lehmmine": PLAYER_1_SMALL_DEPOSITS["Lehm"],
-    "Schwefelmine": PLAYER_1_SMALL_DEPOSITS["Schwefel"],
+    "Eisenmine": PLAYER_1_MINE_PITS["Eisen"],
+    "Steinmine": PLAYER_1_MINE_PITS["Stein"],
+    "Lehmmine": PLAYER_1_MINE_PITS["Lehm"],
+    "Schwefelmine": PLAYER_1_MINE_PITS["Schwefel"],
 }
 PLAYER_1_MINE_POSITIONS = PLAYER_1_MINE_BUILD_SLOTS  # Alias (genutzt von environment.py)
 MINES_PER_PLAYER = {
-    "Steinmine": {"count": 1, "capacity": 4000},
-    "Eisenmine": {"count": 2, "capacity": 8000},
-    "Lehmmine": {"count": 1, "capacity": 4000},
-    "Schwefelmine": {"count": 2, "capacity": 8000},
+    "Steinmine": {"count": 1, "capacity": 14000},
+    "Eisenmine": {"count": 2, "capacity": 24000},
+    "Lehmmine": {"count": 1, "capacity": 12000},
+    "Schwefelmine": {"count": 2, "capacity": 16000},
 }
 DEPOSITS_PER_PLAYER = {
-    "Stein": {"count": 1, "capacity": 4000},
-    "Eisen": {"count": 2, "capacity": 8000},
-    "Lehm": {"count": 1, "capacity": 4000},
-    "Schwefel": {"count": 2, "capacity": 8000},
+    "Stein": {"count": 1, "capacity": 14000},
+    "Eisen": {"count": 2, "capacity": 24000},
+    "Lehm": {"count": 1, "capacity": 12000},
+    "Schwefel": {"count": 2, "capacity": 16000},
 }
 
 # =============================================================================

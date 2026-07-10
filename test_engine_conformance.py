@@ -10,6 +10,9 @@ import pytest
 import pathfinding
 from original_game_values import aliases_for_technology, load_building_geometry, load_technology_xml_values
 from map_config_wintersturm import (
+    MINES_PER_PLAYER,
+    PLAYER_1_MINE_PITS,
+    PLAYER_1_SMALL_RESOURCE_NODES,
     PLAYER_1_SMALL_DEPOSITS,
     PLAYER_1_TREES_SUMMARY,
     PLAYER_1_VILLAGE_CENTER_SLOTS,
@@ -1384,15 +1387,62 @@ def test_wintersturm_player1_map_data_matches_extract():
         "Lehmmine_1": "Lehm",
         "Schwefelmine_1": "Schwefel",
     }
+    expected_mine_capacities = {
+        "Eisenmine": 24000,
+        "Steinmine": 14000,
+        "Lehmmine": 12000,
+        "Schwefelmine": 16000,
+    }
+    assert {
+        mine_type: int(data["capacity"])
+        for mine_type, data in MINES_PER_PLAYER.items()
+    } == expected_mine_capacities
+
     for building, category in mine_buildings.items():
+        mine_type = building.removesuffix("_1")
         expected = [
             (int(dep["x"]), int(dep["y"]))
-            for dep in PLAYER_1_SMALL_DEPOSITS[category]
+            for dep in PLAYER_1_MINE_PITS[category]
         ]
         assert [_xy(pos) for pos in env._get_build_position_candidates(building)] == expected
         deposits = env.deposit_categories[category]["deposits"]
         assert len(deposits) == len(expected)
-        assert sum(int(dep["remaining"]) for dep in deposits) == 4000 * len(expected)
+        assert sum(int(dep["remaining"]) for dep in deposits) == sum(
+            int(dep["amount"]) for dep in PLAYER_1_MINE_PITS[category]
+        )
+        assert [_xy(pos) for pos in env.mine_shafts[mine_type]] == expected
+
+        nodes = env.shaft_categories[category]["shafts"]
+        expected_nodes = PLAYER_1_SMALL_RESOURCE_NODES[mine_type]
+        assert len(nodes) == len(expected_nodes)
+        assert sum(int(node["remaining"]) for node in nodes) == sum(
+            int(node["amount"]) for node in expected_nodes
+        )
+
+
+def test_wintersturm_resource_entity_semantics_are_exact():
+    map_data = json.loads(
+        (PROJECT_ROOT / "config" / "wintersturm_map_data.json").read_text(encoding="utf-8")
+    )
+
+    assert map_data["summary"]["legacy_aliases"] == {
+        "deposits": "mine_pits",
+        "mine_slots": "small_resource_nodes",
+    }
+    assert {
+        resource: {int(pit["amount"]) for pit in pits}
+        for resource, pits in map_data["mine_pits"].items()
+    } == {
+        "iron": {12000},
+        "stone": {14000},
+        "clay": {12000},
+        "sulfur": {8000},
+    }
+    assert all(
+        int(node["amount"]) == 400
+        for nodes in map_data["small_resource_nodes"].values()
+        for node in nodes
+    )
 
 
 def _xy(position):

@@ -394,7 +394,8 @@ TECHNOLOGY_EFFECTS = {
 # Importiere Karten-Konfiguration
 from map_config_wintersturm import (
     START_RESOURCES, MINES_PER_PLAYER, BUILDING_ZONES_PLAYER_1,
-    PLAYER_1_MINE_POSITIONS, PLAYER_1_MINE_SHAFTS, PLAYER_1_SMALL_DEPOSITS,
+    PLAYER_1_MINE_POSITIONS, PLAYER_1_MINE_PITS, PLAYER_1_SMALL_RESOURCE_NODES,
+    PLAYER_1_MINE_SHAFTS,
     PLAYER_1_TREES_SUMMARY, PLAYER_1_TREES_NEAREST,
     PLAYER_1_VILLAGE_CENTER_SLOTS,
     PLAYER_HQ_POSITIONS, MAP_SIZE,
@@ -1689,17 +1690,29 @@ _MIN_SOLDIER_TALER_COST = min(
     default=50,
 )
 
+_SMALL_NODE_TOTALS = {
+    mine_type: float(sum(int(node.get("amount", 400)) for node in nodes))
+    for mine_type, nodes in PLAYER_1_SMALL_RESOURCE_NODES.items()
+}
+_MAP_RESOURCE_CAPS = {
+    RESOURCE_HOLZ: float(START_RESOURCES.get(RESOURCE_HOLZ_ROH, 0)) + float(PLAYER_1_TREES_SUMMARY["estimated_wood"]),
+    RESOURCE_STEIN: float(START_RESOURCES.get(RESOURCE_STEIN_ROH, 0)) + float(MINES_PER_PLAYER["Steinmine"]["capacity"]) + _SMALL_NODE_TOTALS["Steinmine"],
+    RESOURCE_LEHM: float(START_RESOURCES.get(RESOURCE_LEHM_ROH, 0)) + float(MINES_PER_PLAYER["Lehmmine"]["capacity"]) + _SMALL_NODE_TOTALS["Lehmmine"],
+    RESOURCE_EISEN: float(START_RESOURCES.get(RESOURCE_EISEN_ROH, 0)) + float(MINES_PER_PLAYER["Eisenmine"]["capacity"]) + _SMALL_NODE_TOTALS["Eisenmine"],
+    RESOURCE_SCHWEFEL: float(START_RESOURCES.get(RESOURCE_SCHWEFEL_ROH, 0)) + float(MINES_PER_PLAYER["Schwefelmine"]["capacity"]) + _SMALL_NODE_TOTALS["Schwefelmine"],
+}
+
 _OBS_RESOURCE_CAPS = {
-    RESOURCE_HOLZ: 6000.0,
-    RESOURCE_STEIN: 6000.0,
-    RESOURCE_LEHM: 6000.0,
-    RESOURCE_EISEN: 4000.0,
-    RESOURCE_SCHWEFEL: 4000.0,
-    RESOURCE_HOLZ_ROH: 15000.0,
-    RESOURCE_STEIN_ROH: 15000.0,
-    RESOURCE_LEHM_ROH: 15000.0,
-    RESOURCE_EISEN_ROH: 15000.0,
-    RESOURCE_SCHWEFEL_ROH: 15000.0,
+    RESOURCE_HOLZ: _MAP_RESOURCE_CAPS[RESOURCE_HOLZ],
+    RESOURCE_STEIN: _MAP_RESOURCE_CAPS[RESOURCE_STEIN],
+    RESOURCE_LEHM: _MAP_RESOURCE_CAPS[RESOURCE_LEHM],
+    RESOURCE_EISEN: _MAP_RESOURCE_CAPS[RESOURCE_EISEN],
+    RESOURCE_SCHWEFEL: _MAP_RESOURCE_CAPS[RESOURCE_SCHWEFEL],
+    RESOURCE_HOLZ_ROH: _MAP_RESOURCE_CAPS[RESOURCE_HOLZ],
+    RESOURCE_STEIN_ROH: _MAP_RESOURCE_CAPS[RESOURCE_STEIN],
+    RESOURCE_LEHM_ROH: _MAP_RESOURCE_CAPS[RESOURCE_LEHM],
+    RESOURCE_EISEN_ROH: _MAP_RESOURCE_CAPS[RESOURCE_EISEN],
+    RESOURCE_SCHWEFEL_ROH: _MAP_RESOURCE_CAPS[RESOURCE_SCHWEFEL],
     RESOURCE_GOLD_ROH: 8000.0,
     RESOURCE_TALER: 8000.0,
 }
@@ -2920,13 +2933,13 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # Format: {resource: [{position, remaining_amount}, ...]}
         self.small_deposits = {
             "Eisen": [{"x": d["x"], "y": d["y"], "remaining": d["amount"]}
-                      for d in PLAYER_1_SMALL_DEPOSITS.get("Eisen", [])],
+                      for d in PLAYER_1_MINE_PITS.get("Eisen", [])],
             "Stein": [{"x": d["x"], "y": d["y"], "remaining": d["amount"]}
-                      for d in PLAYER_1_SMALL_DEPOSITS.get("Stein", [])],
+                      for d in PLAYER_1_MINE_PITS.get("Stein", [])],
             "Lehm": [{"x": d["x"], "y": d["y"], "remaining": d["amount"]}
-                     for d in PLAYER_1_SMALL_DEPOSITS.get("Lehm", [])],
+                     for d in PLAYER_1_MINE_PITS.get("Lehm", [])],
             "Schwefel": [{"x": d["x"], "y": d["y"], "remaining": d["amount"]}
-                         for d in PLAYER_1_SMALL_DEPOSITS.get("Schwefel", [])],
+                         for d in PLAYER_1_MINE_PITS.get("Schwefel", [])],
         }
         self._small_deposit_by_pos = {}
         for category, deps in self.small_deposits.items():
@@ -2968,22 +2981,22 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         self.deposit_categories = {
             "Eisen": {
                 "deposits": [{"x": d["x"], "y": d["y"], "remaining": d["amount"]}
-                             for d in PLAYER_1_SMALL_DEPOSITS.get("Eisen", [])],
+                             for d in PLAYER_1_MINE_PITS.get("Eisen", [])],
                 "serfs_assigned": 0,
             },
             "Stein": {
                 "deposits": [{"x": d["x"], "y": d["y"], "remaining": d["amount"]}
-                             for d in PLAYER_1_SMALL_DEPOSITS.get("Stein", [])],
+                             for d in PLAYER_1_MINE_PITS.get("Stein", [])],
                 "serfs_assigned": 0,
             },
             "Lehm": {
                 "deposits": [{"x": d["x"], "y": d["y"], "remaining": d["amount"]}
-                             for d in PLAYER_1_SMALL_DEPOSITS.get("Lehm", [])],
+                             for d in PLAYER_1_MINE_PITS.get("Lehm", [])],
                 "serfs_assigned": 0,
             },
             "Schwefel": {
                 "deposits": [{"x": d["x"], "y": d["y"], "remaining": d["amount"]}
-                             for d in PLAYER_1_SMALL_DEPOSITS.get("Schwefel", [])],
+                             for d in PLAYER_1_MINE_PITS.get("Schwefel", [])],
                 "serfs_assigned": 0,
             },
         }
@@ -2998,25 +3011,28 @@ class SiedlerScharfschuetzenEnv(gym.Env):
         # STOLLEN (Shafts): Wo Serfs IMMER sammeln kÃƒÆ’Ã‚Â¶nnen (XD_Iron1, XD_Stone1, etc.)
         # Diese haben 400 Ressourcen pro Stollen und kÃƒÆ’Ã‚Â¶nnen NICHT bebaut werden.
         # Lade aus player1_resources.json (mine_shafts = echte Stollen)
-        shaft_data = self._cached_resources.get("mine_shafts", {})
+        shaft_data = self._cached_resources.get(
+            "small_resource_nodes",
+            self._cached_resources.get("mine_shafts", {}),
+        )
         self.shaft_categories = {
             "Eisen": {
-                "shafts": [{"x": s["x"], "y": s["y"], "remaining": 400, "serfs_assigned": 0}
+                "shafts": [{"x": s["x"], "y": s["y"], "remaining": int(s.get("amount", 400)), "serfs_assigned": 0}
                           for s in shaft_data.get("Eisen", [])],
                 "serfs_assigned": 0,
             },
             "Stein": {
-                "shafts": [{"x": s["x"], "y": s["y"], "remaining": 400, "serfs_assigned": 0}
+                "shafts": [{"x": s["x"], "y": s["y"], "remaining": int(s.get("amount", 400)), "serfs_assigned": 0}
                           for s in shaft_data.get("Stein", [])],
                 "serfs_assigned": 0,
             },
             "Lehm": {
-                "shafts": [{"x": s["x"], "y": s["y"], "remaining": 400, "serfs_assigned": 0}
+                "shafts": [{"x": s["x"], "y": s["y"], "remaining": int(s.get("amount", 400)), "serfs_assigned": 0}
                           for s in shaft_data.get("Lehm", [])],
                 "serfs_assigned": 0,
             },
             "Schwefel": {
-                "shafts": [{"x": s["x"], "y": s["y"], "remaining": 400, "serfs_assigned": 0}
+                "shafts": [{"x": s["x"], "y": s["y"], "remaining": int(s.get("amount", 400)), "serfs_assigned": 0}
                           for s in shaft_data.get("Schwefel", [])],
                 "serfs_assigned": 0,
             },
@@ -3056,10 +3072,10 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         # MinenschÃƒÆ’Ã‚Â¤chte: wo Minen-GebÃƒÆ’Ã‚Â¤ude gebaut werden KÃƒÆ’Ã¢â‚¬â€œNNEN
         self.mine_shafts = {
-            "Eisenmine": [s.copy() for s in PLAYER_1_MINE_SHAFTS.get("Eisenmine", [])],
-            "Steinmine": [s.copy() for s in PLAYER_1_MINE_SHAFTS.get("Steinmine", [])],
-            "Lehmmine": [s.copy() for s in PLAYER_1_MINE_SHAFTS.get("Lehmmine", [])],
-            "Schwefelmine": [s.copy() for s in PLAYER_1_MINE_SHAFTS.get("Schwefelmine", [])],
+            "Eisenmine": [s.copy() for s in PLAYER_1_MINE_POSITIONS.get("Eisenmine", [])],
+            "Steinmine": [s.copy() for s in PLAYER_1_MINE_POSITIONS.get("Steinmine", [])],
+            "Lehmmine": [s.copy() for s in PLAYER_1_MINE_POSITIONS.get("Lehmmine", [])],
+            "Schwefelmine": [s.copy() for s in PLAYER_1_MINE_POSITIONS.get("Schwefelmine", [])],
         }
 
         # NEU: WorkTime/Pausen-System initialisieren

@@ -30,14 +30,14 @@ Worker-Parameter werden gegen `config/full_worker_engine_behavior.json` verglich
 ## 3. Deposit-Mengen
 
 - OK: xd_clay1: 400
-- INFO: xd_claypit1: Engine=12000 vs Env=4000 (Map-Override plausibel: runtime_export=4000)
+- OK: xd_claypit1: 12000
 - OK: xd_iron1: 400
-- INFO: xd_ironpit1: Engine=12000 vs Env=4000 (Map-Override plausibel: runtime_export=4000)
+- OK: xd_ironpit1: 12000
 - INFO: xd_resourcetree: Engine=0, Env=nicht definiert
 - OK: xd_stone1: 400
-- INFO: xd_stonepit1: Engine=14000 vs Env=4000 (Map-Override plausibel: runtime_export=4000)
+- OK: xd_stonepit1: 14000
 - OK: xd_sulfur1: 400
-- INFO: xd_sulfurpit1: Engine=8000 vs Env=4000 (Map-Override plausibel: runtime_export=4000)
+- OK: xd_sulfurpit1: 8000
 
 ## 4. Worker-Parameter
 

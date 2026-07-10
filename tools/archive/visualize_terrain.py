@@ -71,12 +71,12 @@ def get_player(x, y):
 def load_map_config():
     """Lädt Karten-Konfiguration"""
     from map_config_wintersturm import (
-        PLAYER_1_MINE_SHAFTS, PLAYER_1_SMALL_DEPOSITS,
+        PLAYER_1_SMALL_RESOURCE_NODES, PLAYER_1_MINE_PITS,
         PLAYER_1_TREES_NEAREST, PLAYER_HQ_POSITIONS
     )
     return {
-        "mine_shafts": PLAYER_1_MINE_SHAFTS,
-        "deposits": PLAYER_1_SMALL_DEPOSITS,
+        "mine_shafts": PLAYER_1_SMALL_RESOURCE_NODES,
+        "deposits": PLAYER_1_MINE_PITS,
         "trees": PLAYER_1_TREES_NEAREST,
         "hq": PLAYER_HQ_POSITIONS,
     }
@@ -173,7 +173,7 @@ def create_map_visualization():
                 linewidth=2, edgecolor=color, facecolor='none', linestyle='--'
             )
             ax.add_patch(circle)
-            ax.annotate(f'{res_type[:2]}\n4000', (dep["x"], dep["y"]+400),
+            ax.annotate(f'{res_type[:2]}\n{int(dep["amount"])}', (dep["x"], dep["y"]+400),
                        fontsize=6, ha='center', color=color)
 
     # Bäume (nur die nächsten 50)
@@ -245,17 +245,20 @@ def create_map_visualization():
         status = "GEBAUT" if is_built else "frei"
         print(f"  ({vc[0]}, {vc[1]}) - Distanz: {dist:.0f} - {status}")
 
-    print("\nMINEN-SCHÄCHTE (wo Minen gebaut werden können):")
+    print("\nKLEINE ROHSTOFFKNOTEN (nicht bebaubar, je 400 Einheiten):")
     for mine_type, shafts in config["mine_shafts"].items():
         print(f"  {mine_type}:")
         for shaft in sorted(shafts, key=lambda x: x["distance_to_hq"]):
             print(f"    ({shaft['x']}, {shaft['y']}) - Distanz: {shaft['distance_to_hq']}")
 
-    print("\nKLEINE VORKOMMEN (erschöpfbar, 4000 Einheiten):")
+    print("\nMINENGRUBEN (bebaubare Mineplaetze, variable Kapazitaet):")
     for res_type, deposits in config["deposits"].items():
         print(f"  {res_type}:")
         for dep in sorted(deposits, key=lambda x: x["distance_to_hq"]):
-            print(f"    ({dep['x']}, {dep['y']}) - Distanz: {dep['distance_to_hq']}")
+            print(
+                f"    ({dep['x']}, {dep['y']}) - {int(dep['amount'])} Einheiten "
+                f"- Distanz: {dep['distance_to_hq']}"
+            )
 
     print(f"\nBÄUME: ~888 (nächster bei Distanz {config['trees'][0]['distance_to_hq']})")
 

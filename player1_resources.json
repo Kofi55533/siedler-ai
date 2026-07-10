@@ -5468,21 +5468,30 @@
       "distance_to_hq": 26050.0
     }
   ],
-  "mine_shafts": {
+  "small_resource_nodes": {
     "Eisen": [
       {
         "x": 36275.84,
         "y": 8927.041,
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 14971.0
       },
       {
         "x": 37495.02,
         "y": 7801.381,
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 15718.0
       },
       {
         "x": 37784.37,
         "y": 7265.83,
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 16178.0
       }
     ],
@@ -5490,16 +5499,25 @@
       {
         "x": 40056.03,
         "y": 14890.56,
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 8276.0
       },
       {
         "x": 39320.85,
         "y": 14715.73,
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 8571.0
       },
       {
         "x": 38633.13,
         "y": 14720.38,
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 8735.0
       }
     ],
@@ -5507,16 +5525,25 @@
       {
         "x": 35180.72,
         "y": 19552.98,
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 6901.0
       },
       {
         "x": 35106.41,
         "y": 18871.68,
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 7335.0
       },
       {
         "x": 34991.41,
         "y": 17996.99,
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 7960.0
       }
     ],
@@ -5524,16 +5551,197 @@
       {
         "x": 44304.14,
         "y": 21484.33,
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 3588.0
       },
       {
         "x": 44005.73,
         "y": 20978.49,
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 3598.0
       },
       {
         "x": 44576.42,
         "y": 22119.58,
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 3612.0
+      }
+    ]
+  },
+  "mine_pits": {
+    "Eisen": [
+      {
+        "x": 34325.0,
+        "y": 7950.0,
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "distance_to_hq": 16596.0
+      },
+      {
+        "x": 36325.0,
+        "y": 6750.0,
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
+        "distance_to_hq": 17033.0
+      }
+    ],
+    "Stein": [
+      {
+        "x": 42800.0,
+        "y": 15100.0,
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
+        "distance_to_hq": 8179.0
+      }
+    ],
+    "Lehm": [
+      {
+        "x": 31125.0,
+        "y": 18750.0,
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
+        "distance_to_hq": 10882.0
+      }
+    ],
+    "Schwefel": [
+      {
+        "x": 48125.0,
+        "y": 20950.0,
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "distance_to_hq": 7347.0
+      },
+      {
+        "x": 47725.0,
+        "y": 18550.0,
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
+        "distance_to_hq": 8037.0
+      }
+    ]
+  },
+  "resource_semantics": {
+    "small_resource_nodes": "XD_*1/2/3, direct collection, not a mine build slot",
+    "mine_pits": "XD_*Pit1, mine build slot and pre-mine resource source",
+    "legacy_aliases": {
+      "mine_shafts": "small_resource_nodes",
+      "deposits": "mine_pits"
+    }
+  },
+  "mine_shafts": {
+    "Eisen": [
+      {
+        "x": 36275.84,
+        "y": 8927.041,
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 14971.0
+      },
+      {
+        "x": 37495.02,
+        "y": 7801.381,
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 15718.0
+      },
+      {
+        "x": 37784.37,
+        "y": 7265.83,
+        "amount": 400,
+        "original_type": "XD_Iron1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 16178.0
+      }
+    ],
+    "Stein": [
+      {
+        "x": 40056.03,
+        "y": 14890.56,
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 8276.0
+      },
+      {
+        "x": 39320.85,
+        "y": 14715.73,
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 8571.0
+      },
+      {
+        "x": 38633.13,
+        "y": 14720.38,
+        "amount": 400,
+        "original_type": "XD_Stone1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 8735.0
+      }
+    ],
+    "Lehm": [
+      {
+        "x": 35180.72,
+        "y": 19552.98,
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 6901.0
+      },
+      {
+        "x": 35106.41,
+        "y": 18871.68,
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 7335.0
+      },
+      {
+        "x": 34991.41,
+        "y": 17996.99,
+        "amount": 400,
+        "original_type": "XD_Clay1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 7960.0
+      }
+    ],
+    "Schwefel": [
+      {
+        "x": 44304.14,
+        "y": 21484.33,
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 3588.0
+      },
+      {
+        "x": 44005.73,
+        "y": 20978.49,
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node",
+        "distance_to_hq": 3598.0
+      },
+      {
+        "x": 44576.42,
+        "y": 22119.58,
+        "amount": 400,
+        "original_type": "XD_Sulfur1",
+        "entity_kind": "small_resource_node",
         "distance_to_hq": 3612.0
       }
     ]
@@ -5543,13 +5751,17 @@
       {
         "x": 34325.0,
         "y": 7950.0,
-        "amount": 4000,
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
         "distance_to_hq": 16596.0
       },
       {
         "x": 36325.0,
         "y": 6750.0,
-        "amount": 4000,
+        "amount": 12000,
+        "original_type": "XD_IronPit1",
+        "entity_kind": "mine_pit",
         "distance_to_hq": 17033.0
       }
     ],
@@ -5557,7 +5769,9 @@
       {
         "x": 42800.0,
         "y": 15100.0,
-        "amount": 4000,
+        "amount": 14000,
+        "original_type": "XD_StonePit1",
+        "entity_kind": "mine_pit",
         "distance_to_hq": 8179.0
       }
     ],
@@ -5565,7 +5779,9 @@
       {
         "x": 31125.0,
         "y": 18750.0,
-        "amount": 4000,
+        "amount": 12000,
+        "original_type": "XD_ClayPit1",
+        "entity_kind": "mine_pit",
         "distance_to_hq": 10882.0
       }
     ],
@@ -5573,13 +5789,17 @@
       {
         "x": 48125.0,
         "y": 20950.0,
-        "amount": 4000,
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
         "distance_to_hq": 7347.0
       },
       {
         "x": 47725.0,
         "y": 18550.0,
-        "amount": 4000,
+        "amount": 8000,
+        "original_type": "XD_SulfurPit1",
+        "entity_kind": "mine_pit",
         "distance_to_hq": 8037.0
       }
     ]

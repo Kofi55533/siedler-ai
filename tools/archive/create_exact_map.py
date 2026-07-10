@@ -7,8 +7,14 @@ Extrahiert begehbare Flächen, Ressourcen, Bauplätze aus den echten Spieldaten.
 import numpy as np
 import os
 import re
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Dict, Tuple, Optional
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from map_extract_config import EXTRACTED_DIR
 
@@ -16,9 +22,23 @@ from map_extract_config import EXTRACTED_DIR
 # KONFIGURATION
 # =============================================================================
 
-TERRAIN_FILE = os.path.join(str(EXTRACTED_DIR), "file_0.bin")
-MAPDATA_FILE = os.path.join(str(EXTRACTED_DIR), "mapdata.xml")
-OUTPUT_DIR = r"c:\Users\marku\OneDrive\Desktop\siedler_ai"
+RAW_EXTRACT_FALLBACK_DIR = Path(
+    os.environ.get("SIEDLER_RAW_MAP_EXTRACT_DIR", ROOT_DIR.parent / "wintersturm_extracted")
+)
+
+
+def _source_file(name: str) -> str:
+    """Use the repository extraction first, then the local raw-map fallback."""
+    primary = EXTRACTED_DIR / name
+    if primary.exists():
+        return str(primary)
+    fallback = RAW_EXTRACT_FALLBACK_DIR / name
+    return str(fallback if fallback.exists() else primary)
+
+
+TERRAIN_FILE = _source_file("file_0.bin")
+MAPDATA_FILE = _source_file("mapdata.xml")
+OUTPUT_DIR = str(ROOT_DIR)
 
 # Karten-Dimensionen (aus mapdata.xml)
 MAP_WIDTH = 50480   # Spieleinheiten
@@ -40,6 +60,19 @@ PLAYER_1_QUADRANT = {
     "y_min": 0,
     "y_max": MAP_HEIGHT / 2,  # 25248
 }
+
+SMALL_RESOURCE_NODE_AMOUNT = 400
+MINE_PIT_DEFAULT_AMOUNTS = {
+    "Eisen": 12000,
+    "Stein": 14000,
+    "Lehm": 12000,
+    "Schwefel": 8000,
+}
+
+
+def _resource_amount(script_command: str, default: int) -> int:
+    match = re.search(r"SetResourceDoodadGoodAmount\\([^,]+,(\\d+)\\)", script_command or "")
+    return int(match.group(1)) if match else int(default)
 
 # =============================================================================
 # DATENKLASSEN
@@ -71,11 +104,18 @@ class Entity:
     def is_tree(self) -> bool:
         return any(t in self.entity_type for t in ['Fir', 'Pine', 'DarkTree', 'Tree'])
 
-    def is_mine_shaft(self) -> bool:
+    def is_small_resource_node(self) -> bool:
         return any(t in self.entity_type for t in ['XD_Iron', 'XD_Stone', 'XD_Clay', 'XD_Sulfur']) and 'Pit' not in self.entity_type
 
-    def is_small_deposit(self) -> bool:
+    def is_mine_pit(self) -> bool:
         return 'Pit' in self.entity_type
+
+    # Historical names retained for existing consumers of this archive tool.
+    def is_mine_shaft(self) -> bool:
+        return self.is_small_resource_node()
+
+    def is_small_deposit(self) -> bool:
+        return self.is_mine_pit()
 
     def is_building_slot(self) -> bool:
         return 'VillageCenter' in self.entity_type or 'HQ' in self.entity_type
@@ -193,8 +233,8 @@ def extract_resources(entities: List[Entity], hq_pos: Position) -> Dict:
     """Extrahiert alle Ressourcen für Spieler 1."""
 
     trees = []
-    mine_shafts = {"Eisen": [], "Stein": [], "Lehm": [], "Schwefel": []}
-    deposits = {"Eisen": [], "Stein": [], "Lehm": [], "Schwefel": []}
+    small_resource_nodes = {"Eisen": [], "Stein": [], "Lehm": [], "Schwefel": []}
+    mine_pits = {"Eisen": [], "Stein": [], "Lehm": [], "Schwefel": []}
 
     for e in entities:
         dist = e.position.distance_to(hq_pos)
@@ -207,43 +247,44 @@ def extract_resources(entities: List[Entity], hq_pos: Position) -> Dict:
                 "distance_to_hq": round(dist, 0)
             })
 
-        elif e.is_mine_shaft():
+        elif e.is_small_resource_node():
             res_type = e.get_resource_type()
-            if res_type and res_type in mine_shafts:
-                mine_shafts[res_type].append({
+            if res_type and res_type in small_resource_nodes:
+                small_resource_nodes[res_type].append({
                     "x": e.position.x,
                     "y": e.position.y,
+                    "amount": _resource_amount(e.script_command, SMALL_RESOURCE_NODE_AMOUNT),
+                    "original_type": e.entity_type,
+                    "entity_kind": "small_resource_node",
                     "distance_to_hq": round(dist, 0)
                 })
 
-        elif e.is_small_deposit():
+        elif e.is_mine_pit():
             res_type = e.get_resource_type()
-            if res_type and res_type in deposits:
-                # Extrahiere Menge aus ScriptCommand wenn vorhanden
-                amount = 4000  # Default
-                if "SetResourceDoodadGoodAmount" in e.script_command:
-                    match = re.search(r'(\d+)\)', e.script_command)
-                    if match:
-                        amount = int(match.group(1))
-
-                deposits[res_type].append({
+            if res_type and res_type in mine_pits:
+                mine_pits[res_type].append({
                     "x": e.position.x,
                     "y": e.position.y,
-                    "amount": amount,
+                    "amount": _resource_amount(e.script_command, MINE_PIT_DEFAULT_AMOUNTS[res_type]),
+                    "original_type": e.entity_type,
+                    "entity_kind": "mine_pit",
                     "distance_to_hq": round(dist, 0)
                 })
 
     # Sortiere nach Distanz
     trees.sort(key=lambda t: t["distance_to_hq"])
-    for res_type in mine_shafts:
-        mine_shafts[res_type].sort(key=lambda m: m["distance_to_hq"])
-    for res_type in deposits:
-        deposits[res_type].sort(key=lambda d: d["distance_to_hq"])
+    for res_type in small_resource_nodes:
+        small_resource_nodes[res_type].sort(key=lambda node: node["distance_to_hq"])
+    for res_type in mine_pits:
+        mine_pits[res_type].sort(key=lambda pit: pit["distance_to_hq"])
 
     return {
         "trees": trees,
-        "mine_shafts": mine_shafts,
-        "deposits": deposits
+        "small_resource_nodes": small_resource_nodes,
+        "mine_pits": mine_pits,
+        # Legacy aliases preserve the current environment input contract.
+        "mine_shafts": small_resource_nodes,
+        "deposits": mine_pits,
     }
 
 # =============================================================================
@@ -306,23 +347,23 @@ def visualize_map(terrain: np.ndarray, walkable: np.ndarray,
     tree_ys = [(t["y"] / SCALE_Y) - y_start for t in resources["trees"][:100]]
     ax2.scatter(tree_xs, tree_ys, c='darkgreen', s=10, alpha=0.7, label=f'Bäume ({len(resources["trees"])})')
 
-    # Minenschächte
+    # Kleine Ressourcenklumpen (XD_*1/2/3, nicht bebaubar)
     colors = {"Eisen": "gray", "Stein": "brown", "Lehm": "orange", "Schwefel": "yellow"}
-    for res_type, shafts in resources["mine_shafts"].items():
-        if shafts:
-            xs = [(s["x"] / SCALE_X) - x_start for s in shafts]
-            ys = [(s["y"] / SCALE_Y) - y_start for s in shafts]
+    for res_type, nodes in resources["small_resource_nodes"].items():
+        if nodes:
+            xs = [(node["x"] / SCALE_X) - x_start for node in nodes]
+            ys = [(node["y"] / SCALE_Y) - y_start for node in nodes]
             ax2.scatter(xs, ys, c=colors.get(res_type, 'black'), s=100,
-                       marker='s', edgecolors='black', label=f'{res_type}mine ({len(shafts)})')
+                       marker='s', edgecolors='black', label=f'{res_type}klumpen ({len(nodes)})')
 
-    # Kleine Vorkommen
-    for res_type, deps in resources["deposits"].items():
-        if deps:
-            xs = [(d["x"] / SCALE_X) - x_start for d in deps]
-            ys = [(d["y"] / SCALE_Y) - y_start for d in deps]
+    # Minengruben (XD_*Pit1, bebaubare Mineplaetze)
+    for res_type, pits in resources["mine_pits"].items():
+        if pits:
+            xs = [(pit["x"] / SCALE_X) - x_start for pit in pits]
+            ys = [(pit["y"] / SCALE_Y) - y_start for pit in pits]
             ax2.scatter(xs, ys, c=colors.get(res_type, 'black'), s=60,
                        marker='o', edgecolors='black', alpha=0.7,
-                       label=f'{res_type}vorkommen ({len(deps)})')
+                       label=f'{res_type}gruben ({len(pits)})')
 
     ax2.set_title('Spieler 1 Quadrant - Ressourcen')
     ax2.legend(loc='upper left', fontsize=8)
@@ -369,6 +410,17 @@ def export_exact_map_data(terrain: np.ndarray, walkable: np.ndarray,
         "quadrant_offset": {"x": q["x_min"], "y": q["y_min"]},
         "trees_count": len(resources["trees"]),
         "trees_all": resources["trees"],  # ALLE Bäume exportieren
+        "small_resource_nodes": resources["small_resource_nodes"],
+        "mine_pits": resources["mine_pits"],
+        "resource_semantics": {
+            "small_resource_nodes": "XD_*1/2/3, direct collection, not a mine build slot",
+            "mine_pits": "XD_*Pit1, mine build slot and pre-mine resource source",
+            "legacy_aliases": {
+                "mine_shafts": "small_resource_nodes",
+                "deposits": "mine_pits",
+            },
+        },
+        # Legacy aliases retained for environment.py and earlier reports.
         "mine_shafts": resources["mine_shafts"],
         "deposits": resources["deposits"],
     }
@@ -378,9 +430,9 @@ def export_exact_map_data(terrain: np.ndarray, walkable: np.ndarray,
 
     print(f"Ressourcen exportiert: player1_resources.json")
     print(f"  - {len(resources['trees'])} Bäume")
-    for res_type in resources["mine_shafts"]:
-        print(f"  - {len(resources['mine_shafts'][res_type])} {res_type}schächte")
-        print(f"  - {len(resources['deposits'][res_type])} {res_type}vorkommen")
+    for res_type in resources["small_resource_nodes"]:
+        print(f"  - {len(resources['small_resource_nodes'][res_type])} {res_type}klumpen")
+        print(f"  - {len(resources['mine_pits'][res_type])} {res_type}gruben")
 
     return quadrant_walkable, quadrant_terrain
 
@@ -424,10 +476,10 @@ def main():
     resources = extract_resources(p1_entities, hq_pos)
 
     print(f"    Bäume: {len(resources['trees'])}")
-    for res_type in resources["mine_shafts"]:
-        shafts = resources["mine_shafts"][res_type]
-        deps = resources["deposits"][res_type]
-        print(f"    {res_type}: {len(shafts)} Schächte, {len(deps)} Vorkommen")
+    for res_type in resources["small_resource_nodes"]:
+        nodes = resources["small_resource_nodes"][res_type]
+        pits = resources["mine_pits"][res_type]
+        print(f"    {res_type}: {len(nodes)} Klumpen, {len(pits)} Gruben")
 
     # 6. Visualisierung
     print("\n[6] Erstelle Visualisierung...")

@@ -16,14 +16,19 @@ Outputs:
 import argparse
 import json
 import pathlib
+import sys
 
 import numpy as np
+
+ROOT_DIR = pathlib.Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from map_extract_config import EXTRACTED_DIR
 
 DEFAULT_HEIGHT = EXTRACTED_DIR / "height_map_515.npy"
 DEFAULT_TERRAIN_LOWRES = EXTRACTED_DIR / "terrain_lowres_131.npy"
-DEFAULT_ENGINE_DECODED = pathlib.Path(__file__).resolve().parents[2] / "config" / "engine_decoded.json"
+DEFAULT_ENGINE_DECODED = ROOT_DIR / "config" / "engine_decoded.json"
 DEFAULT_OUT = pathlib.Path(__file__).resolve().parent
 
 MAP_WIDTH = 50480
@@ -91,6 +96,11 @@ def main():
     parser.add_argument("--water-level", type=int, default=None)
     parser.add_argument("--slope-threshold", type=int, default=None)
     parser.add_argument("--slope-quantile", type=float, default=0.8)
+    parser.add_argument(
+        "--use-slope-filter",
+        action="store_true",
+        help="Apply the height-gradient heuristic in addition to engine terrain types.",
+    )
     parser.add_argument("--upsample", action="store_true", help="Also write 1508x1496 grids")
     args = parser.parse_args()
 
@@ -111,13 +121,21 @@ def main():
     max_diff = compute_max_neighbor_diff(height)
     land_mask = height > water_level
 
-    if args.slope_threshold is None:
+    use_slope_filter = bool(args.use_slope_filter or args.slope_threshold is not None)
+    if args.slope_threshold is not None:
+        slope_threshold = int(args.slope_threshold)
+    elif use_slope_filter:
         md_land = max_diff[land_mask]
         slope_threshold = int(np.quantile(md_land, args.slope_quantile))
     else:
-        slope_threshold = args.slope_threshold
+        slope_threshold = None
 
-    walkable = (height > water_level) & (max_diff <= slope_threshold)
+    # Terrain types originate from the original map/engine data. The slope
+    # threshold is only a heuristic and can falsely split known connected P1
+    # routes, so it is opt-in rather than part of the default training map.
+    walkable = height > water_level
+    if slope_threshold is not None:
+        walkable &= max_diff <= slope_threshold
 
     terrain_blocking_report = None
     if not args.no_terrain_blocking:
@@ -156,7 +174,8 @@ def main():
     report = {
         "height_shape": [int(h), int(w)],
         "water_level": int(water_level),
-        "slope_threshold": int(slope_threshold),
+        "slope_filter_enabled": bool(use_slope_filter),
+        "slope_threshold": int(slope_threshold) if slope_threshold is not None else None,
         "walkable_ratio_full": float(walkable.mean()),
         "walkable_ratio_land": float(walkable[land_mask].mean()) if land_mask.any() else 0.0,
         "player1_shape_native": list(p1_walkable_native.shape),

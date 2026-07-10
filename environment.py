@@ -5536,6 +5536,12 @@ class SiedlerScharfschuetzenEnv(gym.Env):
 
         path = self._find_path_world(start_pos, target_pos)
         if not path:
+            if self.sim_mode == "full_sim":
+                # A full simulation must never turn an unreachable route into
+                # a straight-line movement through blocked terrain.
+                dist = float("inf")
+                self._path_cache[key] = ([], dist)
+                return [], dist
             if _env_truthy(os.environ.get("SIEDLER_BLOCK_ON_PATH_FAILURE", "0")):
                 # Strict debug mode: expose unreachable pathing instead of falling back.
                 dist = float("inf")

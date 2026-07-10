@@ -150,8 +150,9 @@ def _has_researched(env: SiedlerScharfschuetzenEnv, aliases: Iterable[str]) -> b
 
 def _world_to_px(env: SiedlerScharfschuetzenEnv, x: float, y: float, width: int, height: int) -> Tuple[int, int]:
     local_x, local_y = env.map_manager.to_local_coords(x, y)
-    gx = int(round(local_x / pathfinding.SCALE_X))
-    gy = int(round(local_y / pathfinding.SCALE_Y))
+    # Match GridPosition.from_world(): pathfinding uses floor/int conversion.
+    gx = int(local_x / pathfinding.SCALE_X)
+    gy = int(local_y / pathfinding.SCALE_Y)
     gx = max(0, min(width - 1, gx))
     gy = max(0, min(height - 1, gy))
     return gx, gy

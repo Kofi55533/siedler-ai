@@ -1,0 +1,30 @@
+{
+  "map": "EMS Wintersturm",
+  "active_grid": {
+    "full_shape": [515, 515],
+    "player1_shape": [257, 258],
+    "world_bounds": [25240, 0, 50480, 25248]
+  },
+  "source": {
+    "height_map": "map_extract/wintersturm_extracted/height_map_515.npy",
+    "terrain_types": "map_extract/wintersturm_extracted/terrain_lowres_131.npy",
+    "blocked_terrain_definitions": "config/engine_decoded.json"
+  },
+  "derivation": {
+    "water_level": 2000,
+    "slope_filter_enabled": false,
+    "reason": "The previous slope heuristic split verified P1 routes from the headquarters to the iron and clay mine pits.",
+    "static_blocking": "Water and terrain types declared blocked by the original engine data remain blocked. Buildings and trees are applied dynamically by WalkableGrid."
+  },
+  "validation": {
+    "p1_hq_connected_mine_pits": {
+      "iron": 2,
+      "stone": 1,
+      "clay": 1,
+      "sulfur": 2
+    },
+    "full_sim_direct_path_fallback": "forbidden",
+    "live_engine_blocking_dump": "not yet available for the complete map"
+  },
+  "truth_status": "calibrated_original_data_derivation_not_a_complete_live_engine_blocking_export"
+}

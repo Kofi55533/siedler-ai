@@ -2,6 +2,7 @@
 """Konformitaetstests fuer Action-Flow, Placement und Worker-Truth."""
 
 import json
+import math
 from pathlib import Path
 
 import numpy as np
@@ -1443,6 +1444,33 @@ def test_wintersturm_resource_entity_semantics_are_exact():
         for nodes in map_data["small_resource_nodes"].values()
         for node in nodes
     )
+
+
+def test_full_sim_rejects_unreachable_paths_without_direct_fallback(monkeypatch):
+    monkeypatch.setenv("SIEDLER_SIM_MODE", "full_sim")
+    monkeypatch.setenv("SIEDLER_DISABLE_RUNTIME_PATHING", "0")
+    env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
+    env.reset(seed=11)
+    monkeypatch.setattr(env, "_find_path_world", lambda _start, _goal: [])
+
+    path, distance = env._compute_path(
+        Position(x=env.hq_position[0], y=env.hq_position[1]),
+        Position(x=34325.0, y=7950.0),
+    )
+
+    assert path == []
+    assert math.isinf(distance)
+
+
+def test_wintersturm_full_sim_connects_hq_to_each_p1_mine_pit():
+    env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
+    env.reset(seed=11)
+
+    for pits in PLAYER_1_MINE_PITS.values():
+        for pit in pits:
+            result = env.map_manager.find_path(env.hq_position, (pit["x"], pit["y"]))
+            assert result.found
+            assert len(result.path) >= 2
 
 
 def _xy(position):

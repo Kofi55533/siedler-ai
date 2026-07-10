@@ -53,7 +53,9 @@ def test_expert_opening_demo_collection_has_no_invalid_fallbacks():
     assert demos["episode_completed_actions"][0] == 45
 
 
-def test_build_assignment_falls_back_when_astar_cannot_reach_exact_cell():
+def test_fast_train_build_assignment_falls_back_when_astar_cannot_reach_exact_cell(monkeypatch):
+    monkeypatch.setenv("SIEDLER_SIM_MODE", "fast_train")
+    monkeypatch.delenv("SIEDLER_DISABLE_RUNTIME_PATHING", raising=False)
     env = SiedlerScharfschuetzenEnv(use_spatial_obs=False)
     env.reset(seed=9)
     env._find_path_world = lambda _start, _target: []

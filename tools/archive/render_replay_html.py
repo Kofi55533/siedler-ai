@@ -250,7 +250,7 @@ def _export_original_graphics(
     else:
         manifest = export_original_graphics_report(game_root, report_dir, thumb_size=220)
 
-    sample_keys = ("serf_idle", "headquarters_1", "university_1", "tree_fir")
+    sample_keys = ("serf_idle", "headquarters_1", "university_1", "tree_fir_1")
     sample_sprites: dict[str, str] = {}
     sample_meshes: dict[str, str] = {}
     sprite_by_key: dict[str, str] = {}
@@ -694,6 +694,12 @@ def _entity_snapshot(env, args) -> list[dict]:
         return any(math.hypot(px - ox, py - oy) <= radius for ox, oy in occupied_mine_points)
 
     render_scale = max(1, int(getattr(args, "render_scale", 1) or 1))
+    tree_types_by_position = {
+        (round(float(tree.get("x", 0.0)), 2), round(float(tree.get("y", 0.0)), 2)): str(tree.get("type", ""))
+        for tree in getattr(env, "resource_trees", [])
+        if isinstance(tree, dict)
+    }
+    tree_world_positions = getattr(env.map_manager, "tree_world_positions", {})
     for tree_id, grid_pos in sorted(getattr(env.map_manager.grid, "tree_positions", {}).items()):
         gx = getattr(grid_pos, "x", None)
         gy = getattr(grid_pos, "y", None)
@@ -702,15 +708,22 @@ def _entity_snapshot(env, args) -> list[dict]:
         px = int(round((float(gx) + 0.5) * render_scale))
         py = int(round((float(gy) + 0.5) * render_scale))
         tree_entity_id = f"tree:{tree_id}"
+        world_pos = replay._as_xy(tree_world_positions.get(tree_id))
+        tree_type = ""
+        if world_pos is not None:
+            tree_type = tree_types_by_position.get(
+                (round(float(world_pos[0]), 2), round(float(world_pos[1]), 2)),
+                "",
+            )
         entities.append(
             {
                 "id": tree_entity_id,
                 "kind": "tree",
-                "sprite_key": "tree_fir",
+                "sprite_key": _tree_mesh_key(tree_type),
                 "x": px,
                 "y": py,
                 "size": 46,
-                "label": f"Baum {tree_id}",
+                "label": f"{tree_type or 'Baum'} {tree_id}",
                 "state": "standing",
                 "anchor_y": 0.90,
                 "anim_role": "idle",
@@ -1243,6 +1256,15 @@ def _small_deposit_mesh_key(category: str) -> str:
     if "schwefel" in normalized or "sulfur" in normalized:
         return "sulfur_small_deposit"
     return "generic_mine_site"
+
+
+def _tree_mesh_key(tree_type: str) -> str:
+    normalized = str(tree_type or "").lower()
+    if "fir1" in normalized:
+        return "tree_fir_1"
+    if "fir2" in normalized:
+        return "tree_fir_2"
+    return "tree_fir"
 
 
 def _building_icon_key(building_name: str) -> str:
@@ -4853,7 +4875,7 @@ def _write_html(output_dir: Path, timeline: list[dict], width: int, height: int,
         "__MESH_SERF__": sample_sprites.get("serf_idle") or sample_meshes.get("serf_idle") or blank_asset,
         "__MESH_HEADQUARTER__": sample_sprites.get("headquarters_1") or sample_meshes.get("headquarters_1") or blank_asset,
         "__MESH_UNIVERSITY__": sample_sprites.get("university_1") or sample_meshes.get("university_1") or blank_asset,
-        "__MESH_TREE__": sample_sprites.get("tree_fir") or sample_meshes.get("tree_fir") or blank_asset,
+        "__MESH_TREE__": sample_sprites.get("tree_fir_1") or sample_meshes.get("tree_fir_1") or blank_asset,
     }
     replacements.update({key: html.escape(value, quote=True) for key, value in asset_replacements.items()})
     for key, value in replacements.items():
